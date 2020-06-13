@@ -3,11 +3,11 @@ import axios from 'axios';
 
 export default class Navbar extends React.Component {
 
-    constructor(props){
+    constructor(props) {
         super(props);
 
         this.state = {
-            stream_key : ''
+            stream_key: ''
         };
 
         this.generateStreamKey = this.generateStreamKey.bind(this);
@@ -17,22 +17,20 @@ export default class Navbar extends React.Component {
         this.getStreamKey();
     }
 
-    generateStreamKey(e){
-        axios.post('/settings/stream_key')
-            .then(res => {
-                this.setState({
-                    stream_key : res.data.stream_key
-                });
-            })
+    generateStreamKey() {
+        axios.post('/settings/stream_key').then(res => {
+            this.setState({
+                stream_key: res.data.stream_key
+            });
+        })
     }
 
-    getStreamKey(){
-        axios.get('/settings/stream_key')
-            .then(res => {
-                this.setState({
-                    stream_key : res.data.stream_key
-                });
-            })
+    getStreamKey() {
+        axios.get('/settings/stream_key').then(res => {
+            this.setState({
+                stream_key: res.data.stream_key
+            });
+        })
     }
 
     render() {
@@ -66,7 +64,8 @@ export default class Navbar extends React.Component {
                                 You can use <a target="_blank" href="https://obsproject.com/">OBS</a> or
                                 <a target="_blank" href="https://www.xsplit.com/">XSplit</a> to Live stream. If you're
                                 using OBS, go to Settings > Stream and select Custom from service dropdown.
-                                Enter <b>rtmp://127.0.0.1:1935/live</b> in server input field. Also, add your stream key.
+                                Enter <b>rtmp://127.0.0.1:1935/live</b> in server input field. Also, add your stream
+                                key.
                                 Click apply to save.
                             </p>
                         </div>

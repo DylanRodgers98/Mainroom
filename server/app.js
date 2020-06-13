@@ -1,19 +1,19 @@
-const express = require('express'),
-    path = require('path'),
-    Session = require('express-session'),
-    bodyParse = require('body-parser'),
-    passport = require('./auth/passport'),
-    mongoose = require('mongoose'),
-    middleware = require('connect-ensure-login'),
-    FileStore = require('session-file-store')(Session),
-    config = require('./config/default'),
-    flash = require('connect-flash'),
-    port = config.server.port,
-    app = express(),
-    node_media_server = require('./media_server'),
-    thumbnail_generator = require('./cron/thumbnails');
+const express = require('express');
+const path = require('path');
+const Session = require('express-session');
+const bodyParser = require('body-parser');
+const passport = require('./auth/passport');
+const mongoose = require('mongoose');
+const loginChecker = require('connect-ensure-login');
+const FileStore = require('session-file-store')(Session);
+const config = require('./config/default');
+const flash = require('connect-flash');
+const app = express();
+const cookieParser = require('cookie-parser');
+const nodeMediaServer = require('./mediaServer');
+const thumbnailGenerator = require('./cron/thumbnails');
 
-mongoose.connect('mongodb://127.0.0.1/nodeStream' , { useNewUrlParser: true });
+mongoose.connect('mongodb://127.0.0.1/mainroom' , { useNewUrlParser: true });
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, './views'));
@@ -21,9 +21,9 @@ app.use(express.static('public'));
 app.use('/thumbnails', express.static('server/thumbnails'));
 app.use(flash());
 
-app.use(require('cookie-parser')());
-app.use(bodyParse.urlencoded({extended: true}));
-app.use(bodyParse.json({extended: true}));
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json({extended: true}));
 
 app.use(Session({
     store: new FileStore({
@@ -50,10 +50,12 @@ app.get('/logout', (req, res) => {
     return res.redirect('/login');
 });
 
-app.get('*', middleware.ensureLoggedIn(), (req, res) => {
+app.get('*', loginChecker.ensureLoggedIn(), (req, res) => {
     res.render('index');
 });
 
+const port = config.server.port;
 app.listen(port, () => console.log(`App listening on ${port}!`));
-node_media_server.run();
-thumbnail_generator.start();
+
+nodeMediaServer.run();
+thumbnailGenerator.start();

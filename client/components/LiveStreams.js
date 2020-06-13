@@ -4,7 +4,6 @@ import {Link} from 'react-router-dom';
 import './LiveStreams.scss';
 import config from '../../server/config/default';
 
-
 export default class Navbar extends React.Component {
 
     constructor(props) {
@@ -19,13 +18,12 @@ export default class Navbar extends React.Component {
     }
 
     getLiveStreams() {
-        axios.get('http://127.0.0.1:' + config.rtmp_server.http.port + '/api/streams')
-            .then(res => {
-                let streams = res.data;
-                if (typeof (streams['live'] !== 'undefined')) {
-                    this.getStreamsInfo(streams['live']);
-                }
-            });
+        axios.get('http://127.0.0.1:' + config.rtmp_server.http.port + '/api/streams').then(res => {
+            const streams = res.data;
+            if (typeof streams['live'] !== 'undefined') {
+                this.getStreamsInfo(streams['live']);
+            }
+        });
     }
 
     getStreamsInfo(live_streams) {
@@ -43,7 +41,7 @@ export default class Navbar extends React.Component {
     }
 
     render() {
-        let streams = this.state.live_streams.map((stream, index) => {
+        const streams = this.state.live_streams.map((stream, index) => {
             return (
                 <div className="stream col-xs-12 col-sm-12 col-md-3 col-lg-4" key={index}>
                     <span className="live-label">LIVE</span>

@@ -3,6 +3,7 @@ import videojs from 'video.js'
 import axios from 'axios';
 import config from '../../server/config/default';
 
+const port = config.rtmp_server.http.port;
 
 export default class VideoPlayer extends React.Component {
 
@@ -16,7 +17,6 @@ export default class VideoPlayer extends React.Component {
     }
 
     componentDidMount() {
-
         axios.get('/user', {
             params: {
                 username: this.props.match.params.username
@@ -28,7 +28,7 @@ export default class VideoPlayer extends React.Component {
                     autoplay: false,
                     controls: true,
                     sources: [{
-                        src: 'http://127.0.0.1:' + config.rtmp_server.http.port + '/live/' + res.data.stream_key + '/index.m3u8',
+                        src: 'http://127.0.0.1:' + port + '/live/' + res.data.stream_key + '/index.m3u8',
                         type: 'application/x-mpegURL'
                     }],
                     fluid: true,

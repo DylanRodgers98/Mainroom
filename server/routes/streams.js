@@ -1,26 +1,28 @@
-const express = require('express'),
-    router = express.Router(),
-    User = require('../database/Schema').User;
+const express = require('express');
+const router = express.Router();
+const User = require('../database/Schema').User;
+const loginChecker = require('connect-ensure-login');
 
-router.get('/info',
-    require('connect-ensure-login').ensureLoggedIn(),
-    (req, res) => {
-        if(req.query.streams){
-            let streams = JSON.parse(req.query.streams);
-            let query = {$or: []};
-            for (let stream in streams) {
-                if (!streams.hasOwnProperty(stream)) continue;
-                query.$or.push({stream_key : stream});
+router.get('/info', loginChecker.ensureLoggedIn(), (req, res) => {
+    if (req.query.streams) {
+        const streams = JSON.parse(req.query.streams);
+        const query = {$or: []};
+        for (const stream in streams) {
+            if (!streams.hasOwnProperty(stream)) {
+                continue;
             }
-
-            User.find(query,(err, users) => {
-                if (err)
-                    return;
-                if (users) {
-                    res.json(users);
-                }
-            });
+            query.$or.push({stream_key: stream});
         }
-    });
-module.exports = router;
 
+        User.find(query, (err, users) => {
+            if (err) {
+                return;
+            }
+            if (users) {
+                res.json(users);
+            }
+        });
+    }
+});
+
+module.exports = router;

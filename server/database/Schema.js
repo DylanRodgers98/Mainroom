@@ -1,3 +1,3 @@
-let mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 exports.User = mongoose.model('User', require('./UserSchema'));
