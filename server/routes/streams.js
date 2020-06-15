@@ -6,12 +6,16 @@ const loginChecker = require('connect-ensure-login');
 router.get('/info', loginChecker.ensureLoggedIn(), (req, res) => {
     if (req.query.streams) {
         const streams = JSON.parse(req.query.streams);
-        const query = {$or: []};
+        const query = {stream_key: {$in: []}};
         for (const stream in streams) {
             if (!streams.hasOwnProperty(stream)) {
                 continue;
             }
-            query.$or.push({stream_key: stream});
+            query.stream_key.$in.push(stream);
+        }
+
+        if (req.query.genre) {
+            query.genre = req.query.genre;
         }
 
         User.find(query, (err, users) => {

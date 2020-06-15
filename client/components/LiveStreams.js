@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom';
 import './LiveStreams.scss';
 import config from '../../server/config/default';
 
-export default class Navbar extends React.Component {
+export default class LiveStreams extends React.Component {
 
     constructor(props) {
         super(props);
@@ -27,11 +27,16 @@ export default class Navbar extends React.Component {
     }
 
     getStreamsInfo(live_streams) {
-        axios.get('/streams/info', {
+        const queryParams = {
             params: {
                 streams: live_streams
             }
-        }).then(res => {
+        };
+        if (this.props.match.params.genre) {
+            queryParams.params.genre = this.props.match.params.genre;
+        }
+
+        axios.get('/streams/info', queryParams).then(res => {
             this.setState({
                 live_streams: res.data
             }, () => {
@@ -45,14 +50,14 @@ export default class Navbar extends React.Component {
             return (
                 <div className="stream col-xs-12 col-sm-12 col-md-3 col-lg-4" key={index}>
                     <span className="live-label">LIVE</span>
-                    <Link to={'/stream/' + stream.username}>
+                    <Link to={'/user/' + stream.username}>
                         <div className="stream-thumbnail">
                             <img src={'/thumbnails/' + stream.stream_key + '.png'}/>
                         </div>
                     </Link>
 
                     <span className="username">
-                        <Link to={'/stream/' + stream.username}>
+                        <Link to={'/user/' + stream.username}>
                             {stream.username}
                         </Link>
                     </span>

@@ -36,6 +36,8 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             user.password = user.generateHash(password);
             user.username = req.body.username;
             user.stream_key = shortid.generate();
+            user.genre = null;
+            user.tags = [];
             user.save((err) => {
                 if (err) {
                     throw err;

@@ -22,7 +22,11 @@ export default class Root extends React.Component {
                         <LiveStreams  {...props} />
                     )}/>
 
-                    <Route exact path="/stream/:username" render={(props) => (
+                    <Route exact path="/genre/:genre" render={(props) => (
+                        <LiveStreams  {...props} />
+                    )}/>
+
+                    <Route exact path="/user/:username" render={(props) => (
                         <VideoPlayer {...props}/>
                     )}/>
 

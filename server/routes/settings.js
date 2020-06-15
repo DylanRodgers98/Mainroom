@@ -31,6 +31,32 @@ router.post('/stream_key', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
+router.get('/genre', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOne({email: req.user.email}, (err, user) => {
+        if (!err) {
+            res.json({
+                genre: user.genre
+            })
+        }
+    });
+});
+
+router.post('/genre', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOneAndUpdate({
+        email: req.user.email
+    }, {
+        genre: req.body.genre
+    }, {
+        upsert: true,
+        new: true,
+    }, (err, user) => {
+        if (!err) {
+            res.json({
+                genre: user.genre
+            })
+        }
+    });
+});
 
 module.exports = router;
 

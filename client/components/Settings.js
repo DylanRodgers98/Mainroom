@@ -1,26 +1,46 @@
 import React from 'react';
 import axios from 'axios';
+import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
+import {Link} from "react-router-dom";
 
-export default class Navbar extends React.Component {
+const genres = require('./genres.json');
+
+export default class Settings extends React.Component {
 
     constructor(props) {
         super(props);
 
-        this.state = {
-            stream_key: ''
-        };
-
         this.generateStreamKey = this.generateStreamKey.bind(this);
+        this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
+        this.getGenre = this.getGenre.bind(this);
+        this.setGenre = this.setGenre.bind(this);
+
+        this.state = {
+            streamKey: '',
+            selectedGenre: '',
+            genres: [],
+            genreDropdownOpen: false
+        };
     }
 
     componentDidMount() {
         this.getStreamKey();
+        this.getGenre();
+        this.setState({
+            genres: Array.from(genres.genres).sort()
+        });
+    }
+
+    genreDropdownToggle() {
+        this.setState(prevState => ({
+            genreDropdownOpen: !prevState.genreDropdownOpen
+        }));
     }
 
     generateStreamKey() {
         axios.post('/settings/stream_key').then(res => {
             this.setState({
-                stream_key: res.data.stream_key
+                streamKey: res.data.stream_key
             });
         })
     }
@@ -28,12 +48,38 @@ export default class Navbar extends React.Component {
     getStreamKey() {
         axios.get('/settings/stream_key').then(res => {
             this.setState({
-                stream_key: res.data.stream_key
+                streamKey: res.data.stream_key
             });
         })
     }
 
+    getGenre() {
+        axios.get('/settings/genre').then(res => {
+            this.setState({
+                selectedGenre: res.data.genre
+            })
+        });
+    }
+
+    setGenre(dropdownValue) {
+        axios.post('/settings/genre', {
+            genre: dropdownValue.currentTarget.textContent
+        }).then(res => {
+            this.setState({
+                selectedGenre: res.data.genre
+            })
+        });
+    }
+
+    getGenreDropdownText() {
+        return this.state.selectedGenre ? this.state.selectedGenre : 'Select a genre...';
+    }
+
     render() {
+        const genres = this.state.genres.map((genre) => {
+            return <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
+        });
+
         return (
             <React.Fragment>
                 <div className="container mt-5">
@@ -50,6 +96,20 @@ export default class Navbar extends React.Component {
                                 onClick={this.generateStreamKey}>
                                 Generate a new key
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="container mt-5">
+                    <h4>Select a Genre</h4>
+                    <hr className="my-4"/>
+
+                    <div className="col-xs-12 col-sm-12 col-md-8 col-lg-6">
+                        <div className="row">
+                            <Dropdown isOpen={this.state.genreDropdownOpen} toggle={this.genreDropdownToggle}>
+                                <DropdownToggle caret>{this.getGenreDropdownText()}</DropdownToggle>
+                                <DropdownMenu>{genres}</DropdownMenu>
+                            </Dropdown>
                         </div>
                     </div>
                 </div>

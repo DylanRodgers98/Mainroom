@@ -5,16 +5,18 @@ const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
     username: String,
-    email : String,
+    email: String,
     password: String,
-    stream_key : String,
+    stream_key: String,
+    genre: String,
+    tags: [{tag: String}]
 });
 
 UserSchema.methods.generateHash = (password) => {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
 };
 
-UserSchema.methods.validPassword = function(password) {
+UserSchema.methods.validPassword = function (password) {
     return bcrypt.compareSync(password, this.password);
 };
 
