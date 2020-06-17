@@ -39,8 +39,6 @@ export default class LiveStreams extends React.Component {
         axios.get('/streams/info', queryParams).then(res => {
             this.setState({
                 live_streams: res.data
-            }, () => {
-                console.log(this.state);
             });
         });
     }
@@ -65,9 +63,11 @@ export default class LiveStreams extends React.Component {
             );
         });
 
+        const genre = this.props.match.params.genre ? decodeURIComponent(this.props.match.params.genre) : 'All';
+
         return (
             <div className="container mt-5">
-                <h4>Live Streams</h4>
+                <h4>{genre} Livestreams</h4>
                 <hr className="my-4"/>
 
                 <div className="streams row">

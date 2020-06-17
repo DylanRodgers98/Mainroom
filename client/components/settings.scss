@@ -1,0 +1,30 @@
+.settings-dropdown {
+
+  .btn-secondary {
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background-color: darkred !important;
+    border-color: darkred !important;
+  }
+
+}
+
+.btn-dark:disabled {
+  color: gray !important;
+  font-style: italic;
+}
+
+.btn-dark:hover:not(.disabled) {
+  background-color: darkred !important;
+  border-color: darkred !important;
+}
+
+.settings-title {
+  width: 100%;
+}
+
+i {
+  font-size: 14px;
+}

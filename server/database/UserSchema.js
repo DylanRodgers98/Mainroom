@@ -8,8 +8,9 @@ const UserSchema = new Schema({
     email: String,
     password: String,
     stream_key: String,
-    genre: String,
-    tags: [{tag: String}]
+    stream_title: String,
+    stream_genre: String,
+    stream_tags: [String]
 });
 
 UserSchema.methods.generateHash = (password) => {

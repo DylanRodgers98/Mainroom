@@ -32,12 +32,13 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             return done(null, false);
         } else {
             const user = new User();
+            user.username = req.body.username;
             user.email = email;
             user.password = user.generateHash(password);
-            user.username = req.body.username;
             user.stream_key = shortid.generate();
-            user.genre = null;
-            user.tags = [];
+            user.stream_title = null;
+            user.stream_genre = null;
+            user.stream_tags = [];
             user.save((err) => {
                 if (err) {
                     throw err;
