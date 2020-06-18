@@ -1,11 +1,11 @@
 import React from 'react';
 import videojs from 'video.js'
 import axios from 'axios';
-import config from '../../server/config/default';
+import config from '../server/config/default';
 
 const port = config.rtmp_server.http.port;
 
-export default class VideoPlayer extends React.Component {
+export default class UserStream extends React.Component {
 
     constructor(props) {
         super(props);
@@ -49,14 +49,12 @@ export default class VideoPlayer extends React.Component {
 
     render() {
         return (
-            <div className="row">
-                <div className="col-xs-12 col-sm-12 col-md-10 col-lg-8 mx-auto mt-5">
-                    {this.state.stream ? (
-                        <div data-vjs-player>
-                            <video ref={node => this.videoNode = node} className="video-js vjs-big-play-centered"/>
-                        </div>
-                    ) : ' Loading ... '}
-                </div>
+            <div className="col-xs-12 col-sm-12 col-md-10 col-lg-8 mx-auto mt-5">
+                {this.state.stream ? (
+                    <div data-vjs-player>
+                        <video ref={node => this.videoNode = node} className="video-js vjs-big-play-centered"/>
+                    </div>
+                ) : ' Loading ... '}
             </div>
         )
     }

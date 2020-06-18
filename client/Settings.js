@@ -1,9 +1,9 @@
 import React from 'react';
 import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
-import './settings.scss';
+import './css/settings.scss';
 
-const genres = require('./genres.json');
+const genres = require('./json/genres.json');
 
 export default class Settings extends React.Component {
 
@@ -13,8 +13,6 @@ export default class Settings extends React.Component {
         this.getUserSettings = this.getUserSettings.bind(this);
         this.populateGenresDropdown = this.populateGenresDropdown.bind(this);
         this.generateStreamKey = this.generateStreamKey.bind(this);
-        this.copyStreamKey = this.copyStreamKey.bind(this);
-        this.copyServerUrl = this.copyServerUrl.bind(this);
         this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
         this.setTitle = this.setTitle.bind(this);
         this.setGenre = this.setGenre.bind(this);
@@ -62,13 +60,8 @@ export default class Settings extends React.Component {
         })
     }
 
-    copyServerUrl() {
-        document.getElementById('serverUrlInput').select();
-        document.execCommand('copy');
-    }
-
-    copyStreamKey() {
-        document.getElementById('streamKeyInput').select();
+    copyFrom(elementId) {
+        document.getElementById(elementId).select();
         document.execCommand('copy');
     }
 
@@ -116,7 +109,7 @@ export default class Settings extends React.Component {
     }
 
     getGenreDropdownText() {
-        return this.state.stream_genre ? this.state.stream_genre : 'Select a genre...';
+        return this.state.stream_genre || 'Select a genre...';
     }
 
     render() {
@@ -140,7 +133,8 @@ export default class Settings extends React.Component {
                                         <input id="serverUrlInput" type="text" value="rtmp://127.0.0.1:1935/live"/>
                                     </td>
                                     <td>
-                                        <Button className="btn btn-dark ml-1" size="sm" onClick={this.copyServerUrl}>
+                                        <Button className="btn btn-dark ml-1" size="sm"
+                                                onClick={() => this.copyFrom('serverUrlInput')}>
                                             Copy
                                         </Button>
                                     </td>
@@ -159,11 +153,11 @@ export default class Settings extends React.Component {
                                     </td>
                                     <td>
                                         <Button className="btn btn-dark mt-2 ml-1" size="sm"
-                                                onClick={this.copyStreamKey}>
+                                                onClick={() => this.copyFrom('streamKeyInput')}>
                                             Copy
                                         </Button>
-                                        <Button className="btn btn-dark mt-2 ml-1" onClick={this.generateStreamKey}
-                                                size="sm">
+                                        <Button className="btn btn-dark mt-2 ml-1" size="sm"
+                                                onClick={this.generateStreamKey}>
                                             Generate a new key
                                         </Button>
                                     </td>

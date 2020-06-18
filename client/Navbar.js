@@ -1,9 +1,9 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
-import './dropdown.scss';
+import './css/dropdown.scss';
 
-const genres = require('./genres.json');
+const genres = require('./json/genres.json');
 
 export default class Navbar extends React.Component {
 

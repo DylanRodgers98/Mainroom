@@ -1,8 +1,8 @@
 import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
-import './LiveStreams.scss';
-import config from '../../server/config/default';
+import config from '../server/config/default';
+import './css/livestreams.scss';
 
 export default class LiveStreams extends React.Component {
 

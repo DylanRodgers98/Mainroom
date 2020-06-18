@@ -3,9 +3,9 @@ import {Router, Route} from 'react-router-dom';
 import Navbar from './Navbar';
 import LiveStreams from './LiveStreams';
 import Settings from './Settings';
-import VideoPlayer from './VideoPlayer';
+import UserStream from './UserStream';
 
-const customHistory = require("history").createBrowserHistory();
+const browserHistory = require("history").createBrowserHistory();
 
 export default class Root extends React.Component {
 
@@ -15,7 +15,7 @@ export default class Root extends React.Component {
 
     render() {
         return (
-            <Router history={customHistory}>
+            <Router history={browserHistory}>
                 <div>
                     <Navbar/>
                     <Route exact path="/" render={props => (
@@ -27,7 +27,7 @@ export default class Root extends React.Component {
                     )}/>
 
                     <Route exact path="/user/:username" render={(props) => (
-                        <VideoPlayer {...props}/>
+                        <UserStream {...props}/>
                     )}/>
 
                     <Route exact path="/settings" render={props => (
