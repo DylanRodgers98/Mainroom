@@ -1,4 +1,7 @@
 const express = require('express');
+const app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 const path = require('path');
 const Session = require('express-session');
 const bodyParser = require('body-parser');
@@ -8,10 +11,10 @@ const loginChecker = require('connect-ensure-login');
 const FileStore = require('session-file-store')(Session);
 const config = require('./config/default');
 const flash = require('connect-flash');
-const app = express();
 const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
 const thumbnailGenerator = require('./cron/thumbnails');
+const LOGGER = require('node-media-server/node_core_logger');
 
 mongoose.connect('mongodb://127.0.0.1/mainroom' , { useNewUrlParser: true });
 
@@ -54,8 +57,19 @@ app.get('*', loginChecker.ensureLoggedIn(), (req, res) => {
     res.render('index');
 });
 
-const port = config.server.port;
-app.listen(port, () => console.log(`App listening on ${port}!`));
+io.on("connection", socket => {
+    const { id } = socket.client;
+    LOGGER.log(`User connected: ${id}`);
+
+    socket.on("chat message", ({streamUsername, viewerUsername, msg}) => {
+        LOGGER.log(`[${streamUsername} Chat] ${viewerUsername} (${id}): ${msg}`);
+        io.emit(`chat message ${streamUsername}`, {viewerUsername, msg});
+    });
+});
+
+server.listen(config.server.port, () => {
+    LOGGER.log(`App listening on ${config.server.port}!`)
+});
 
 nodeMediaServer.run();
 thumbnailGenerator.start();

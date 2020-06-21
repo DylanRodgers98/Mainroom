@@ -26,13 +26,21 @@ export default class Root extends React.Component {
                         <LiveStreams  {...props} />
                     )}/>
 
-                    <Route exact path="/user/:username" render={(props) => (
+                    {/*TODO: ADD USER PROFILE ROUTE*/}
+                    {/*<Route exact path="/user/:username" render={(props) => (*/}
+                    {/*    <UserProfile {...props}/>*/}
+                    {/*)}/>*/}
+
+                    <Route exact path="/user/:username/live" render={(props) => (
                         <UserStream {...props}/>
                     )}/>
 
                     <Route exact path="/settings" render={props => (
                         <Settings {...props} />
                     )}/>
+
+                    {/*TODO: ADD 404 ROUTE*/}
+                    {/*<Route component={404Component} />*/}
                 </div>
             </Router>
         )

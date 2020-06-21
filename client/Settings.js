@@ -121,8 +121,9 @@ export default class Settings extends React.Component {
             <React.Fragment>
                 <div className="container mt-5">
                     <h4>Stream Settings</h4>
-                    <hr className="my-4"/>
-                    <table>
+                    <hr className="mt-4"/>
+                    <i>Copy and paste the Server URL and Stream Key into your streaming software</i>
+                    <table className="mt-3">
                         <tr>
                             <td>
                                 <h5 className="mr-3">Server URL:</h5>
@@ -143,7 +144,7 @@ export default class Settings extends React.Component {
                         </tr>
                         <tr>
                             <td>
-                                <h5 className="mt-2 mr-3">Streaming Key:</h5>
+                                <h5 className="mt-2 mr-3">Stream Key:</h5>
                             </td>
                             <table>
                                 <tr>

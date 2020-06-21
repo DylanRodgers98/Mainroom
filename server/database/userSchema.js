@@ -10,7 +10,9 @@ const UserSchema = new Schema({
     stream_key: String,
     stream_title: String,
     stream_genre: String,
-    stream_tags: [String]
+    stream_tags: [String],
+    subscribers: [String],
+    subscriptions: [String]
 });
 
 UserSchema.methods.generateHash = (password) => {

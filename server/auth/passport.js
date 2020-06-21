@@ -39,6 +39,8 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             user.stream_title = null;
             user.stream_genre = null;
             user.stream_tags = [];
+            user.subscribers = [];
+            user.subscriptions = [];
             user.save((err) => {
                 if (err) {
                     throw err;

@@ -1,6 +1,7 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
+import config from '../server/config/default';
 import './css/dropdown.scss';
 
 const genres = require('./json/genres.json');
@@ -54,7 +55,7 @@ export default class Navbar extends React.Component {
             <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div className="container">
                     <div className="navbar-nav mr-auto">
-                        <Link to={'/'} className={'navbar-brand'}>Mainroom</Link>
+                        <Link to={'/'} className={'navbar-brand'}>{config.siteTitle}</Link>
                         <Dropdown className="nav-item float-left" onMouseOver={this.onMouseEnter}
                                   onMouseLeave={this.onMouseLeave} isOpen={this.state.dropdownOpen}
                                   toggle={this.toggle}>
