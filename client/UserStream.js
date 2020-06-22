@@ -23,13 +23,13 @@ export default class UserStream extends React.Component {
         this.state = {
             stream: false,
             videoJsOptions: null,
+            viewer_username: '',
             stream_username: '',
             stream_title: '',
             stream_genre: '',
             stream_tags: [],
             msg: '',
-            chat: [],
-            viewer_username: ''
+            chat: []
         }
     }
 
@@ -90,8 +90,11 @@ export default class UserStream extends React.Component {
     }
 
     handleKeyDown(e) {
-        if (e.key === 'Enter' && this.state.msg) {
-            this.onMessageSubmit();
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (this.state.msg) {
+                this.onMessageSubmit();
+            }
         }
     }
 
@@ -106,12 +109,21 @@ export default class UserStream extends React.Component {
     };
 
     renderChat() {
-        return this.state.chat.map(({viewerUsername, msg}, idx) => (
-            <div key={idx}>
+        return this.state.chat.map(({viewerUsername, msg}, i) => (
+            <div key={i}>
                 <span style={{color: "green"}}>{viewerUsername}: </span>
                 <span>{msg}</span>
             </div>
         ));
+    }
+
+    componentDidUpdate() {
+        const messages = document.getElementById('messages');
+        const downArrowHeight = 25;
+        const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + downArrowHeight;
+        if (isScrolledToBottom) {
+            messages.scrollTop = messages.scrollHeight - messages.clientHeight;
+        }
     }
 
     render() {
@@ -138,9 +150,9 @@ export default class UserStream extends React.Component {
                     </div>
                 </div>
                 <div className='col chat-col'>
-                    <div className='chat-messages'>{this.renderChat()}</div>
+                    <div className='chat-messages' id='messages'>{this.renderChat()}</div>
                     <div className='chat-input'>
-                        <input onChange={this.onTextChange} onKeyDown={this.handleKeyDown} value={this.state.msg}/>
+                        <textarea onChange={this.onTextChange} onKeyDown={this.handleKeyDown} value={this.state.msg}/>
                         <button onClick={this.onMessageSubmit}>Send</button>
                     </div>
                 </div>
