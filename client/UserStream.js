@@ -34,7 +34,7 @@ export default class UserStream extends React.Component {
     }
 
     componentDidMount() {
-        axios.get('/user', {
+        axios.get('/streams', {
             params: {
                 username: this.props.match.params.username
             }

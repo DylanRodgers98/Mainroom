@@ -43,7 +43,7 @@ export default class LiveStreams extends React.Component {
             queryParams.params.genre = decodeURIComponent(this.props.match.params.genre);
         }
 
-        axios.get('/streams/info', queryParams).then(res => {
+        axios.get('/streams/all', queryParams).then(res => {
             this.setState({
                 live_streams: res.data
             });
@@ -58,7 +58,8 @@ export default class LiveStreams extends React.Component {
                     <span className="live-label">LIVE</span>
                     <Link to={`/user/${stream.username}/live`}>
                         <div className="stream-thumbnail">
-                            <img src={`/thumbnails/${stream.stream_key}.png`}/>
+                            <img src={`/thumbnails/${stream.stream_key}.png`}
+                                 alt={`${stream.username} Stream Thumbnail`}/>
                         </div>
                     </Link>
 

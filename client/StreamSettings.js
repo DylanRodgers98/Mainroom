@@ -5,7 +5,7 @@ import './css/settings.scss';
 
 const genres = require('./json/genres.json');
 
-export default class Settings extends React.Component {
+export default class StreamSettings extends React.Component {
 
     constructor(props) {
         super(props);
@@ -36,7 +36,7 @@ export default class Settings extends React.Component {
     }
 
     getUserSettings() {
-        axios.get('/settings/all').then(res => {
+        axios.get('/settings').then(res => {
             this.setState({
                 stream_key: res.data.stream_key,
                 stream_title: res.data.stream_title,
@@ -94,7 +94,7 @@ export default class Settings extends React.Component {
     }
 
     saveSettings() {
-        axios.post('/settings/all', {
+        axios.post('/settings', {
             stream_title: this.state.stream_title,
             stream_genre: this.state.stream_genre,
             stream_tags: this.state.stream_tags

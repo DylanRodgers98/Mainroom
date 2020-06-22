@@ -2,7 +2,7 @@ import React from "react";
 import {Router, Route} from 'react-router-dom';
 import Navbar from './Navbar';
 import LiveStreams from './LiveStreams';
-import Settings from './Settings';
+import StreamSettings from './StreamSettings';
 import UserStream from './UserStream';
 
 const browserHistory = require("history").createBrowserHistory();
@@ -36,7 +36,7 @@ export default class Root extends React.Component {
                     )}/>
 
                     <Route exact path="/settings" render={props => (
-                        <Settings {...props} />
+                        <StreamSettings {...props} />
                     )}/>
 
                     {/*TODO: ADD 404 ROUTE*/}

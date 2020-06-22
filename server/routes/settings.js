@@ -1,53 +1,53 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../database/schema').User;
+const Stream = require('../database/schema').Stream;
 const shortid = require('shortid');
 const loginChecker = require('connect-ensure-login');
 
-router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
-   User.findOne({email: req.user.email}, (err, user) => {
-      if (!err) {
-          res.json({
-              stream_key: user.stream_key,
-              stream_title: user.stream_title,
-              stream_genre: user.stream_genre,
-              stream_tags: user.stream_tags
-          });
-      }
-   });
+router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
+    Stream.findOne({username: req.user.username}, (err, stream) => {
+        if (!err) {
+            res.json({
+                stream_key: stream.stream_key,
+                stream_title: stream.stream_title,
+                stream_genre: stream.stream_genre,
+                stream_tags: stream.stream_tags
+            });
+        }
+    });
 });
 
-router.post('/all', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOneAndUpdate({
-        email: req.user.email
+router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
+    Stream.findOneAndUpdate({
+        username: req.user.username
     }, {
         stream_title: req.body.stream_title,
         stream_genre: req.body.stream_genre,
         stream_tags: req.body.stream_tags
     }, {
         new: true,
-    }, (err, user) => {
+    }, (err, stream) => {
         if (!err) {
             res.json({
-                stream_title: user.stream_title,
-                stream_genre: user.stream_genre,
-                stream_tags: user.stream_tags
+                stream_title: stream.stream_title,
+                stream_genre: stream.stream_genre,
+                stream_tags: stream.stream_tags
             });
         }
     });
 });
 
 router.post('/stream_key', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOneAndUpdate({
-        email: req.user.email
+    Stream.findOneAndUpdate({
+        username: req.user.username
     }, {
         stream_key: shortid.generate()
     }, {
         new: true,
-    }, (err, user) => {
+    }, (err, stream) => {
         if (!err) {
             res.json({
-                stream_key: user.stream_key
+                stream_key: stream.stream_key
             })
         }
     });

@@ -1,6 +1,7 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const User = require('../database/schema').User;
+const Stream = require('../database/schema').Stream;
 const shortid = require('shortid');
 
 const strategyOptions = {
@@ -35,18 +36,27 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             user.username = req.body.username;
             user.email = email;
             user.password = user.generateHash(password);
-            user.stream_key = shortid.generate();
-            user.stream_title = null;
-            user.stream_genre = null;
-            user.stream_tags = [];
             user.subscribers = [];
             user.subscriptions = [];
             user.save((err) => {
                 if (err) {
                     throw err;
                 }
-                return done(null, user);
             });
+
+            const stream = new Stream();
+            stream.username = user.username;
+            stream.stream_key = shortid.generate();
+            stream.stream_title = null;
+            stream.stream_genre = null;
+            stream.stream_tags = [];
+            stream.save((err) => {
+                if (err) {
+                    throw err;
+                }
+            })
+
+            return done(null, user);
         }
     });
 }));
