@@ -1,12 +1,13 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
+import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from "reactstrap";
 import config from '../server/config/default';
-import './css/dropdown.scss';
+import './css/navbar.scss';
 
 const genres = require('./json/genres.json');
 
 export default class Navbar extends React.Component {
+
 
     constructor(props) {
         super(props);
@@ -14,10 +15,15 @@ export default class Navbar extends React.Component {
         this.toggle = this.toggle.bind(this);
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
+        this.onTextChange = this.onTextChange.bind(this);
+        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.clearSearchBox = this.clearSearchBox.bind(this);
 
         this.state = {
             dropdownOpen: false,
-            genres: []
+            genres: [],
+            searchText: '',
+            searchSubmitted: false
         };
     }
 
@@ -45,6 +51,25 @@ export default class Navbar extends React.Component {
         });
     }
 
+    onTextChange(e) {
+        this.setState({
+            searchText: e.target.value
+        });
+    }
+
+    handleKeyDown(e) {
+        if (e.key === 'Enter' && this.state.searchText) {
+            document.getElementById("searchButton").click();
+            this.clearSearchBox();
+        }
+    }
+
+    clearSearchBox() {
+        this.setState({
+            searchText: ''
+        });
+    }
+
     render() {
         const genres = this.state.genres.map((genre) => {
             const link = encodeURIComponent(genre.trim());
@@ -62,6 +87,15 @@ export default class Navbar extends React.Component {
                             <DropdownToggle caret>Genre</DropdownToggle>
                             <DropdownMenu>{genres}</DropdownMenu>
                         </Dropdown>
+                        <div className="navbar-nav ml-2">
+                            <input className="form-control search-box" placeholder="Search..."
+                                   onChange={this.onTextChange} onKeyDown={this.handleKeyDown}
+                                   value={this.state.searchText}/>
+                            <Button id="searchButton" className="form-control" onClick={this.clearSearchBox}
+                                    tag={Link} to={`/search/${this.state.searchText}`}>
+                                Search
+                            </Button>
+                        </div>
                     </div>
                     <div className="navbar-nav ml-auto">
                         <Link className='nav-item nav-link float-right' to='/settings'>Go Live</Link>

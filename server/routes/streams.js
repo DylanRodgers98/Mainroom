@@ -10,36 +10,41 @@ router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
             query.stream_genre = req.query.genre;
         }
 
-        Stream.find(query, (err, stream) => {
-            if (err) {
-                return;
-            }
-            if (stream) {
-                res.json(stream);
+        Stream.find(query).then(streams => {
+            if (streams) {
+                res.json(streams);
             }
         });
     }
 });
 
-router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
-    if (req.query.username) {
-        Stream.findOne({username: req.query.username}, (err, stream) => {
-            if (err) {
-                return;
+router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
+    if (req.query.stream_keys) {
+        const searchQuery = req.query.query;
+
+        Stream.find({
+            $and: [{
+                stream_key: {$in: req.query.stream_keys},
+                $or: [{stream_title: searchQuery}, {stream_tags: searchQuery}, {username: searchQuery}]
+            }]
+        }).then(streams => {
+            if (streams) {
+                res.json(streams);
             }
-            if (stream) {
-                res.json({
-                    username: stream.username,
-                    stream_key: stream.stream_key,
-                    stream_title: stream.stream_title,
-                    stream_genre: stream.stream_genre,
-                    stream_tags: stream.stream_tags
-                });
-            }
-        });
-    } else {
-        res.json({});
+        })
     }
+});
+
+router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
+    Stream.findOne({username: req.query.username}).then(stream => {
+        res.json({
+            username: stream.username,
+            stream_key: stream.stream_key,
+            stream_title: stream.stream_title,
+            stream_genre: stream.stream_genre,
+            stream_tags: stream.stream_tags
+        });
+    });
 });
 
 module.exports = router;

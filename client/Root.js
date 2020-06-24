@@ -4,6 +4,7 @@ import Navbar from './Navbar';
 import LiveStreams from './LiveStreams';
 import StreamSettings from './StreamSettings';
 import UserStream from './UserStream';
+import Search from './Search';
 
 const browserHistory = require("history").createBrowserHistory();
 
@@ -26,14 +27,23 @@ export default class Root extends React.Component {
                         <LiveStreams  {...props} />
                     )}/>
 
+                    <Route exact path="/search/:query" render={(props) => (
+                        <Search  {...props} />
+                    )}/>
+
                     {/*TODO: ADD USER PROFILE ROUTE*/}
                     {/*<Route exact path="/user/:username" render={(props) => (*/}
-                    {/*    <UserProfile {...props}/>*/}
+                    {/*    <UserProfile {...props} />*/}
                     {/*)}/>*/}
 
                     <Route exact path="/user/:username/live" render={(props) => (
-                        <UserStream {...props}/>
+                        <UserStream {...props} />
                     )}/>
+
+                    {/*TODO: ADD SCHEDULE PAGE ROUTE*/}
+                    {/*<Route exact path="/schedule" render={(props) => (*/}
+                    {/*    <Schedule {...props} />*/}
+                    {/*)}/>*/}
 
                     <Route exact path="/settings" render={props => (
                         <StreamSettings {...props} />
