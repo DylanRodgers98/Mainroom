@@ -33,7 +33,7 @@ app.use(Session({
         path : 'server/sessions'
     }),
     secret: config.server.secret,
-    maxAge : Date().now + (60 * 1000 * 30),
+    maxAge : Date.now + (60 * 1000 * 30),
     resave : true,
     saveUninitialized : false,
 }));
@@ -57,6 +57,7 @@ app.get('*', loginChecker.ensureLoggedIn(), (req, res) => {
     res.render('index');
 });
 
+// Set up stream chat rooms
 io.on("connection", socket => {
     const { id } = socket.client;
     LOGGER.log(`User connected: ${id}`);
@@ -67,9 +68,9 @@ io.on("connection", socket => {
     });
 });
 
+// Start server
 server.listen(config.server.port, () => {
     LOGGER.log(`App listening on ${config.server.port}!`)
 });
-
 nodeMediaServer.run();
 thumbnailGenerator.start();

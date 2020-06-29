@@ -1,9 +1,8 @@
 const spawn = require('child_process').spawn;
 const config = require('../config/default');
 
-const cmd = config.rtmp_server.trans.ffmpeg;
-
 const generateStreamThumbnail = (stream_key) => {
+    const ffmpeg = config.rtmp_server.trans.ffmpeg;
     const args = [
         '-y',
         '-i', 'http://127.0.0.1:8888/live/' + stream_key + '/index.m3u8',
@@ -13,7 +12,7 @@ const generateStreamThumbnail = (stream_key) => {
         'server/thumbnails/' + stream_key + '.png',
     ];
 
-    spawn(cmd, args, {
+    spawn(ffmpeg, args, {
         detached: true,
         stdio: 'ignore'
     }).unref();

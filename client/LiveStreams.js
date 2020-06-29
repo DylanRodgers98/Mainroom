@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
 import config from '../server/config/default';
+import {Container, Row, Col} from "reactstrap";
 import './css/livestreams.scss';
 
 export default class LiveStreams extends React.Component {
@@ -10,6 +11,16 @@ export default class LiveStreams extends React.Component {
         super(props);
         this.state = {
             live_streams: []
+        }
+    }
+
+    componentDidMount() {
+        this.getLiveStreams();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.match.params.genre !== this.props.match.params.genre) {
+            this.getLiveStreams();
         }
     }
 
@@ -51,7 +62,6 @@ export default class LiveStreams extends React.Component {
     }
 
     render() {
-        this.getLiveStreams();
         const streams = this.state.live_streams.map((stream, index) => {
             return (
                 <div className="stream col-xs-12 col-sm-12 col-md-3 col-lg-4" key={index}>
@@ -75,14 +85,17 @@ export default class LiveStreams extends React.Component {
         const genre = this.props.match.params.genre ? decodeURIComponent(this.props.match.params.genre) : 'All';
 
         return (
-            <div className="container mt-5">
-                <h4>{genre} Livestreams</h4>
+            <Container className="mt-5">
+                <Row>
+                    <Col>
+                        <h4>{genre} Livestreams</h4>
+                    </Col>
+                </Row>
                 <hr className="my-4"/>
-
-                <div className="streams row">
+                <Row className="streams">
                     {streams}
-                </div>
-            </div>
+                </Row>
+            </Container>
         )
     }
 }

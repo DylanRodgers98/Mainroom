@@ -60,7 +60,7 @@ export default class Navbar extends React.Component {
     handleKeyDown(e) {
         if (e.key === 'Enter' && this.state.searchText) {
             document.getElementById("searchButton").click();
-            this.clearSearchBox();
+            document.getElementById("searchBox").blur();
         }
     }
 
@@ -88,7 +88,7 @@ export default class Navbar extends React.Component {
                             <DropdownMenu>{genres}</DropdownMenu>
                         </Dropdown>
                         <div className="navbar-nav ml-2">
-                            <input className="form-control search-box" placeholder="Search..."
+                            <input id="searchBox" className="form-control search-box" placeholder="Search..."
                                    onChange={this.onTextChange} onKeyDown={this.handleKeyDown}
                                    value={this.state.searchText}/>
                             <Button id="searchButton" className="form-control" onClick={this.clearSearchBox}

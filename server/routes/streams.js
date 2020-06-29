@@ -6,6 +6,7 @@ const loginChecker = require('connect-ensure-login');
 router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
     if (req.query.stream_keys) {
         const query = {stream_key: {$in: req.query.stream_keys}};
+
         if (req.query.genre) {
             query.stream_genre = req.query.genre;
         }
@@ -21,13 +22,18 @@ router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
 router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
     if (req.query.stream_keys) {
         const searchQuery = req.query.query;
+        const query = {
+            $and: [
+                {stream_key: {$in: req.query.stream_keys}},
+                {$or: [{stream_title: searchQuery}, {stream_tags: searchQuery}, {username: searchQuery}]}
+            ]
+        };
 
-        Stream.find({
-            $and: [{
-                stream_key: {$in: req.query.stream_keys},
-                $or: [{stream_title: searchQuery}, {stream_tags: searchQuery}, {username: searchQuery}]
-            }]
-        }).then(streams => {
+        if (req.query.genre) {
+            query.$and.push({stream_genre: req.query.genre});
+        }
+
+        Stream.find(query).then(streams => {
             if (streams) {
                 res.json(streams);
             }
