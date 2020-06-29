@@ -1,12 +1,11 @@
 import React from "react";
-import {Router, Route} from 'react-router-dom';
+import {Route, Switch, BrowserRouter} from 'react-router-dom';
 import Navbar from './Navbar';
 import LiveStreams from './LiveStreams';
 import StreamSettings from './StreamSettings';
 import UserStream from './UserStream';
 import Search from './Search';
-
-const browserHistory = require("history").createBrowserHistory();
+import FourOhFour from "./FourOhFour";
 
 export default class Root extends React.Component {
 
@@ -16,9 +15,9 @@ export default class Root extends React.Component {
 
     render() {
         return (
-            <Router history={browserHistory}>
-                <div>
-                    <Navbar/>
+            <div>
+                <Navbar/>
+                <Switch>
                     <Route exact path="/" render={props => (
                         <LiveStreams  {...props} />
                     )}/>
@@ -49,10 +48,10 @@ export default class Root extends React.Component {
                         <StreamSettings {...props} />
                     )}/>
 
-                    {/*TODO: ADD 404 ROUTE*/}
-                    {/*<Route component={404Component} />*/}
-                </div>
-            </Router>
+                    {/* matches none -> 404 */}
+                    <Route component={FourOhFour}/>
+                </Switch>
+            </div>
         )
     }
 }
