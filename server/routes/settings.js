@@ -11,6 +11,7 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
                 streamKey: stream.streamKey,
                 streamTitle: stream.title,
                 streamGenre: stream.genre,
+                streamCategory: stream.category,
                 streamTags: stream.tags
             });
         }
@@ -23,6 +24,7 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
     }, {
         title: req.body.streamTitle,
         genre: req.body.streamGenre,
+        category: req.body.streamCategory,
         tags: req.body.streamTags
     }, {
         new: true,
@@ -31,6 +33,7 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
             res.json({
                 streamTitle: stream.title,
                 streamGenre: stream.genre,
+                streamCategory: stream.category,
                 streamTags: stream.tags
             });
         }

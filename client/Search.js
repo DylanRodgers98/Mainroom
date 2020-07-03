@@ -6,7 +6,7 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Co
 import './css/livestreams.scss';
 import './css/search.scss';
 
-const genres = require('./json/genres.json');
+const genres = require('./json/filters.json');
 
 export default class LiveStreams extends React.Component {
 

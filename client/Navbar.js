@@ -4,7 +4,7 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from "reac
 import config from '../server/config/default';
 import './css/navbar.scss';
 
-const genres = require('./json/genres.json');
+const genres = require('./json/filters.json');
 
 export default class Navbar extends React.Component {
 

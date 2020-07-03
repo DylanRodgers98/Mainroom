@@ -3,7 +3,7 @@ import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
 import './css/settings.scss';
 
-const genres = require('./json/genres.json');
+const filters = require('./json/filters.json');
 
 export default class StreamSettings extends React.Component {
 
@@ -12,20 +12,26 @@ export default class StreamSettings extends React.Component {
 
         this.getUserSettings = this.getUserSettings.bind(this);
         this.populateGenresDropdown = this.populateGenresDropdown.bind(this);
+        this.populateCategoriesDropdown = this.populateCategoriesDropdown.bind(this);
         this.generateStreamKey = this.generateStreamKey.bind(this);
         this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
+        this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
         this.setTitle = this.setTitle.bind(this);
         this.setGenre = this.setGenre.bind(this);
+        this.setCategory = this.setCategory.bind(this);
         this.setTags = this.setTags.bind(this);
         this.saveSettings = this.saveSettings.bind(this);
 
         this.state = {
             genres: [],
+            categories: [],
             genreDropdownOpen: false,
+            categoryDropdownOpen: false,
             unsavedChanges: false,
             streamKey: '',
             streamTitle: '',
             streamGenre: '',
+            streamCategory: '',
             streamTags: []
         };
     }
@@ -33,6 +39,7 @@ export default class StreamSettings extends React.Component {
     componentDidMount() {
         this.getUserSettings();
         this.populateGenresDropdown();
+        this.populateCategoriesDropdown();
     }
 
     getUserSettings() {
@@ -41,6 +48,7 @@ export default class StreamSettings extends React.Component {
                 streamKey: res.data.streamKey,
                 streamTitle: res.data.streamTitle,
                 streamGenre: res.data.streamGenre,
+                streamCategory: res.data.streamCategory,
                 streamTags: res.data.streamTags
             });
         });
@@ -48,7 +56,13 @@ export default class StreamSettings extends React.Component {
 
     populateGenresDropdown() {
         this.setState({
-            genres: Array.from(genres.genres).sort()
+            genres: Array.from(filters.genres).sort()
+        });
+    }
+
+    populateCategoriesDropdown() {
+        this.setState({
+            categories: Array.from(filters.categories).sort()
         });
     }
 
@@ -71,6 +85,12 @@ export default class StreamSettings extends React.Component {
         }));
     }
 
+    categoryDropdownToggle() {
+        this.setState(prevState => ({
+            categoryDropdownOpen: !prevState.categoryDropdownOpen
+        }));
+    }
+
     setTitle(event) {
         this.setState({
             streamTitle: event.target.value,
@@ -81,6 +101,13 @@ export default class StreamSettings extends React.Component {
     setGenre(event) {
         this.setState({
             streamGenre: event.currentTarget.textContent,
+            unsavedChanges: true
+        });
+    }
+
+    setCategory(event) {
+        this.setState({
+            streamCategory: event.currentTarget.textContent,
             unsavedChanges: true
         });
     }
@@ -97,11 +124,13 @@ export default class StreamSettings extends React.Component {
         axios.post('/settings', {
             streamTitle: this.state.streamTitle,
             streamGenre: this.state.streamGenre,
+            streamCategory: this.state.streamCategory,
             streamTags: this.state.streamTags
         }).then(res => {
             this.setState({
                 streamTitle: res.data.streamTitle,
                 streamGenre: res.data.streamGenre,
+                streamCategory: res.data.streamCategory,
                 streamTags: res.data.streamTags,
                 unsavedChanges: false
             })
@@ -112,9 +141,17 @@ export default class StreamSettings extends React.Component {
         return this.state.streamGenre || 'Select a genre...';
     }
 
+    getCategoryDropdownText() {
+        return this.state.streamCategory || 'Select a category...';
+    }
+
     render() {
         const genres = this.state.genres.map((genre) => {
             return <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
+        });
+
+        const categories = this.state.categories.map((category) => {
+            return <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
         });
 
         return (
@@ -183,6 +220,18 @@ export default class StreamSettings extends React.Component {
                                           toggle={this.genreDropdownToggle} size="sm">
                                     <DropdownToggle caret>{this.getGenreDropdownText()}</DropdownToggle>
                                     <DropdownMenu>{genres}</DropdownMenu>
+                                </Dropdown>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <h5 className="mt-2">Category:</h5>
+                            </td>
+                            <td>
+                                <Dropdown className="settings-dropdown" isOpen={this.state.categoryDropdownOpen}
+                                          toggle={this.categoryDropdownToggle} size="sm">
+                                    <DropdownToggle caret>{this.getCategoryDropdownText()}</DropdownToggle>
+                                    <DropdownMenu>{categories}</DropdownMenu>
                                 </Dropdown>
                             </td>
                         </tr>
