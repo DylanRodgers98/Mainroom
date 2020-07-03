@@ -8,10 +8,10 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
     Stream.findOne({username: req.user.username}, (err, stream) => {
         if (!err) {
             res.json({
-                stream_key: stream.stream_key,
-                stream_title: stream.stream_title,
-                stream_genre: stream.stream_genre,
-                stream_tags: stream.stream_tags
+                streamKey: stream.streamKey,
+                streamTitle: stream.title,
+                streamGenre: stream.genre,
+                streamTags: stream.tags
             });
         }
     });
@@ -21,33 +21,33 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
     Stream.findOneAndUpdate({
         username: req.user.username
     }, {
-        stream_title: req.body.stream_title,
-        stream_genre: req.body.stream_genre,
-        stream_tags: req.body.stream_tags
+        title: req.body.streamTitle,
+        genre: req.body.streamGenre,
+        tags: req.body.streamTags
     }, {
         new: true,
     }, (err, stream) => {
         if (!err) {
             res.json({
-                stream_title: stream.stream_title,
-                stream_genre: stream.stream_genre,
-                stream_tags: stream.stream_tags
+                streamTitle: stream.title,
+                streamGenre: stream.genre,
+                streamTags: stream.tags
             });
         }
     });
 });
 
-router.post('/stream_key', loginChecker.ensureLoggedIn(), (req, res) => {
+router.post('/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
     Stream.findOneAndUpdate({
         username: req.user.username
     }, {
-        stream_key: shortid.generate()
+        streamKey: shortid.generate()
     }, {
         new: true,
     }, (err, stream) => {
         if (!err) {
             res.json({
-                stream_key: stream.stream_key
+                streamKey: stream.streamKey
             })
         }
     });

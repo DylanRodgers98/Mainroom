@@ -46,10 +46,11 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
 
             const stream = new Stream();
             stream.username = user.username;
-            stream.stream_key = shortid.generate();
-            stream.stream_title = null;
-            stream.stream_genre = null;
-            stream.stream_tags = [];
+            stream.streamKey = shortid.generate();
+            stream.title = null;
+            stream.genre = null;
+            stream.category = null;
+            stream.tags = [];
             stream.save((err) => {
                 if (err) {
                     throw err;

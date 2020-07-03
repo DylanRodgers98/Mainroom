@@ -4,10 +4,11 @@ const Schema = mongoose.Schema;
 
 const StreamSchema = new Schema({
     username: String,
-    stream_key: String,
-    stream_title: String,
-    stream_genre: String,
-    stream_tags: [String]
+    streamKey: String,
+    title: String,
+    genre: String,
+    category: String,
+    tags: [String]
 });
 
 StreamSchema.methods.generateStreamKey = () => {

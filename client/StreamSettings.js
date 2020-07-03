@@ -23,10 +23,10 @@ export default class StreamSettings extends React.Component {
             genres: [],
             genreDropdownOpen: false,
             unsavedChanges: false,
-            stream_key: '',
-            stream_title: '',
-            stream_genre: '',
-            stream_tags: []
+            streamKey: '',
+            streamTitle: '',
+            streamGenre: '',
+            streamTags: []
         };
     }
 
@@ -38,10 +38,10 @@ export default class StreamSettings extends React.Component {
     getUserSettings() {
         axios.get('/settings').then(res => {
             this.setState({
-                stream_key: res.data.stream_key,
-                stream_title: res.data.stream_title,
-                stream_genre: res.data.stream_genre,
-                stream_tags: res.data.stream_tags
+                streamKey: res.data.streamKey,
+                streamTitle: res.data.streamTitle,
+                streamGenre: res.data.streamGenre,
+                streamTags: res.data.streamTags
             });
         });
     }
@@ -53,9 +53,9 @@ export default class StreamSettings extends React.Component {
     }
 
     generateStreamKey() {
-        axios.post('/settings/stream_key').then(res => {
+        axios.post('/settings/streamKey').then(res => {
             this.setState({
-                stream_key: res.data.stream_key
+                streamKey: res.data.streamKey
             });
         })
     }
@@ -73,14 +73,14 @@ export default class StreamSettings extends React.Component {
 
     setTitle(event) {
         this.setState({
-            stream_title: event.target.value,
+            streamTitle: event.target.value,
             unsavedChanges: true
         });
     }
 
     setGenre(event) {
         this.setState({
-            stream_genre: event.currentTarget.textContent,
+            streamGenre: event.currentTarget.textContent,
             unsavedChanges: true
         });
     }
@@ -88,28 +88,28 @@ export default class StreamSettings extends React.Component {
     setTags(event) {
         const tags = event.target.value.replace(/\s/g, '').split(',');
         this.setState({
-            stream_tags: tags,
+            streamTags: tags,
             unsavedChanges: true
         });
     }
 
     saveSettings() {
         axios.post('/settings', {
-            stream_title: this.state.stream_title,
-            stream_genre: this.state.stream_genre,
-            stream_tags: this.state.stream_tags
+            streamTitle: this.state.streamTitle,
+            streamGenre: this.state.streamGenre,
+            streamTags: this.state.streamTags
         }).then(res => {
             this.setState({
-                stream_title: res.data.stream_title,
-                stream_genre: res.data.stream_genre,
-                stream_tags: res.data.stream_tags,
+                streamTitle: res.data.streamTitle,
+                streamGenre: res.data.streamGenre,
+                streamTags: res.data.streamTags,
                 unsavedChanges: false
             })
         });
     }
 
     getGenreDropdownText() {
-        return this.state.stream_genre || 'Select a genre...';
+        return this.state.streamGenre || 'Select a genre...';
     }
 
     render() {
@@ -150,7 +150,7 @@ export default class StreamSettings extends React.Component {
                                 <tr>
                                     <td>
                                         <input id="streamKeyInput" className="mt-2" type="text"
-                                               value={this.state.stream_key}/>
+                                               value={this.state.streamKey}/>
                                     </td>
                                     <td>
                                         <Button className="btn btn-dark mt-2 ml-1" size="sm"
@@ -170,7 +170,7 @@ export default class StreamSettings extends React.Component {
                                 <h5 className="mt-2">Title:</h5>
                             </td>
                             <td>
-                                <input className="settings-title" type="text" value={this.state.stream_title}
+                                <input className="settings-title" type="text" value={this.state.streamTitle}
                                        onChange={this.setTitle}/>
                             </td>
                         </tr>
@@ -193,7 +193,7 @@ export default class StreamSettings extends React.Component {
                             <table>
                                 <tr>
                                     <td>
-                                        <input className="mt-1" type="text" value={this.state.stream_tags}
+                                        <input className="mt-1" type="text" value={this.state.streamTags}
                                                onChange={this.setTags}/>
                                     </td>
                                     <td>

@@ -4,7 +4,7 @@ const helpers = require('../helpers/helpers');
 const config = require('../config/default');
 
 const job = new CronJob('*/5 * * * * *', () => {
-    request.get(`http://127.0.0.1:${config.rtmp_server.http.port}/api/streams`, (error, response, body) => {
+    request.get(`http://127.0.0.1:${config.rtmpServer.http.port}/api/streams`, (error, response, body) => {
         const streams = JSON.parse(body)['live'];
         if (typeof streams !== undefined) {
             for (let stream in streams) {

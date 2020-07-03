@@ -4,11 +4,11 @@ const Stream = require('../database/schema').Stream;
 const loginChecker = require('connect-ensure-login');
 
 router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
-    if (req.query.stream_keys) {
-        const query = {stream_key: {$in: req.query.stream_keys}};
+    if (req.query.streamKeys) {
+        const query = {streamKey: {$in: req.query.streamKeys}};
 
         if (req.query.genre) {
-            query.stream_genre = req.query.genre;
+            query.genre = req.query.genre;
         }
 
         Stream.find(query).then(streams => {
@@ -20,17 +20,17 @@ router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
-    if (req.query.stream_keys) {
+    if (req.query.streamKeys) {
         const searchQuery = req.query.query;
         const query = {
             $and: [
-                {stream_key: {$in: req.query.stream_keys}},
-                {$or: [{stream_title: searchQuery}, {stream_tags: searchQuery}, {username: searchQuery}]}
+                {streamKey: {$in: req.query.streamKeys}},
+                {$or: [{title: searchQuery}, {tags: searchQuery}, {username: searchQuery}]}
             ]
         };
 
         if (req.query.genre) {
-            query.$and.push({stream_genre: req.query.genre});
+            query.$and.push({genre: req.query.genre});
         }
 
         Stream.find(query).then(streams => {
@@ -45,10 +45,10 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
     Stream.findOne({username: req.query.username}).then(stream => {
         res.json({
             username: stream.username,
-            stream_key: stream.stream_key,
-            stream_title: stream.stream_title,
-            stream_genre: stream.stream_genre,
-            stream_tags: stream.stream_tags
+            streamKey: stream.streamKey,
+            title: stream.title,
+            genre: stream.genre,
+            tags: stream.tags
         });
     });
 });

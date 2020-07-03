@@ -23,11 +23,11 @@ export default class UserStream extends React.Component {
         this.state = {
             stream: false,
             videoJsOptions: null,
-            viewer_username: '',
-            stream_username: '',
-            stream_title: '',
-            stream_genre: '',
-            stream_tags: [],
+            viewerUsername: '',
+            streamUsername: '',
+            streamTitle: '',
+            streamGenre: '',
+            streamTags: [],
             msg: '',
             chat: []
         }
@@ -45,33 +45,33 @@ export default class UserStream extends React.Component {
                     autoplay: true,
                     controls: true,
                     sources: [{
-                        src: `http://127.0.0.1:${config.rtmp_server.http.port}/live/${res.data.stream_key}/index.m3u8`,
+                        src: `http://127.0.0.1:${config.rtmpServer.http.port}/live/${res.data.streamKey}/index.m3u8`,
                         type: 'application/x-mpegURL'
                     }],
                     fluid: true,
                 },
-                stream_username: res.data.username,
-                stream_title: res.data.stream_title,
-                stream_genre: res.data.stream_genre,
-                stream_tags: res.data.stream_tags
+                streamUsername: res.data.username,
+                streamTitle: res.data.title,
+                streamGenre: res.data.genre,
+                streamTags: res.data.tags
             }, () => {
                 this.player = videojs(this.videoNode, this.state.videoJsOptions, function onPlayerReady() {
                     LOGGER.log('onPlayerReady', this)
                 });
             });
 
-            document.title = [this.state.stream_username, this.state.stream_title, config.siteTitle].filter(Boolean).join(' - ');
+            document.title = [this.state.streamUsername, this.state.streamTitle, config.siteTitle].filter(Boolean).join(' - ');
 
-            this.socket.on(`chat message ${this.state.stream_username}`, ({viewerUsername, msg}) => {
+            this.socket.on(`chat message ${this.state.streamUsername}`, ({viewerUsername, msg}) => {
                 this.setState({
                     chat: [...this.state.chat, {viewerUsername, msg}]
                 });
             });
         });
 
-        axios.get('/user/loggedin').then(res => {
+        axios.get('/user/loggedIn').then(res => {
             this.setState({
-                viewer_username: res.data.username
+                viewerUsername: res.data.username
             });
         });
     }
@@ -99,8 +99,8 @@ export default class UserStream extends React.Component {
     }
 
     onMessageSubmit() {
-        const streamUsername = this.state.stream_username;
-        const viewerUsername = this.state.viewer_username;
+        const streamUsername = this.state.streamUsername;
+        const viewerUsername = this.state.viewerUsername;
         const msg = this.state.msg;
         this.socket.emit("chat message", {streamUsername, viewerUsername, msg});
         this.setState({
@@ -127,7 +127,7 @@ export default class UserStream extends React.Component {
     }
 
     render() {
-        const streamTitle = this.state.stream_title ? ` - ${this.state.stream_title}` : '';
+        const streamTitle = this.state.streamTitle ? ` - ${this.state.streamTitle}` : '';
 
         return this.state.stream ? (
             <Row className="stream-row">
@@ -137,14 +137,14 @@ export default class UserStream extends React.Component {
                     </div>
                     <div className="ml-2">
                         <h3>
-                            <Link to={`/user/${this.state.stream_username}`}>
-                                {this.state.stream_username}
+                            <Link to={`/user/${this.state.streamUsername}`}>
+                                {this.state.streamUsername}
                             </Link>
                             {streamTitle}
                         </h3>
                         <h5>
-                            <Link to={`/genre/${this.state.stream_genre}`}>
-                                {this.state.stream_genre}
+                            <Link to={`/genre/${this.state.streamGenre}`}>
+                                {this.state.streamGenre}
                             </Link>
                         </h5>
                     </div>

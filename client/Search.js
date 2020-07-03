@@ -32,7 +32,7 @@ export default class LiveStreams extends React.Component {
     }
 
     getLiveStreams() {
-        axios.get('http://127.0.0.1:' + config.rtmp_server.http.port + '/api/streams').then(res => {
+        axios.get('http://127.0.0.1:' + config.rtmpServer.http.port + '/api/streams').then(res => {
             const streams = res.data['live'];
             if (typeof streams !== 'undefined') {
                 const streamKeys = this.extractStreamKeys(streams);
@@ -54,7 +54,7 @@ export default class LiveStreams extends React.Component {
     getStreamsInfo(streamKeys) {
         const queryParams = {
             params: {
-                stream_keys: streamKeys,
+                streamKeys: streamKeys,
                 query: this.props.match.params.query
             }
         };
@@ -111,7 +111,7 @@ export default class LiveStreams extends React.Component {
                     <span className="live-label">LIVE</span>
                     <Link to={`/user/${stream.username}/live`}>
                         <div className="stream-thumbnail">
-                            <img src={`/thumbnails/${stream.stream_key}.png`}
+                            <img src={`/thumbnails/${stream.streamKey}.png`}
                                  alt={`${stream.username} Stream Thumbnail`}/>
                         </div>
                     </Link>

@@ -5,7 +5,7 @@ const config = {
         secret: 'kjVkuti2xAyF3JGCzSZTk0YWM5JhI9mgQW4rytXc',
         port : 3333
     },
-    rtmp_server: {
+    rtmpServer: {
         rtmp: {
             port: 1935,
             chunk_size: 60000,

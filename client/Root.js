@@ -1,5 +1,5 @@
 import React from "react";
-import {Route, Switch, BrowserRouter} from 'react-router-dom';
+import {Route, Switch} from 'react-router-dom';
 import Navbar from './Navbar';
 import LiveStreams from './LiveStreams';
 import StreamSettings from './StreamSettings';
@@ -22,25 +22,25 @@ export default class Root extends React.Component {
                         <LiveStreams  {...props} />
                     )}/>
 
-                    <Route exact path="/genre/:genre" render={(props) => (
+                    <Route exact path="/genre/:genre" render={props => (
                         <LiveStreams  {...props} />
                     )}/>
 
-                    <Route exact path="/search/:query" render={(props) => (
+                    <Route exact path="/search/:query" render={props => (
                         <Search  {...props} />
                     )}/>
 
                     {/*TODO: ADD USER PROFILE ROUTE*/}
-                    {/*<Route exact path="/user/:username" render={(props) => (*/}
+                    {/*<Route exact path="/user/:username" render={props => (*/}
                     {/*    <UserProfile {...props} />*/}
                     {/*)}/>*/}
 
-                    <Route exact path="/user/:username/live" render={(props) => (
+                    <Route exact path="/user/:username/live" render={props => (
                         <UserStream {...props} />
                     )}/>
 
                     {/*TODO: ADD SCHEDULE PAGE ROUTE*/}
-                    {/*<Route exact path="/schedule" render={(props) => (*/}
+                    {/*<Route exact path="/schedule" render={props => (*/}
                     {/*    <Schedule {...props} />*/}
                     {/*)}/>*/}
 
