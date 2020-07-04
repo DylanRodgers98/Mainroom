@@ -92,21 +92,21 @@ export default class UserStream extends React.Component {
     handleKeyDown(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            if (this.state.msg) {
-                this.onMessageSubmit();
-            }
+            this.onMessageSubmit();
         }
     }
 
     onMessageSubmit() {
-        const streamUsername = this.state.streamUsername;
-        const viewerUsername = this.state.viewerUsername;
-        const msg = this.state.msg;
-        this.socket.emit("chat message", {streamUsername, viewerUsername, msg});
-        this.setState({
-            msg: ""
-        });
-    };
+        if (this.state.msg) {
+            const streamUsername = this.state.streamUsername;
+            const viewerUsername = this.state.viewerUsername;
+            const msg = this.state.msg;
+            this.socket.emit("chat message", {streamUsername, viewerUsername, msg});
+            this.setState({
+                msg: ""
+            });
+        }
+    }
 
     renderChat() {
         return this.state.chat.map(({viewerUsername, msg}, i) => (
