@@ -6,29 +6,44 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Co
 import './css/livestreams.scss';
 import './css/search.scss';
 
-const genres = require('./json/filters.json');
+const filters = require('./json/filters.json');
 
 export default class LiveStreams extends React.Component {
 
     constructor(props) {
         super(props);
 
-        this.populateFilterDropdown = this.populateFilterDropdown.bind(this);
-        this.filterDropdownToggle = this.filterDropdownToggle.bind(this);
+        this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
         this.setGenreFilter = this.setGenreFilter.bind(this);
-        this.clearFilter = this.clearFilter.bind(this);
+        this.clearGenreFilter = this.clearGenreFilter.bind(this);
+        this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
+        this.setCategoryFilter = this.setCategoryFilter.bind(this);
+        this.clearCategoryFilter = this.clearCategoryFilter.bind(this);
 
         this.state = {
             liveStreams: [],
             genres: [],
-            filterDropdownOpen: false,
-            genreFilter: ''
+            genreDropdownOpen: false,
+            genreFilter: '',
+            categories: [],
+            categoryDropdownOpen: false,
+            categoryFilter: ''
         }
     }
 
     componentDidMount() {
-        this.populateFilterDropdown();
         this.getLiveStreams();
+        this.setState({
+            genres: Array.from(filters.genres).sort(),
+            categories: Array.from(filters.categories).sort()
+        });
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.genreFilter !== this.state.genreFilter ||
+            prevState.categoryFilter !== this.state.categoryFilter) {
+            this.getLiveStreams();
+        }
     }
 
     getLiveStreams() {
@@ -62,6 +77,9 @@ export default class LiveStreams extends React.Component {
         if (this.state.genreFilter) {
             queryParams.params.genre = this.state.genreFilter;
         }
+        if (this.state.categoryFilter) {
+            queryParams.params.category = this.state.categoryFilter;
+        }
 
         axios.get('/streams/search', queryParams).then(res => {
             this.setState({
@@ -70,20 +88,10 @@ export default class LiveStreams extends React.Component {
         });
     }
 
-    populateFilterDropdown() {
-        this.setState({
-            genres: Array.from(genres.genres).sort()
-        });
-    }
-
-    filterDropdownToggle() {
+    genreDropdownToggle() {
         this.setState(prevState => ({
-            filterDropdownOpen: !prevState.filterDropdownOpen
+            genreDropdownOpen: !prevState.genreDropdownOpen
         }));
-    }
-
-    getFilterDropdownText() {
-        return this.state.genreFilter || 'Filter';
     }
 
     setGenreFilter(event) {
@@ -92,16 +100,28 @@ export default class LiveStreams extends React.Component {
         });
     }
 
-    clearFilter() {
+    clearGenreFilter() {
         this.setState({
             genreFilter: ''
         });
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.genreFilter !== this.state.genreFilter) {
-            this.getLiveStreams();
-        }
+    categoryDropdownToggle() {
+        this.setState(prevState => ({
+            categoryDropdownOpen: !prevState.categoryDropdownOpen
+        }));
+    }
+
+    setCategoryFilter(event) {
+        this.setState({
+            categoryFilter: event.currentTarget.textContent
+        });
+    }
+
+    clearCategoryFilter() {
+        this.setState({
+            categoryFilter: ''
+        });
     }
 
     render() {
@@ -125,8 +145,15 @@ export default class LiveStreams extends React.Component {
             );
         });
 
+        const genreDropdownText = this.state.genreFilter || 'Genre';
+        const categoryDropdownText = this.state.categoryFilter || 'Category';
+
         const genres = this.state.genres.map((genre) => {
             return <DropdownItem onClick={this.setGenreFilter}>{genre}</DropdownItem>
+        });
+
+        const categories = this.state.categories.map((category) => {
+            return <DropdownItem onClick={this.setCategoryFilter}>{category}</DropdownItem>
         });
 
         return (
@@ -136,17 +163,38 @@ export default class LiveStreams extends React.Component {
                         <h4>Search: "{this.props.match.params.query}"</h4>
                     </Col>
                     <Col>
-                        <Dropdown className="float-right genre-filter-dropdown" isOpen={this.state.filterDropdownOpen}
-                                  toggle={this.filterDropdownToggle} size="sm">
-                            <DropdownToggle caret>{this.getFilterDropdownText()}</DropdownToggle>
-                            <DropdownMenu right>
-                                <DropdownItem onClick={this.clearFilter} disabled={!this.state.genreFilter}>
-                                    Clear Filter
-                                </DropdownItem>
-                                <DropdownItem divider/>
-                                {genres}
-                            </DropdownMenu>
-                        </Dropdown>
+                        <table className="float-right">
+                            <tr>
+                                <td>
+                                    <Dropdown className="filter-dropdown" isOpen={this.state.genreDropdownOpen}
+                                              toggle={this.genreDropdownToggle} size="sm">
+                                        <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
+                                        <DropdownMenu right>
+                                            <DropdownItem onClick={this.clearGenreFilter}
+                                                          disabled={!this.state.genreFilter}>
+                                                Clear Filter
+                                            </DropdownItem>
+                                            <DropdownItem divider/>
+                                            {genres}
+                                        </DropdownMenu>
+                                    </Dropdown>
+                                </td>
+                                <td>
+                                    <Dropdown className="filter-dropdown" isOpen={this.state.categoryDropdownOpen}
+                                              toggle={this.categoryDropdownToggle} size="sm">
+                                        <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
+                                        <DropdownMenu right>
+                                            <DropdownItem onClick={this.clearCategoryFilter}
+                                                          disabled={!this.state.categoryFilter}>
+                                                Clear Filter
+                                            </DropdownItem>
+                                            <DropdownItem divider/>
+                                            {categories}
+                                        </DropdownMenu>
+                                    </Dropdown>
+                                </td>
+                            </tr>
+                        </table>
                     </Col>
                 </Row>
                 <hr className="my-4"/>

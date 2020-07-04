@@ -10,6 +10,9 @@ router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
         if (req.query.genre) {
             query.genre = req.query.genre;
         }
+        if (req.query.category) {
+            query.category = req.query.category;
+        }
 
         Stream.find(query).then(streams => {
             if (streams) {
@@ -32,6 +35,9 @@ router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
         if (req.query.genre) {
             query.$and.push({genre: req.query.genre});
         }
+        if (req.query.category) {
+            query.$and.push({category: req.query.category});
+        }
 
         Stream.find(query).then(streams => {
             if (streams) {
@@ -48,6 +54,7 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
             streamKey: stream.streamKey,
             title: stream.title,
             genre: stream.genre,
+            category: stream.category,
             tags: stream.tags
         });
     });

@@ -125,15 +125,10 @@ export default class StreamSettings extends React.Component {
         });
     }
 
-    getGenreDropdownText() {
-        return this.state.streamGenre || 'Select a genre...';
-    }
-
-    getCategoryDropdownText() {
-        return this.state.streamCategory || 'Select a category...';
-    }
-
     render() {
+        const genreDropdownText = this.state.streamGenre || 'Select a genre...';
+        const categoryDropdownText = this.state.streamCategory || 'Select a category...';
+
         const genres = this.state.genres.map((genre) => {
             return <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
         });
@@ -206,7 +201,7 @@ export default class StreamSettings extends React.Component {
                             <td>
                                 <Dropdown className="settings-dropdown" isOpen={this.state.genreDropdownOpen}
                                           toggle={this.genreDropdownToggle} size="sm">
-                                    <DropdownToggle caret>{this.getGenreDropdownText()}</DropdownToggle>
+                                    <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
                                     <DropdownMenu>{genres}</DropdownMenu>
                                 </Dropdown>
                             </td>
@@ -218,7 +213,7 @@ export default class StreamSettings extends React.Component {
                             <td>
                                 <Dropdown className="settings-dropdown" isOpen={this.state.categoryDropdownOpen}
                                           toggle={this.categoryDropdownToggle} size="sm">
-                                    <DropdownToggle caret>{this.getCategoryDropdownText()}</DropdownToggle>
+                                    <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
                                     <DropdownMenu>{categories}</DropdownMenu>
                                 </Dropdown>
                             </td>
