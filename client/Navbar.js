@@ -4,60 +4,83 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from "reac
 import config from '../server/config/default';
 import './css/navbar.scss';
 
-const genres = require('./json/filters.json');
+const filters = require('./json/filters.json');
 
 export default class Navbar extends React.Component {
-
 
     constructor(props) {
         super(props);
 
-        this.toggle = this.toggle.bind(this);
-        this.onMouseEnter = this.onMouseEnter.bind(this);
-        this.onMouseLeave = this.onMouseLeave.bind(this);
-        this.onTextChange = this.onTextChange.bind(this);
-        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
+        this.onMouseEnterGenreDropdown = this.onMouseEnterGenreDropdown.bind(this);
+        this.onMouseLeaveGenreDropdown = this.onMouseLeaveGenreDropdown.bind(this);
+        this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
+        this.onMouseEnterCategoryDropdown = this.onMouseEnterCategoryDropdown.bind(this);
+        this.onMouseLeaveCategoryDropdown = this.onMouseLeaveCategoryDropdown.bind(this);
+        this.onSearchTextChange = this.onSearchTextChange.bind(this);
+        this.searchHandleKeyDown = this.searchHandleKeyDown.bind(this);
         this.clearSearchBox = this.clearSearchBox.bind(this);
 
         this.state = {
-            dropdownOpen: false,
+            genreDropdownOpen: false,
             genres: [],
+            categoryDropdownOpen: false,
+            categories: [],
             searchText: '',
             searchSubmitted: false
         };
     }
 
-    toggle() {
+    componentDidMount() {
+        this.setState({
+            genres: Array.from(filters.genres).sort(),
+            categories: Array.from(filters.categories).sort()
+        });
+    }
+
+    genreDropdownToggle() {
         this.setState(prevState => ({
-            dropdownOpen: !prevState.dropdownOpen
+            genreDropdownOpen: !prevState.genreDropdownOpen
         }));
     }
 
-    onMouseEnter() {
+    onMouseEnterGenreDropdown() {
         this.setState({
-            dropdownOpen: true
+            genreDropdownOpen: true
         });
     }
 
-    onMouseLeave() {
+    onMouseLeaveGenreDropdown() {
         this.setState({
-            dropdownOpen: false
+            genreDropdownOpen: false
         });
     }
 
-    componentDidMount() {
+    categoryDropdownToggle() {
+        this.setState(prevState => ({
+            categoryDropdownOpen: !prevState.categoryDropdownOpen
+        }));
+    }
+
+    onMouseEnterCategoryDropdown() {
         this.setState({
-            genres: Array.from(genres.genres).sort()
+            categoryDropdownOpen: true
         });
     }
 
-    onTextChange(e) {
+    onMouseLeaveCategoryDropdown() {
+        this.setState({
+            categoryDropdownOpen: false
+        });
+    }
+
+    onSearchTextChange(e) {
         this.setState({
             searchText: e.target.value
         });
     }
 
-    handleKeyDown(e) {
+    searchHandleKeyDown(e) {
         if (e.key === 'Enter' && this.state.searchText) {
             document.getElementById("searchButton").click();
             document.getElementById("searchBox").blur();
@@ -76,20 +99,31 @@ export default class Navbar extends React.Component {
             return <DropdownItem tag={Link} to={`/genre/${link}`}>{genre}</DropdownItem>;
         })
 
+        const categories = this.state.categories.map((category) => {
+            const link = encodeURIComponent(category.trim());
+            return <DropdownItem tag={Link} to={`/category/${link}`}>{category}</DropdownItem>;
+        })
+
         return (
             <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div className="container">
                     <div className="navbar-nav mr-auto">
                         <Link to={'/'} className={'navbar-brand'}>{config.siteTitle}</Link>
-                        <Dropdown className="nav-item float-left" onMouseOver={this.onMouseEnter}
-                                  onMouseLeave={this.onMouseLeave} isOpen={this.state.dropdownOpen}
-                                  toggle={this.toggle}>
+                        <Dropdown className="nav-item float-left" onMouseOver={this.onMouseEnterGenreDropdown}
+                                  onMouseLeave={this.onMouseLeaveGenreDropdown} isOpen={this.state.genreDropdownOpen}
+                                  toggle={this.genreDropdownToggle}>
                             <DropdownToggle caret>Genre</DropdownToggle>
                             <DropdownMenu>{genres}</DropdownMenu>
                         </Dropdown>
+                        <Dropdown className="nav-item float-left" onMouseOver={this.onMouseEnterCategoryDropdown}
+                                  onMouseLeave={this.onMouseLeaveCategoryDropdown}
+                                  isOpen={this.state.categoryDropdownOpen} toggle={this.categoryDropdownToggle}>
+                            <DropdownToggle caret>Category</DropdownToggle>
+                            <DropdownMenu>{categories}</DropdownMenu>
+                        </Dropdown>
                         <div className="navbar-nav ml-2">
                             <input id="searchBox" className="form-control search-box" placeholder="Search..."
-                                   onChange={this.onTextChange} onKeyDown={this.handleKeyDown}
+                                   onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
                                    value={this.state.searchText}/>
                             <Button id="searchButton" className="form-control" onClick={this.clearSearchBox}
                                     tag={Link} to={`/search/${this.state.searchText}`}>

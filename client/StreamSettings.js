@@ -11,8 +11,6 @@ export default class StreamSettings extends React.Component {
         super(props);
 
         this.getUserSettings = this.getUserSettings.bind(this);
-        this.populateGenresDropdown = this.populateGenresDropdown.bind(this);
-        this.populateCategoriesDropdown = this.populateCategoriesDropdown.bind(this);
         this.generateStreamKey = this.generateStreamKey.bind(this);
         this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
@@ -38,8 +36,10 @@ export default class StreamSettings extends React.Component {
 
     componentDidMount() {
         this.getUserSettings();
-        this.populateGenresDropdown();
-        this.populateCategoriesDropdown();
+        this.setState({
+            genres: Array.from(filters.genres).sort(),
+            categories: Array.from(filters.categories).sort()
+        });
     }
 
     getUserSettings() {
@@ -51,18 +51,6 @@ export default class StreamSettings extends React.Component {
                 streamCategory: res.data.streamCategory,
                 streamTags: res.data.streamTags
             });
-        });
-    }
-
-    populateGenresDropdown() {
-        this.setState({
-            genres: Array.from(filters.genres).sort()
-        });
-    }
-
-    populateCategoriesDropdown() {
-        this.setState({
-            categories: Array.from(filters.categories).sort()
         });
     }
 
