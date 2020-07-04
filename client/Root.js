@@ -2,9 +2,11 @@ import React from "react";
 import {Route, Switch} from 'react-router-dom';
 import Navbar from './Navbar';
 import LiveStreams from './LiveStreams';
-import StreamSettings from './StreamSettings';
-import UserStream from './UserStream';
+import LiveStreamsByGenre from "./LiveStreamsByGenre";
+import LiveStreamsByCategory from "./LiveStreamsByCategory";
 import Search from './Search';
+import UserStream from './UserStream';
+import StreamSettings from './StreamSettings';
 import FourOhFour from "./FourOhFour";
 
 export default class Root extends React.Component {
@@ -23,11 +25,11 @@ export default class Root extends React.Component {
                     )}/>
 
                     <Route exact path="/genre/:genre" render={props => (
-                        <LiveStreams  {...props} />
+                        <LiveStreamsByGenre  {...props} />
                     )}/>
 
                     <Route exact path="/category/:category" render={props => (
-                        <LiveStreams  {...props} />
+                        <LiveStreamsByCategory  {...props} />
                     )}/>
 
                     <Route exact path="/search/:query" render={props => (

@@ -104,6 +104,8 @@ export default class Navbar extends React.Component {
             return <DropdownItem tag={Link} to={`/category/${link}`}>{category}</DropdownItem>;
         })
 
+        const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText}`: '';
+
         return (
             <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div className="container">
@@ -126,7 +128,7 @@ export default class Navbar extends React.Component {
                                    onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
                                    value={this.state.searchText}/>
                             <Button id="searchButton" className="form-control" onClick={this.clearSearchBox}
-                                    tag={Link} to={`/search/${this.state.searchText}`}>
+                                    tag={Link} to={searchButtonLink}>
                                 Search
                             </Button>
                         </div>
