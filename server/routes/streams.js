@@ -24,14 +24,14 @@ router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
 
 router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
     if (req.query.streamKeys) {
-        const searchQuery = req.query.query;
+        const searchQuery = new RegExp(`^${req.query.query}$`, 'i');
+
         const query = {
             $and: [
                 {streamKey: {$in: req.query.streamKeys}},
                 {$or: [{title: searchQuery}, {tags: searchQuery}, {username: searchQuery}]}
             ]
         };
-
         if (req.query.genre) {
             query.$and.push({genre: req.query.genre});
         }
