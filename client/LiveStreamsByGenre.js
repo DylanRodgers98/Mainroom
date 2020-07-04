@@ -32,9 +32,13 @@ export default class LiveStreamsByCategory extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.match.params.genre !== this.props.match.params.genre ||
-            prevState.categoryFilter !== this.state.categoryFilter) {
+        if (prevProps.match.params.genre !== this.props.match.params.genre) {
+            this.setState({
+                categoryFilter: ''
+            })
             this.getLiveStreams();
+        } else if (prevState.categoryFilter !== this.state.categoryFilter) {
+            this.getLiveStreams()
         }
     }
 
