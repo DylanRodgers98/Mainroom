@@ -26,6 +26,10 @@ export default class Root extends React.Component {
                         <LiveStreams  {...props} />
                     )}/>
 
+                    <Route exact path="/category/:category" render={props => (
+                        <LiveStreams  {...props} />
+                    )}/>
+
                     <Route exact path="/search/:query" render={props => (
                         <Search  {...props} />
                     )}/>

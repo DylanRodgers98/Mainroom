@@ -53,6 +53,9 @@ export default class LiveStreams extends React.Component {
         if (this.props.match.params.genre) {
             queryParams.params.genre = decodeURIComponent(this.props.match.params.genre);
         }
+        if (this.props.match.params.category) {
+            queryParams.params.category = decodeURIComponent(this.props.match.params.category);
+        }
 
         axios.get('/streams/all', queryParams).then(res => {
             this.setState({
@@ -82,13 +85,16 @@ export default class LiveStreams extends React.Component {
             );
         });
 
-        const genre = this.props.match.params.genre ? decodeURIComponent(this.props.match.params.genre) : 'All';
+        const genre = this.props.match.params.genre ? decodeURIComponent(this.props.match.params.genre) : '';
+        const category = this.props.match.params.category ? decodeURIComponent(this.props.match.params.category) : '';
+        const livestreams = !(genre || category) ? 'All Livestreams' : 'Livestreams';
+        const pageHeader = [genre, category, livestreams].filter(Boolean).join(' ');
 
         return (
             <Container className="mt-5">
                 <Row>
                     <Col>
-                        <h4>{genre} Livestreams</h4>
+                        <h4>{pageHeader}</h4>
                     </Col>
                 </Row>
                 <hr className="my-4"/>
