@@ -62,7 +62,7 @@ export default class UserStream extends React.Component {
 
             document.title = [this.state.streamUsername, this.state.streamTitle, config.siteTitle].filter(Boolean).join(' - ');
 
-            this.socket.on(`chat message ${this.state.streamUsername}`, ({viewerUsername, msg}) => {
+            this.socket.on(`chatMessage_${this.state.streamUsername}`, ({viewerUsername, msg}) => {
                 this.setState({
                     chat: [...this.state.chat, {viewerUsername, msg}]
                 });
@@ -101,7 +101,7 @@ export default class UserStream extends React.Component {
             const streamUsername = this.state.streamUsername;
             const viewerUsername = this.state.viewerUsername;
             const msg = this.state.msg;
-            this.socket.emit("chat message", {streamUsername, viewerUsername, msg});
+            this.socket.emit("chatMessage", {streamUsername, viewerUsername, msg});
             this.setState({
                 msg: ""
             });
@@ -110,7 +110,7 @@ export default class UserStream extends React.Component {
 
     renderChat() {
         return this.state.chat.map(({viewerUsername, msg}, i) => (
-            <div key={i}>
+            <div className='ml-1' key={i}>
                 <span style={{color: "green"}}>{viewerUsername}: </span>
                 <span>{msg}</span>
             </div>

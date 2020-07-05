@@ -6,6 +6,7 @@ import LiveStreamsByGenre from "./LiveStreamsByGenre";
 import LiveStreamsByCategory from "./LiveStreamsByCategory";
 import Search from './Search';
 import UserStream from './UserStream';
+import Schedule from './Schedule';
 import StreamSettings from './StreamSettings';
 import FourOhFour from "./FourOhFour";
 
@@ -45,10 +46,9 @@ export default class Root extends React.Component {
                         <UserStream {...props} />
                     )}/>
 
-                    {/*TODO: ADD SCHEDULE PAGE ROUTE*/}
-                    {/*<Route exact path="/schedule" render={props => (*/}
-                    {/*    <Schedule {...props} />*/}
-                    {/*)}/>*/}
+                    <Route exact path="/schedule" render={props => (
+                        <Schedule {...props} />
+                    )}/>
 
                     <Route exact path="/settings" render={props => (
                         <StreamSettings {...props} />

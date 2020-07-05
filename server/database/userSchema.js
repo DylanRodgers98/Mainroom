@@ -7,7 +7,8 @@ const UserSchema = new Schema({
     email: String,
     password: String,
     subscribers: [String],
-    subscriptions: [String]
+    subscriptions: [String],
+    schedule: [{startDate: Date, endDate: Date}]
 });
 
 UserSchema.methods.generateHash = (password) => {

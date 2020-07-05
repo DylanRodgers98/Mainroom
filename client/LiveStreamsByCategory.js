@@ -123,7 +123,7 @@ export default class LiveStreamsByCategory extends React.Component {
 
         const pageHeader = `${decodeURIComponent(this.props.match.params.category)} Livestreams`
 
-        const genreDropdownText = this.state.genreFilter || 'Genre';
+        const genreDropdownText = this.state.genreFilter || 'Filter';
 
         const genres = this.state.genres.map((genre) => {
             return <DropdownItem onClick={this.setGenreFilter}>{genre}</DropdownItem>

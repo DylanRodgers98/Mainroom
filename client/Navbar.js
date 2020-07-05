@@ -134,6 +134,7 @@ export default class Navbar extends React.Component {
                         </div>
                     </div>
                     <div className="navbar-nav ml-auto">
+                        <Link className='nav-item nav-link float-right' to='/schedule'>My Schedule</Link>
                         <Link className='nav-item nav-link float-right' to='/settings'>Go Live</Link>
                         <a className="nav-item nav-link float-right" href="/logout">Logout</a>
                     </div>

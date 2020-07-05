@@ -58,13 +58,13 @@ app.get('*', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 // Set up stream chat rooms
-io.on("connection", socket => {
+io.on('connection', socket => {
     const { id } = socket.client;
     LOGGER.log(`User connected: ${id}`);
 
-    socket.on("chat message", ({streamUsername, viewerUsername, msg}) => {
+    socket.on('chatMessage', ({streamUsername, viewerUsername, msg}) => {
         LOGGER.log(`[${streamUsername} Chat] ${viewerUsername} (${id}): ${msg}`);
-        io.emit(`chat message ${streamUsername}`, {viewerUsername, msg});
+        io.emit(`chatMessage_${streamUsername}`, {viewerUsername, msg});
     });
 });
 

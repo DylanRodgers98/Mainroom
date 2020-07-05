@@ -38,6 +38,7 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             user.password = user.generateHash(password);
             user.subscribers = [];
             user.subscriptions = [];
+            user.schedule = [];
             user.save((err) => {
                 if (err) {
                     throw err;
