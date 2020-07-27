@@ -1,5 +1,5 @@
 const spawn = require('child_process').spawn;
-const config = require('../config/default');
+const config = require('../../mainroom.config');
 
 const generateStreamThumbnail = (streamKey) => {
     const ffmpeg = config.rtmpServer.trans.ffmpeg;

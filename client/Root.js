@@ -22,19 +22,19 @@ export default class Root extends React.Component {
                 <Navbar/>
                 <Switch>
                     <Route exact path="/" render={props => (
-                        <LiveStreams  {...props} />
+                        <LiveStreams {...props} />
                     )}/>
 
                     <Route exact path="/genre/:genre" render={props => (
-                        <LiveStreamsByGenre  {...props} />
+                        <LiveStreamsByGenre {...props} />
                     )}/>
 
                     <Route exact path="/category/:category" render={props => (
-                        <LiveStreamsByCategory  {...props} />
+                        <LiveStreamsByCategory {...props} />
                     )}/>
 
                     <Route exact path="/search/:query" render={props => (
-                        <Search  {...props} />
+                        <Search {...props} />
                     )}/>
 
                     {/*TODO: ADD USER PROFILE ROUTE*/}

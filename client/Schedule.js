@@ -2,7 +2,7 @@ import React from "react";
 import axios from 'axios';
 import Timeline from 'react-calendar-timeline'
 import moment from 'moment'
-import {Container} from 'reactstrap';
+import {Col, Container, Row, Button} from 'reactstrap';
 import 'react-calendar-timeline/lib/Timeline.css'
 
 export default class Schedule extends React.Component {
@@ -101,11 +101,17 @@ export default class Schedule extends React.Component {
     render() {
         return (
             <Container className='my-5'>
-                <Timeline groups={this.state.scheduleGroups}
-                          items={this.state.scheduleItems}
-                          defaultTimeStart={moment()}
-                          defaultTimeEnd={moment().add(24, 'hour')}
-                />
+                <Row>
+                    <Col>
+                        <h4>My Schedule</h4>
+                    </Col>
+                    <Col>
+                        <Button className='btn btn-dark float-right'>Schedule a Stream</Button>
+                    </Col>
+                </Row>
+                <hr className='my-4'/>
+                <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
+                          defaultTimeStart={moment()} defaultTimeEnd={moment().add(24, 'hour')} />
             </Container>
         )
     }

@@ -1,7 +1,7 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from "reactstrap";
-import config from '../server/config/default';
+import config from '../mainroom.config';
 import './css/navbar.scss';
 
 const filters = require('./json/filters.json');

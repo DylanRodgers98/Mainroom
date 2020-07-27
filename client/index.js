@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import {BrowserRouter} from 'react-router-dom';
 import 'bootstrap';
 import Root from './Root.js';
-import config from '../server/config/default';
+import config from '../mainroom.config';
 import './css/index.scss';
 
 document.title = config.headTitle;

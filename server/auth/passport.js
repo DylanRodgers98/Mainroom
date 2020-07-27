@@ -3,6 +3,9 @@ const LocalStrategy = require('passport-local').Strategy;
 const User = require('../database/schema').User;
 const Stream = require('../database/schema').Stream;
 const shortid = require('shortid');
+const passwordValidator = require('../validation/passwordValidator');
+const config = require('../../mainroom.config');
+const LOGGER = require('node-media-server/node_core_logger');
 
 const strategyOptions = {
     usernameField: 'email',
@@ -19,8 +22,21 @@ passport.deserializeUser((obj, cb) => {
 });
 
 passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, password, done) => {
+    if (!passwordValidator.validate(password)) {
+        req.flash('password', 'Invalid password. Password must contain:');
+        req.flash('password', `• Between ${config.validation.password.minLength}-${config.validation.password.maxLength} characters`);
+        req.flash('password', `• At least ${config.validation.password.minLowercase} lowercase character(s)`);
+        req.flash('password', `• At least ${config.validation.password.minUppercase} uppercase character(s)`);
+        req.flash('password', `• At least ${config.validation.password.minNumeric} number(s)`);
+        req.flash('password', `• At least ${config.validation.password.minSpecialChar} special character(s)`);
+        return done(null, false);
+    }
+    if (password !== req.body.confirmPassword) {
+        return done(null, false, req.flash('confirmPassword', 'Passwords do not match'));
+    }
     User.findOne({$or: [{email: email}, {username: req.body.username}]}, (err, user) => {
         if (err) {
+            LOGGER.error('An error occurred during user registration: ', err);
             return done(err);
         }
         if (user) {
@@ -39,21 +55,24 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             user.subscribers = [];
             user.subscriptions = [];
             user.schedule = [];
-            user.save((err) => {
-                if (err) {
-                    throw err;
-                }
-            });
 
             const stream = new Stream();
-            stream.username = user.username;
+            stream.username = req.body.username;
             stream.streamKey = shortid.generate();
             stream.title = null;
             stream.genre = null;
             stream.category = null;
             stream.tags = [];
+
+            user.save((err) => {
+                if (err) {
+                    LOGGER.error('An error occurred when saving new user:', user, '\n', 'Error:', err);
+                    throw err;
+                }
+            });
             stream.save((err) => {
                 if (err) {
+                    LOGGER.error('An error occurred when saving new stream info:', stream, '\n', 'Error:', err);
                     throw err;
                 }
             })
@@ -66,13 +85,11 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
 passport.use('localLogin', new LocalStrategy(strategyOptions, (req, email, password, done) => {
     User.findOne({'email': email}, (err, user) => {
         if (err) {
+            LOGGER.error('An error occurred during user login: ', err);
             return done(err);
         }
-        if (!user) {
-            return done(null, false, req.flash('email', 'Email doesn\'t exist.'));
-        }
-        if (!user.validPassword(password)) {
-            return done(null, false, req.flash('password', 'Oops! Wrong password.'));
+        if (!(user && user.checkPassword(password))) {
+            return done(null, false, req.flash('login', 'Incorrect email or password'));
         }
         return done(null, user);
     });

@@ -8,7 +8,9 @@ router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
         user: null,
         errors: {
             username: req.flash('username'),
-            email: req.flash('email')
+            email: req.flash('email'),
+            password: req.flash('password'),
+            confirmPassword: req.flash('confirmPassword')
         }
     });
 });

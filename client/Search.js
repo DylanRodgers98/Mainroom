@@ -1,6 +1,6 @@
 import React from "react";
 import axios from 'axios';
-import config from '../server/config/default';
+import config from '../mainroom.config';
 import {Link} from "react-router-dom";
 import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Col} from "reactstrap";
 import './css/livestreams.scss';

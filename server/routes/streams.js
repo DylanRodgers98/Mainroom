@@ -49,14 +49,16 @@ router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
 
 router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
     Stream.findOne({username: req.query.username}).then(stream => {
-        res.json({
-            username: stream.username,
-            streamKey: stream.streamKey,
-            title: stream.title,
-            genre: stream.genre,
-            category: stream.category,
-            tags: stream.tags
-        });
+        if (stream) {
+            res.json({
+                username: stream.username,
+                streamKey: stream.streamKey,
+                title: stream.title,
+                genre: stream.genre,
+                category: stream.category,
+                tags: stream.tags
+            });
+        }
     });
 });
 

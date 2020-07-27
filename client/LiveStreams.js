@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
-import config from '../server/config/default';
+import config from '../mainroom.config';
 import {Container, Row, Col} from "reactstrap";
 import './css/livestreams.scss';
 

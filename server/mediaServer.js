@@ -1,5 +1,5 @@
 const NodeMediaServer = require('node-media-server');
-const config = require('./config/default').rtmpServer;
+const config = require('../mainroom.config').rtmpServer;
 const Stream = require('./database/schema').Stream;
 const helpers = require('./helpers/helpers');
 const LOGGER = require('node-media-server/node_core_logger');

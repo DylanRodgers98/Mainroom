@@ -8,28 +8,30 @@
     <h4>Login</h4>
 
     <hr class="my-4">
+
     <div class="row">
         <form action="/login" method="post" class="col-xs-12 col-sm-12 col-md-8 col-lg-6">
+
             <div class="form-group">
                 <label for="email">Email address</label>
                 <input id="email" type="email" name="email" class="form-control" placeholder="Enter email" required>
-                <% if (errors.email.length) { %>
-                    <small class="form-text text-danger"><%= errors.email %></small>
-                <% } %>
             </div>
+
             <div class="form-group">
                 <label for="password">Password</label>
                 <input id="password" type="password" name="password" class="form-control" placeholder="Password" required>
-                <% if (errors.password.length) { %>
-                    <small class="form-text text-danger"><%= errors.password %></small>
+                <% if (errors.login.length) { %>
+                    <small class="form-text text-danger"><%= errors.login %></small>
                 <% } %>
             </div>
+
             <div class="form-group">
                 <div class="leader">
                     Don't have an account? Register <a href="/register">here</a>.
                 </div>
             </div>
-            <button type="submit" class="btn btn-dark btn-block">Login</button>
+
+            <button type="submit" class="btn btn-dark btn-block mb-3">Login</button>
         </form>
     </div>
 </div>
