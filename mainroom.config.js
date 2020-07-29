@@ -1,6 +1,6 @@
 const config = {
     siteTitle: 'Mainroom',
-    headTitle: `${config.siteTitle} - Livestreaming for DJs, bands and artists`,
+    headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
     server: {
         secret: 'kjVkuti2xAyF3JGCzSZTk0YWM5JhI9mgQW4rytXc',
         port : 3333
@@ -38,9 +38,12 @@ const config = {
             minLowercase: 1,
             minUppercase: 1,
             minNumeric: 1,
-            minSpecialChar: 1,
+            minSpecialChars: 1,
             allowedSpecialChars: '-[]/{}()*+?.\\^$|~`!#%^&=;,\'":<>'
         }
+    },
+    cron: {
+        thumbnailGeneration: '*/5 * * * * *'
     }
 };
 

@@ -7,8 +7,6 @@ import {Row} from "reactstrap";
 import io from "socket.io-client";
 import './css/userstream.scss';
 
-const LOGGER = require('node-media-server/node_core_logger');
-
 export default class UserStream extends React.Component {
 
     constructor(props) {
@@ -39,40 +37,42 @@ export default class UserStream extends React.Component {
                 username: this.props.match.params.username
             }
         }).then(res => {
-            this.setState({
-                stream: true,
-                videoJsOptions: {
-                    autoplay: true,
-                    controls: true,
-                    sources: [{
-                        src: `http://127.0.0.1:${config.rtmpServer.http.port}/live/${res.data.streamKey}/index.m3u8`,
-                        type: 'application/x-mpegURL'
-                    }],
-                    fluid: true,
-                },
-                streamUsername: res.data.username,
-                streamTitle: res.data.title,
-                streamGenre: res.data.genre,
-                streamTags: res.data.tags
-            }, () => {
-                this.player = videojs(this.videoNode, this.state.videoJsOptions, function onPlayerReady() {
-                    LOGGER.log('onPlayerReady', this)
+            if (res) {
+                this.populateStreamData(res);
+                this.socket.on(`chatMessage_${this.state.streamUsername}`, ({viewerUsername, msg}) => {
+                    this.setState({
+                        chat: [...this.state.chat, {viewerUsername, msg}]
+                    });
                 });
-            });
-
-            document.title = [this.state.streamUsername, this.state.streamTitle, config.siteTitle].filter(Boolean).join(' - ');
-
-            this.socket.on(`chatMessage_${this.state.streamUsername}`, ({viewerUsername, msg}) => {
-                this.setState({
-                    chat: [...this.state.chat, {viewerUsername, msg}]
-                });
-            });
+            }
         });
 
         axios.get('/user/loggedIn').then(res => {
             this.setState({
                 viewerUsername: res.data.username
             });
+        });
+    }
+
+    populateStreamData(res) {
+        this.setState({
+            stream: true,
+            videoJsOptions: {
+                autoplay: true,
+                controls: true,
+                sources: [{
+                    src: `http://127.0.0.1:${config.rtmpServer.http.port}/live/${res.data.streamKey}/index.m3u8`,
+                    type: 'application/x-mpegURL'
+                }],
+                fluid: true,
+            },
+            streamUsername: res.data.username,
+            streamTitle: res.data.title,
+            streamGenre: res.data.genre,
+            streamTags: res.data.tags
+        }, () => {
+            this.player = videojs(this.videoNode, this.state.videoJsOptions);
+            document.title = [this.state.streamUsername, this.state.streamTitle, config.siteTitle].filter(Boolean).join(' - ');
         });
     }
 
@@ -119,10 +119,12 @@ export default class UserStream extends React.Component {
 
     componentDidUpdate() {
         const messages = document.getElementById('messages');
-        const downArrowHeight = 25;
-        const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + downArrowHeight;
-        if (isScrolledToBottom) {
-            messages.scrollTop = messages.scrollHeight - messages.clientHeight;
+        if (messages) {
+            const downArrowHeight = 25;
+            const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + downArrowHeight;
+            if (isScrolledToBottom) {
+                messages.scrollTop = messages.scrollHeight - messages.clientHeight;
+            }
         }
     }
 

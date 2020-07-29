@@ -1,10 +1,10 @@
 const NodeMediaServer = require('node-media-server');
-const config = require('../mainroom.config').rtmpServer;
+const config = require('../mainroom.config');
 const Stream = require('./database/schema').Stream;
 const helpers = require('./helpers/helpers');
 const LOGGER = require('node-media-server/node_core_logger');
 
-nms = new NodeMediaServer(config);
+const nms = new NodeMediaServer(config.rtmpServer);
 
 nms.on('prePublish', async (id, streamPath, args) => {
     LOGGER.log('[NodeEvent on prePublish]', `id=${id} StreamPath=${streamPath} args=${JSON.stringify(args)}`);

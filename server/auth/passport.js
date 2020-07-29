@@ -23,13 +23,7 @@ passport.deserializeUser((obj, cb) => {
 
 passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, password, done) => {
     if (!passwordValidator.validate(password)) {
-        req.flash('password', 'Invalid password. Password must contain:');
-        req.flash('password', `• Between ${config.validation.password.minLength}-${config.validation.password.maxLength} characters`);
-        req.flash('password', `• At least ${config.validation.password.minLowercase} lowercase character(s)`);
-        req.flash('password', `• At least ${config.validation.password.minUppercase} uppercase character(s)`);
-        req.flash('password', `• At least ${config.validation.password.minNumeric} number(s)`);
-        req.flash('password', `• At least ${config.validation.password.minSpecialChar} special character(s)`);
-        return done(null, false);
+        return done(null, false, flashInvalidPassword(req));
     }
     if (password !== req.body.confirmPassword) {
         return done(null, false, req.flash('confirmPassword', 'Passwords do not match'));
@@ -66,13 +60,13 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
 
             user.save((err) => {
                 if (err) {
-                    LOGGER.error('An error occurred when saving new user:', user, '\n', 'Error:', err);
+                    LOGGER.error('An error occurred when saving new user:', JSON.stringify(user), '\n', 'Error:', err);
                     throw err;
                 }
             });
             stream.save((err) => {
                 if (err) {
-                    LOGGER.error('An error occurred when saving new stream info:', stream, '\n', 'Error:', err);
+                    LOGGER.error('An error occurred when saving new stream info:', JSON.stringify(stream), '\n', 'Error:', err);
                     throw err;
                 }
             })
@@ -81,6 +75,27 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
         }
     });
 }));
+
+function flashInvalidPassword(req) {
+    req.flash('password', 'Invalid password. Password must contain:');
+
+    const minLength = config.validation.password.minLength;
+    const maxLength = config.validation.password.maxLength;
+    req.flash('password', `• Between ${minLength}-${maxLength} characters`);
+
+    const minLowercase = config.validation.password.minLowercase;
+    req.flash('password', `• At least ${minLowercase} lowercase character${minLowercase > 1 ? 's' : ''}`);
+
+    const minUppercase = config.validation.password.minUppercase;
+    req.flash('password', `• At least ${minUppercase} uppercase character${minUppercase > 1 ? 's' : ''}`);
+
+    const minNumeric = config.validation.password.minUppercase;
+    req.flash('password', `• At least ${minNumeric} number${minNumeric > 1 ? 's' : ''}`);
+
+    const minSpecialChars = config.validation.password.minSpecialChars;
+    const allowedSpecialChars = Array.from(config.validation.password.allowedSpecialChars).join(' ');
+    req.flash('password', `• At least ${minSpecialChars} of the following special characters: ${allowedSpecialChars}`);
+}
 
 passport.use('localLogin', new LocalStrategy(strategyOptions, (req, email, password, done) => {
     User.findOne({'email': email}, (err, user) => {
