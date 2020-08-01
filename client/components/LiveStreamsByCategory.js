@@ -1,43 +1,43 @@
 import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
-import config from '../mainroom.config';
+import config from '../../mainroom.config';
 import {Container, Row, Col, DropdownToggle, DropdownMenu, DropdownItem, Dropdown} from "reactstrap";
-import './css/livestreams.scss';
+import '../css/livestreams.scss';
 
-const filters = require('./json/filters.json');
+const filters = require('../json/filters.json');
 
 export default class LiveStreamsByCategory extends React.Component {
 
     constructor(props) {
         super(props);
 
-        this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
-        this.setCategoryFilter = this.setCategoryFilter.bind(this);
-        this.clearCategoryFilter = this.clearCategoryFilter.bind(this);
+        this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
+        this.setGenreFilter = this.setGenreFilter.bind(this);
+        this.clearGenreFilter = this.clearGenreFilter.bind(this);
 
         this.state = {
             liveStreams: [],
-            categories: [],
-            categoryDropdownOpen: false,
-            categoryFilter: ''
+            genres: [],
+            genreDropdownOpen: false,
+            genreFilter: '',
         }
     }
 
     componentDidMount() {
         this.getLiveStreams();
         this.setState({
-            categories: Array.from(filters.categories).sort()
+            genres: Array.from(filters.genres).sort()
         });
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.match.params.genre !== this.props.match.params.genre) {
+        if (prevProps.match.params.category !== this.props.match.params.category) {
             this.setState({
-                categoryFilter: ''
+                genreFilter: ''
             })
             this.getLiveStreams();
-        } else if (prevState.categoryFilter !== this.state.categoryFilter) {
+        } else if (prevState.genreFilter !== this.state.genreFilter) {
             this.getLiveStreams()
         }
     }
@@ -68,11 +68,11 @@ export default class LiveStreamsByCategory extends React.Component {
                 streamKeys: streamKeys
             }
         };
-        if (this.props.match.params.genre) {
-            queryParams.params.genre = decodeURIComponent(this.props.match.params.genre);
+        if (this.props.match.params.category) {
+            queryParams.params.category = decodeURIComponent(this.props.match.params.category);
         }
-        if (this.state.categoryFilter) {
-            queryParams.params.category = this.state.categoryFilter;
+        if (this.state.genreFilter) {
+            queryParams.params.genre = this.state.genreFilter;
         }
 
         axios.get('/streams/all', queryParams).then(res => {
@@ -82,21 +82,21 @@ export default class LiveStreamsByCategory extends React.Component {
         });
     }
 
-    categoryDropdownToggle() {
+    genreDropdownToggle() {
         this.setState(prevState => ({
-            categoryDropdownOpen: !prevState.categoryDropdownOpen
+            genreDropdownOpen: !prevState.genreDropdownOpen
         }));
     }
 
-    setCategoryFilter(event) {
+    setGenreFilter(event) {
         this.setState({
-            categoryFilter: event.currentTarget.textContent
+            genreFilter: event.currentTarget.textContent
         });
     }
 
-    clearCategoryFilter() {
+    clearGenreFilter() {
         this.setState({
-            categoryFilter: ''
+            genreFilter: ''
         });
     }
 
@@ -121,12 +121,12 @@ export default class LiveStreamsByCategory extends React.Component {
             );
         });
 
-        const pageHeader = `${decodeURIComponent(this.props.match.params.genre)} Livestreams`
+        const pageHeader = `${decodeURIComponent(this.props.match.params.category)} Livestreams`
 
-        const categoryDropdownText = this.state.categoryFilter || 'Filter';
+        const genreDropdownText = this.state.genreFilter || 'Filter';
 
-        const categories = this.state.categories.map((category) => {
-            return <DropdownItem onClick={this.setCategoryFilter}>{category}</DropdownItem>
+        const genres = this.state.genres.map((genre) => {
+            return <DropdownItem onClick={this.setGenreFilter}>{genre}</DropdownItem>
         });
 
         return (
@@ -136,15 +136,15 @@ export default class LiveStreamsByCategory extends React.Component {
                         <h4>{pageHeader}</h4>
                     </Col>
                     <Col>
-                        <Dropdown className="filter-dropdown float-right" isOpen={this.state.categoryDropdownOpen}
-                                  toggle={this.categoryDropdownToggle} size="sm">
-                            <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
+                        <Dropdown className="filter-dropdown float-right" isOpen={this.state.genreDropdownOpen}
+                                  toggle={this.genreDropdownToggle} size="sm">
+                            <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
                             <DropdownMenu right>
-                                <DropdownItem onClick={this.clearCategoryFilter} disabled={!this.state.categoryFilter}>
+                                <DropdownItem onClick={this.clearGenreFilter} disabled={!this.state.genreFilter}>
                                     Clear Filter
                                 </DropdownItem>
                                 <DropdownItem divider/>
-                                {categories}
+                                {genres}
                             </DropdownMenu>
                         </Dropdown>
                     </Col>

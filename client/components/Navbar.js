@@ -1,10 +1,11 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from "reactstrap";
-import config from '../mainroom.config';
-import './css/navbar.scss';
+import config from '../../mainroom.config';
+import '../css/navbar.scss';
+import axios from "axios";
 
-const filters = require('./json/filters.json');
+const filters = require('../json/filters.json');
 
 export default class Navbar extends React.Component {
 
@@ -20,21 +21,27 @@ export default class Navbar extends React.Component {
         this.onSearchTextChange = this.onSearchTextChange.bind(this);
         this.searchHandleKeyDown = this.searchHandleKeyDown.bind(this);
         this.clearSearchBox = this.clearSearchBox.bind(this);
+        this.profileDropdownToggle = this.profileDropdownToggle.bind(this);
 
         this.state = {
+            loggedInUser: '',
             genreDropdownOpen: false,
             genres: [],
             categoryDropdownOpen: false,
             categories: [],
             searchText: '',
-            searchSubmitted: false
+            searchSubmitted: false,
+            profileDropdownOpen: false
         };
     }
 
     componentDidMount() {
-        this.setState({
-            genres: Array.from(filters.genres).sort(),
-            categories: Array.from(filters.categories).sort()
+        axios.get('/user/loggedIn').then(res => {
+            this.setState({
+                loggedInUser: res.data.username,
+                genres: Array.from(filters.genres).sort(),
+                categories: Array.from(filters.categories).sort()
+            });
         });
     }
 
@@ -93,6 +100,12 @@ export default class Navbar extends React.Component {
         });
     }
 
+    profileDropdownToggle() {
+        this.setState(prevState => ({
+            profileDropdownOpen: !prevState.profileDropdownOpen
+        }));
+    }
+
     render() {
         const genres = this.state.genres.map((genre) => {
             const link = encodeURIComponent(genre.trim());
@@ -134,9 +147,19 @@ export default class Navbar extends React.Component {
                         </div>
                     </div>
                     <div className="navbar-nav ml-auto">
-                        <Link className='nav-item nav-link float-right' to='/schedule'>My Schedule</Link>
-                        <Link className='nav-item nav-link float-right' to='/settings'>Go Live</Link>
-                        <a className="nav-item nav-link float-right" href="/logout">Logout</a>
+                        <Link className='nav-item nav-link float-right' to='/go-live'>Go Live</Link>
+                        <Dropdown className="nav-item float-left" isOpen={this.state.profileDropdownOpen}
+                                  toggle={this.profileDropdownToggle}>
+                            <DropdownToggle caret>(img)</DropdownToggle>
+                            <DropdownMenu right>
+                                <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>My Profile</DropdownItem>
+                                <DropdownItem tag={Link} to={'/schedule'}>My Schedule</DropdownItem>
+                                <DropdownItem divider/>
+                                <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
+                                <DropdownItem divider/>
+                                <DropdownItem tag={Link} to={'/logout'}>Log Out</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
                     </div>
                 </div>
             </nav>

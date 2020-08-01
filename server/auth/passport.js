@@ -3,7 +3,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const User = require('../database/schema').User;
 const Stream = require('../database/schema').Stream;
 const shortid = require('shortid');
-const passwordValidator = require('../validation/passwordValidator');
+const passwordValidator = require('./passwordValidator');
 const config = require('../../mainroom.config');
 const LOGGER = require('node-media-server/node_core_logger');
 
@@ -58,6 +58,7 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             stream.category = null;
             stream.tags = [];
 
+            // TODO: either do the below save operations transactionally or condense User and Stream schemas into one
             user.save((err) => {
                 if (err) {
                     LOGGER.error('An error occurred when saving new user:', JSON.stringify(user), '\n', 'Error:', err);

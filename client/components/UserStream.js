@@ -1,11 +1,11 @@
 import React from 'react';
-import videojs from 'video.js'
+import videojs from 'video.js';
 import axios from 'axios';
-import config from '../mainroom.config';
+import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
 import {Row} from "reactstrap";
 import io from "socket.io-client";
-import './css/userstream.scss';
+import '../css/userstream.scss';
 
 export default class UserStream extends React.Component {
 
@@ -64,7 +64,7 @@ export default class UserStream extends React.Component {
                     src: `http://127.0.0.1:${config.rtmpServer.http.port}/live/${res.data.streamKey}/index.m3u8`,
                     type: 'application/x-mpegURL'
                 }],
-                fluid: true,
+                fluid: true
             },
             streamUsername: res.data.username,
             streamTitle: res.data.title,

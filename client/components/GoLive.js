@@ -1,11 +1,11 @@
 import React from 'react';
 import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
-import './css/settings.scss';
+import '../css/settings.scss';
 
-const filters = require('./json/filters.json');
+const filters = require('../json/filters.json');
 
-export default class StreamSettings extends React.Component {
+export default class GoLive extends React.Component {
 
     constructor(props) {
         super(props);

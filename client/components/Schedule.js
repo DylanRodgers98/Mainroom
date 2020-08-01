@@ -41,11 +41,11 @@ export default class Schedule extends React.Component {
         schedule.forEach(stream => {
             this.setState({
                 scheduleItems: [...this.state.scheduleItems, {
-                    id: this.scheduleItems.length,
+                    id: this.state.scheduleItems.length,
                     group: 0,
                     title: username,
-                    start_time: moment(new Date(stream.startDate)),
-                    end_time: moment(new Date(stream.endDate))
+                    start_time: moment(stream.startDate),
+                    end_time: moment(stream.endDate)
                 }]
             });
         });
@@ -53,12 +53,9 @@ export default class Schedule extends React.Component {
 
     getSchedulesFromSubscriptions() {
         axios.get('/user/subscriptions').then(res => {
-            const subscriptions = res.data.subscriptions;
-            for (const username in subscriptions) {
-                if (subscriptions.hasOwnProperty(username)) {
-                    this.getScheduleForUser(username);
-                }
-            }
+            res.data.subscriptions.forEach(username => {
+                this.getScheduleForUser(username);
+            });
         });
     }
 
@@ -76,7 +73,7 @@ export default class Schedule extends React.Component {
     }
 
     buildScheduleFromSubscription({username, schedule}) {
-        let groupId = this.state.scheduleGroups.length;
+        const groupId = this.state.scheduleGroups.length;
 
         this.setState({
             scheduleGroups: [...this.state.scheduleGroups, {
@@ -88,11 +85,11 @@ export default class Schedule extends React.Component {
         schedule.forEach(stream => {
             this.setState({
                 scheduleItems: [...this.state.scheduleItems, {
-                    id: this.scheduleItems.length,
+                    id: this.state.scheduleItems.length,
                     group: groupId,
                     title: username,
-                    start_time: moment(new Date(stream.startDate)),
-                    end_time: moment(new Date(stream.endDate))
+                    start_time: moment(stream.startDate),
+                    end_time: moment(stream.endDate)
                 }]
             });
         });
@@ -110,7 +107,7 @@ export default class Schedule extends React.Component {
                     </Col>
                 </Row>
                 <hr className='my-4'/>
-                <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
+                <Timeline id='schedule' groups={this.state.scheduleGroups} items={this.state.scheduleItems}
                           defaultTimeStart={moment()} defaultTimeEnd={moment().add(24, 'hour')} />
             </Container>
         )

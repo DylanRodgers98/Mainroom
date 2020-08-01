@@ -1,12 +1,12 @@
 import React from "react";
 import axios from 'axios';
-import config from '../mainroom.config';
+import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
 import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Col} from "reactstrap";
-import './css/livestreams.scss';
-import './css/search.scss';
+import '../css/livestreams.scss';
+import '../css/search.scss';
 
-const filters = require('./json/filters.json');
+const filters = require('../json/filters.json');
 
 export default class LiveStreams extends React.Component {
 
