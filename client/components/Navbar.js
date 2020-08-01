@@ -5,8 +5,6 @@ import config from '../../mainroom.config';
 import '../css/navbar.scss';
 import axios from "axios";
 
-const filters = require('../json/filters.json');
-
 export default class Navbar extends React.Component {
 
     constructor(props) {
@@ -36,14 +34,27 @@ export default class Navbar extends React.Component {
     }
 
     componentDidMount() {
+        this.getLoggedInUser();
+        this.getFilters();
+    }
+
+    getLoggedInUser() {
         axios.get('/user/loggedIn').then(res => {
             this.setState({
                 loggedInUser: res.data.username,
-                genres: Array.from(filters.genres).sort(),
-                categories: Array.from(filters.categories).sort()
             });
         });
     }
+
+    getFilters() {
+        axios.get('/filters').then(res => {
+            this.setState({
+                genres: res.data.genres,
+                categories: res.data.categories
+            })
+        });
+    }
+
 
     genreDropdownToggle() {
         this.setState(prevState => ({

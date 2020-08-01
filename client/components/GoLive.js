@@ -3,8 +3,6 @@ import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
 import '../css/settings.scss';
 
-const filters = require('../json/filters.json');
-
 export default class GoLive extends React.Component {
 
     constructor(props) {
@@ -36,10 +34,7 @@ export default class GoLive extends React.Component {
 
     componentDidMount() {
         this.getUserSettings();
-        this.setState({
-            genres: Array.from(filters.genres).sort(),
-            categories: Array.from(filters.categories).sort()
-        });
+        this.getFilters();
     }
 
     getUserSettings() {
@@ -51,6 +46,15 @@ export default class GoLive extends React.Component {
                 streamCategory: res.data.streamCategory,
                 streamTags: res.data.streamTags
             });
+        });
+    }
+
+    getFilters() {
+        axios.get('/filters').then(res => {
+            this.setState({
+                genres: res.data.genres,
+                categories: res.data.categories
+            })
         });
     }
 

@@ -5,8 +5,6 @@ import config from '../../mainroom.config';
 import {Container, Row, Col, DropdownToggle, DropdownMenu, DropdownItem, Dropdown} from "reactstrap";
 import '../css/livestreams.scss';
 
-const filters = require('../json/filters.json');
-
 export default class LiveStreamsByCategory extends React.Component {
 
     constructor(props) {
@@ -26,9 +24,7 @@ export default class LiveStreamsByCategory extends React.Component {
 
     componentDidMount() {
         this.getLiveStreams();
-        this.setState({
-            categories: Array.from(filters.categories).sort()
-        });
+        this.getFilters();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -79,6 +75,14 @@ export default class LiveStreamsByCategory extends React.Component {
             this.setState({
                 liveStreams: res.data
             });
+        });
+    }
+
+    getFilters() {
+        axios.get('/filters/categories').then(res => {
+            this.setState({
+                categories: res.data.categories
+            })
         });
     }
 

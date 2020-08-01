@@ -6,8 +6,6 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Co
 import '../css/livestreams.scss';
 import '../css/search.scss';
 
-const filters = require('../json/filters.json');
-
 export default class LiveStreams extends React.Component {
 
     constructor(props) {
@@ -33,10 +31,7 @@ export default class LiveStreams extends React.Component {
 
     componentDidMount() {
         this.getLiveStreams();
-        this.setState({
-            genres: Array.from(filters.genres).sort(),
-            categories: Array.from(filters.categories).sort()
-        });
+        this.getFilters();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -86,6 +81,15 @@ export default class LiveStreams extends React.Component {
             this.setState({
                 liveStreams: res.data
             });
+        });
+    }
+
+    getFilters() {
+        axios.get('/filters').then(res => {
+            this.setState({
+                genres: res.data.genres,
+                categories: res.data.categories
+            })
         });
     }
 

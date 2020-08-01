@@ -44,6 +44,7 @@ app.use(passport.session());
 // Register app routes
 app.use('/login', require('./routes/login'));
 app.use('/register', require('./routes/register'));
+app.use('/filters', require('./routes/filters'));
 app.use('/settings', require('./routes/settings'));
 app.use('/streams', require('./routes/streams'));
 app.use('/user', require('./routes/user'));
