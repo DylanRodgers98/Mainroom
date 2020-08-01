@@ -1,0 +1,70 @@
+import React from "react";
+import {render, unmountComponentAtNode} from "react-dom";
+import {act} from "react-dom/test-utils"
+import Schedule from "../../../client/components/Schedule";
+import moment from "moment";
+
+const mockStartTime = moment().add(12, 'hour');
+
+const mockEndTime = moment().add(13, 'hour');
+
+const mockOwnUsername = 'ownUser';
+
+const mockSubscriptions = ['user1', 'user2', 'user3'];
+
+jest.mock('axios', () => {
+    return {
+        get: jest.fn(async (url, config) => {
+            if (url === '/user/schedule') {
+                return {
+                    data: {
+                        username: config !== undefined ? config.params.username : mockOwnUsername,
+                        schedule: [{
+                            startDate: mockStartTime,
+                            endDate: mockEndTime
+                        }]
+                    }
+                }
+            }
+            if (url === '/user/subscriptions') {
+                return {
+                    data: {
+                        subscriptions: mockSubscriptions
+                    }
+                }
+            }
+        })
+    };
+});
+
+let container = null;
+
+beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    jest.clearAllMocks();
+});
+
+afterEach(() => {
+    unmountComponentAtNode(container);
+    container.remove();
+    container = null;
+});
+
+describe('Schedule component', () => {
+    it('should build schedule when component gets mounted', async () => {
+        await act(async () => {
+            render(<Schedule/>, container);
+        });
+        const groups = container.getElementsByClassName('rct-sidebar-row');
+        const groupNames = Array.from(groups).map(group => {
+            return group.textContent;
+        });
+        const items = container.getElementsByClassName('rct-item');
+        const itemValues = Array.from(items).map(item => {
+            return item.textContent;
+        });
+        expect(groupNames).toEqual(['My Scheduled Streams', ...mockSubscriptions]);
+        expect(itemValues).toEqual([mockOwnUsername, ...mockSubscriptions]);
+    });
+});
