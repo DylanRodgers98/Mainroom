@@ -6,6 +6,8 @@ const UserSchema = new Schema({
     username: String,
     email: String,
     password: String,
+    location: String,
+    bio: String,
     subscribers: [String],
     subscriptions: [String],
     schedule: [{startDate: Date, endDate: Date}]

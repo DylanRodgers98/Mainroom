@@ -107,7 +107,7 @@ export default class Schedule extends React.Component {
                     </Col>
                 </Row>
                 <hr className='my-4'/>
-                <Timeline id='schedule' groups={this.state.scheduleGroups} items={this.state.scheduleItems}
+                <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
                           defaultTimeStart={moment()} defaultTimeEnd={moment().add(24, 'hour')} />
             </Container>
         )

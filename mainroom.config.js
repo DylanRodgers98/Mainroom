@@ -1,4 +1,4 @@
-const config = {
+module.exports = {
     siteTitle: 'Mainroom',
     headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
     server: {
@@ -46,5 +46,3 @@ const config = {
         thumbnailGeneration: '*/5 * * * * *'
     }
 };
-
-module.exports = config;

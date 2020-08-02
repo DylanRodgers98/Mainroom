@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
 import '../css/settings.scss';
+import Container from "reactstrap/es/Container";
 
 export default class GoLive extends React.Component {
 
@@ -143,7 +144,7 @@ export default class GoLive extends React.Component {
 
         return (
             <React.Fragment>
-                <div className="container mt-5">
+                <Container className="mt-5">
                     <h4>Stream Settings</h4>
                     <hr className="mt-4"/>
                     <i>Copy and paste the Server URL and Stream Key into your streaming software</i>
@@ -246,7 +247,7 @@ export default class GoLive extends React.Component {
                             Save Settings
                         </Button>
                     </div>
-                </div>
+                </Container>
             </React.Fragment>
         )
     }

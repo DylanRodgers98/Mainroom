@@ -4,6 +4,7 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from "reac
 import config from '../../mainroom.config';
 import '../css/navbar.scss';
 import axios from "axios";
+import defaultProfilePic from '../img/defaultProfilePic.png'; //TODO: change this from trollface lmao
 
 export default class Navbar extends React.Component {
 
@@ -22,7 +23,6 @@ export default class Navbar extends React.Component {
         this.profileDropdownToggle = this.profileDropdownToggle.bind(this);
 
         this.state = {
-            loggedInUser: '',
             genreDropdownOpen: false,
             genres: [],
             categoryDropdownOpen: false,
@@ -161,14 +161,17 @@ export default class Navbar extends React.Component {
                         <Link className='nav-item nav-link float-right' to='/go-live'>Go Live</Link>
                         <Dropdown className="nav-item float-left" isOpen={this.state.profileDropdownOpen}
                                   toggle={this.profileDropdownToggle}>
-                            <DropdownToggle caret>(img)</DropdownToggle>
+                            <DropdownToggle caret>
+                                {/*TODO: get profile pic through API call*/}
+                                <img src={defaultProfilePic} width='25' height='25'/>
+                            </DropdownToggle>
                             <DropdownMenu right>
                                 <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>My Profile</DropdownItem>
                                 <DropdownItem tag={Link} to={'/schedule'}>My Schedule</DropdownItem>
                                 <DropdownItem divider/>
                                 <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
                                 <DropdownItem divider/>
-                                <DropdownItem tag={Link} to={'/logout'}>Log Out</DropdownItem>
+                                <DropdownItem href="/logout">Log Out</DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
                     </div>

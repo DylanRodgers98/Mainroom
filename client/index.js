@@ -8,6 +8,7 @@ import LiveStreams from "./components/LiveStreams";
 import LiveStreamsByGenre from "./components/LiveStreamsByGenre";
 import LiveStreamsByCategory from "./components/LiveStreamsByCategory";
 import Search from "./components/Search";
+import UserProfile from "./components/UserProfile";
 import UserStream from "./components/UserStream";
 import Schedule from "./components/Schedule";
 import GoLive from "./components/GoLive";
@@ -38,10 +39,9 @@ if (document.getElementById('root')) {
                         <Search {...props} />
                     )}/>
 
-                    {/*TODO: ADD USER PROFILE ROUTE*/}
-                    {/*<Route exact path="/user/:username" render={props => (*/}
-                    {/*    <UserProfile {...props} />*/}
-                    {/*)}/>*/}
+                    <Route exact path="/user/:username" render={props => (
+                        <UserProfile {...props} />
+                    )}/>
 
                     <Route exact path="/user/:username/live" render={props => (
                         <UserStream {...props} />
