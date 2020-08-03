@@ -14,7 +14,7 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
                 username: user.username,
                 location: user.location,
                 bio: user.bio,
-                numOfSubscribers: user.subscriptions.length,
+                numOfSubscribers: user.subscribers.length,
                 schedule: user.schedule
             });
         }
@@ -55,71 +55,51 @@ router.get('/subscribedTo', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
-    let addedToSubscriptions;
-
     User.findOneAndUpdate({
         username: req.user.username
     }, {
         $push: { subscriptions: req.body.userToSubscribeTo }
-    }, {
-        new: true,
-    }, (err, user) => {
-        if (!err && user) {
-            addedToSubscriptions = user.subscriptions.includes(req.body.userToSubscribeTo);
+    },(err, user) => {
+        if (err) {
+            return res.sendStatus(500);
         }
     });
-
-    let addedToSubscribers;
 
     User.findOneAndUpdate({
         username: req.body.userToSubscribeTo
     }, {
         $push: { subscribers: req.user.username }
-    }, {
-        new: true,
-    }, (err, user) => {
-        if (!err && user) {
-            addedToSubscribers = user.subscribers.includes(req.user.username);
+    },(err, user) => {
+        if (err) {
+            return res.sendStatus(500);
         }
     });
 
-    res.json({
-        subscribed: addedToSubscriptions && addedToSubscribers
-    });
+    res.sendStatus(200);
 });
 
 router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
-    let removedFromSubscriptions;
-
     User.findOneAndUpdate({
         username: req.user.username
     }, {
         $pull: { subscriptions: req.body.userToUnsubscribeFrom }
-    }, {
-        new: true,
     }, (err, user) => {
-        if (!err && user) {
-            removedFromSubscriptions = !user.subscriptions.includes(req.body.userToUnsubscribeFrom);
+        if (err) {
+            return res.sendStatus(500);
         }
     });
-
-    let removedFromSubscribers;
 
     User.findOneAndUpdate({
         username: req.body.userToUnsubscribeFrom
     }, {
         $pull: { subscribers: req.user.username }
-    }, {
-        new: true,
-    }, (err, user) => {
-        if (!err && user) {
-            removedFromSubscribers = !user.subscribers.includes(req.user.username);
+    },(err, user) => {
+        if (err) {
+            return res.sendStatus(500);
         }
     });
 
-    res.json({
-        subscribed: !(removedFromSubscriptions && removedFromSubscribers)
-    });
+    res.sendStatus(200);
 });
 
 //TODO: create get route for profile pic

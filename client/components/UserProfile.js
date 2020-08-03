@@ -22,7 +22,7 @@ export default class UserProfile extends React.Component {
             isLoggedInUserSubscribed: false,
             location: '',
             bio: '',
-            subscribers: 0,
+            numOfSubscribers: 0,
             scheduleItems: [],
             isUserLive: false,
             redirect: false
@@ -53,7 +53,7 @@ export default class UserProfile extends React.Component {
             doesUserExist: true,
             location: user.location,
             bio: user.bio,
-            subscribers: user.numOfSubscribers
+            numOfSubscribers: user.numOfSubscribers
         });
     }
 
@@ -116,7 +116,8 @@ export default class UserProfile extends React.Component {
             userToSubscribeTo: this.props.match.params.username
         }).then(res => {
             this.setState({
-                isLoggedInUserSubscribed: res.data.subscribed
+                isLoggedInUserSubscribed: true,
+                numOfSubscribers: this.state.numOfSubscribers + 1
             });
         });
     }
@@ -126,7 +127,8 @@ export default class UserProfile extends React.Component {
             userToUnsubscribeFrom: this.props.match.params.username
         }).then(res => {
             this.setState({
-                isLoggedInUserSubscribed: res.data.subscribed
+                isLoggedInUserSubscribed: false,
+                numOfSubscribers: this.state.numOfSubscribers - 1
             });
         });
     }
@@ -150,7 +152,7 @@ export default class UserProfile extends React.Component {
                         <img src={defaultProfilePic}/>
                         <h1>{this.props.match.params.username}</h1>
                         <h5>{this.state.location || 'Planet Earth'}</h5>
-                        <h5>{this.state.subscribers} Subscribers</h5>
+                        <h5>{this.state.numOfSubscribers} Subscribers</h5>
                         <div>
                             {this.renderRedirect()}
                             <Button className='btn btn-dark subscribe-button' onClick={this.onClickSubscribeButton}>
