@@ -5,7 +5,7 @@ import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
 import {Row} from "reactstrap";
 import io from "socket.io-client";
-import '../css/userstream.scss';
+import '../css/user-stream.scss';
 
 export default class UserStream extends React.Component {
 

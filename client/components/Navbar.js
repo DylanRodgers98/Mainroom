@@ -166,7 +166,7 @@ export default class Navbar extends React.Component {
                                 <img src={defaultProfilePic} width='25' height='25'/>
                             </DropdownToggle>
                             <DropdownMenu right>
-                                <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>My Profile</DropdownItem>
+                                <DropdownItem href={`/user/${this.state.loggedInUser}`}>My Profile</DropdownItem>
                                 <DropdownItem tag={Link} to={'/schedule'}>My Schedule</DropdownItem>
                                 <DropdownItem divider/>
                                 <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>

@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
-import '../css/settings.scss';
+import '../css/go-live.scss';
 import Container from "reactstrap/es/Container";
 
 export default class GoLive extends React.Component {
