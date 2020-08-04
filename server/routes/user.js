@@ -56,13 +56,13 @@ router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
         username: req.user.username
     }, {
-        $push: {subscriptions: req.body.userToSubscribeTo}
+        $addToSet: {subscriptions: req.body.userToSubscribeTo}
     });
 
     User.findOneAndUpdate({
         username: req.body.userToSubscribeTo
     }, {
-        $push: {subscribers: req.user.username}
+        $addToSet: {subscribers: req.user.username}
     });
 
     res.sendStatus(200);
