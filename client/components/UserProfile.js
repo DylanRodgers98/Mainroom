@@ -1,20 +1,20 @@
 import React from "react";
 import axios from "axios";
 import {Container, Row, Col, Button} from "reactstrap";
+import {Redirect} from "react-router-dom";
 import Timeline from "react-calendar-timeline";
 import moment from "moment";
 import FourOhFour from "./FourOhFour";
 import '../css/user-profile.scss';
 
 import defaultProfilePic from '../img/defaultProfilePic.png';
-import {Redirect} from "react-router-dom";
 
 export default class UserProfile extends React.Component {
 
     constructor(props) {
         super(props);
 
-        this.onClickSubscribeButton = this.onClickSubscribeButton.bind(this);
+        this.onClickSubscribeOrEditProfileButton = this.onClickSubscribeOrEditProfileButton.bind(this);
 
         this.state = {
             doesUserExist: false,
@@ -25,7 +25,7 @@ export default class UserProfile extends React.Component {
             numOfSubscribers: 0,
             scheduleItems: [],
             isUserLive: false,
-            redirect: false
+            redirectToEditProfile: false
         }
     }
 
@@ -87,38 +87,39 @@ export default class UserProfile extends React.Component {
                 }
             }).then(res => {
                 this.setState({
-                    isLoggedInUserSubscribed: res.data.subscribed
+                    isLoggedInUserSubscribed: res.data
                 });
             })
         }
     }
 
-    getSubscribeButtonText() {
+    getSubscribeOrEditProfileButtonText() {
         return this.state.isProfileOfLoggedInUser ? 'Edit Profile'
             : this.state.isLoggedInUserSubscribed ? 'Subscribed' : 'Subscribe';
     }
 
-    onClickSubscribeButton() {
-        if (!this.state.isProfileOfLoggedInUser) {
-            if (this.state.isLoggedInUserSubscribed) {
-                this.unsubscribeFromUser();
-            } else {
-                this.subscribeToUser();
-            }
+    onClickSubscribeOrEditProfileButton() {
+        if (this.state.isProfileOfLoggedInUser) {
+            this.setState({
+                redirectToEditProfile: true
+            });
+        } else if (this.state.isLoggedInUserSubscribed) {
+            this.unsubscribeFromUser();
+        } else {
+            this.subscribeToUser();
         }
-        this.setState({
-            redirect: true
-        });
     }
 
     subscribeToUser() {
         axios.post('/user/subscribe', {
             userToSubscribeTo: this.props.match.params.username
         }).then(res => {
-            this.setState({
-                isLoggedInUserSubscribed: true,
-                numOfSubscribers: this.state.numOfSubscribers + 1
-            });
+            if (res.status === 200) {
+                this.setState({
+                    isLoggedInUserSubscribed: true,
+                    numOfSubscribers: this.state.numOfSubscribers + 1
+                });
+            }
         });
     }
 
@@ -126,21 +127,19 @@ export default class UserProfile extends React.Component {
         axios.post('/user/unsubscribe', {
             userToUnsubscribeFrom: this.props.match.params.username
         }).then(res => {
-            this.setState({
-                isLoggedInUserSubscribed: false,
-                numOfSubscribers: this.state.numOfSubscribers - 1
-            });
+            if (res.status === 200) {
+                this.setState({
+                    isLoggedInUserSubscribed: false,
+                    numOfSubscribers: this.state.numOfSubscribers - 1
+                });
+            }
         });
     }
 
-    renderRedirect() {
-        if (this.state.redirect) {
-            return <Redirect to={this.getRedirect()} />;
+    renderRedirectToEditProfile() {
+        if (this.state.redirectToEditProfile) {
+            return <Redirect to={'/edit-profile'}/>;
         }
-    }
-
-    getRedirect() {
-        return this.state.isProfileOfLoggedInUser ? '/edit-profile' : `/user/${this.props.match.params.username}`
     }
 
     render() {
@@ -154,12 +153,13 @@ export default class UserProfile extends React.Component {
                         <h5>{this.state.location || 'Planet Earth'}</h5>
                         <h5>{this.state.numOfSubscribers} Subscribers</h5>
                         <div>
-                            {this.renderRedirect()}
-                            <Button className='btn btn-dark subscribe-button' onClick={this.onClickSubscribeButton}>
-                                {this.getSubscribeButtonText()}
+                            {this.renderRedirectToEditProfile()}
+                            <Button className='btn btn-dark subscribe-button'
+                                    onClick={this.onClickSubscribeOrEditProfileButton}>
+                                {this.getSubscribeOrEditProfileButtonText()}
                             </Button>
                         </div>
-                        <p>{this.state.bio || 'This is my bio hello I am a good person'}</p>
+                        <p>{this.state.bio || 'BIO BIO BIO BIO BIO'}</p>
                     </Col>
                     <Col xs='9'>
                         <h3>Upcoming Streams</h3>

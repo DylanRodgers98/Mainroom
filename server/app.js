@@ -16,7 +16,10 @@ const nodeMediaServer = require('./mediaServer');
 const thumbnailGenerator = require('./cron/thumbnails');
 const LOGGER = require('node-media-server/node_core_logger');
 
-mongoose.connect('mongodb://127.0.0.1/mainroom' , { useNewUrlParser: true });
+mongoose.connect('mongodb://127.0.0.1/mainroom' , {
+    useNewUrlParser: true,
+    useFindAndModify: false
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, './views'));

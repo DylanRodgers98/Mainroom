@@ -47,9 +47,7 @@ router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res) => {
 router.get('/subscribedTo', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOne({username: req.user.username}, (err, user) => {
         if (!err && user) {
-            res.json({
-                subscribed: user.subscriptions.includes(req.query.otherUser)
-            });
+            res.send(user.subscriptions.includes(req.query.otherUser));
         }
     });
 });
@@ -58,21 +56,13 @@ router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
         username: req.user.username
     }, {
-        $push: { subscriptions: req.body.userToSubscribeTo }
-    },(err, user) => {
-        if (err) {
-            return res.sendStatus(500);
-        }
+        $push: {subscriptions: req.body.userToSubscribeTo}
     });
 
     User.findOneAndUpdate({
         username: req.body.userToSubscribeTo
     }, {
-        $push: { subscribers: req.user.username }
-    },(err, user) => {
-        if (err) {
-            return res.sendStatus(500);
-        }
+        $push: {subscribers: req.user.username}
     });
 
     res.sendStatus(200);
@@ -82,21 +72,13 @@ router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
         username: req.user.username
     }, {
-        $pull: { subscriptions: req.body.userToUnsubscribeFrom }
-    }, (err, user) => {
-        if (err) {
-            return res.sendStatus(500);
-        }
+        $pull: {subscriptions: req.body.userToUnsubscribeFrom}
     });
 
     User.findOneAndUpdate({
         username: req.body.userToUnsubscribeFrom
     }, {
-        $pull: { subscribers: req.user.username }
-    },(err, user) => {
-        if (err) {
-            return res.sendStatus(500);
-        }
+        $pull: {subscribers: req.user.username}
     });
 
     res.sendStatus(200);
