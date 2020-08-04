@@ -1,13 +1,15 @@
 import React from "react";
 import axios from "axios";
 import {Container, Row, Col, Button} from "reactstrap";
-import {Redirect} from "react-router-dom";
+import {Link, Redirect} from "react-router-dom";
 import Timeline from "react-calendar-timeline";
 import moment from "moment";
 import FourOhFour from "./FourOhFour";
 import '../css/user-profile.scss';
+import '../css/livestreams.scss';
 
 import defaultProfilePic from '../img/defaultProfilePic.png';
+import config from "../../mainroom.config";
 
 export default class UserProfile extends React.Component {
 
@@ -24,15 +26,16 @@ export default class UserProfile extends React.Component {
             bio: '',
             numOfSubscribers: 0,
             scheduleItems: [],
-            isUserLive: false,
+            streamKey: '',
             redirectToEditProfile: false
         }
     }
 
     componentDidMount() {
         this.getUserInfo();
-        this.setProfileOfLoggedInUser();
-        this.setLoggedInUserSubscribed();
+        this.isProfileOfLoggedInUser();
+        this.isLoggedInUserSubscribed();
+        this.getLiveStreamIfLive();
     }
 
     getUserInfo() {
@@ -71,7 +74,7 @@ export default class UserProfile extends React.Component {
         });
     }
 
-    setProfileOfLoggedInUser() {
+    isProfileOfLoggedInUser() {
         axios.get('/user/loggedIn').then(res => {
             this.setState({
                 isProfileOfLoggedInUser: res.data.username === this.props.match.params.username,
@@ -79,7 +82,7 @@ export default class UserProfile extends React.Component {
         });
     }
 
-    setLoggedInUserSubscribed() {
+    isLoggedInUserSubscribed() {
         if (!this.state.isProfileOfLoggedInUser) {
             axios.get('/user/subscribedTo', {
                 params: {
@@ -136,10 +139,48 @@ export default class UserProfile extends React.Component {
         });
     }
 
+    getLiveStreamIfLive() {
+        axios.get('/streams/streamKey', {
+            params: {
+                username: this.props.match.params.username
+            }
+        }).then(res => {
+            const streamKey = res.data.streamKey;
+            axios.get(`http://127.0.0.1:${config.rtmpServer.http.port}/api/streams/live/${streamKey}`).then(res => {
+                if (res.data.isLive) {
+                    this.setState({
+                        streamKey: streamKey
+                    });
+                }
+            });
+        });
+    }
+
     renderRedirectToEditProfile() {
         if (this.state.redirectToEditProfile) {
             return <Redirect to={'/edit-profile'}/>;
         }
+    }
+
+    renderLiveStream() {
+        return this.state.streamKey ? (
+            <Row className='streams' xs='2'>
+                <Col className='stream'>
+                    <span className="live-label">LIVE</span>
+                    <Link to={`/user/${this.props.match.params.username}/live`}>
+                        <div className="stream-thumbnail">
+                            <img src={`/thumbnails/${this.state.streamKey}.png`}
+                                 alt={`${this.props.match.params.username} Stream Thumbnail`}/>
+                        </div>
+                    </Link>
+                    <span className="username">
+                        <Link to={`/user/${this.props.match.params.username}/live`}>
+                            {this.props.match.params.username}
+                        </Link>
+                    </span>
+                </Col>
+            </Row>
+        ) : <h3>This user is not currently live</h3>;
     }
 
     render() {
@@ -167,7 +208,7 @@ export default class UserProfile extends React.Component {
                                   visibleTimeStart={moment().startOf('day')}
                                   visibleTimeEnd={moment().startOf('day').add(7, 'day')}/>
                         <hr className="my-4"/>
-                        <h3>This user is {this.state.isUserLive ? '' : 'not '}currently live</h3>
+                        {this.renderLiveStream()}
                     </Col>
                 </Row>
             </Container>
