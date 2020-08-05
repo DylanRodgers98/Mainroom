@@ -5,15 +5,15 @@ import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
 import {Row, Button} from "reactstrap";
 import io from "socket.io-client";
-import '../css/user-stream.scss';
 import FourOhFour from "./FourOhFour";
+import '../css/user-stream.scss';
 
 export default class UserStream extends React.Component {
 
     constructor(props) {
         super(props);
 
-        this.onTextChange = this.onTextChange.bind(this);
+        this.onMessageTextChange = this.onMessageTextChange.bind(this);
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.onMessageSubmit = this.onMessageSubmit.bind(this);
 
@@ -25,7 +25,7 @@ export default class UserStream extends React.Component {
             streamUsername: '',
             streamTitle: '',
             streamGenre: '',
-            streamTags: [],
+            streamCategory: '',
             msg: '',
             chat: []
         }
@@ -51,7 +51,7 @@ export default class UserStream extends React.Component {
             if (stream.data.isLive) {
                 this.populateStreamData(res);
                 this.getViewerUsername();
-                this.listenToChat();
+                this.connectToChat();
             }
         });
     }
@@ -71,7 +71,7 @@ export default class UserStream extends React.Component {
             streamUsername: res.data.username,
             streamTitle: res.data.title,
             streamGenre: res.data.genre,
-            streamTags: res.data.tags
+            streamCategory: res.data.category
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [this.state.streamUsername, this.state.streamTitle, config.siteTitle].filter(Boolean).join(' - ');
@@ -86,7 +86,7 @@ export default class UserStream extends React.Component {
         });
     }
 
-    listenToChat() {
+    connectToChat() {
         this.socket = io.connect(`http://localhost:${config.server.port}`);
         this.socket.on(`chatMessage_${this.state.streamUsername}`, ({viewerUsername, msg}) => {
             this.setState({
@@ -102,7 +102,7 @@ export default class UserStream extends React.Component {
         document.title = config.headTitle;
     }
 
-    onTextChange(e) {
+    onMessageTextChange(e) {
         this.setState({
             msg: e.target.value
         });
@@ -148,8 +148,6 @@ export default class UserStream extends React.Component {
     }
 
     render() {
-        const streamTitle = this.state.streamTitle ? ` - ${this.state.streamTitle}` : '';
-
         return this.state.stream ? (
             <Row className="stream-row">
                 <div className="col-lg-8 stream-col">
@@ -161,11 +159,13 @@ export default class UserStream extends React.Component {
                             <Link to={`/user/${this.state.streamUsername}`}>
                                 {this.state.streamUsername}
                             </Link>
-                            {streamTitle}
+                            {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
                         </h3>
                         <h5>
                             <Link to={`/genre/${this.state.streamGenre}`}>
                                 {this.state.streamGenre}
+                            </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                {this.state.streamCategory}
                             </Link>
                         </h5>
                     </div>
@@ -173,7 +173,8 @@ export default class UserStream extends React.Component {
                 <div className='col chat-col'>
                     <div className='chat-messages' id='messages'>{this.renderChat()}</div>
                     <div className='chat-input'>
-                        <textarea onChange={this.onTextChange} onKeyDown={this.handleKeyDown} value={this.state.msg}/>
+                        <textarea onChange={this.onMessageTextChange} onKeyDown={this.handleKeyDown}
+                                  value={this.state.msg}/>
                         <button onClick={this.onMessageSubmit}>Send</button>
                     </div>
                 </div>

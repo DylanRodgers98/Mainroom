@@ -62,14 +62,4 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
-router.get('/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
-    Stream.findOne({username: req.query.username}).then(stream => {
-        if (stream) {
-            res.json({
-                streamKey: stream.streamKey
-            });
-        }
-    });
-});
-
 module.exports = router;

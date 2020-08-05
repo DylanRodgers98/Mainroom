@@ -5,11 +5,11 @@ import {Link, Redirect} from "react-router-dom";
 import Timeline from "react-calendar-timeline";
 import moment from "moment";
 import FourOhFour from "./FourOhFour";
+import config from "../../mainroom.config";
 import '../css/user-profile.scss';
 import '../css/livestreams.scss';
 
 import defaultProfilePic from '../img/defaultProfilePic.png';
-import config from "../../mainroom.config";
 
 export default class UserProfile extends React.Component {
 
@@ -27,18 +27,14 @@ export default class UserProfile extends React.Component {
             numOfSubscribers: 0,
             scheduleItems: [],
             streamKey: '',
+            streamTitle: '',
+            streamGenre: '',
+            streamCategory: '',
             redirectToEditProfile: false
         }
     }
 
     componentDidMount() {
-        this.getUserInfo();
-        this.isProfileOfLoggedInUser();
-        this.isLoggedInUserSubscribed();
-        this.getLiveStreamIfLive();
-    }
-
-    getUserInfo() {
         axios.get('/user', {
             params: {
                 username: this.props.match.params.username
@@ -47,6 +43,9 @@ export default class UserProfile extends React.Component {
             if (res.data.username) {
                 this.populateProfile(res.data)
                 this.buildSchedule(res.data.schedule);
+                this.isProfileOfLoggedInUser();
+                this.isLoggedInUserSubscribed();
+                this.getLiveStreamIfLive();
             }
         });
     }
@@ -140,16 +139,19 @@ export default class UserProfile extends React.Component {
     }
 
     getLiveStreamIfLive() {
-        axios.get('/streams/streamKey', {
+        axios.get('/streams', {
             params: {
                 username: this.props.match.params.username
             }
-        }).then(res => {
-            const streamKey = res.data.streamKey;
+        }).then(stream => {
+            const streamKey = stream.data.streamKey;
             axios.get(`http://127.0.0.1:${config.rtmpServer.http.port}/api/streams/live/${streamKey}`).then(res => {
                 if (res.data.isLive) {
                     this.setState({
-                        streamKey: streamKey
+                        streamKey: streamKey,
+                        streamTitle: stream.data.title,
+                        streamGenre: stream.data.genre,
+                        streamCategory: stream.data.category
                     });
                 }
             });
@@ -164,21 +166,37 @@ export default class UserProfile extends React.Component {
 
     renderLiveStream() {
         return this.state.streamKey ? (
-            <div>
-                <span className="live-label">LIVE</span>
-                <Link to={`/user/${this.props.match.params.username}/live`}>
-                    <div className="stream-thumbnail">
-                        <img src={`/thumbnails/${this.state.streamKey}.png`}
-                             alt={`${this.props.match.params.username} Stream Thumbnail`}/>
-                    </div>
-                </Link>
-                <span className="username">
+            <Row className='streams' xs='2'>
+                <Col className='stream mb-4'>
+                    <span className="live-label">LIVE</span>
                     <Link to={`/user/${this.props.match.params.username}/live`}>
-                        {this.props.match.params.username}
+                        <div className="stream-thumbnail">
+                            <img src={`/thumbnails/${this.state.streamKey}.png`}
+                                 alt={`${this.props.match.params.username} Stream Thumbnail`}/>
+                        </div>
                     </Link>
-                </span>
-            </div>
-        ) : <h3>This user is not currently live</h3>;
+                    <span className="username">
+                        <Link to={`/user/${this.props.match.params.username}/live`}>
+                            {this.props.match.params.username}
+                        </Link>
+                    </span>
+                </Col>
+                <Col>
+                    <h3 className='live-stream-title-link'>
+                        <Link to={`/user/${this.props.match.params.username}/live`}>
+                            {this.state.streamTitle}
+                        </Link>
+                    </h3>
+                    <h5>
+                        <Link to={`/genre/${this.state.streamGenre}`}>
+                            {this.state.streamGenre}
+                        </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                            {this.state.streamCategory}
+                        </Link>
+                    </h5>
+                </Col>
+            </Row>
+        ) : <i><h3 className='text-center mt-5'>This user is not currently live</h3></i>;
     }
 
     render() {
@@ -187,7 +205,7 @@ export default class UserProfile extends React.Component {
                 <Row className="mt-5" xs='4'>
                     <Col>
                         {/*TODO: get profile pic through API call*/}
-                        <img src={defaultProfilePic}/>
+                        <img src={defaultProfilePic} alt={`${this.props.match.params.username} Profile Picture`}/>
                         <h1>{this.props.match.params.username}</h1>
                         <h5>{this.state.location || 'Planet Earth'}</h5>
                         <h5>{this.state.numOfSubscribers} Subscribers</h5>
@@ -198,7 +216,7 @@ export default class UserProfile extends React.Component {
                                 {this.getSubscribeOrEditProfileButtonText()}
                             </Button>
                         </div>
-                        <p>{this.state.bio || 'BIO BIO BIO BIO BIO'}</p>
+                        <p>{this.state.bio}</p>
                     </Col>
                     <Col xs='9'>
                         <h3>Upcoming Streams</h3>
@@ -206,11 +224,7 @@ export default class UserProfile extends React.Component {
                                   visibleTimeStart={moment().startOf('day')}
                                   visibleTimeEnd={moment().startOf('day').add(7, 'day')}/>
                         <hr className="my-4"/>
-                        <Row className='streams' xs='2'>
-                            <Col className='stream'>
-                                {this.renderLiveStream()}
-                            </Col>
-                        </Row>
+                        {this.renderLiveStream()}
                     </Col>
                 </Row>
             </Container>
