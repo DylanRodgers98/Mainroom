@@ -3,9 +3,10 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
-import {Row} from "reactstrap";
+import {Row, Button} from "reactstrap";
 import io from "socket.io-client";
 import '../css/user-stream.scss';
+import FourOhFour from "./FourOhFour";
 
 export default class UserStream extends React.Component {
 
@@ -16,9 +17,8 @@ export default class UserStream extends React.Component {
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.onMessageSubmit = this.onMessageSubmit.bind(this);
 
-        this.socket = io.connect(`http://localhost:${config.server.port}`);
-
         this.state = {
+            doesUserExist: false,
             stream: false,
             videoJsOptions: null,
             viewerUsername: '',
@@ -37,20 +37,22 @@ export default class UserStream extends React.Component {
                 username: this.props.match.params.username
             }
         }).then(res => {
+            this.setState({
+                doesUserExist: !!res
+            });
             if (res) {
-                this.populateStreamData(res);
-                this.socket.on(`chatMessage_${this.state.streamUsername}`, ({viewerUsername, msg}) => {
-                    this.setState({
-                        chat: [...this.state.chat, {viewerUsername, msg}]
-                    });
-                });
+                this.populateStreamDataIfUserIsLive(res);
             }
         });
+    }
 
-        axios.get('/user/loggedIn').then(res => {
-            this.setState({
-                viewerUsername: res.data.username
-            });
+    populateStreamDataIfUserIsLive(res) {
+        axios.get(`http://127.0.0.1:${config.rtmpServer.http.port}/api/streams/live/${res.data.streamKey}`).then(stream => {
+            if (stream.data.isLive) {
+                this.populateStreamData(res);
+                this.getViewerUsername();
+                this.listenToChat();
+            }
         });
     }
 
@@ -73,6 +75,23 @@ export default class UserStream extends React.Component {
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [this.state.streamUsername, this.state.streamTitle, config.siteTitle].filter(Boolean).join(' - ');
+        });
+    }
+
+    getViewerUsername() {
+        axios.get('/user/loggedIn').then(res => {
+            this.setState({
+                viewerUsername: res.data.username
+            });
+        });
+    }
+
+    listenToChat() {
+        this.socket = io.connect(`http://localhost:${config.server.port}`);
+        this.socket.on(`chatMessage_${this.state.streamUsername}`, ({viewerUsername, msg}) => {
+            this.setState({
+                chat: [...this.state.chat, {viewerUsername, msg}]
+            });
         });
     }
 
@@ -160,9 +179,14 @@ export default class UserStream extends React.Component {
                 </div>
             </Row>
         ) : (
-            <h3 className="mt-5 not-live">
-                Cannot find livestream for user {this.props.match.params.username}
-            </h3>
+            !this.state.doesUserExist ? <FourOhFour/> : (
+                <div className='mt-5 not-live'>
+                    <h3>Cannot find livestream for user {this.props.match.params.username}</h3>
+                    <Button className='btn btn-dark' tag={Link} to={`/user/${this.props.match.params.username}`}>
+                        Go To Profile
+                    </Button>
+                </div>
+            )
         )
     }
 }

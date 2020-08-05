@@ -164,22 +164,20 @@ export default class UserProfile extends React.Component {
 
     renderLiveStream() {
         return this.state.streamKey ? (
-            <Row className='streams' xs='2'>
-                <Col className='stream'>
-                    <span className="live-label">LIVE</span>
+            <div>
+                <span className="live-label">LIVE</span>
+                <Link to={`/user/${this.props.match.params.username}/live`}>
+                    <div className="stream-thumbnail">
+                        <img src={`/thumbnails/${this.state.streamKey}.png`}
+                             alt={`${this.props.match.params.username} Stream Thumbnail`}/>
+                    </div>
+                </Link>
+                <span className="username">
                     <Link to={`/user/${this.props.match.params.username}/live`}>
-                        <div className="stream-thumbnail">
-                            <img src={`/thumbnails/${this.state.streamKey}.png`}
-                                 alt={`${this.props.match.params.username} Stream Thumbnail`}/>
-                        </div>
+                        {this.props.match.params.username}
                     </Link>
-                    <span className="username">
-                        <Link to={`/user/${this.props.match.params.username}/live`}>
-                            {this.props.match.params.username}
-                        </Link>
-                    </span>
-                </Col>
-            </Row>
+                </span>
+            </div>
         ) : <h3>This user is not currently live</h3>;
     }
 
@@ -208,7 +206,11 @@ export default class UserProfile extends React.Component {
                                   visibleTimeStart={moment().startOf('day')}
                                   visibleTimeEnd={moment().startOf('day').add(7, 'day')}/>
                         <hr className="my-4"/>
-                        {this.renderLiveStream()}
+                        <Row className='streams' xs='2'>
+                            <Col className='stream'>
+                                {this.renderLiveStream()}
+                            </Col>
+                        </Row>
                     </Col>
                 </Row>
             </Container>
