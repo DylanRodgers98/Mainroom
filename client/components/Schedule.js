@@ -12,7 +12,9 @@ export default class Schedule extends React.Component {
 
         this.state = {
             scheduleGroups: [],
-            scheduleItems: []
+            scheduleItems: [],
+            startTime: moment(),
+            endTime: moment().add(24, 'hour')
         }
     }
 
@@ -44,8 +46,8 @@ export default class Schedule extends React.Component {
                     id: this.state.scheduleItems.length,
                     group: 0,
                     title: username,
-                    start_time: moment(stream.startDate),
-                    end_time: moment(stream.endDate)
+                    start_time: moment(stream.startTime),
+                    end_time: moment(stream.endTime)
                 }]
             });
         });
@@ -74,25 +76,35 @@ export default class Schedule extends React.Component {
 
     buildScheduleFromSubscription({username, schedule}) {
         const groupId = this.state.scheduleGroups.length;
-
-        this.setState({
-            scheduleGroups: [...this.state.scheduleGroups, {
-                id: groupId,
-                title: username
-            }]
-        });
+        let addedToSchedule = false;
 
         schedule.forEach(stream => {
+            const startTime = moment(stream.startTime);
+            const endTime = moment(stream.endTime);
+
+            if (startTime.isBetween(this.state.startTime, this.state.endTime)
+                || endTime.isBetween(this.state.startTime, this.state.endTime)) {
+                this.setState({
+                    scheduleItems: [...this.state.scheduleItems, {
+                        id: this.state.scheduleItems.length,
+                        group: groupId,
+                        title: username,
+                        start_time: startTime,
+                        end_time: endTime
+                    }]
+                });
+                addedToSchedule = true;
+            }
+        });
+
+        if (addedToSchedule) {
             this.setState({
-                scheduleItems: [...this.state.scheduleItems, {
-                    id: this.state.scheduleItems.length,
-                    group: groupId,
-                    title: username,
-                    start_time: moment(stream.startDate),
-                    end_time: moment(stream.endDate)
+                scheduleGroups: [...this.state.scheduleGroups, {
+                    id: groupId,
+                    title: username
                 }]
             });
-        });
+        }
     }
 
     render() {
@@ -100,7 +112,7 @@ export default class Schedule extends React.Component {
             <Container className='my-5'>
                 <Row>
                     <Col>
-                        <h4>My Schedule</h4>
+                        <h4>Schedule</h4>
                     </Col>
                     <Col>
                         <Button className='btn btn-dark float-right'>Schedule a Stream</Button>
@@ -108,7 +120,11 @@ export default class Schedule extends React.Component {
                 </Row>
                 <hr className='my-4'/>
                 <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
-                          defaultTimeStart={moment()} defaultTimeEnd={moment().add(24, 'hour')} />
+                          defaultTimeStart={this.state.startTime} defaultTimeEnd={this.state.endTime} />
+                <p className='my-3 text-center'>
+                    {this.state.scheduleGroups.length > 1 ? ''
+                    : 'Streams scheduled by your subscriptions during the selected time period will appear here'}
+                </p>
             </Container>
         )
     }

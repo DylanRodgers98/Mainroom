@@ -66,8 +66,8 @@ export default class UserProfile extends React.Component {
                     id: this.state.scheduleItems.length,
                     group: 0,
                     title: this.props.match.params.username,
-                    start_time: moment(stream.startDate),
-                    end_time: moment(stream.endDate)
+                    start_time: moment(stream.startTime),
+                    end_time: moment(stream.endTime)
                 }]
             });
         });
@@ -182,7 +182,7 @@ export default class UserProfile extends React.Component {
                     </span>
                 </Col>
                 <Col>
-                    <h3 className='live-stream-title-link'>
+                    <h3 className='black-link'>
                         <Link to={`/user/${this.props.match.params.username}/live`}>
                             {this.state.streamTitle}
                         </Link>
@@ -208,7 +208,11 @@ export default class UserProfile extends React.Component {
                         <img src={defaultProfilePic} alt={`${this.props.match.params.username} Profile Picture`}/>
                         <h1>{this.props.match.params.username}</h1>
                         <h5>{this.state.location || 'Planet Earth'}</h5>
-                        <h5>{this.state.numOfSubscribers} Subscribers</h5>
+                        <h5 className='black-link'>
+                            <Link to={`/user/${this.props.match.params.username}/subscribers`}>
+                                {this.state.numOfSubscribers} Subscribers
+                            </Link>
+                        </h5>
                         <div>
                             {this.renderRedirectToEditProfile()}
                             <Button className='btn btn-dark subscribe-button'

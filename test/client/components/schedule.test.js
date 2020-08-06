@@ -20,8 +20,8 @@ jest.mock('axios', () => {
                     data: {
                         username: config !== undefined ? config.params.username : mockOwnUsername,
                         schedule: [{
-                            startDate: mockStartTime,
-                            endDate: mockEndTime
+                            startTime: mockStartTime,
+                            endTime: mockEndTime
                         }]
                     }
                 }
