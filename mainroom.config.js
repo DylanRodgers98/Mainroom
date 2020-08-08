@@ -3,7 +3,12 @@ module.exports = {
     headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
     server: {
         secret: 'kjVkuti2xAyF3JGCzSZTk0YWM5JhI9mgQW4rytXc',
-        port : 3333
+        port: {
+            http: 8080
+        }
+    },
+    database: {
+        uri: 'mongodb://127.0.0.1/mainroom'
     },
     rtmpServer: {
         rtmp: {
@@ -43,6 +48,10 @@ module.exports = {
         }
     },
     cron: {
-        thumbnailGeneration: '*/5 * * * * *'
+        thumbnailGenerator: '*/5 * * * * *'
+    },
+    storage: {
+        thumbnails: 'server/thumbnails',
+        sessions: 'server/sessions'
     }
 };

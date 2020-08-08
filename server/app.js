@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
+const httpServer = require('http').createServer(app);
+const io = require('socket.io')(httpServer);
 const path = require('path');
 const Session = require('express-session');
 const bodyParser = require('body-parser');
@@ -13,18 +13,19 @@ const config = require('../mainroom.config');
 const flash = require('connect-flash');
 const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
-const thumbnailGenerator = require('./cron/thumbnails');
+const cronJobs = require('./cron/cronJobs');
 const LOGGER = require('node-media-server/node_core_logger');
 
-mongoose.connect('mongodb://127.0.0.1/mainroom' , {
+mongoose.connect(config.database.uri, {
     useNewUrlParser: true,
-    useFindAndModify: false
+    useFindAndModify: false,
+    useUnifiedTopology: true
 });
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, './views'));
 app.use(express.static('public'));
-app.use('/thumbnails', express.static('server/thumbnails'));
+app.use('/thumbnails', express.static(config.storage.thumbnails));
 app.use(flash());
 
 app.use(cookieParser());
@@ -33,12 +34,12 @@ app.use(bodyParser.json({extended: true}));
 
 app.use(Session({
     store: new FileStore({
-        path : 'server/sessions'
+        path: config.storage.sessions
     }),
     secret: config.server.secret,
-    maxAge : Date.now + (60 * 1000 * 30),
-    resave : true,
-    saveUninitialized : false,
+    maxAge: Date.now + (60 * 1000 * 30),
+    resave: true,
+    saveUninitialized: false,
 }));
 
 app.use(passport.initialize());
@@ -63,18 +64,14 @@ app.get('*', loginChecker.ensureLoggedIn(), (req, res) => {
 
 // Set up stream chat rooms
 io.on('connection', socket => {
-    const { id } = socket.client;
-    LOGGER.log(`User connected: ${id}`);
-
     socket.on('chatMessage', ({streamUsername, viewerUsername, msg}) => {
-        LOGGER.log(`[${streamUsername} Chat] ${viewerUsername} (${id}): ${msg}`);
         io.emit(`chatMessage_${streamUsername}`, {viewerUsername, msg});
     });
 });
 
 // Start server
-server.listen(config.server.port, () => {
-    LOGGER.log(`App listening on ${config.server.port}!`)
+httpServer.listen(config.server.port.http || 8080, () => {
+    LOGGER.log(`HTTP server listening on ${config.server.port.http || 8080}`)
 });
 nodeMediaServer.run();
-thumbnailGenerator.start();
+cronJobs.startAll();
