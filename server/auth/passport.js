@@ -13,12 +13,18 @@ const strategyOptions = {
     passReqToCallback: true
 };
 
-passport.serializeUser((user, cb) => {
-    cb(null, user);
+passport.serializeUser((user, done) => {
+    done(null, user._id);
 });
 
-passport.deserializeUser((obj, cb) => {
-    cb(null, obj);
+passport.deserializeUser((id, done) => {
+    User.findById(id, (err, user) => {
+        if (err) {
+            LOGGER.error(`Error deserializing user (_id: ${id})`);
+            throw err;
+        }
+        done(null, user);
+    });
 });
 
 passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, password, done) => {
