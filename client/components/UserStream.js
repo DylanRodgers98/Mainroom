@@ -22,7 +22,6 @@ export default class UserStream extends React.Component {
             stream: false,
             videoJsOptions: null,
             viewerUsername: '',
-            streamUsername: '',
             streamTitle: '',
             streamGenre: '',
             streamCategory: '',
@@ -68,13 +67,16 @@ export default class UserStream extends React.Component {
                 }],
                 fluid: true
             },
-            streamUsername: res.data.username,
             streamTitle: res.data.title,
             streamGenre: res.data.genre,
             streamCategory: res.data.category
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
-            document.title = [this.state.streamUsername, this.state.streamTitle, config.siteTitle].filter(Boolean).join(' - ');
+            document.title = [
+                this.props.match.params.username,
+                this.state.streamTitle,
+                config.siteTitle
+            ].filter(Boolean).join(' - ');
         });
     }
 
@@ -88,7 +90,7 @@ export default class UserStream extends React.Component {
 
     connectToChat() {
         this.socket = io.connect(`http://127.0.0.1:${config.server.port.http}`);
-        this.socket.on(`chatMessage_${this.state.streamUsername}`, ({viewerUsername, msg}) => {
+        this.socket.on(`chatMessage_${this.props.match.params.username}`, ({viewerUsername, msg}) => {
             this.setState({
                 chat: [...this.state.chat, {viewerUsername, msg}]
             });
@@ -117,7 +119,7 @@ export default class UserStream extends React.Component {
 
     onMessageSubmit() {
         if (this.state.msg) {
-            const streamUsername = this.state.streamUsername;
+            const streamUsername = this.props.match.params.username;
             const viewerUsername = this.state.viewerUsername;
             const msg = this.state.msg;
             this.socket.emit("chatMessage", {streamUsername, viewerUsername, msg});
@@ -156,8 +158,8 @@ export default class UserStream extends React.Component {
                     </div>
                     <div className="ml-2">
                         <h3>
-                            <Link to={`/user/${this.state.streamUsername}`}>
-                                {this.state.streamUsername}
+                            <Link to={`/user/${this.props.match.params.username}`}>
+                                {this.props.match.params.username}
                             </Link>
                             {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
                         </h3>

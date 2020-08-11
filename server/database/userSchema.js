@@ -1,6 +1,5 @@
-const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
 const bcrypt = require('bcrypt-nodejs');
-const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
     username: String,
@@ -8,9 +7,16 @@ const UserSchema = new Schema({
     password: String,
     location: String,
     bio: String,
-    subscribers: [String],
-    subscriptions: [String],
-    schedule: [{startTime: Date, endTime: Date}]
+    streamInfo: {
+        streamKey: String,
+        title: String,
+        genre: String,
+        category: String,
+        tags: [String]
+    },
+    subscribers: [{type: Schema.Types.ObjectId, ref: 'User'}],
+    subscriptions: [{type: Schema.Types.ObjectId, ref: 'User'}],
+    scheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}]
 });
 
 UserSchema.methods.generateHash = (password) => {

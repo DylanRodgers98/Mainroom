@@ -1,10 +1,10 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const User = require('../database/schema').User;
-const Stream = require('../database/schema').Stream;
 const shortid = require('shortid');
 const passwordValidator = require('./passwordValidator');
 const config = require('../../mainroom.config');
+const mongoose = require('mongoose');
 const LOGGER = require('node-media-server/node_core_logger');
 
 const strategyOptions = {
@@ -46,39 +46,21 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             if (user.username === req.body.username) {
                 req.flash('username', 'Username is already taken');
             }
-            return done(null, false);
+            done(null, false);
         } else {
             const user = new User();
+            user._id = new mongoose.Types.ObjectId(),
             user.username = req.body.username;
             user.email = email;
             user.password = user.generateHash(password);
-            user.subscribers = [];
-            user.subscriptions = [];
-            user.schedule = [];
-
-            const stream = new Stream();
-            stream.username = req.body.username;
-            stream.streamKey = shortid.generate();
-            stream.title = null;
-            stream.genre = null;
-            stream.category = null;
-            stream.tags = [];
-
-            // TODO: either do the below save operations transactionally or condense User and Stream schemas into one
-            user.save((err) => {
+            user.streamInfo.streamKey = shortid.generate();
+            user.save(err => {
                 if (err) {
-                    LOGGER.error('An error occurred when saving new user:', JSON.stringify(user), '\n', 'Error:', err);
-                    throw err;
+                    LOGGER.error('An error occurred when saving new User:', JSON.stringify(user), '\n', 'Error:', err);
+                    return done(err)
                 }
             });
-            stream.save((err) => {
-                if (err) {
-                    LOGGER.error('An error occurred when saving new stream info:', JSON.stringify(stream), '\n', 'Error:', err);
-                    throw err;
-                }
-            })
-
-            return done(null, user);
+            done(null, user);
         }
     });
 }));
@@ -113,7 +95,7 @@ passport.use('localLogin', new LocalStrategy(strategyOptions, (req, email, passw
         if (!(user && user.checkPassword(password))) {
             return done(null, false, req.flash('login', 'Incorrect email or password'));
         }
-        return done(null, user);
+        done(null, user);
     });
 }));
 

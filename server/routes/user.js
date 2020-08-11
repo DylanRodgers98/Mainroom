@@ -15,15 +15,14 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
                 location: user.location,
                 bio: user.bio,
                 numOfSubscribers: user.subscribers.length,
-                schedule: user.schedule
+                schedule: user.scheduledStreams
             });
         }
     });
 });
 
 router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
-    const username = req.query.username ? req.query.username : req.user.username;
-    User.findOne({username: username}, (err, user) => {
+    User.findOne({username: req.query.username || req.user.username}, (err, user) => {
         if (!err && user) {
             res.json({
                 subscriptions: user.subscriptions
@@ -33,12 +32,11 @@ router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res) => {
-    const username = req.query.username ? req.query.username : req.user.username;
-    User.findOne({username: username}, (err, user) => {
+    User.findOne({username: req.query.username || req.user.username}, (err, user) => {
         if (!err && user) {
             res.json({
                 username: user.username,
-                schedule: user.schedule
+                scheduledStreams: user.scheduledStreams
             });
         }
     });

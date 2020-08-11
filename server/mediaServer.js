@@ -1,7 +1,7 @@
 const NodeMediaServer = require('node-media-server');
 const config = require('../mainroom.config');
-const Stream = require('./database/schema').Stream;
-const helpers = require('./helpers/helpers');
+const User = require('./database/schema').User;
+const helpers = require('./helpers/thumbnailGenerator');
 const LOGGER = require('node-media-server/node_core_logger');
 
 const nms = new NodeMediaServer(config.rtmpServer);
@@ -9,7 +9,11 @@ const nms = new NodeMediaServer(config.rtmpServer);
 nms.on('prePublish', async (id, streamPath, args) => {
     LOGGER.log('[NodeEvent on prePublish]', `id=${id} StreamPath=${streamPath} args=${JSON.stringify(args)}`);
     const streamKey = getStreamKeyFromStreamPath(streamPath);
-    Stream.findOne({streamKey: streamKey}, (err, user) => {
+    User.findOne({
+        streamInfo: {
+            streamKey: streamKey
+        }
+    }, (err, user) => {
         if (!err) {
             if (!user) {
                 let session = nms.getSession(id);

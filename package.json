@@ -37,7 +37,6 @@
     "react-calendar-timeline": "^0.27.0",
     "react-dom": "^16.13.1",
     "react-router-dom": "^4.3.1",
-    "request": "^2.88.2",
     "session-file-store": "^1.4.0",
     "shortid": "^2.2.15",
     "socket.io": "^2.3.0",

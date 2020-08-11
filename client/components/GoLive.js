@@ -39,13 +39,13 @@ export default class GoLive extends React.Component {
     }
 
     getUserSettings() {
-        axios.get('/settings').then(res => {
+        axios.get('/streams').then(res => {
             this.setState({
                 streamKey: res.data.streamKey,
-                streamTitle: res.data.streamTitle,
-                streamGenre: res.data.streamGenre,
-                streamCategory: res.data.streamCategory,
-                streamTags: res.data.streamTags
+                streamTitle: res.data.title,
+                streamGenre: res.data.genre,
+                streamCategory: res.data.category,
+                streamTags: res.data.tags
             });
         });
     }
@@ -60,7 +60,7 @@ export default class GoLive extends React.Component {
     }
 
     generateStreamKey() {
-        axios.post('/settings/streamKey').then(res => {
+        axios.post('/streams/streamKey').then(res => {
             this.setState({
                 streamKey: res.data.streamKey
             });
@@ -114,17 +114,17 @@ export default class GoLive extends React.Component {
     }
 
     saveSettings() {
-        axios.post('/settings', {
-            streamTitle: this.state.streamTitle,
-            streamGenre: this.state.streamGenre,
-            streamCategory: this.state.streamCategory,
-            streamTags: this.state.streamTags
+        axios.post('/streams', {
+            title: this.state.streamTitle,
+            genre: this.state.streamGenre,
+            category: this.state.streamCategory,
+            tags: this.state.streamTags
         }).then(res => {
             this.setState({
-                streamTitle: res.data.streamTitle,
-                streamGenre: res.data.streamGenre,
-                streamCategory: res.data.streamCategory,
-                streamTags: res.data.streamTags,
+                streamTitle: res.data.title,
+                streamGenre: res.data.genre,
+                streamCategory: res.data.category,
+                streamTags: res.data.tags,
                 unsavedChanges: false
             })
         });

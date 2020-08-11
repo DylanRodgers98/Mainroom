@@ -1,22 +1,33 @@
 const express = require('express');
 const router = express.Router();
-const Stream = require('../database/schema').Stream;
+const User = require('../database/schema').User;
 const loginChecker = require('connect-ensure-login');
+const shortid = require('shortid');
 
 router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
     if (req.query.streamKeys) {
-        const query = {streamKey: {$in: req.query.streamKeys}};
+        const query = {
+            streamInfo: {
+                streamKey: {$in: req.query.streamKeys}
+            }
+        };
 
         if (req.query.genre) {
-            query.genre = req.query.genre;
+            query.streamInfo.genre = req.query.genre;
         }
         if (req.query.category) {
-            query.category = req.query.category;
+            query.streamInfo.category = req.query.category;
         }
 
-        Stream.find(query).then(streams => {
-            if (streams) {
-                res.json(streams);
+        User.find(query).then(users => {
+            if (users) {
+                const streamInfo = users.map(user => {
+                    return {
+                        username: user.username,
+                        streamKey: user.streamInfo.streamKey
+                    };
+                })
+                res.json(streamInfo);
             }
         });
     }
@@ -28,36 +39,81 @@ router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
 
         const query = {
             $and: [
-                {streamKey: {$in: req.query.streamKeys}},
+                {
+                    streamInfo: {
+                        streamKey: {$in: req.query.streamKeys}
+                    }
+                },
                 {$or: [{title: searchQuery}, {tags: searchQuery}, {username: searchQuery}]}
             ]
         };
         if (req.query.genre) {
-            query.$and.push({genre: req.query.genre});
+            query.$and[0].streamInfo.genre = req.query.genre
         }
         if (req.query.category) {
-            query.$and.push({category: req.query.category});
+            query.$and[0].streamInfo.category = req.query.category;
         }
 
-        Stream.find(query).then(streams => {
-            if (streams) {
-                res.json(streams);
-            }
+        User.find(query).then(users => {
+            const streamInfo = users.map(user => {
+                return {
+                    username: user.username,
+                    streamKey: user.streamInfo.streamKey
+                };
+            })
+            res.json(streamInfo);
         })
     }
 });
 
 router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
-    Stream.findOne({username: req.query.username}).then(stream => {
-        if (stream) {
+    User.findOne({username: req.query.username || req.user.username}, (err, user) => {
+        if (!err && user.streamInfo) {
             res.json({
-                username: stream.username,
-                streamKey: stream.streamKey,
-                title: stream.title,
-                genre: stream.genre,
-                category: stream.category,
-                tags: stream.tags
+                streamKey: user.streamInfo.streamKey,
+                title: user.streamInfo.title,
+                genre: user.streamInfo.genre,
+                category: user.streamInfo.category,
+                tags: user.streamInfo.tags
             });
+        }
+    });
+});
+
+router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOneAndUpdate({
+        username: req.user.username
+    }, {
+        'streamInfo.title': req.body.title,
+        'streamInfo.genre': req.body.genre,
+        'streamInfo.category': req.body.category,
+        'streamInfo.tags': req.body.tags
+    }, {
+        new: true,
+    }, (err, user) => {
+        if (!err && user.streamInfo) {
+            res.json({
+                title: user.streamInfo.title,
+                genre: user.streamInfo.genre,
+                category: user.streamInfo.category,
+                tags: user.streamInfo.tags
+            });
+        }
+    });
+});
+
+router.post('/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOneAndUpdate({
+        username: req.user.username
+    }, {
+        'streamInfo.streamKey': shortid.generate()
+    }, {
+        new: true,
+    }, (err, user) => {
+        if (!err && user.streamInfo) {
+            res.json({
+                streamKey: user.streamInfo.streamKey
+            })
         }
     });
 });
