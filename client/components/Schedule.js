@@ -28,7 +28,7 @@ export default class Schedule extends React.Component {
     }
 
     getOwnSchedule() {
-        axios.get('/user/schedule').then(res => {
+        axios.get('/user').then(res => {
             this.buildOwnSchedule({
                 username: res.data.username,
                 scheduledStreams: res.data.scheduledStreams
@@ -59,16 +59,16 @@ export default class Schedule extends React.Component {
 
     getSchedulesFromSubscriptions() {
         axios.get('/user/subscriptions').then(res => {
-            res.data.subscriptions.forEach(userId => {
-                this.getScheduleForUser(userId);
+            res.data.subscriptions.forEach(user => {
+                this.getScheduleForUser(user.username);
             });
         });
     }
 
-    getScheduleForUser(userId) {
-        axios.get('/user/schedule', {
+    getScheduleForUser(username) {
+        axios.get('/user', {
             params: {
-                userId: userId
+                username: username
             }
         }).then(res => {
             this.buildScheduleFromSubscription({

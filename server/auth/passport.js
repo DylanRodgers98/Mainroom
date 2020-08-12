@@ -21,7 +21,7 @@ passport.deserializeUser((id, done) => {
     User.findById(id, (err, user) => {
         if (err) {
             LOGGER.error(`Error deserializing user (_id: ${id})`);
-            throw err;
+            return done(err);
         }
         done(null, user);
     });
@@ -49,14 +49,14 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             done(null, false);
         } else {
             const user = new User();
-            user._id = new mongoose.Types.ObjectId(),
+            user._id = new mongoose.Types.ObjectId();
             user.username = req.body.username;
             user.email = email;
             user.password = user.generateHash(password);
             user.streamInfo.streamKey = shortid.generate();
             user.save(err => {
                 if (err) {
-                    LOGGER.error('An error occurred when saving new User:', JSON.stringify(user), '\n', 'Error:', err);
+                    LOGGER.error('An error occurred when saving new User: ' + JSON.stringify(user) + ', Error: ' + err);
                     return done(err)
                 }
             });

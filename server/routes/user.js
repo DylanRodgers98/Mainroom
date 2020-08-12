@@ -9,7 +9,7 @@ router.get('/loggedIn', loginChecker.ensureLoggedIn(), (req, res) => {
 
 router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOne({username: req.query.username})
-        .populate('ScheduledStream')
+        .populate('scheduledStreams')
         .exec((err, user) => {
             if (!err && user) {
                 res.json({
@@ -24,23 +24,12 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.query.username || req.user.username}, (err, user) => {
-        if (!err && user) {
-            res.json({
-                subscriptions: user.subscriptions
-            });
-        }
-    });
-});
-
-router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findById({_id: req.query.userId || req.user._id})
-        .populate('ScheduledStream')
+    User.findOne({username: req.query.username || req.user.username})
+        .populate('subscriptions')
         .exec((err, user) => {
             if (!err && user) {
                 res.json({
-                    username: user.username,
-                    scheduledStreams: user.scheduledStreams
+                    subscriptions: user.subscriptions
                 });
             }
         });
