@@ -25,7 +25,7 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }}
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1=
+      uses: github/codeql-action/init@v1
       with:
         languages: javascript
 
