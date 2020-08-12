@@ -1,6 +1,6 @@
 const NodeMediaServer = require('node-media-server');
 const config = require('../mainroom.config');
-const User = require('./database/schema').User;
+const User = require('./database/schemas').User;
 const helpers = require('./helpers/thumbnailGenerator');
 const LOGGER = require('node-media-server/node_core_logger');
 

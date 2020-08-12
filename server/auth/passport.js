@@ -1,6 +1,6 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const User = require('../database/schema').User;
+const User = require('../database/schemas').User;
 const shortid = require('shortid');
 const passwordValidator = require('./passwordValidator');
 const config = require('../../mainroom.config');

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../database/schema').User;
+const User = require('../database/schemas').User;
 const loginChecker = require('connect-ensure-login');
 
 router.get('/loggedIn', loginChecker.ensureLoggedIn(), (req, res) => {
@@ -8,17 +8,19 @@ router.get('/loggedIn', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.query.username}, (err, user) => {
-        if (!err && user) {
-            res.json({
-                username: user.username,
-                location: user.location,
-                bio: user.bio,
-                numOfSubscribers: user.subscribers.length,
-                schedule: user.scheduledStreams
-            });
-        }
-    });
+    User.findOne({username: req.query.username})
+        .populate('ScheduledStream')
+        .exec((err, user) => {
+            if (!err && user) {
+                res.json({
+                    username: user.username,
+                    location: user.location,
+                    bio: user.bio,
+                    numOfSubscribers: user.subscribers.length,
+                    scheduledStreams: user.scheduledStreams
+                });
+            }
+        });
 });
 
 router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
@@ -32,54 +34,72 @@ router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.query.username || req.user.username}, (err, user) => {
-        if (!err && user) {
-            res.json({
-                username: user.username,
-                scheduledStreams: user.scheduledStreams
-            });
-        }
-    });
+    User.findById({_id: req.query.userId || req.user._id})
+        .populate('ScheduledStream')
+        .exec((err, user) => {
+            if (!err && user) {
+                res.json({
+                    username: user.username,
+                    scheduledStreams: user.scheduledStreams
+                });
+            }
+        });
 });
 
 router.get('/subscribedTo', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.user.username}, (err, user) => {
-        if (!err && user) {
-            res.send(user.subscriptions.includes(req.query.otherUser));
+    User.findOne({username: req.query.otherUsername}, (err, otherUser) => {
+        if (!err && otherUser) {
+            res.send(otherUser.subscriptions.includes(req.user._id));
         }
     });
 });
 
 router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
-        username: req.user.username
-    }, {
-        $addToSet: {subscriptions: req.body.userToSubscribeTo}
-    });
-
-    User.findOneAndUpdate({
         username: req.body.userToSubscribeTo
     }, {
-        $addToSet: {subscribers: req.user.username}
+        $addToSet: {subscribers: req.user._id}
+    }, (err, userToSubscribeTo) => {
+        if (err || !userToSubscribeTo) {
+            res.sendStatus(500);
+        } else {
+            User.findByIdAndUpdate({
+                username: req.user._id
+            }, {
+                $addToSet: {subscriptions: userToSubscribeTo._id}
+            }, (err, user) => {
+                if (err || !user) {
+                    res.sendStatus(500);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
+        }
     });
-
-    res.sendStatus(200);
 });
 
 router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
-        username: req.user.username
-    }, {
-        $pull: {subscriptions: req.body.userToUnsubscribeFrom}
-    });
-
-    User.findOneAndUpdate({
         username: req.body.userToUnsubscribeFrom
     }, {
-        $pull: {subscribers: req.user.username}
+        $pull: {subscribers: req.user._id}
+    }, (err, userToUnsubscribeFrom) => {
+        if (err || !userToUnsubscribeFrom) {
+            res.sendStatus(500);
+        } else {
+            User.findByIdAndUpdate({
+                username: req.user._id
+            }, {
+                $pull: {subscriptions: userToUnsubscribeFrom._id}
+            }, (err, user) => {
+                if (err || !user) {
+                    res.sendStatus(500);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
+        }
     });
-
-    res.sendStatus(200);
 });
 
 //TODO: create get route for profile pic

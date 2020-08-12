@@ -30,7 +30,9 @@ export default class UserProfile extends React.Component {
             streamTitle: '',
             streamGenre: '',
             streamCategory: '',
-            redirectToEditProfile: false
+            redirectToEditProfile: false,
+            upcomingStreamsStartTime: moment().startOf('day'),
+            upcomingStreamsEndTime: moment().startOf('day').add(7, 'day')
         }
     }
 
@@ -42,7 +44,7 @@ export default class UserProfile extends React.Component {
         }).then(res => {
             if (res.data.username) {
                 this.populateProfile(res.data)
-                this.buildSchedule(res.data.schedule);
+                this.buildSchedule(res.data.scheduledStreams);
                 this.isProfileOfLoggedInUser();
                 this.isLoggedInUserSubscribed();
                 this.getLiveStreamIfLive();
@@ -59,17 +61,23 @@ export default class UserProfile extends React.Component {
         });
     }
 
-    buildSchedule(schedule) {
-        schedule.forEach(stream => {
-            this.setState({
-                scheduleItems: [...this.state.scheduleItems, {
-                    id: this.state.scheduleItems.length,
-                    group: 0,
-                    title: this.props.match.params.username,
-                    start_time: moment(stream.startTime),
-                    end_time: moment(stream.endTime)
-                }]
-            });
+    buildSchedule(scheduledStreams) {
+        scheduledStreams.forEach(scheduledStream => {
+            const startTime = moment(scheduledStream.startTime);
+            const endTime = moment(scheduledStream.endTime);
+
+            if (startTime.isBetween(this.state.upcomingStreamsStartTime, this.state.upcomingStreamsEndTime)
+                || endTime.isBetween(this.state.upcomingStreamsStartTime, this.state.upcomingStreamsEndTime)) {
+                this.setState({
+                    scheduleItems: [...this.state.scheduleItems, {
+                        id: this.state.scheduleItems.length,
+                        group: 0,
+                        title: this.props.match.params.username,
+                        start_time: startTime,
+                        end_time: endTime
+                    }]
+                });
+            }
         });
     }
 
@@ -85,7 +93,7 @@ export default class UserProfile extends React.Component {
         if (!this.state.isProfileOfLoggedInUser) {
             axios.get('/user/subscribedTo', {
                 params: {
-                    otherUser: this.props.match.params.username
+                    otherUsername: this.props.match.params.username
                 }
             }).then(res => {
                 this.setState({
@@ -225,8 +233,8 @@ export default class UserProfile extends React.Component {
                     <Col xs='9'>
                         <h3>Upcoming Streams</h3>
                         <Timeline groups={[{id: 0}]} items={this.state.scheduleItems} sidebarWidth='0'
-                                  visibleTimeStart={moment().startOf('day')}
-                                  visibleTimeEnd={moment().startOf('day').add(7, 'day')}/>
+                                  visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
+                                  visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
                         <hr className="my-4"/>
                         {this.renderLiveStream()}
                     </Col>

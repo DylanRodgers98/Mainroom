@@ -31,12 +31,12 @@ export default class Schedule extends React.Component {
         axios.get('/user/schedule').then(res => {
             this.buildOwnSchedule({
                 username: res.data.username,
-                schedule: res.data.schedule
+                scheduledStreams: res.data.scheduledStreams
             });
         });
     }
 
-    buildOwnSchedule({username, schedule}) {
+    buildOwnSchedule({username, scheduledStreams}) {
         this.setState({
             scheduleGroups: [...this.state.scheduleGroups, {
                 id: 0,
@@ -44,14 +44,14 @@ export default class Schedule extends React.Component {
             }]
         });
 
-        schedule.forEach(stream => {
+        scheduledStreams.forEach(scheduledStream => {
             this.setState({
                 scheduleItems: [...this.state.scheduleItems, {
                     id: this.state.scheduleItems.length,
                     group: 0,
                     title: username,
-                    start_time: moment(stream.startTime),
-                    end_time: moment(stream.endTime)
+                    start_time: moment(scheduledStream.startTime),
+                    end_time: moment(scheduledStream.endTime)
                 }]
             });
         });
@@ -59,32 +59,32 @@ export default class Schedule extends React.Component {
 
     getSchedulesFromSubscriptions() {
         axios.get('/user/subscriptions').then(res => {
-            res.data.subscriptions.forEach(username => {
-                this.getScheduleForUser(username);
+            res.data.subscriptions.forEach(userId => {
+                this.getScheduleForUser(userId);
             });
         });
     }
 
-    getScheduleForUser(username) {
+    getScheduleForUser(userId) {
         axios.get('/user/schedule', {
             params: {
-                username: username
+                userId: userId
             }
         }).then(res => {
             this.buildScheduleFromSubscription({
                 username: res.data.username,
-                schedule: res.data.schedule
+                scheduledStreams: res.data.scheduledStreams
             });
         });
     }
 
-    buildScheduleFromSubscription({username, schedule}) {
+    buildScheduleFromSubscription({username, scheduledStreams}) {
         const groupId = this.state.scheduleGroups.length;
         let addedToSchedule = false;
 
-        schedule.forEach(stream => {
-            const startTime = moment(stream.startTime);
-            const endTime = moment(stream.endTime);
+        scheduledStreams.forEach(scheduledStream => {
+            const startTime = moment(scheduledStream.startTime);
+            const endTime = moment(scheduledStream.endTime);
 
             if (startTime.isBetween(this.state.startTime, this.state.endTime)
                 || endTime.isBetween(this.state.startTime, this.state.endTime)) {
@@ -163,7 +163,8 @@ export default class Schedule extends React.Component {
                     </DateTimeRangeContainer>
                 </div>
                 <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
-                          visibleTimeStart={this.state.startTime} visibleTimeEnd={this.state.endTime}/>
+                          visibleTimeStart={this.state.startTime.valueOf()}
+                          visibleTimeEnd={this.state.endTime.valueOf()}/>
                 <p className='my-3 text-center'>
                     {this.state.scheduleGroups.length > 1 ? ''
                         : 'Streams scheduled by your subscriptions during the selected time period will appear here'}
