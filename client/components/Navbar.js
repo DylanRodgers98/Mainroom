@@ -128,7 +128,7 @@ export default class Navbar extends React.Component {
             return <DropdownItem tag={Link} to={`/category/${link}`}>{category}</DropdownItem>;
         })
 
-        const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText}`: '';
+        const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText}` : '';
 
         return (
             <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -158,16 +158,20 @@ export default class Navbar extends React.Component {
                         </div>
                     </div>
                     <div className="navbar-nav ml-auto">
-                        <Link className='nav-item nav-link float-right' to='/go-live'>Go Live</Link>
-                        <Dropdown className="nav-item float-left" isOpen={this.state.profileDropdownOpen}
-                                  toggle={this.profileDropdownToggle}>
+                        <Button className='nav-item nav-link float-right go-live-button' tag={Link} to='/go-live'>
+                            Go Live
+                        </Button>
+                        <Dropdown className="nav-item float-left navbar-settings-dropdown"
+                                  isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
                             <DropdownToggle caret>
                                 {/*TODO: get profile pic through API call*/}
-                                <img src={defaultProfilePic} width='25' height='25'/>
+                                <img src={defaultProfilePic} width='25' height='25'
+                                     alt={`${this.state.loggedInUser} profile picture as dropdown icon`}/>
                             </DropdownToggle>
                             <DropdownMenu right>
-                                <DropdownItem href={`/user/${this.state.loggedInUser}`}>My Profile</DropdownItem>
-                                <DropdownItem tag={Link} to={'/schedule'}>My Schedule</DropdownItem>
+                                <DropdownItem href={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
+                                <DropdownItem tag={Link} to={'/schedule'}>Schedule</DropdownItem>
+                                <DropdownItem tag={Link} to={'/subscriptions'}>Subscriptions</DropdownItem>
                                 <DropdownItem divider/>
                                 <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
                                 <DropdownItem divider/>

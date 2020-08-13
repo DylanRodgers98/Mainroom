@@ -66,7 +66,7 @@ router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
     }
 });
 
-router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
+router.get('/user', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOne({username: req.query.username || req.user.username}, (err, user) => {
         if (!err && user.streamInfo) {
             res.json({
@@ -80,7 +80,7 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
-router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
+router.post('/user', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
         username: req.user.username
     }, {
@@ -102,7 +102,7 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
-router.post('/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
+router.post('/user/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
         username: req.user.username
     }, {

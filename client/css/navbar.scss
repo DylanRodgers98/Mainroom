@@ -11,3 +11,21 @@
 .search-box {
   flex-shrink: 0;
 }
+
+.go-live-button {
+  background-color: #343a40 !important;
+  border-color: #343a40 !important;
+}
+
+.go-live-button:hover {
+  background-color: #5a6268 !important;
+  border-color: #545b62 !important;
+}
+
+.navbar-settings-dropdown {
+
+  .btn {
+    padding: 0.375rem;
+  }
+
+}

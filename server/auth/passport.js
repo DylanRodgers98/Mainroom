@@ -87,7 +87,7 @@ function flashInvalidPassword(req) {
 }
 
 passport.use('localLogin', new LocalStrategy(strategyOptions, (req, email, password, done) => {
-    User.findOne({'email': email}, (err, user) => {
+    User.findOne({'email': email}).select('+password').exec((err, user) => {
         if (err) {
             LOGGER.error('An error occurred during user login: ', err);
             return done(err);

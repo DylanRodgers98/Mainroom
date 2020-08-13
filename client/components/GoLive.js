@@ -39,7 +39,7 @@ export default class GoLive extends React.Component {
     }
 
     getUserSettings() {
-        axios.get('/streams').then(res => {
+        axios.get('/streams/user').then(res => {
             this.setState({
                 streamKey: res.data.streamKey,
                 streamTitle: res.data.title,
@@ -60,7 +60,7 @@ export default class GoLive extends React.Component {
     }
 
     generateStreamKey() {
-        axios.post('/streams/streamKey').then(res => {
+        axios.post('/streams/user/streamKey').then(res => {
             this.setState({
                 streamKey: res.data.streamKey
             });
@@ -114,7 +114,7 @@ export default class GoLive extends React.Component {
     }
 
     saveSettings() {
-        axios.post('/streams', {
+        axios.post('/streams/user', {
             title: this.state.streamTitle,
             genre: this.state.streamGenre,
             category: this.state.streamCategory,

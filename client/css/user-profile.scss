@@ -2,8 +2,13 @@
     width: 100%;
 }
 
-.live-stream-title-link {
+.black-link {
     a {
         color: black;
+    }
+
+    a:hover {
+        color: darkred;
+        text-decoration: none;
     }
 }

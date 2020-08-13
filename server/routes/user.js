@@ -23,9 +23,27 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
         });
 });
 
+router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOne({username: req.query.username || req.user.username})
+        .populate({
+            path: 'subscribers',
+            select: 'username'
+        })
+        .exec((err, user) => {
+            if (!err && user) {
+                res.json({
+                    subscribers: user.subscribers
+                });
+            }
+        });
+});
+
 router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOne({username: req.query.username || req.user.username})
-        .populate('subscriptions')
+        .populate({
+            path: 'subscriptions',
+            select: 'username'
+        })
         .exec((err, user) => {
             if (!err && user) {
                 res.json({
@@ -52,9 +70,7 @@ router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
         if (err || !userToSubscribeTo) {
             res.sendStatus(500);
         } else {
-            User.findByIdAndUpdate({
-                username: req.user._id
-            }, {
+            User.findByIdAndUpdate(req.user._id, {
                 $addToSet: {subscriptions: userToSubscribeTo._id}
             }, (err, user) => {
                 if (err || !user) {
@@ -76,9 +92,7 @@ router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
         if (err || !userToUnsubscribeFrom) {
             res.sendStatus(500);
         } else {
-            User.findByIdAndUpdate({
-                username: req.user._id
-            }, {
+            User.findByIdAndUpdate(req.user._id, {
                 $pull: {subscriptions: userToUnsubscribeFrom._id}
             }, (err, user) => {
                 if (err || !user) {
