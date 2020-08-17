@@ -23,7 +23,7 @@ jest.mock('axios', () => {
             if (url === '/user') {
                 return {
                     data: {
-                        username: config !== undefined ? config.params.username : mockOwnUsername,
+                        username: config.params.username || mockOwnUsername,
                         scheduledStreams: [{
                             startTime: mockStartTime,
                             endTime: mockEndTime
