@@ -47,8 +47,17 @@ module.exports = {
             allowedSpecialChars: '-[]/{}()*+?.\\^$|~`!#%^&=;,\'":<>'
         }
     },
-    cron: {
-        thumbnailGenerator: '*/5 * * * * *'
+    thumbnailGenerator: {
+        cron: '*/5 * * * * *'
+    },
+    scheduledStreamDeleter: {
+        cron: '0 0 0 * * *',
+        ageToDelete: {
+            seconds: 0,
+            minutes: 0,
+            hours: 0,
+            days: 7
+        }
     },
     storage: {
         thumbnails: 'server/thumbnails',

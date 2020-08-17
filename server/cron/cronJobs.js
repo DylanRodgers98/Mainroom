@@ -1,7 +1,11 @@
-const LOGGER = require('node-media-server/node_core_logger');
+const LOGGER = require('../logger')('server/cron/cronJobs.js');
 const thumbnailGenerator = require('./thumbnailGeneratorCronJob');
+const scheduledStreamDeleter = require('./scheduledStreamDeleterCronJob');
 
-const cronJobs = [thumbnailGenerator];
+const cronJobs = [
+    thumbnailGenerator,
+    scheduledStreamDeleter
+];
 
 function startAll() {
     cronJobs.forEach(async cronJob => {

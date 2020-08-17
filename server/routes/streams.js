@@ -4,6 +4,7 @@ const User = require('../database/schemas').User;
 const ScheduledStream = require('../database/schemas').ScheduledStream;
 const loginChecker = require('connect-ensure-login');
 const shortid = require('shortid');
+const LOGGER = require('../logger')('server/routes/streams.js');
 
 router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
     if (req.query.streamKeys) {
@@ -146,6 +147,18 @@ router.post('/addToSchedule', loginChecker.ensureLoggedIn(), (req, res) => {
                     })
                 }
             });
+        }
+    });
+});
+
+router.post('/deleteOldScheduledStreams', req => {
+    ScheduledStream.deleteMany({
+        endTime: {$lte: req.query.endedBefore}
+    }, (err, res) => {
+        if (err) {
+            LOGGER.error('An error occurred when deleting old scheduled streams: ' + err);
+        } else {
+            LOGGER.log(`Deleted ${res.deletedCount} old scheduled streams`);
         }
     });
 });
