@@ -223,7 +223,7 @@ export default class UserProfile extends React.Component {
                         </h5>
                         <div>
                             {this.renderRedirectToEditProfile()}
-                            <Button className='btn btn-dark subscribe-button'
+                            <Button className='btn-dark subscribe-button'
                                     onClick={this.onClickSubscribeOrEditProfileButton}>
                                 {this.getSubscribeOrEditProfileButtonText()}
                             </Button>

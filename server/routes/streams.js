@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../database/schemas').User;
+const ScheduledStream = require('../database/schemas').ScheduledStream;
 const loginChecker = require('connect-ensure-login');
 const shortid = require('shortid');
 
@@ -114,6 +115,37 @@ router.post('/user/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
             res.json({
                 streamKey: user.streamInfo.streamKey
             })
+        }
+    });
+});
+
+router.post('/addToSchedule', loginChecker.ensureLoggedIn(), (req, res) => {
+    const scheduledStream = new ScheduledStream({
+        user: req.user._id,
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
+        title: req.body.title,
+        genre: req.body.genre,
+        category: req.body.category,
+        tags: req.body.tags
+    });
+
+    scheduledStream.save((err) => {
+        if (!err) {
+            User.findOneAndUpdate({
+                username: req.user.username
+            }, {
+                $push: {scheduledStreams: scheduledStream._id}
+            }, {
+                new: true,
+            }, (err, user) => {
+                if (!err && user.scheduledStreams) {
+                    res.json({
+                        username: user.username,
+                        scheduledStream: scheduledStream
+                    })
+                }
+            });
         }
     });
 });

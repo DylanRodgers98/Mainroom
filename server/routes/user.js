@@ -8,8 +8,20 @@ router.get('/loggedIn', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.query.username})
-        .populate('scheduledStreams')
+    const populateArgs = {path: 'scheduledStreams'};
+    const match = {};
+    if (req.query.scheduleStartTime) {
+        match.startTime = {$gte: req.query.scheduleStartTime};
+    }
+    if (req.query.scheduleEndTime) {
+        match.endTime = {$lte: req.query.scheduleEndTime};
+    }
+    if (match !== {}) {
+        populateArgs.match = match;
+    }
+
+    User.findOne({username: req.query.username || req.user.username})
+        .populate(populateArgs)
         .exec((err, user) => {
             if (!err && user) {
                 res.json({

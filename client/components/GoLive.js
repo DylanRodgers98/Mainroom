@@ -159,7 +159,7 @@ export default class GoLive extends React.Component {
                                         <input id="serverUrlInput" type="text" value="rtmp://127.0.0.1:1935/live"/>
                                     </td>
                                     <td>
-                                        <Button className="btn btn-dark ml-1" size="sm"
+                                        <Button className="btn-dark ml-1" size="sm"
                                                 onClick={() => this.copyFrom('serverUrlInput')}>
                                             Copy
                                         </Button>
@@ -178,11 +178,11 @@ export default class GoLive extends React.Component {
                                                value={this.state.streamKey}/>
                                     </td>
                                     <td>
-                                        <Button className="btn btn-dark mt-2 ml-1" size="sm"
+                                        <Button className="btn-dark mt-2 ml-1" size="sm"
                                                 onClick={() => this.copyFrom('streamKeyInput')}>
                                             Copy
                                         </Button>
-                                        <Button className="btn btn-dark mt-2 ml-1" size="sm"
+                                        <Button className="btn-dark mt-2 ml-1" size="sm"
                                                 onClick={this.generateStreamKey}>
                                             Generate a new key
                                         </Button>
@@ -242,7 +242,7 @@ export default class GoLive extends React.Component {
                     </table>
                     <hr className="my-4"/>
                     <div className="float-right">
-                        <Button className="btn btn-dark" size="lg" disabled={!this.state.unsavedChanges}
+                        <Button className="btn-dark" size="lg" disabled={!this.state.unsavedChanges}
                                 onClick={this.saveSettings}>
                             Save Settings
                         </Button>

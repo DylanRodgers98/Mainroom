@@ -185,7 +185,7 @@ export default class UserStream extends React.Component {
             !this.state.doesUserExist ? <FourOhFour/> : (
                 <div className='mt-5 not-live'>
                     <h3>Cannot find livestream for user {this.props.match.params.username}</h3>
-                    <Button className='btn btn-dark' tag={Link} to={`/user/${this.props.match.params.username}`}>
+                    <Button className='btn-dark' tag={Link} to={`/user/${this.props.match.params.username}`}>
                         Go To Profile
                     </Button>
                 </div>
