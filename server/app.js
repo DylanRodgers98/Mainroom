@@ -14,7 +14,7 @@ const flash = require('connect-flash');
 const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
-const LOGGER = require('node-media-server/node_core_logger');
+const LOGGER = require('./logger')('server/app.js');
 
 mongoose.connect(config.database.uri, {
     useNewUrlParser: true,
