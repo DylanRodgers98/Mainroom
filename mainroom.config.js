@@ -2,7 +2,7 @@ module.exports = {
     siteTitle: 'Mainroom',
     headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
     server: {
-        secret: 'kjVkuti2xAyF3JGCzSZTk0YWM5JhI9mgQW4rytXc',
+        secretLocation: './sessions/secret.txt',
         port: {
             http: 8080
         }

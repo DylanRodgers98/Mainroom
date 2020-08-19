@@ -14,6 +14,7 @@ const flash = require('connect-flash');
 const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
+const {resolveFilePath, decodeBase64File} = require("./helpers/fileHelpers");
 const LOGGER = require('./logger')('server/app.js');
 
 mongoose.connect(config.database.uri, {
@@ -36,7 +37,7 @@ app.use(Session({
     store: new FileStore({
         path: config.storage.sessions
     }),
-    secret: config.server.secret,
+    secret: decodeBase64File(resolveFilePath(config.server.secretLocation)),
     maxAge: Date.now + (60 * 1000 * 30),
     resave: true,
     saveUninitialized: false,
@@ -71,6 +72,7 @@ io.on('connection', socket => {
 // Start server
 httpServer.listen(config.server.port.http || 8080, () => {
     LOGGER.log(`${config.siteTitle} HTTP server listening on port: ${config.server.port.http || 8080}`)
+    LOGGER.log(config.server.secretLocation);
 });
 nodeMediaServer.run();
 cronJobs.startAll();
