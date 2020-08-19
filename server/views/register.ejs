@@ -10,10 +10,7 @@
     <hr class="my-4">
 
     <div class="row">
-        <form action="/register"
-              method="post"
-              class="col-xs-12 col-sm-12 col-md-8 col-lg-6">
-
+        <form action="/register" method="post" class="col-xs-12 col-sm-12 col-md-8 col-lg-6">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input id="username" type="text" name="username" class="form-control" placeholder="Enter username" required>
@@ -56,6 +53,7 @@
             </div>
 
             <button type="submit" class="btn btn-dark btn-block mb-3">Register</button>
+            <input type="hidden" name="_csrf" value="{{csrfToken}}">
         </form>
     </div>
 </div>

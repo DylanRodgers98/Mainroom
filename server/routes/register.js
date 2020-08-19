@@ -11,7 +11,8 @@ router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
             email: req.flash('email'),
             password: req.flash('password'),
             confirmPassword: req.flash('confirmPassword')
-        }
+        },
+        csrfToken: req.csrfToken()
     });
 });
 

@@ -11,7 +11,6 @@
 
     <div class="row">
         <form action="/login" method="post" class="col-xs-12 col-sm-12 col-md-8 col-lg-6">
-
             <div class="form-group">
                 <label for="email">Email address</label>
                 <input id="email" type="email" name="email" class="form-control" placeholder="Enter email" required>
@@ -32,6 +31,7 @@
             </div>
 
             <button type="submit" class="btn btn-dark btn-block mb-3">Login</button>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         </form>
     </div>
 </div>

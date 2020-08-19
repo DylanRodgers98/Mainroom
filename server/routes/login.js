@@ -8,7 +8,8 @@ router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
         user: null,
         errors: {
             login: req.flash('login')
-        }
+        },
+        csrfToken: req.csrfToken()
     });
 });
 

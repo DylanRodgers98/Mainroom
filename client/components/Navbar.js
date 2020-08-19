@@ -1,9 +1,9 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from "reactstrap";
+import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from 'reactstrap';
 import config from '../../mainroom.config';
 import '../css/navbar.scss';
-import axios from "axios";
+import axios from 'axios';
 import defaultProfilePic from '../img/defaultProfilePic.png'; //TODO: change this from trollface lmao
 
 export default class Navbar extends React.Component {
