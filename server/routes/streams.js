@@ -5,6 +5,7 @@ const ScheduledStream = require('../database/schemas').ScheduledStream;
 const loginChecker = require('connect-ensure-login');
 const shortid = require('shortid');
 const _ = require('lodash');
+const sanitise = require('mongo-sanitize');
 const LOGGER = require('../logger')('server/routes/streams.js');
 
 router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
@@ -71,7 +72,7 @@ router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/user', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.query.username || req.user.username}, (err, user) => {
+    User.findOne({username: sanitise(req.query.username) || req.user.username}, (err, user) => {
         if (!err && user.streamInfo) {
             res.json({
                 streamKey: user.streamInfo.streamKey,
@@ -88,10 +89,10 @@ router.post('/user', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
         username: req.user.username
     }, {
-        'streamInfo.title': req.body.title,
-        'streamInfo.genre': req.body.genre,
-        'streamInfo.category': req.body.category,
-        'streamInfo.tags': req.body.tags
+        'streamInfo.title': sanitise(req.body.title),
+        'streamInfo.genre': sanitise(req.body.genre),
+        'streamInfo.category': sanitise(req.body.category),
+        'streamInfo.tags': sanitise(req.body.tags)
     }, {
         new: true,
     }, (err, user) => {

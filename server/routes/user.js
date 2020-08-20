@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../database/schemas').User;
 const loginChecker = require('connect-ensure-login');
+const sanitise = require('mongo-sanitize');
 
 router.get('/loggedIn', loginChecker.ensureLoggedIn(), (req, res) => {
     res.json({username: req.user.username});
@@ -20,7 +21,7 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
         populateArgs.match = match;
     }
 
-    User.findOne({username: req.query.username || req.user.username})
+    User.findOne({username: sanitise(req.query.username) || req.user.username})
         .populate(populateArgs)
         .exec((err, user) => {
             if (!err && user) {
@@ -36,7 +37,7 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.query.username || req.user.username})
+    User.findOne({username: sanitise(req.query.username) || req.user.username})
         .populate({
             path: 'subscribers',
             select: 'username'
@@ -51,7 +52,7 @@ router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.query.username || req.user.username})
+    User.findOne({username: sanitise(req.query.username) || req.user.username})
         .populate({
             path: 'subscriptions',
             select: 'username'
@@ -66,7 +67,7 @@ router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/subscribedTo', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: req.query.otherUsername}, (err, otherUser) => {
+    User.findOne({username: sanitise(req.query.otherUsername)}, (err, otherUser) => {
         if (!err && otherUser) {
             res.send(otherUser.subscriptions.includes(req.user._id));
         }
@@ -75,7 +76,7 @@ router.get('/subscribedTo', loginChecker.ensureLoggedIn(), (req, res) => {
 
 router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
-        username: req.body.userToSubscribeTo
+        username: sanitise(req.body.userToSubscribeTo)
     }, {
         $addToSet: {subscribers: req.user._id}
     }, (err, userToSubscribeTo) => {
@@ -97,7 +98,7 @@ router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
 
 router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOneAndUpdate({
-        username: req.body.userToUnsubscribeFrom
+        username: sanitise(req.body.userToUnsubscribeFrom)
     }, {
         $pull: {subscribers: req.user._id}
     }, (err, userToUnsubscribeFrom) => {
