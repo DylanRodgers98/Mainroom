@@ -4,6 +4,7 @@ const User = require('../database/schemas').User;
 const ScheduledStream = require('../database/schemas').ScheduledStream;
 const loginChecker = require('connect-ensure-login');
 const shortid = require('shortid');
+const _ = require('lodash');
 const LOGGER = require('../logger')('server/routes/streams.js');
 
 router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
@@ -37,7 +38,8 @@ router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
 
 router.get('/search', loginChecker.ensureLoggedIn(), (req, res) => {
     if (req.query.streamKeys) {
-        const searchQuery = new RegExp(`^${req.query.query}$`, 'i');
+        const sanitisedQuery = _.escapeRegExp(req.query.query);
+        const searchQuery = new RegExp(`^${sanitisedQuery}$`, 'i');
 
         const query = {
             $and: [
