@@ -32,14 +32,16 @@ export default class UserProfile extends React.Component {
             streamCategory: '',
             redirectToEditProfile: false,
             upcomingStreamsStartTime: moment().startOf('day'),
-            upcomingStreamsEndTime: moment().startOf('day').add(7, 'day')
+            upcomingStreamsEndTime: moment().startOf('day').add(3, 'day')
         }
     }
 
     componentDidMount() {
         axios.get('/user', {
             params: {
-                username: this.props.match.params.username
+                username: this.props.match.params.username,
+                scheduleStartTime: this.state.upcomingStreamsStartTime.toDate(),
+                scheduleEndTime: this.state.upcomingStreamsEndTime.toDate(),
             }
         }).then(res => {
             if (res.data.username) {
@@ -63,21 +65,15 @@ export default class UserProfile extends React.Component {
 
     buildSchedule(scheduledStreams) {
         scheduledStreams.forEach(scheduledStream => {
-            const startTime = moment(scheduledStream.startTime);
-            const endTime = moment(scheduledStream.endTime);
-
-            if (startTime.isBetween(this.state.upcomingStreamsStartTime, this.state.upcomingStreamsEndTime)
-                || endTime.isBetween(this.state.upcomingStreamsStartTime, this.state.upcomingStreamsEndTime)) {
-                this.setState({
-                    scheduleItems: [...this.state.scheduleItems, {
-                        id: this.state.scheduleItems.length,
-                        group: 0,
-                        title: this.props.match.params.username,
-                        start_time: startTime,
-                        end_time: endTime
-                    }]
-                });
-            }
+            this.setState({
+                scheduleItems: [...this.state.scheduleItems, {
+                    id: this.state.scheduleItems.length,
+                    group: 0,
+                    title: this.props.match.params.username,
+                    start_time: moment(scheduledStream.startTime),
+                    end_time: moment(scheduledStream.endTime)
+                }]
+            });
         });
     }
 
@@ -199,8 +195,8 @@ export default class UserProfile extends React.Component {
                         <Link to={`/genre/${this.state.streamGenre}`}>
                             {this.state.streamGenre}
                         </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                            {this.state.streamCategory}
-                        </Link>
+                        {this.state.streamCategory}
+                    </Link>
                     </h5>
                 </Col>
             </Row>

@@ -9,20 +9,14 @@ router.get('/loggedIn', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
-    const populateArgs = {path: 'scheduledStreams'};
-    const match = {};
-    if (req.query.scheduleStartTime) {
-        match.startTime = {$gte: req.query.scheduleStartTime};
-    }
-    if (req.query.scheduleEndTime) {
-        match.endTime = {$lte: req.query.scheduleEndTime};
-    }
-    if (match !== {}) {
-        populateArgs.match = match;
-    }
-
     User.findOne({username: sanitise(req.query.username) || req.user.username})
-        .populate(populateArgs)
+        .populate({
+            path: 'scheduledStreams',
+            match: {
+                endTime: {$gte: req.query.scheduleStartTime},
+                startTime: {$lte: req.query.scheduleEndTime}
+            }
+        })
         .exec((err, user) => {
             if (!err && user) {
                 res.json({

@@ -25,6 +25,7 @@ export default class Schedule extends React.Component {
         this.addToSchedule = this.addToSchedule.bind(this);
 
         this.state = {
+            loaded: false,
             scheduleGroups: [],
             scheduleItems: [],
             startTime: moment(),
@@ -47,31 +48,28 @@ export default class Schedule extends React.Component {
         this.getSchedule();
     }
 
-    getSchedule() {
+    async getSchedule() {
+        await this.getOwnSchedule();
+        await this.getSchedulesFromSubscriptions();
         this.setState({
-            scheduleGroups: [],
-            scheduleItems: []
-        }, () => {
-            this.getOwnSchedule();
-            this.getSchedulesFromSubscriptions();
+            loaded: true
         });
     }
 
-    getOwnSchedule() {
-        axios.get('/user', {
+    async getOwnSchedule() {
+        const res = await axios.get('/user', {
             params: {
                 scheduleStartTime: this.state.startTime.toDate(),
                 scheduleEndTime: this.state.endTime.toDate()
             }
-        }).then(res => {
-            this.buildOwnSchedule({
-                username: res.data.username,
-                scheduledStreams: res.data.scheduledStreams
-            });
+        });
+        await this.buildOwnSchedule({
+            username: res.data.username,
+            scheduledStreams: res.data.scheduledStreams
         });
     }
 
-    buildOwnSchedule({username, scheduledStreams}) {
+    async buildOwnSchedule({username, scheduledStreams}) {
         this.setState({
             scheduleGroups: [...this.state.scheduleGroups, {
                 id: 0,
@@ -92,29 +90,27 @@ export default class Schedule extends React.Component {
         });
     }
 
-    getSchedulesFromSubscriptions() {
-        axios.get('/user/subscriptions').then(res => {
-            res.data.subscriptions.forEach(user => {
-                this.getScheduleForUser(user.username);
-            });
+    async getSchedulesFromSubscriptions() {
+        const res = await axios.get('/user/subscriptions');
+        res.data.subscriptions.forEach(user => {
+            this.getScheduleForUser(user.username);
         });
     }
 
-    getScheduleForUser(username) {
-        axios.get('/user', {
+    async getScheduleForUser(username) {
+        const res = await axios.get('/user', {
             params: {
                 username: username,
                 scheduleStartTime: this.state.startTime.toDate(),
                 scheduleEndTime: this.state.endTime.toDate()
             }
-        }).then(res => {
-            if (res.data.scheduledStreams.length) {
-                this.buildScheduleFromSubscription({
-                    username: res.data.username,
-                    scheduledStreams: res.data.scheduledStreams
-                });
-            }
         });
+        if (res.data.scheduledStreams.length) {
+            this.buildScheduleFromSubscription({
+                username: res.data.username,
+                scheduledStreams: res.data.scheduledStreams
+            });
+        }
     }
 
     buildScheduleFromSubscription({username, scheduledStreams}) {
@@ -165,6 +161,8 @@ export default class Schedule extends React.Component {
 
     applyDate(startTime, endTime) {
         this.setState({
+            scheduleGroups: [],
+            scheduleItems: [],
             startTime: startTime,
             endTime: endTime
         }, () => {
@@ -182,13 +180,12 @@ export default class Schedule extends React.Component {
         });
     }
 
-    getFilters() {
-        axios.get('/filters').then(res => {
-            this.setState({
-                genres: res.data.genres,
-                categories: res.data.categories
-            })
-        });
+    async getFilters() {
+        const res = await axios.get('/filters');
+        this.setState({
+            genres: res.data.genres,
+            categories: res.data.categories
+        })
     }
 
     genreDropdownToggle() {
@@ -235,25 +232,21 @@ export default class Schedule extends React.Component {
         });
     }
 
-    addToSchedule() {
-        axios.post('/streams/addToSchedule', {
+    async addToSchedule() {
+        await axios.post('/streams/addToSchedule', {
             startTime: this.state.scheduleStreamStartTime,
             endTime: this.state.scheduleStreamEndTime,
             title: this.state.scheduleStreamTitle,
             genre: this.state.scheduleStreamGenre,
             category: this.state.scheduleStreamCategory,
             tags: this.state.scheduleStreamTags
-        }).then(res => {
-            this.scheduleStreamToggle();
-            this.setState({
-                scheduleItems: [...this.state.scheduleItems, {
-                    id: this.state.scheduleItems.length,
-                    group: 0,
-                    title: res.data.scheduledStream.title || res.data.scheduledStream.username,
-                    start_time: moment(res.data.scheduledStream.startTime),
-                    end_time: moment(res.data.scheduledStream.endTime)
-                }]
-            });
+        });
+        this.scheduleStreamToggle();
+        this.setState({
+            scheduleGroups: [],
+            scheduleItems: []
+        }, () => {
+            this.getSchedule();
         });
     }
 
@@ -357,7 +350,8 @@ export default class Schedule extends React.Component {
     }
 
     render() {
-        return (
+        // TODO: create proper loading screen, to be used across components
+        return !this.state.loaded ? <h1>Loading...</h1> : (
             <React.Fragment>
                 <Container className='my-5'>
                     <Row>
@@ -375,8 +369,7 @@ export default class Schedule extends React.Component {
                         <DateTimeRangeContainer ranges={this.getDatePickerRange()} local={this.getDatePickerFormat()}
                                                 start={this.state.startTime} end={this.state.endTime}
                                                 applyCallback={this.applyDate} leftMode={true} noMobileMode={true}>
-                            <Dropdown className='date-picker-dropdown' size='sm' toggle={() => {
-                            }}>
+                            <Dropdown className='date-picker-dropdown' size='sm' toggle={() => {}}>
                                 <DropdownToggle caret>Select Time Period</DropdownToggle>
                             </Dropdown>
                         </DateTimeRangeContainer>

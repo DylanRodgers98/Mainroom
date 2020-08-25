@@ -169,7 +169,7 @@ export default class Navbar extends React.Component {
                                      alt={`${this.state.loggedInUser} profile picture as dropdown icon`}/>
                             </DropdownToggle>
                             <DropdownMenu right>
-                                <DropdownItem href={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
+                                <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
                                 <DropdownItem tag={Link} to={'/schedule'}>Schedule</DropdownItem>
                                 <DropdownItem tag={Link} to={'/subscriptions'}>Subscriptions</DropdownItem>
                                 <DropdownItem divider/>

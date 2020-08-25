@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
+import 'regenerator-runtime/runtime';
 import config from '../mainroom.config';
 import Navbar from "./components/Navbar";
 import LiveStreams from "./components/LiveStreams";
