@@ -8,7 +8,10 @@ module.exports = {
         }
     },
     database: {
-        uri: 'mongodb://127.0.0.1/mainroom'
+        uri: 'mongodb://127.0.0.1/mainroom',
+        scheduledStream: {
+            ttl: '7d'
+        }
     },
     rtmpServer: {
         rtmp: {
@@ -49,15 +52,6 @@ module.exports = {
     },
     thumbnailGenerator: {
         cron: '*/5 * * * * *'
-    },
-    scheduledStreamDeleter: {
-        cron: '0 0 0 * * *',
-        ageToDelete: {
-            seconds: 0,
-            minutes: 0,
-            hours: 0,
-            days: 7
-        }
     },
     storage: {
         thumbnails: 'server/thumbnails',

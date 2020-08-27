@@ -1,10 +1,8 @@
 const LOGGER = require('../logger')('server/cron/cronJobs.js');
 const thumbnailGenerator = require('./thumbnailGeneratorCronJob');
-const scheduledStreamDeleter = require('./scheduledStreamDeleterCronJob');
 
 const cronJobs = [
-    thumbnailGenerator,
-    scheduledStreamDeleter
+    thumbnailGenerator
 ];
 
 function startAll() {

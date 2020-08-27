@@ -154,16 +154,4 @@ router.post('/addToSchedule', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
-router.post('/deleteOldScheduledStreams', req => {
-    ScheduledStream.deleteMany({
-        endTime: {$lte: req.query.endedBefore}
-    }, (err, res) => {
-        if (err) {
-            LOGGER.error('An error occurred when deleting old scheduled streams: ' + err);
-        } else {
-            LOGGER.log(`Deleted ${res.deletedCount} old scheduled streams`);
-        }
-    });
-});
-
 module.exports = router;
