@@ -6,9 +6,8 @@ const loginChecker = require('connect-ensure-login');
 const shortid = require('shortid');
 const _ = require('lodash');
 const sanitise = require('mongo-sanitize');
-const LOGGER = require('../logger')('server/routes/streams.js');
 
-router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
+router.get('/all', loginChecker.ensureLoggedIn(), async (req, res) => {
     if (req.query.streamKeys) {
         const query = {
             streamInfo: {
@@ -23,17 +22,16 @@ router.get('/all', loginChecker.ensureLoggedIn(), (req, res) => {
             query.streamInfo.category = req.query.category;
         }
 
-        User.find(query).then(users => {
-            if (users) {
-                const streamInfo = users.map(user => {
-                    return {
-                        username: user.username,
-                        streamKey: user.streamInfo.streamKey
-                    };
-                })
-                res.json(streamInfo);
-            }
-        });
+        const users = await User.find(query);
+        if (users) {
+            const streamInfo = users.map(user => {
+                return {
+                    username: user.username,
+                    streamKey: user.streamInfo.streamKey
+                };
+            })
+            res.json(streamInfo);
+        }
     }
 });
 
@@ -85,26 +83,42 @@ router.get('/user', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
-router.post('/user', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOneAndUpdate({
-        username: req.user.username
-    }, {
-        'streamInfo.title': sanitise(req.body.title),
-        'streamInfo.genre': sanitise(req.body.genre),
-        'streamInfo.category': sanitise(req.body.category),
-        'streamInfo.tags': sanitise(req.body.tags)
-    }, {
-        new: true,
-    }, (err, user) => {
-        if (!err && user.streamInfo) {
-            res.json({
-                title: user.streamInfo.title,
-                genre: user.streamInfo.genre,
-                category: user.streamInfo.category,
-                tags: user.streamInfo.tags
-            });
-        }
-    });
+router.post('/user', (req, res) => {
+    const updateQuery = {};
+
+    const sanitisedTitle = sanitise(req.body.title);
+    if (sanitisedTitle) {
+        updateQuery['streamInfo.title'] = sanitisedTitle;
+    }
+    const sanitisedGenre = sanitise(req.body.genre);
+    if (sanitisedGenre) {
+        updateQuery['streamInfo.genre'] = sanitisedGenre;
+    }
+    const sanitisedCategory = sanitise(req.body.category);
+    if (sanitisedCategory) {
+        updateQuery['streamInfo.category'] = sanitisedCategory;
+    }
+    const sanitisedTags = sanitise(req.body.tags);
+    if (sanitisedTags) {
+        updateQuery['streamInfo.tags'] = sanitisedTags;
+    }
+
+    if (updateQuery !== {}) {
+        User.findByIdAndUpdate({
+            username: sanitise(req.body.userId) || req.user._id
+        }, updateQuery, {
+            new: true,
+        }, (err, user) => {
+            if (!err && user.streamInfo) {
+                res.json({
+                    title: user.streamInfo.title,
+                    genre: user.streamInfo.genre,
+                    category: user.streamInfo.category,
+                    tags: user.streamInfo.tags
+                });
+            }
+        });
+    }
 });
 
 router.post('/user/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
@@ -153,5 +167,21 @@ router.post('/addToSchedule', loginChecker.ensureLoggedIn(), (req, res) => {
         }
     });
 });
+
+router.get('/scheduled', (req, res) => {
+    const query = {};
+    if (req.query.scheduledStartTime) {
+        const between = JSON.parse(req.query.scheduledStartTime).between;
+        if (between) {
+            query.$and = [
+                {startTime: {$gte: between.start}},
+                {startTime: {$lte: between.end}}
+            ]
+        }
+    }
+    if (query !== {}) {
+        ScheduledStream.find(query).then(streams => res.json(streams));
+    }
+})
 
 module.exports = router;

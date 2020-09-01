@@ -50,8 +50,9 @@ module.exports = {
             allowedSpecialChars: '-[]/{}()*+?.\\^$|~`!#%^&=;,\'":<>'
         }
     },
-    thumbnailGenerator: {
-        cron: '*/5 * * * * *'
+    cron: {
+        thumbnailGenerator: '*/5 * * * * *',
+        scheduledStreamInfoUpdater: '0 0/10 * * * *'
     },
     storage: {
         thumbnails: 'server/thumbnails',

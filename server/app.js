@@ -21,7 +21,8 @@ const LOGGER = require('./logger')('server/app.js');
 mongoose.connect(config.database.uri, {
     useNewUrlParser: true,
     useFindAndModify: false,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useCreateIndex: true
 });
 
 app.set('view engine', 'ejs');
@@ -74,7 +75,7 @@ io.on('connection', socket => {
 
 // Start server
 httpServer.listen(config.server.port.http || 8080, () => {
-    LOGGER.log(`${config.siteTitle} HTTP server listening on port: ${config.server.port.http || 8080}`)
+    LOGGER.info(`${config.siteTitle} HTTP server listening on port: ${config.server.port.http || 8080}`)
 });
 nodeMediaServer.run();
 cronJobs.startAll();

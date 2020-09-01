@@ -5,7 +5,7 @@ class Logger {
         this.fileName = fileName;
     }
 
-    log(args) {
+    info(args) {
         LOGGER.log(`[${this.fileName}]`, args);
     }
 

@@ -1,7 +1,7 @@
 const spawn = require('child_process').spawn;
 const config = require('../../mainroom.config');
 
-const generateStreamThumbnail = (streamKey) => {
+module.exports.generateStreamThumbnail = (streamKey) => {
     const ffmpeg = config.rtmpServer.trans.ffmpeg;
     const args = [
         '-y',
@@ -17,8 +17,3 @@ const generateStreamThumbnail = (streamKey) => {
         stdio: 'ignore'
     }).unref();
 };
-
-module.exports = {
-    generateStreamThumbnail: generateStreamThumbnail
-};
-

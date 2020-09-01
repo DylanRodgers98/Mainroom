@@ -163,6 +163,7 @@ export default class Schedule extends React.Component {
         this.setState({
             scheduleGroups: [],
             scheduleItems: [],
+            loaded: false,
             startTime: startTime,
             endTime: endTime
         }, () => {
@@ -244,7 +245,8 @@ export default class Schedule extends React.Component {
         this.scheduleStreamToggle();
         this.setState({
             scheduleGroups: [],
-            scheduleItems: []
+            scheduleItems: [],
+            loaded: false
         }, () => {
             this.getSchedule();
         });
