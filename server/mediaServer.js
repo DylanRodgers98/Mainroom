@@ -2,22 +2,17 @@ const NodeMediaServer = require('node-media-server');
 const config = require('../mainroom.config');
 const User = require('./database/schemas').User;
 const helpers = require('./helpers/thumbnailGenerator');
-const LOGGER = require('./logger')('server/mediaServer.js');
 
 const nms = new NodeMediaServer(config.rtmpServer);
 
-nms.on('prePublish', async (id, streamPath, args) => {
-    LOGGER.log('[NodeEvent on prePublish]', `id=${id} StreamPath=${streamPath} args=${JSON.stringify(args)}`);
+nms.on('prePublish', async (id, streamPath) => {
     const streamKey = getStreamKeyFromStreamPath(streamPath);
     User.findOne({
-        streamInfo: {
-            streamKey: streamKey
-        }
+        "streamInfo.streamKey": streamKey
     }, (err, user) => {
         if (!err) {
             if (!user) {
-                let session = nms.getSession(id);
-                session.reject();
+                nms.getSession(id).reject();
             } else {
                 helpers.generateStreamThumbnail(streamKey);
             }
