@@ -1,6 +1,6 @@
 module.exports = {
     moduleNameMapper: {
-        '\\.(css|scss|less)$': '<rootDir>/test/cssStub.js',
+        '\.s?[ac]ss$': '<rootDir>/test/cssStub.js',
     },
     setupFiles: [
         '<rootDir>/jest.init.js'

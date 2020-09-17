@@ -58,17 +58,11 @@ afterEach(() => {
 
 describe('Schedule component', () => {
     it('should build schedule when component gets mounted', async () => {
-        await act(async () => {
-            render(<Schedule/>, container);
-        });
+        await act(async () => render(<Schedule/>, container));
         const groups = container.getElementsByClassName('rct-sidebar-row');
-        const groupNames = Array.from(groups).map(group => {
-            return group.textContent;
-        });
+        const groupNames = Array.from(groups).map(group => group.textContent);
         const items = container.getElementsByClassName('rct-item');
-        const itemValues = Array.from(items).map(item => {
-            return item.textContent;
-        });
+        const itemValues = Array.from(items).map(item => item.textContent);
         expect(groupNames).toEqual(['My Scheduled Streams', username1, username2, username3]);
         expect(itemValues).toEqual([mockOwnUsername, username1, username2, username3]);
     });

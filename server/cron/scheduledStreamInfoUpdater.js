@@ -1,4 +1,4 @@
-const CronJob = require('cron').CronJob;
+const {CronJob} = require('cron');
 const config = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../database/schemas');
 const LOGGER = require('../logger')('server/cron/scheduledStreamInfoUpdater.js');
@@ -10,18 +10,16 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
 
     const streams = await ScheduledStream.find({
         $and: [
-            {startTime: {$gte: lastTimeTriggered}},
+            {startTime: {$gt: lastTimeTriggered}},
             {startTime: {$lte: thisTimeTriggered}}
         ]
     });
 
-    if (streams.data && streams.data.length) {
-        LOGGER.info(`Updating ${streams.data.length} users' stream info from scheduled streams`);
+    if (streams.length) {
+        LOGGER.info(`Updating ${streams.length} user${streams.length === 1 ? `'s` : `s'`} stream info from scheduled streams`);
         let updated = 0;
-        streams.data.forEach(stream => {
-            User.findByIdAndUpdate({
-                username: stream.user._id
-            }, {
+        streams.forEach(stream => {
+            User.findByIdAndUpdate(stream.user._id, {
                 'streamInfo.title': stream.title,
                 'streamInfo.genre': stream.genre,
                 'streamInfo.category': stream.category,
@@ -32,7 +30,7 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
                 }
             });
         });
-        LOGGER.info(`Successfully updated ${updated}/${streams.data.length} users' stream info from scheduled streams`);
+        LOGGER.info(`Successfully updated ${updated}/${streams.length} user${streams.length === 1 ? `'s` : `s'`} stream info from scheduled streams`);
     }
     lastTimeTriggered = thisTimeTriggered;
 });
