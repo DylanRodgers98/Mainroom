@@ -1,45 +1,43 @@
 const CronJob = require('cron').CronJob;
-const axios = require('axios');
 const config = require('../../mainroom.config');
+const {ScheduledStream, User} = require('../database/schemas');
 const LOGGER = require('../logger')('server/cron/scheduledStreamInfoUpdater.js');
-
-const jobName = 'Scheduled Stream Info Updater';
 
 let lastTimeTriggered = Date.now();
 
 const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
     const thisTimeTriggered = job.lastDate().valueOf();
-    const streams = await axios.get(`http://127.0.0.1:${config.server.port.http}/streams/scheduled`, {
-        params: {
-            scheduledStartTime: {
-                between: {
-                    start: lastTimeTriggered,
-                    end: thisTimeTriggered
-                }
-            }
-        }
+
+    const streams = await ScheduledStream.find({
+        $and: [
+            {startTime: {$gte: lastTimeTriggered}},
+            {startTime: {$lte: thisTimeTriggered}}
+        ]
     });
-    if (streams.data.length) {
+
+    if (streams.data && streams.data.length) {
         LOGGER.info(`Updating ${streams.data.length} users' stream info from scheduled streams`);
         let updated = 0;
-        for (const stream of streams.data) {
-            const res = await axios.post(`http://127.0.0.1:${config.server.port.http}/streams/user`, {
-                userId: stream.user,
-                title: stream.title,
-                genre: stream.genre,
-                category: stream.category,
-                tags: stream.tags
-            })
-            if (res !== undefined) {
-                updated++;
-            }
-        }
+        streams.data.forEach(stream => {
+            User.findByIdAndUpdate({
+                username: stream.user._id
+            }, {
+                'streamInfo.title': stream.title,
+                'streamInfo.genre': stream.genre,
+                'streamInfo.category': stream.category,
+                'streamInfo.tags': stream.tags
+            }, err => {
+                if (!err) {
+                    updated++;
+                }
+            });
+        });
         LOGGER.info(`Successfully updated ${updated}/${streams.data.length} users' stream info from scheduled streams`);
     }
     lastTimeTriggered = thisTimeTriggered;
 });
 
 module.exports = {
-    jobName: jobName,
+    jobName: 'Scheduled Stream Info Updater',
     job: job
 };

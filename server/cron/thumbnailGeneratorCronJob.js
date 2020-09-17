@@ -3,8 +3,6 @@ const axios = require('axios');
 const helpers = require('../helpers/thumbnailGenerator');
 const config = require('../../mainroom.config');
 
-const jobName = 'Thumbnail Generator';
-
 const job = new CronJob(config.cron.thumbnailGenerator, async () => {
     const res = await axios.get(`http://127.0.0.1:${config.rtmpServer.http.port}/api/streams`);
     const streams = res.data['live'];
@@ -18,6 +16,6 @@ const job = new CronJob(config.cron.thumbnailGenerator, async () => {
 });
 
 module.exports = {
-    jobName: jobName,
+    jobName: 'Thumbnail Generator',
     job: job
 };

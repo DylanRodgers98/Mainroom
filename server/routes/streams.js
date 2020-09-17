@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../database/schemas').User;
-const ScheduledStream = require('../database/schemas').ScheduledStream;
+const {ScheduledStream, User} = require('../database/schemas');
 const loginChecker = require('connect-ensure-login');
 const shortid = require('shortid');
 const _ = require('lodash');
@@ -84,41 +83,25 @@ router.get('/user', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.post('/user', (req, res) => {
-    const updateQuery = {};
-
-    const sanitisedTitle = sanitise(req.body.title);
-    if (sanitisedTitle) {
-        updateQuery['streamInfo.title'] = sanitisedTitle;
-    }
-    const sanitisedGenre = sanitise(req.body.genre);
-    if (sanitisedGenre) {
-        updateQuery['streamInfo.genre'] = sanitisedGenre;
-    }
-    const sanitisedCategory = sanitise(req.body.category);
-    if (sanitisedCategory) {
-        updateQuery['streamInfo.category'] = sanitisedCategory;
-    }
-    const sanitisedTags = sanitise(req.body.tags);
-    if (sanitisedTags) {
-        updateQuery['streamInfo.tags'] = sanitisedTags;
-    }
-
-    if (updateQuery !== {}) {
-        User.findByIdAndUpdate({
-            username: sanitise(req.body.userId) || req.user._id
-        }, updateQuery, {
-            new: true,
-        }, (err, user) => {
-            if (!err && user.streamInfo) {
-                res.json({
-                    title: user.streamInfo.title,
-                    genre: user.streamInfo.genre,
-                    category: user.streamInfo.category,
-                    tags: user.streamInfo.tags
-                });
-            }
-        });
-    }
+    User.findByIdAndUpdate({
+        username: req.user._id
+    }, {
+        'streamInfo.title': req.body.title,
+        'streamInfo.genre': req.body.genre,
+        'streamInfo.category': req.body.category,
+        'streamInfo.tags': req.body.tags
+    }, {
+        new: true
+    }, (err, user) => {
+        if (!err && user.streamInfo) {
+            res.json({
+                title: user.streamInfo.title,
+                genre: user.streamInfo.genre,
+                category: user.streamInfo.category,
+                tags: user.streamInfo.tags
+            });
+        }
+    });
 });
 
 router.post('/user/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
@@ -127,7 +110,7 @@ router.post('/user/streamKey', loginChecker.ensureLoggedIn(), (req, res) => {
     }, {
         'streamInfo.streamKey': shortid.generate()
     }, {
-        new: true,
+        new: true
     }, (err, user) => {
         if (!err && user.streamInfo) {
             res.json({
@@ -148,14 +131,14 @@ router.post('/addToSchedule', loginChecker.ensureLoggedIn(), (req, res) => {
         tags: req.body.tags
     });
 
-    scheduledStream.save((err) => {
+    scheduledStream.save(err => {
         if (!err) {
             User.findOneAndUpdate({
                 username: req.user.username
             }, {
                 $push: {scheduledStreams: scheduledStream._id}
             }, {
-                new: true,
+                new: true
             }, (err, user) => {
                 if (!err && user.scheduledStreams) {
                     res.json({
@@ -167,21 +150,5 @@ router.post('/addToSchedule', loginChecker.ensureLoggedIn(), (req, res) => {
         }
     });
 });
-
-router.get('/scheduled', (req, res) => {
-    const query = {};
-    if (req.query.scheduledStartTime) {
-        const between = JSON.parse(req.query.scheduledStartTime).between;
-        if (between) {
-            query.$and = [
-                {startTime: {$gte: between.start}},
-                {startTime: {$lte: between.end}}
-            ]
-        }
-    }
-    if (query !== {}) {
-        ScheduledStream.find(query).then(streams => res.json(streams));
-    }
-})
 
 module.exports = router;
