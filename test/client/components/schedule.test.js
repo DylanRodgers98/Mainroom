@@ -20,7 +20,7 @@ const mockUser3 = { username: username3 };
 jest.mock('axios', () => {
     return {
         get: jest.fn(async (url, config) => {
-            if (url === '/user') {
+            if (url === '/users') {
                 return {
                     data: {
                         username: config.params.username || mockOwnUsername,
@@ -31,7 +31,7 @@ jest.mock('axios', () => {
                     }
                 }
             }
-            if (url === '/user/subscriptions') {
+            if (url === '/users/subscriptions') {
                 return {
                     data: {
                         subscriptions: [mockUser1, mockUser2, mockUser3]

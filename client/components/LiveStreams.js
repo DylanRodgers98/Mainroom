@@ -40,7 +40,7 @@ export default class LiveStreams extends React.Component {
     }
 
     getStreamsInfo(streamKeys) {
-        axios.get('/streams/all', {
+        axios.get('/streams', {
             params: {
                 streamKeys: streamKeys
             }

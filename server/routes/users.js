@@ -3,8 +3,9 @@ const router = express.Router();
 const User = require('../database/schemas').User;
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
+const shortid = require('shortid');
 
-router.get('/loggedIn', loginChecker.ensureLoggedIn(), (req, res) => {
+router.get('/logged-in', loginChecker.ensureLoggedIn(), (req, res) => {
     res.json({username: req.user.username});
 });
 
@@ -110,6 +111,83 @@ router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
             });
         }
     });
+});
+
+router.get('/stream-info', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOne({username: sanitise(req.query.username) || req.user.username}, (err, user) => {
+        if (!err && user.streamInfo) {
+            res.json({
+                streamKey: user.streamInfo.streamKey,
+                title: user.streamInfo.title,
+                genre: user.streamInfo.genre,
+                category: user.streamInfo.category,
+                tags: user.streamInfo.tags
+            });
+        }
+    });
+});
+
+router.post('/stream-info', (req, res) => {
+    User.findOneAndUpdate({
+        username: req.user.username
+    }, {
+        'streamInfo.title': sanitise(req.body.title),
+        'streamInfo.genre': sanitise(req.body.genre),
+        'streamInfo.category': sanitise(req.body.category),
+        'streamInfo.tags': sanitise(req.body.tags)
+    }, {
+        new: true,
+    }, (err, user) => {
+        if (!err && user.streamInfo) {
+            res.json({
+                title: user.streamInfo.title,
+                genre: user.streamInfo.genre,
+                category: user.streamInfo.category,
+                tags: user.streamInfo.tags
+            });
+        }
+    });
+});
+
+router.post('/stream-key', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOneAndUpdate({
+        username: req.user.username
+    }, {
+        'streamInfo.streamKey': shortid.generate()
+    }, {
+        new: true
+    }, (err, user) => {
+        if (!err && user.streamInfo) {
+            res.json({
+                streamKey: user.streamInfo.streamKey
+            })
+        }
+    });
+});
+
+router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOne({username: req.user.username}, 'username scheduledStreams subscriptions')
+        .populate({
+            path: 'scheduledStreams',
+            select: 'title startTime endTime',
+            match: {
+                endTime: {$gte: req.query.scheduleStartTime},
+                startTime: {$lte: req.query.scheduleEndTime}
+            }
+        })
+        .populate({
+            path: 'subscriptions',
+            select: 'username scheduledStreams.title scheduledStreams.startTime scheduledStreams.endTime',
+            match: {
+                'scheduledStreams.endTime': {$gte: req.query.scheduleStartTime},
+                'scheduledStreams.startTime': {$lte: req.query.scheduleEndTime}
+            }
+        })
+        .exec((err, user) => {
+            if (!err && user) {
+                res.json(user);
+            }
+        });
 });
 
 //TODO: create get route for profile pic

@@ -39,7 +39,7 @@ export default class Navbar extends React.Component {
     }
 
     getLoggedInUser() {
-        axios.get('/user/loggedIn').then(res => {
+        axios.get('/users/logged-in').then(res => {
             this.setState({
                 loggedInUser: res.data.username,
             });

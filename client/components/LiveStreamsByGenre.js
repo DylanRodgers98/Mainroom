@@ -71,7 +71,7 @@ export default class LiveStreamsByCategory extends React.Component {
             queryParams.params.category = this.state.categoryFilter;
         }
 
-        axios.get('/streams/all', queryParams).then(res => {
+        axios.get('/streams', queryParams).then(res => {
             this.setState({
                 liveStreams: res.data
             });

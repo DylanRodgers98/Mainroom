@@ -14,7 +14,7 @@ export default class Subscribers extends React.Component {
     }
 
     componentDidMount() {
-        axios.get('/user/subscribers', {
+        axios.get('/users/subscribers', {
             params: {
                 username: this.props.match.params.username
             }

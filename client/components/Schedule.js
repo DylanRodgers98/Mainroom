@@ -49,15 +49,7 @@ export default class Schedule extends React.Component {
     }
 
     async getSchedule() {
-        await this.getOwnSchedule();
-        await this.getSchedulesFromSubscriptions();
-        this.setState({
-            loaded: true
-        });
-    }
-
-    async getOwnSchedule() {
-        const res = await axios.get('/user', {
+        const res = await axios.get('/users/schedule', {
             params: {
                 scheduleStartTime: this.state.startTime.toDate(),
                 scheduleEndTime: this.state.endTime.toDate()
@@ -66,6 +58,15 @@ export default class Schedule extends React.Component {
         await this.buildOwnSchedule({
             username: res.data.username,
             scheduledStreams: res.data.scheduledStreams
+        });
+        for (const subscription of res.data.subscriptions) {
+             await this.buildScheduleFromSubscription({
+                username: subscription.username,
+                scheduledStreams: subscription.scheduledStreams
+            });
+        }
+        this.setState({
+            loaded: true
         });
     }
 
@@ -90,30 +91,7 @@ export default class Schedule extends React.Component {
         });
     }
 
-    async getSchedulesFromSubscriptions() {
-        const res = await axios.get('/user/subscriptions');
-        res.data.subscriptions.forEach(user => {
-            this.getScheduleForUser(user.username);
-        });
-    }
-
-    async getScheduleForUser(username) {
-        const res = await axios.get('/user', {
-            params: {
-                username: username,
-                scheduleStartTime: this.state.startTime.toDate(),
-                scheduleEndTime: this.state.endTime.toDate()
-            }
-        });
-        if (res.data.scheduledStreams.length) {
-            this.buildScheduleFromSubscription({
-                username: res.data.username,
-                scheduledStreams: res.data.scheduledStreams
-            });
-        }
-    }
-
-    buildScheduleFromSubscription({username, scheduledStreams}) {
+    async buildScheduleFromSubscription({username, scheduledStreams}) {
         const groupId = this.state.scheduleGroups.length;
 
         this.setState({
@@ -234,7 +212,7 @@ export default class Schedule extends React.Component {
     }
 
     async addToSchedule() {
-        await axios.post('/streams/addToSchedule', {
+        await axios.post('/scheduled-streams', {
             startTime: this.state.scheduleStreamStartTime,
             endTime: this.state.scheduleStreamEndTime,
             title: this.state.scheduleStreamTitle,

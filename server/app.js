@@ -54,7 +54,8 @@ app.use('/login', require('./routes/login'));
 app.use('/register', require('./routes/register'));
 app.use('/filters', require('./routes/filters'));
 app.use('/streams', require('./routes/streams'));
-app.use('/user', require('./routes/user'));
+app.use('/users', require('./routes/users'));
+app.use('/scheduled-streams', require('./routes/scheduled-streams'));
 
 app.get('/logout', (req, res) => {
     req.logout();

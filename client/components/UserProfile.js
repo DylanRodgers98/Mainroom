@@ -37,7 +37,7 @@ export default class UserProfile extends React.Component {
     }
 
     componentDidMount() {
-        axios.get('/user', {
+        axios.get('/users/', {
             params: {
                 username: this.props.match.params.username,
                 scheduleStartTime: this.state.upcomingStreamsStartTime.toDate(),
@@ -78,7 +78,7 @@ export default class UserProfile extends React.Component {
     }
 
     isProfileOfLoggedInUser() {
-        axios.get('/user/loggedIn').then(res => {
+        axios.get('/users/logged-in').then(res => {
             this.setState({
                 isProfileOfLoggedInUser: res.data.username === this.props.match.params.username,
             });
@@ -87,7 +87,7 @@ export default class UserProfile extends React.Component {
 
     isLoggedInUserSubscribed() {
         if (!this.state.isProfileOfLoggedInUser) {
-            axios.get('/user/subscribedTo', {
+            axios.get('/users/subscribedTo', {
                 params: {
                     otherUsername: this.props.match.params.username
                 }
@@ -117,7 +117,7 @@ export default class UserProfile extends React.Component {
     }
 
     subscribeToUser() {
-        axios.post('/user/subscribe', {
+        axios.post('/users/subscribe', {
             userToSubscribeTo: this.props.match.params.username
         }).then(res => {
             if (res.status === 200) {
@@ -130,7 +130,7 @@ export default class UserProfile extends React.Component {
     }
 
     unsubscribeFromUser() {
-        axios.post('/user/unsubscribe', {
+        axios.post('/users/unsubscribe', {
             userToUnsubscribeFrom: this.props.match.params.username
         }).then(res => {
             if (res.status === 200) {
@@ -143,7 +143,7 @@ export default class UserProfile extends React.Component {
     }
 
     getLiveStreamIfLive() {
-        axios.get('/streams/user', {
+        axios.get('/users/stream-info', {
             params: {
                 username: this.props.match.params.username
             }

@@ -71,7 +71,7 @@ export default class LiveStreams extends React.Component {
         const queryParams = {
             params: {
                 streamKeys: streamKeys,
-                query: this.props.match.params.query
+                searchQuery: this.props.match.params.query
             }
         };
 
@@ -82,7 +82,7 @@ export default class LiveStreams extends React.Component {
             queryParams.params.category = this.state.categoryFilter;
         }
 
-        axios.get('/streams/search', queryParams).then(res => {
+        axios.get('/streams', queryParams).then(res => {
             this.setState({
                 liveStreams: res.data
             });
