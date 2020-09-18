@@ -4,37 +4,37 @@ import {act} from "react-dom/test-utils"
 import Schedule from "../../../client/components/Schedule";
 import moment from "moment";
 
-const mockStartTime = moment().add(12, 'hour');
-const mockEndTime = moment().add(13, 'hour');
-
 const mockOwnUsername = 'ownUser';
-
-const username1 = 'user1';
-const username2 = 'user2';
-const username3 = 'user3';
-
-const mockUser1 = { username: username1 };
-const mockUser2 = { username: username2 };
-const mockUser3 = { username: username3 };
+const mockUsername1 = 'user1';
+const mockUsername2 = 'user2';
+const mockUsername3 = 'user3';
+const mockScheduledStreams = [{
+    startTime: moment().add(12, 'hour'),
+    endTime: moment().add(13, 'hour')
+}];
 
 jest.mock('axios', () => {
     return {
         get: jest.fn(async (url, config) => {
-            if (url === '/users') {
+            if (url === '/users/schedule') {
                 return {
                     data: {
-                        username: config.params.username || mockOwnUsername,
-                        scheduledStreams: [{
-                            startTime: mockStartTime,
-                            endTime: mockEndTime
-                        }]
-                    }
-                }
-            }
-            if (url === '/users/subscriptions') {
-                return {
-                    data: {
-                        subscriptions: [mockUser1, mockUser2, mockUser3]
+                        username: mockOwnUsername,
+                        scheduledStreams: mockScheduledStreams,
+                        subscriptions: [
+                            {
+                                username: mockUsername1,
+                                scheduledStreams: mockScheduledStreams
+                            },
+                            {
+                                username: mockUsername2,
+                                scheduledStreams: mockScheduledStreams
+                            },
+                            {
+                                username: mockUsername3,
+                                scheduledStreams: mockScheduledStreams
+                            }
+                        ]
                     }
                 }
             }
@@ -63,7 +63,7 @@ describe('Schedule component', () => {
         const groupNames = Array.from(groups).map(group => group.textContent);
         const items = container.getElementsByClassName('rct-item');
         const itemValues = Array.from(items).map(item => item.textContent);
-        expect(groupNames).toEqual(['My Scheduled Streams', username1, username2, username3]);
-        expect(itemValues).toEqual([mockOwnUsername, username1, username2, username3]);
+        expect(groupNames).toEqual(['My Scheduled Streams', mockUsername1, mockUsername2, mockUsername3]);
+        expect(itemValues).toEqual([mockOwnUsername, mockUsername1, mockUsername2, mockUsername3]);
     });
 });
