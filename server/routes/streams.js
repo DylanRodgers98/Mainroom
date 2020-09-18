@@ -9,19 +9,15 @@ const sanitise = require('mongo-sanitize');
 router.get('/all', loginChecker.ensureLoggedIn(), async (req, res) => {
     if (req.query.streamKeys) {
         const query = {
-            streamInfo: {
-                streamKey: {$in: req.query.streamKeys}
-            }
+            'streamInfo.streamKey': {$in: req.query.streamKeys}
         };
-
         if (req.query.genre) {
-            query.streamInfo.genre = req.query.genre;
+            query['streamInfo.genre'] = req.query.genre;
         }
         if (req.query.category) {
-            query.streamInfo.category = req.query.category;
+            query['streamInfo.category'] = req.query.category;
         }
-
-        const users = await User.find(query);
+        const users = await User.find(query, 'username streamInfo.streamKey');
         if (users) {
             const streamInfo = users.map(user => {
                 return {
@@ -83,15 +79,15 @@ router.get('/user', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.post('/user', (req, res) => {
-    User.findByIdAndUpdate({
-        username: req.user._id
+    User.findOneAndUpdate({
+        username: req.user.username
     }, {
-        'streamInfo.title': req.body.title,
-        'streamInfo.genre': req.body.genre,
-        'streamInfo.category': req.body.category,
-        'streamInfo.tags': req.body.tags
+        'streamInfo.title': sanitise(req.body.title),
+        'streamInfo.genre': sanitise(req.body.genre),
+        'streamInfo.category': sanitise(req.body.category),
+        'streamInfo.tags': sanitise(req.body.tags)
     }, {
-        new: true
+        new: true,
     }, (err, user) => {
         if (!err && user.streamInfo) {
             res.json({
