@@ -331,7 +331,7 @@ export default class Schedule extends React.Component {
 
     render() {
         // TODO: create proper loading screen, to be used across components
-        return !this.state.loaded ? <h1>Loading...</h1> : (
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
                 <Container className='my-5'>
                     <Row>

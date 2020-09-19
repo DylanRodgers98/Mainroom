@@ -55,7 +55,7 @@ export default class Subscribers extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? <h1>Loading...</h1> : (
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <Container className='my-5'>
                 <Row>
                     <Col>
@@ -65,7 +65,7 @@ export default class Subscribers extends React.Component {
                 <hr className='mt-4'/>
                 {this.state.subscribers.length
                     ? <Row xs='1' sm='2' md='2' lg='3' xl='3'>{this.state.subscribers}</Row>
-                    : <p className='my-3 text-center'>{this.state.isProfileOfLoggedInUser ? 'You have '
+                    : <p className='my-4 text-center'>{this.state.isProfileOfLoggedInUser ? 'You have '
                         : this.props.match.params.username + ' has'} no subscribers!</p>}
             </Container>
         );

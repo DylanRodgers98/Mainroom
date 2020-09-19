@@ -225,38 +225,40 @@ export default class UserProfile extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? <h1>Loading...</h1> : !this.state.doesUserExist ? <FourOhFour/> : (
-            <Container>
-                <Row className="mt-5" xs='4'>
-                    <Col>
-                        {/*TODO: get profile pic through API call*/}
-                        <img src={defaultProfilePic} alt={`${this.props.match.params.username} Profile Picture`}/>
-                        <h1>{this.props.match.params.username}</h1>
-                        <h5>{this.state.location || 'Planet Earth'}</h5>
-                        <h5 className='black-link'>
-                            <Link to={`/user/${this.props.match.params.username}/subscribers`}>
-                                {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
-                            </Link>
-                        </h5>
-                        <div>
-                            {this.renderRedirectToEditProfile()}
-                            <Button className='btn-dark subscribe-button'
-                                    onClick={this.onClickSubscribeOrEditProfileButton}>
-                                {this.getSubscribeOrEditProfileButtonText()}
-                            </Button>
-                        </div>
-                        <p>{this.state.bio}</p>
-                    </Col>
-                    <Col xs='9'>
-                        <h3>Upcoming Streams</h3>
-                        <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems} sidebarWidth='0'
-                                  visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
-                                  visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
-                        <hr className="my-4"/>
-                        {this.renderLiveStream()}
-                    </Col>
-                </Row>
-            </Container>
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1>
+            : (!this.state.doesUserExist ? <FourOhFour/> : (
+                <Container>
+                    <Row className="mt-5" xs='4'>
+                        <Col>
+                            {/*TODO: get profile pic through API call*/}
+                            <img src={defaultProfilePic} alt={`${this.props.match.params.username} Profile Picture`}/>
+                            <h1>{this.props.match.params.username}</h1>
+                            <h5>{this.state.location || 'Planet Earth'}</h5>
+                            <h5 className='black-link'>
+                                <Link to={`/user/${this.props.match.params.username}/subscribers`}>
+                                    {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
+                                </Link>
+                            </h5>
+                            <div>
+                                {this.renderRedirectToEditProfile()}
+                                <Button className='btn-dark subscribe-button'
+                                        onClick={this.onClickSubscribeOrEditProfileButton}>
+                                    {this.getSubscribeOrEditProfileButtonText()}
+                                </Button>
+                            </div>
+                            <p>{this.state.bio}</p>
+                        </Col>
+                        <Col xs='9'>
+                            <h3>Upcoming Streams</h3>
+                            <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems} sidebarWidth='0'
+                                      visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
+                                      visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
+                            <hr className="my-4"/>
+                            {this.renderLiveStream()}
+                        </Col>
+                    </Row>
+                </Container>
+            )
         );
     }
 
