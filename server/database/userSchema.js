@@ -7,6 +7,7 @@ const UserSchema = new Schema({
     password: {type: String, select: false},
     location: String,
     bio: String,
+    links: [String],
     streamInfo: {
         streamKey: String,
         title: String,

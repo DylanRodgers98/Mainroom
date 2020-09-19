@@ -10,9 +10,11 @@ router.get('/logged-in', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.username) || req.user.username})
+    User.findOne({username: sanitise(req.query.username) || req.user.username},
+        'username location bio subscribers scheduledStreams')
         .populate({
             path: 'scheduledStreams',
+            select: 'title startTime endTime',
             match: {
                 endTime: {$gte: req.query.scheduleStartTime},
                 startTime: {$lte: req.query.scheduleEndTime}
@@ -32,7 +34,7 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.username) || req.user.username})
+    User.findOne({username: sanitise(req.query.username) || req.user.username}, 'subscribers')
         .populate({
             path: 'subscribers',
             select: 'username'
@@ -47,7 +49,7 @@ router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.username) || req.user.username})
+    User.findOne({username: sanitise(req.query.username) || req.user.username}, 'subscriptions')
         .populate({
             path: 'subscriptions',
             select: 'username'
@@ -62,7 +64,7 @@ router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/subscribedTo', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.otherUsername)}, (err, otherUser) => {
+    User.findOne({username: sanitise(req.query.otherUsername)}, 'subscriptions', (err, otherUser) => {
         if (!err && otherUser) {
             res.send(otherUser.subscriptions.includes(req.user._id));
         }
@@ -114,17 +116,19 @@ router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
 });
 
 router.get('/stream-info', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.username) || req.user.username}, (err, user) => {
-        if (!err && user.streamInfo) {
-            res.json({
-                streamKey: user.streamInfo.streamKey,
-                title: user.streamInfo.title,
-                genre: user.streamInfo.genre,
-                category: user.streamInfo.category,
-                tags: user.streamInfo.tags
-            });
-        }
-    });
+    User.findOne({username: sanitise(req.query.username) || req.user.username},
+        'streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
+        (err, user) => {
+            if (!err && user && user.streamInfo) {
+                res.json({
+                    streamKey: user.streamInfo.streamKey,
+                    title: user.streamInfo.title,
+                    genre: user.streamInfo.genre,
+                    category: user.streamInfo.category,
+                    tags: user.streamInfo.tags
+                });
+            }
+        });
 });
 
 router.post('/stream-info', (req, res) => {
@@ -189,10 +193,5 @@ router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res) => {
             }
         });
 });
-
-//TODO: create get route for profile pic
-// router.get('/profilePic', (req, res) => {
-//     res.sendFile();
-// });
 
 module.exports = router;

@@ -20,7 +20,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((id, done) => {
     User.findById(id, (err, user) => {
         if (err) {
-            LOGGER.error(`Error deserializing user (_id: ${id})`);
+            LOGGER.error('Error deserializing user (_id: {})', id);
             return done(err);
         }
         done(null, user);
@@ -36,7 +36,7 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
     }
     User.findOne({$or: [{email: email}, {username: req.body.username}]}, (err, user) => {
         if (err) {
-            LOGGER.error('An error occurred during user registration: ', err);
+            LOGGER.error('An error occurred during user registration: {}', err);
             return done(err);
         }
         if (user) {
@@ -56,7 +56,7 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             user.streamInfo.streamKey = shortid.generate();
             user.save(err => {
                 if (err) {
-                    LOGGER.error('An error occurred when saving new User: ' + JSON.stringify(user) + ', Error: ' + err);
+                    LOGGER.error('An error occurred when saving new User: {}, Error: {}', JSON.stringify(user), err);
                     return done(err)
                 }
             });
@@ -89,7 +89,7 @@ function flashInvalidPassword(req) {
 passport.use('localLogin', new LocalStrategy(strategyOptions, (req, email, password, done) => {
     User.findOne({'email': email}).select('+password').exec((err, user) => {
         if (err) {
-            LOGGER.error('An error occurred during user login: ', err);
+            LOGGER.error('An error occurred during user login: {}', err);
             return done(err);
         }
         if (!(user && user.checkPassword(password))) {

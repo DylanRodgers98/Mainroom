@@ -16,7 +16,7 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
     });
 
     if (streams.length) {
-        LOGGER.info(`Updating ${streams.length} user${streams.length === 1 ? `'s` : `s'`} stream info from scheduled streams`);
+        LOGGER.info('Updating {} user{} stream info from scheduled streams', streams.length, streams.length === 1 ? `'s` : `s'`);
         let updated = 0;
         streams.forEach(stream => {
             User.findByIdAndUpdate(stream.user._id, {
@@ -30,7 +30,7 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
                 }
             });
         });
-        LOGGER.info(`Successfully updated ${updated}/${streams.length} user${streams.length === 1 ? `'s` : `s'`} stream info from scheduled streams`);
+        LOGGER.info(`Successfully updated {}/{} user{} stream info from scheduled streams`, updated, streams.length, streams.length === 1 ? `'s` : `s'`);
     }
     lastTimeTriggered = thisTimeTriggered;
 });

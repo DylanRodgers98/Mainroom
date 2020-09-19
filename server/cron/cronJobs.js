@@ -9,7 +9,7 @@ module.exports.startAll = () => {
         await cronJob.job.start();
         if (cronJob.job.running) {
             const jobName = cronJob.jobName || Object.keys(cronJob)[0];
-            LOGGER.info(`Started ${jobName} cron job with cron time: ${cronJob.job.cronTime}`);
+            LOGGER.info('Started {} cron job with cron time: {}', jobName, cronJob.job.cronTime);
         }
     });
 }

@@ -1,27 +1,28 @@
 const LOGGER = require('node-media-server/node_core_logger');
 
+const FORMAT_SPECIFIER = '{}';
+
 class Logger {
     constructor(fileName) {
         this.fileName = fileName;
     }
 
-    info(args) {
-        LOGGER.log(`[${this.fileName}]`, args);
+    info(format, ...args) {
+        LOGGER.log(`[${this.fileName}]`, formatLogMessage(format, ...args));
     }
 
-    error(args) {
-        LOGGER.error(`[${this.fileName}]`, args);
+    error(format, ...args) {
+        LOGGER.error(`[${this.fileName}]`, formatLogMessage(format, ...args));
     }
 
-    debug(args) {
-        LOGGER.debug(`[${this.fileName}]`, args);
-    }
-
-    ffdebug(args) {
-        LOGGER.ffdebug(`[${this.fileName}]`, args);
+    debug(format, ...args) {
+        LOGGER.debug(`[${this.fileName}]`, formatLogMessage(format, ...args));
     }
 }
 
-module.exports = fileName => {
-    return new Logger(fileName);
+function formatLogMessage(format, ...args) {
+    args.forEach(arg => format = format.replace(FORMAT_SPECIFIER, arg));
+    return format;
 }
+
+module.exports = fileName => new Logger(fileName);

@@ -76,7 +76,7 @@ io.on('connection', socket => {
 
 // Start server
 httpServer.listen(config.server.port.http || 8080, () => {
-    LOGGER.info(`${config.siteTitle} HTTP server listening on port: ${config.server.port.http || 8080}`)
+    LOGGER.info('{} HTTP server listening on port: {}', config.siteTitle, config.server.port.http || 8080);
 });
 nodeMediaServer.run();
 cronJobs.startAll();
