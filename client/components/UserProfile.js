@@ -11,6 +11,24 @@ import '../css/livestreams.scss';
 
 import defaultProfilePic from '../img/defaultProfilePic.png';
 
+const startingState = {
+    loaded: false,
+    doesUserExist: false,
+    isProfileOfLoggedInUser: false,
+    isLoggedInUserSubscribed: false,
+    location: '',
+    bio: '',
+    numOfSubscribers: 0,
+    scheduleItems: [],
+    streamKey: '',
+    streamTitle: '',
+    streamGenre: '',
+    streamCategory: '',
+    redirectToEditProfile: false,
+    upcomingStreamsStartTime: moment().startOf('day'),
+    upcomingStreamsEndTime: moment().startOf('day').add(3, 'day')
+}
+
 export default class UserProfile extends React.Component {
 
     constructor(props) {
@@ -18,40 +36,41 @@ export default class UserProfile extends React.Component {
 
         this.onClickSubscribeOrEditProfileButton = this.onClickSubscribeOrEditProfileButton.bind(this);
 
-        this.state = {
-            doesUserExist: false,
-            isProfileOfLoggedInUser: false,
-            isLoggedInUserSubscribed: false,
-            location: '',
-            bio: '',
-            numOfSubscribers: 0,
-            scheduleItems: [],
-            streamKey: '',
-            streamTitle: '',
-            streamGenre: '',
-            streamCategory: '',
-            redirectToEditProfile: false,
-            upcomingStreamsStartTime: moment().startOf('day'),
-            upcomingStreamsEndTime: moment().startOf('day').add(3, 'day')
-        }
+        this.state = startingState;
     }
 
     componentDidMount() {
-        axios.get('/users/', {
+        this.loadUserProfile();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.match.params.username !== this.props.match.params.username) {
+            this.setState(startingState, () => this.loadUserProfile());
+        }
+    }
+
+    async loadUserProfile() {
+        const res = await axios.get('/users/', {
             params: {
                 username: this.props.match.params.username,
                 scheduleStartTime: this.state.upcomingStreamsStartTime.toDate(),
                 scheduleEndTime: this.state.upcomingStreamsEndTime.toDate(),
             }
-        }).then(res => {
-            if (res.data.username) {
-                this.populateProfile(res.data)
-                this.buildSchedule(res.data.scheduledStreams);
-                this.isProfileOfLoggedInUser();
-                this.isLoggedInUserSubscribed();
-                this.getLiveStreamIfLive();
-            }
         });
+        if (res.data.username) {
+            await this.fillComponent(res.data);
+        }
+        this.setState({
+            loaded: true
+        });
+    }
+
+    async fillComponent(user) {
+        this.populateProfile(user)
+        this.buildSchedule(user.scheduledStreams);
+        this.isProfileOfLoggedInUser();
+        this.isLoggedInUserSubscribed();
+        this.getLiveStreamIfLive();
     }
 
     populateProfile(user) {
@@ -204,7 +223,7 @@ export default class UserProfile extends React.Component {
     }
 
     render() {
-        return !this.state.doesUserExist ? <FourOhFour/> : (
+        return !this.state.loaded ? <h1>Loading...</h1> : !this.state.doesUserExist ? <FourOhFour/> : (
             <Container>
                 <Row className="mt-5" xs='4'>
                     <Col>

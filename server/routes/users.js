@@ -29,6 +29,8 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
                     numOfSubscribers: user.subscribers.length,
                     scheduledStreams: user.scheduledStreams
                 });
+            } else {
+                res.sendStatus(204);
             }
         });
 });

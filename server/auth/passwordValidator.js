@@ -9,10 +9,4 @@ const specialCharRegex = `(?=.*[${allowedSpecialChars}]{${config.minSpecialChars
 
 const regex = new RegExp(`^${lengthRegex}${lowercaseRegex}${uppercaseRegex}${numericRegex}${specialCharRegex}.*$`);
 
-function validate(password) {
-    return regex.test(password);
-}
-
-module.exports = {
-    validate: validate
-};
+module.exports.validate = password => regex.test(password);

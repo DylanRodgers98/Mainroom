@@ -30,7 +30,7 @@ router.get('/', loginChecker.ensureLoggedIn(), async (req, res) => {
             res.json(streamInfo);
         }
     } else {
-        res.json({});
+        res.sendStatus(204);
     }
 });
 
