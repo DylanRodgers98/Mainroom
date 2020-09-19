@@ -5,9 +5,10 @@ const UserSchema = new Schema({
     username: String,
     email: String,
     password: {type: String, select: false},
+    displayName: String,
     location: String,
     bio: String,
-    links: [String],
+    links: [{title: String, url: String}],
     streamInfo: {
         streamKey: String,
         title: String,

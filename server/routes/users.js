@@ -11,7 +11,7 @@ router.get('/logged-in', loginChecker.ensureLoggedIn(), (req, res) => {
 
 router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOne({username: sanitise(req.query.username) || req.user.username},
-        'username location bio subscribers scheduledStreams')
+        'username displayName location bio links subscribers scheduledStreams')
         .populate({
             path: 'scheduledStreams',
             select: 'title startTime endTime',
@@ -24,8 +24,10 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
             if (!err && user) {
                 res.json({
                     username: user.username,
+                    displayName: user.displayName,
                     location: user.location,
                     bio: user.bio,
+                    links: user.links,
                     numOfSubscribers: user.subscribers.length,
                     scheduledStreams: user.scheduledStreams
                 });
@@ -33,6 +35,31 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
                 res.sendStatus(204);
             }
         });
+});
+
+router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
+    const updateQuery = {};
+
+    if (req.body.displayName) {
+        updateQuery.displayName = sanitise(req.body.displayName);
+    }
+    if (req.body.location) {
+        updateQuery.location = sanitise(req.body.location);
+    }
+    if (req.body.bio) {
+        updateQuery.bio = sanitise(req.body.bio);
+    }
+    if (req.body.links && Array.isArray(req.body.links)) {
+        updateQuery.links = sanitise(req.body.links);
+    }
+
+    User.findOneAndUpdate({username: req.user.username}, updateQuery, (err, user) => {
+        if (err || !user) {
+            res.sendStatus(500);
+        } else {
+            res.sendStatus(200);
+        }
+    })
 });
 
 router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res) => {

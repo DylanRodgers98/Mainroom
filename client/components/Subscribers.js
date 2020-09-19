@@ -66,7 +66,7 @@ export default class Subscribers extends React.Component {
                 {this.state.subscribers.length
                     ? <Row xs='1' sm='2' md='2' lg='3' xl='3'>{this.state.subscribers}</Row>
                     : <p className='my-4 text-center'>{this.state.isProfileOfLoggedInUser ? 'You have '
-                        : this.props.match.params.username + ' has'} no subscribers!</p>}
+                        : this.props.match.params.username + ' has'} no subscribers :(</p>}
             </Container>
         );
     }

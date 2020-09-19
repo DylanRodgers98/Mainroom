@@ -9,7 +9,6 @@ export default class GoLive extends React.Component {
     constructor(props) {
         super(props);
 
-        this.getUserSettings = this.getUserSettings.bind(this);
         this.generateStreamKey = this.generateStreamKey.bind(this);
         this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
@@ -38,33 +37,30 @@ export default class GoLive extends React.Component {
         this.getFilters();
     }
 
-    getUserSettings() {
-        axios.get('/users/stream-info').then(res => {
-            this.setState({
-                streamKey: res.data.streamKey,
-                streamTitle: res.data.title,
-                streamGenre: res.data.genre,
-                streamCategory: res.data.category,
-                streamTags: res.data.tags
-            });
+    async getUserSettings() {
+        const res = await axios.get('/users/stream-info');
+        this.setState({
+            streamKey: res.data.streamKey,
+            streamTitle: res.data.title,
+            streamGenre: res.data.genre,
+            streamCategory: res.data.category,
+            streamTags: res.data.tags
         });
     }
 
-    getFilters() {
-        axios.get('/filters').then(res => {
-            this.setState({
-                genres: res.data.genres,
-                categories: res.data.categories
-            })
-        });
-    }
-
-    generateStreamKey() {
-        axios.post('/users/stream-key').then(res => {
-            this.setState({
-                streamKey: res.data.streamKey
-            });
+    async getFilters() {
+        const res = await axios.get('/filters')
+        this.setState({
+            genres: res.data.genres,
+            categories: res.data.categories
         })
+    }
+
+    async generateStreamKey() {
+        const res = await axios.post('/users/stream-key');
+        this.setState({
+            streamKey: res.data.streamKey
+        });
     }
 
     copyFrom(elementId) {
@@ -113,21 +109,20 @@ export default class GoLive extends React.Component {
         });
     }
 
-    saveSettings() {
-        axios.post('/users/stream-info', {
+    async saveSettings() {
+        const res = await axios.post('/users/stream-info', {
             title: this.state.streamTitle,
             genre: this.state.streamGenre,
             category: this.state.streamCategory,
             tags: this.state.streamTags
-        }).then(res => {
-            this.setState({
-                streamTitle: res.data.title,
-                streamGenre: res.data.genre,
-                streamCategory: res.data.category,
-                streamTags: res.data.tags,
-                unsavedChanges: false
-            })
         });
+        this.setState({
+            streamTitle: res.data.title,
+            streamGenre: res.data.genre,
+            streamCategory: res.data.category,
+            streamTags: res.data.tags,
+            unsavedChanges: false
+        })
     }
 
     render() {

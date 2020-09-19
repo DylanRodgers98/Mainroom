@@ -9,6 +9,7 @@ import LiveStreamsByGenre from "./components/LiveStreamsByGenre";
 import LiveStreamsByCategory from "./components/LiveStreamsByCategory";
 import Search from "./components/Search";
 import UserProfile from "./components/UserProfile";
+import EditProfile from "./components/EditProfile";
 import Subscribers from "./components/Subscribers";
 import Subscriptions from "./components/Subscriptions";
 import UserStream from "./components/UserStream";
@@ -46,10 +47,9 @@ if (document.getElementById('root')) {
                         <UserProfile {...props} />
                     )}/>
 
-                    {/*TODO: ADD EDIT PROFILE ROUTE*/}
-                    {/*<Route exact path="/edit-profile" render={props => (*/}
-                    {/*    <EditProfile {...props} />*/}
-                    {/*)}/>*/}
+                    <Route exact path="/edit-profile" render={props => (
+                        <EditProfile {...props} />
+                    )}/>
 
                     <Route exact path="/user/:username/subscribers" render={props => (
                         <Subscribers {...props} />

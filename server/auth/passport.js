@@ -23,6 +23,10 @@ passport.deserializeUser((id, done) => {
             LOGGER.error('Error deserializing user (_id: {})', id);
             return done(err);
         }
+        if (!user) {
+            LOGGER.error('User (_id: {}) not found', id);
+            return done(new Error(`User (_id: ${id}) not found`));
+        }
         done(null, user);
     });
 });

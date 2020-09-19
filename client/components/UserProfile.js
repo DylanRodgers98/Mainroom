@@ -16,6 +16,7 @@ const STARTING_STATE = {
     doesUserExist: false,
     isProfileOfLoggedInUser: false,
     isLoggedInUserSubscribed: false,
+    displayName: '',
     location: '',
     bio: '',
     numOfSubscribers: 0,
@@ -78,6 +79,7 @@ export default class UserProfile extends React.Component {
     populateProfile(user) {
         this.setState({
             doesUserExist: true,
+            displayName: user.displayName,
             location: user.location,
             bio: user.bio,
             numOfSubscribers: user.numOfSubscribers
@@ -232,7 +234,7 @@ export default class UserProfile extends React.Component {
                         <Col>
                             {/*TODO: get profile pic through API call*/}
                             <img src={defaultProfilePic} alt={`${this.props.match.params.username} Profile Picture`}/>
-                            <h1>{this.props.match.params.username}</h1>
+                            <h1>{this.state.displayName || this.props.match.params.username}</h1>
                             <h5>{this.state.location || 'Planet Earth'}</h5>
                             <h5 className='black-link'>
                                 <Link to={`/user/${this.props.match.params.username}/subscribers`}>
