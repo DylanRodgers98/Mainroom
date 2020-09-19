@@ -85,6 +85,7 @@ export default class EditProfile extends React.Component {
 
     async saveProfile() {
         if (await this.areLinksValid()) {
+            this.fixLinkProtocols();
             const res = await axios.post('/users', {
                 displayName: this.state.displayName,
                 location: this.state.location,
@@ -111,6 +112,18 @@ export default class EditProfile extends React.Component {
             indexesOfInvalidLinks: indexesOfInvalidLinks
         });
         return isValid;
+    }
+
+    fixLinkProtocols() {
+        const links = this.state.links.map(link => {
+            if (!link.url.includes('://')) {
+                link.url = 'https://' + link.url;
+            }
+            return link;
+        });
+        this.setState({
+            links: links
+        });
     }
 
     renderRedirectToProfile() {

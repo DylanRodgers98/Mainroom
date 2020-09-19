@@ -19,6 +19,7 @@ const STARTING_STATE = {
     displayName: '',
     location: '',
     bio: '',
+    links: [],
     numOfSubscribers: 0,
     scheduleItems: [],
     streamKey: '',
@@ -82,6 +83,7 @@ export default class UserProfile extends React.Component {
             displayName: user.displayName,
             location: user.location,
             bio: user.bio,
+            links: user.links,
             numOfSubscribers: user.numOfSubscribers
         });
     }
@@ -191,6 +193,14 @@ export default class UserProfile extends React.Component {
         }
     }
 
+    renderLinks() {
+        return this.state.links.map(link => (
+            <div>
+                <a href={link.url} target='_blank'>{link.title}</a>
+            </div>
+        ));
+    }
+
     renderLiveStream() {
         return this.state.streamKey ? (
             <Row className='streams' xs='2'>
@@ -249,6 +259,7 @@ export default class UserProfile extends React.Component {
                                 </Button>
                             </div>
                             <p>{this.state.bio}</p>
+                            {this.renderLinks()}
                         </Col>
                         <Col xs='9'>
                             <h3>Upcoming Streams</h3>
