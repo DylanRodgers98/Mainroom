@@ -11,37 +11,51 @@ export default class Subscribers extends React.Component {
         super(props);
 
         this.state = {
-            subscriptions: []
+            subscriptions: [],
+            isProfileOfLoggedInUser: false,
+            loaded: false
         }
     }
 
     componentDidMount() {
-        axios.get('/users/subscriptions', {
+        this.isProfileOfLoggedInUser();
+        this.getSubscriptions();
+    }
+
+    async isProfileOfLoggedInUser() {
+        const res = await axios.get('/users/logged-in');
+        this.setState({
+            isProfileOfLoggedInUser: res.data.username === this.props.match.params.username,
+        });
+    }
+
+    async getSubscriptions() {
+        const res = await axios.get('/users/subscriptions', {
             params: {
                 username: this.props.match.params.username
             }
-        }).then(res => {
-            this.setState({
-                subscriptions: res.data.subscriptions.map(subscription => {
-                    return (
-                        <Col>
-                            <h5>
-                                <Link to={`/user/${subscription.username}`}>
-                                    {/*TODO: get profile pic through API call*/}
-                                    <img src={defaultProfilePic} width='75' height='75' className='mr-3'
-                                         alt={`${subscription.username} profile picture`}/>
-                                    {subscription.username}
-                                </Link>
-                            </h5>
-                        </Col>
-                    );
-                })
-            });
+        });
+        this.setState({
+            subscriptions: res.data.subscriptions.map(subscription => {
+                return (
+                    <Col>
+                        <h5>
+                            <Link to={`/user/${subscription.username}`}>
+                                {/*TODO: get profile pic through API call*/}
+                                <img src={defaultProfilePic} width='75' height='75' className='mr-3'
+                                     alt={`${subscription.username} profile picture`}/>
+                                {subscription.username}
+                            </Link>
+                        </h5>
+                    </Col>
+                );
+            }),
+            loaded: true
         });
     }
 
     render() {
-        return (
+        return !this.state.loaded ? <h1>Loading...</h1> : (
             <Container className='my-5'>
                 <Row>
                     <Col>
@@ -49,7 +63,10 @@ export default class Subscribers extends React.Component {
                     </Col>
                 </Row>
                 <hr className='mt-4'/>
-                <Row xs='1' sm='2' md='2' lg='3' xl='3'>{this.state.subscriptions}</Row>
+                {this.state.subscriptions.length
+                    ? <Row xs='1' sm='2' md='2' lg='3' xl='3'>{this.state.subscriptions}</Row>
+                    : <p className='my-3 text-center'>{this.state.isProfileOfLoggedInUser ? 'You are '
+                        : this.props.match.params.username + ' is'} not subscribed to anybody!</p>}
             </Container>
         );
     }
