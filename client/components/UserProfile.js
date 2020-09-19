@@ -233,7 +233,7 @@ export default class UserProfile extends React.Component {
                         <h5>{this.state.location || 'Planet Earth'}</h5>
                         <h5 className='black-link'>
                             <Link to={`/user/${this.props.match.params.username}/subscribers`}>
-                                {this.state.numOfSubscribers} Subscribers
+                                {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
                             </Link>
                         </h5>
                         <div>

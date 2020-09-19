@@ -10,6 +10,7 @@ import LiveStreamsByCategory from "./components/LiveStreamsByCategory";
 import Search from "./components/Search";
 import UserProfile from "./components/UserProfile";
 import Subscribers from "./components/Subscribers";
+import Subscriptions from "./components/Subscriptions";
 import UserStream from "./components/UserStream";
 import Schedule from "./components/Schedule";
 import GoLive from "./components/GoLive";
@@ -49,6 +50,10 @@ if (document.getElementById('root')) {
                         <Subscribers {...props} />
                     )}/>
 
+                    <Route exact path="/user/:username/subscriptions" render={props => (
+                        <Subscriptions {...props} />
+                    )}/>
+
                     <Route exact path="/user/:username/live" render={props => (
                         <UserStream {...props} />
                     )}/>
@@ -56,11 +61,6 @@ if (document.getElementById('root')) {
                     <Route exact path="/schedule" render={props => (
                         <Schedule {...props} />
                     )}/>
-
-                    {/*TODO: ADD SUBSCRIPTIONS ROUTE*/}
-                    {/*<Route exact path="/subscriptions" render={props => (*/}
-                    {/*    <Subscriptions {...props} />*/}
-                    {/*)}/>*/}
 
                     {/*TODO: ADD SETTINGS ROUTE*/}
                     {/*<Route exact path="/settings" render={props => (*/}

@@ -171,7 +171,7 @@ export default class Navbar extends React.Component {
                             <DropdownMenu right>
                                 <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
                                 <DropdownItem tag={Link} to={'/schedule'}>Schedule</DropdownItem>
-                                <DropdownItem tag={Link} to={'/subscriptions'}>Subscriptions</DropdownItem>
+                                <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}/subscriptions`}>Subscriptions</DropdownItem>
                                 <DropdownItem divider/>
                                 <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
                                 <DropdownItem divider/>
