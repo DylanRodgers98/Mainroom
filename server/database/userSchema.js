@@ -20,7 +20,7 @@ const UserSchema = new Schema({
     scheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}]
 });
 
-UserSchema.methods.generateHash = (password) => {
+UserSchema.methods.generateHash = password => {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
 };
 
