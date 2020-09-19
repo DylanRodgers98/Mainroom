@@ -65,10 +65,10 @@ router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
         });
 });
 
-router.get('/subscribedTo', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.otherUsername)}, 'subscriptions', (err, otherUser) => {
+router.get('/subscribed-to', loginChecker.ensureLoggedIn(), (req, res) => {
+    User.findOne({username: sanitise(req.query.otherUsername)}, 'subscribers', (err, otherUser) => {
         if (!err && otherUser) {
-            res.send(otherUser.subscriptions.includes(req.user._id));
+            res.send(otherUser.subscribers.includes(req.user._id));
         }
     });
 });

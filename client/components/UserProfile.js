@@ -11,7 +11,7 @@ import '../css/livestreams.scss';
 
 import defaultProfilePic from '../img/defaultProfilePic.png';
 
-const startingState = {
+const STARTING_STATE = {
     loaded: false,
     doesUserExist: false,
     isProfileOfLoggedInUser: false,
@@ -29,6 +29,8 @@ const startingState = {
     upcomingStreamsEndTime: moment().startOf('day').add(3, 'day')
 }
 
+const SCHEDULE_GROUP = 0;
+
 export default class UserProfile extends React.Component {
 
     constructor(props) {
@@ -36,7 +38,7 @@ export default class UserProfile extends React.Component {
 
         this.onClickSubscribeOrEditProfileButton = this.onClickSubscribeOrEditProfileButton.bind(this);
 
-        this.state = startingState;
+        this.state = STARTING_STATE;
     }
 
     componentDidMount() {
@@ -45,7 +47,7 @@ export default class UserProfile extends React.Component {
 
     componentDidUpdate(prevProps) {
         if (prevProps.match.params.username !== this.props.match.params.username) {
-            this.setState(startingState, () => this.loadUserProfile());
+            this.setState(STARTING_STATE, () => this.loadUserProfile());
         }
     }
 
@@ -87,8 +89,8 @@ export default class UserProfile extends React.Component {
             this.setState({
                 scheduleItems: [...this.state.scheduleItems, {
                     id: this.state.scheduleItems.length,
-                    group: 0,
-                    title: this.props.match.params.username,
+                    group: SCHEDULE_GROUP,
+                    title: scheduledStream.title || this.props.match.params.username,
                     start_time: moment(scheduledStream.startTime),
                     end_time: moment(scheduledStream.endTime)
                 }]
@@ -106,7 +108,7 @@ export default class UserProfile extends React.Component {
 
     isLoggedInUserSubscribed() {
         if (!this.state.isProfileOfLoggedInUser) {
-            axios.get('/users/subscribedTo', {
+            axios.get('/users/subscribed-to', {
                 params: {
                     otherUsername: this.props.match.params.username
                 }
@@ -247,7 +249,7 @@ export default class UserProfile extends React.Component {
                     </Col>
                     <Col xs='9'>
                         <h3>Upcoming Streams</h3>
-                        <Timeline groups={[{id: 0}]} items={this.state.scheduleItems} sidebarWidth='0'
+                        <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems} sidebarWidth='0'
                                   visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
                                   visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
                         <hr className="my-4"/>
