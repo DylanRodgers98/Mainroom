@@ -214,7 +214,7 @@ export default class UserProfile extends React.Component {
                     </Link>
                     <span className="username">
                         <Link to={`/user/${this.props.match.params.username}/live`}>
-                            {this.props.match.params.username}
+                            {this.state.displayName || this.props.match.params.username}
                         </Link>
                     </span>
                 </Col>

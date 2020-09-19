@@ -118,7 +118,7 @@ export default class LiveStreamsByCategory extends React.Component {
 
                     <span className="username">
                         <Link to={`/user/${stream.username}/live`}>
-                            {stream.username}
+                            {stream.displayName || stream.username}
                         </Link>
                     </span>
                 </div>

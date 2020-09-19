@@ -19,11 +19,12 @@ router.get('/', loginChecker.ensureLoggedIn(), async (req, res) => {
         if (req.query.category) {
             query['streamInfo.category'] = req.query.category;
         }
-        const users = await User.find(query, 'username streamInfo.streamKey');
+        const users = await User.find(query, 'username displayName streamInfo.streamKey');
         if (users) {
             const streamInfo = users.map(user => {
                 return {
                     username: user.username,
+                    displayName: user.displayName,
                     streamKey: user.streamInfo.streamKey
                 };
             })

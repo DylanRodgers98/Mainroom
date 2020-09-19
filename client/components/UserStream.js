@@ -22,6 +22,7 @@ export default class UserStream extends React.Component {
             stream: false,
             videoJsOptions: null,
             viewerUsername: '',
+            displayName: '',
             streamTitle: '',
             streamGenre: '',
             streamCategory: '',
@@ -67,6 +68,7 @@ export default class UserStream extends React.Component {
                 }],
                 fluid: true
             },
+            displayName: res.data.displayName,
             streamTitle: res.data.title,
             streamGenre: res.data.genre,
             streamCategory: res.data.category
@@ -159,7 +161,7 @@ export default class UserStream extends React.Component {
                     <div className="ml-2">
                         <h3>
                             <Link to={`/user/${this.props.match.params.username}`}>
-                                {this.props.match.params.username}
+                                {this.state.displayName || this.props.match.params.username}
                             </Link>
                             {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
                         </h3>

@@ -146,10 +146,11 @@ router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
 
 router.get('/stream-info', loginChecker.ensureLoggedIn(), (req, res) => {
     User.findOne({username: sanitise(req.query.username) || req.user.username},
-        'streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
+        'displayName streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
         (err, user) => {
             if (!err && user && user.streamInfo) {
                 res.json({
+                    displayName: user.displayName,
                     streamKey: user.streamInfo.streamKey,
                     title: user.streamInfo.title,
                     genre: user.streamInfo.genre,
