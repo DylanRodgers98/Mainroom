@@ -9,8 +9,9 @@ router.get('/logged-in', loginChecker.ensureLoggedIn(), (req, res) => {
     res.json({username: req.user.username});
 });
 
-router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.username) || req.user.username},
+router.get('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.query.username) || req.user.username;
+    User.findOne({username: username},
         'username displayName location bio links subscribers scheduledStreams')
         .populate({
             path: 'scheduledStreams',
@@ -21,7 +22,11 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
             }
         })
         .exec((err, user) => {
-            if (!err && user) {
+            if (err) {
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${username}) not found`);
+            } else {
                 res.json({
                     username: user.username,
                     displayName: user.displayName,
@@ -31,13 +36,11 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res) => {
                     numOfSubscribers: user.subscribers.length,
                     scheduledStreams: user.scheduledStreams
                 });
-            } else {
-                res.sendStatus(204);
             }
         });
 });
 
-router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
+router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const updateQuery = {};
 
     if (req.body.displayName) {
@@ -54,22 +57,29 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
     }
 
     User.findOneAndUpdate({username: req.user.username}, updateQuery, (err, user) => {
-        if (err || !user) {
-            res.sendStatus(500);
+        if (err) {
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${req.user.username}) not found`);
         } else {
             res.sendStatus(200);
         }
     })
 });
 
-router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.username) || req.user.username}, 'subscribers')
+router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.query.username) || req.user.username;
+    User.findOne({username: username}, 'subscribers')
         .populate({
             path: 'subscribers',
             select: 'username'
         })
         .exec((err, user) => {
-            if (!err && user) {
+            if (err) {
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${username}) not found`);
+            } else {
                 res.json({
                     subscribers: user.subscribers
                 });
@@ -77,14 +87,19 @@ router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res) => {
         });
 });
 
-router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.username) || req.user.username}, 'subscriptions')
+router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.query.username) || req.user.username;
+    User.findOne({username: username}, 'subscriptions')
         .populate({
             path: 'subscriptions',
             select: 'username'
         })
         .exec((err, user) => {
-            if (!err && user) {
+            if (err) {
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${username}) not found`);
+            } else {
                 res.json({
                     subscriptions: user.subscriptions
                 });
@@ -92,28 +107,36 @@ router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res) => {
         });
 });
 
-router.get('/subscribed-to', loginChecker.ensureLoggedIn(), (req, res) => {
+router.get('/subscribed-to', loginChecker.ensureLoggedIn(), (req, res, next) => {
     User.findOne({username: sanitise(req.query.otherUsername)}, 'subscribers', (err, otherUser) => {
-        if (!err && otherUser) {
+        if (err) {
+            next(err);
+        } else if (!otherUser) {
+            res.status(404).send(`User (username: ${req.query.otherUsername}) not found`);
+        } else {
             res.send(otherUser.subscribers.includes(req.user._id));
         }
     });
 });
 
-router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
+router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res, next) => {
     User.findOneAndUpdate({
         username: sanitise(req.body.userToSubscribeTo)
     }, {
         $addToSet: {subscribers: req.user._id}
     }, (err, userToSubscribeTo) => {
-        if (err || !userToSubscribeTo) {
-            res.sendStatus(500);
+        if (err) {
+            next(err);
+        } else if (!userToSubscribeTo) {
+            res.status(404).send(`User (username: ${req.body.userToSubscribeTo}) not found`);
         } else {
             User.findByIdAndUpdate(req.user._id, {
                 $addToSet: {subscriptions: userToSubscribeTo._id}
             }, (err, user) => {
-                if (err || !user) {
-                    res.sendStatus(500);
+                if (err) {
+                    next(err);
+                } else if (!user) {
+                    res.status(404).send(`User (_id: ${req.user._id}) not found`);
                 } else {
                     res.sendStatus(200);
                 }
@@ -122,20 +145,24 @@ router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
-router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
+router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res, next) => {
     User.findOneAndUpdate({
         username: sanitise(req.body.userToUnsubscribeFrom)
     }, {
         $pull: {subscribers: req.user._id}
     }, (err, userToUnsubscribeFrom) => {
-        if (err || !userToUnsubscribeFrom) {
-            res.sendStatus(500);
+        if (err) {
+            next(err);
+        } else if (!userToUnsubscribeFrom) {
+            res.status(404).send(`User (username: ${req.body.userToUnsubscribeFrom}) not found`);
         } else {
             User.findByIdAndUpdate(req.user._id, {
                 $pull: {subscriptions: userToUnsubscribeFrom._id}
             }, (err, user) => {
-                if (err || !user) {
-                    res.sendStatus(500);
+                if (err) {
+                    next(err);
+                } else if (!user) {
+                    res.status(404).send(`User (_id: ${req.user._id}) not found`);
                 } else {
                     res.sendStatus(200);
                 }
@@ -144,11 +171,16 @@ router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
-router.get('/stream-info', loginChecker.ensureLoggedIn(), (req, res) => {
-    User.findOne({username: sanitise(req.query.username) || req.user.username},
+router.get('/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.query.username) || req.user.username;
+    User.findOne({username: username},
         'displayName streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
         (err, user) => {
-            if (!err && user && user.streamInfo) {
+            if (err) {
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${username}) not found`);
+            } else {
                 res.json({
                     displayName: user.displayName,
                     streamKey: user.streamInfo.streamKey,
@@ -161,7 +193,7 @@ router.get('/stream-info', loginChecker.ensureLoggedIn(), (req, res) => {
         });
 });
 
-router.post('/stream-info', (req, res) => {
+router.post('/stream-info', (req, res, next) => {
     User.findOneAndUpdate({
         username: req.user.username
     }, {
@@ -172,7 +204,11 @@ router.post('/stream-info', (req, res) => {
     }, {
         new: true,
     }, (err, user) => {
-        if (!err && user.streamInfo) {
+        if (err) {
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${req.user.username}) not found`);
+        } else {
             res.json({
                 title: user.streamInfo.title,
                 genre: user.streamInfo.genre,
@@ -183,7 +219,7 @@ router.post('/stream-info', (req, res) => {
     });
 });
 
-router.post('/stream-key', loginChecker.ensureLoggedIn(), (req, res) => {
+router.post('/stream-key', loginChecker.ensureLoggedIn(), (req, res, next) => {
     User.findOneAndUpdate({
         username: req.user.username
     }, {
@@ -191,7 +227,11 @@ router.post('/stream-key', loginChecker.ensureLoggedIn(), (req, res) => {
     }, {
         new: true
     }, (err, user) => {
-        if (!err && user.streamInfo) {
+        if (err) {
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${req.user.username}) not found`);
+        } else {
             res.json({
                 streamKey: user.streamInfo.streamKey
             })
@@ -199,7 +239,7 @@ router.post('/stream-key', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 });
 
-router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res) => {
+router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res, next) => {
     User.findOne({username: req.user.username}, 'username scheduledStreams subscriptions')
         .populate({
             path: 'scheduledStreams',
@@ -218,7 +258,11 @@ router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res) => {
             }
         })
         .exec((err, user) => {
-            if (!err && user) {
+            if (err) {
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${req.user.username}) not found`);
+            } else {
                 res.json(user);
             }
         });
