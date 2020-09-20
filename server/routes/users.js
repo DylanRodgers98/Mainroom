@@ -24,20 +24,20 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
         })
         .exec((err, user) => {
             if (err) {
-                return next(err);
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${escape(username)}) not found`);
+            } else {
+                res.json({
+                    username: user.username,
+                    displayName: user.displayName,
+                    location: user.location,
+                    bio: user.bio,
+                    links: user.links,
+                    numOfSubscribers: user.subscribers.length,
+                    scheduledStreams: user.scheduledStreams
+                });
             }
-            if (!user) {
-                return res.status(404).send(`User (username: ${escape(username)}) not found`);
-            }
-            res.json({
-                username: user.username,
-                displayName: user.displayName,
-                location: user.location,
-                bio: user.bio,
-                links: user.links,
-                numOfSubscribers: user.subscribers.length,
-                scheduledStreams: user.scheduledStreams
-            });
         });
 });
 
@@ -59,12 +59,12 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
 
     User.findOneAndUpdate({username: req.user.username}, updateQuery, (err, user) => {
         if (err) {
-            return next(err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${req.user.username}) not found`);
+        } else {
+            res.sendStatus(200);
         }
-        if (!user) {
-            return res.status(404).send(`User (username: ${req.user.username}) not found`);
-        }
-        res.sendStatus(200);
     })
 });
 
@@ -77,14 +77,14 @@ router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res, next) => {
         })
         .exec((err, user) => {
             if (err) {
-                return next(err);
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${escape(username)}) not found`);
+            } else {
+                res.json({
+                    subscribers: user.subscribers
+                });
             }
-            if (!user) {
-                return res.status(404).send(`User (username: ${escape(username)}) not found`);
-            }
-            res.json({
-                subscribers: user.subscribers
-            });
         });
 });
 
@@ -97,26 +97,26 @@ router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res, next) => 
         })
         .exec((err, user) => {
             if (err) {
-                return next(err);
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${escape(username)}) not found`);
+            } else {
+                res.json({
+                    subscriptions: user.subscriptions
+                });
             }
-            if (!user) {
-                return res.status(404).send(`User (username: ${escape(username)}) not found`);
-            }
-            res.json({
-                subscriptions: user.subscriptions
-            });
         });
 });
 
 router.get('/subscribed-to', loginChecker.ensureLoggedIn(), (req, res, next) => {
     User.findOne({username: sanitise(req.query.otherUsername)}, 'subscribers', (err, otherUser) => {
         if (err) {
-            return next(err);
+            next(err);
+        } else if (!otherUser) {
+            res.status(404).send(`User (username: ${escape(req.query.otherUsername)}) not found`);
+        } else {
+            res.send(otherUser.subscribers.includes(req.user._id));
         }
-        if (!otherUser) {
-            return res.status(404).send(`User (username: ${escape(req.query.otherUsername)}) not found`);
-        }
-        res.send(otherUser.subscribers.includes(req.user._id));
     });
 });
 
@@ -127,22 +127,22 @@ router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res, next) => {
         $addToSet: {subscribers: req.user._id}
     }, (err, userToSubscribeTo) => {
         if (err) {
-            return next(err);
+            next(err);
+        } else if (!userToSubscribeTo) {
+            res.status(404).send(`User (username: ${escape(req.body.userToSubscribeTo)}) not found`);
+        } else {
+            User.findByIdAndUpdate(req.user._id, {
+                $addToSet: {subscriptions: userToSubscribeTo._id}
+            }, (err, user) => {
+                if (err) {
+                    next(err);
+                } else if (!user) {
+                    res.status(404).send(`User (_id: ${req.user._id}) not found`);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
         }
-        if (!userToSubscribeTo) {
-            return res.status(404).send(`User (username: ${escape(req.body.userToSubscribeTo)}) not found`);
-        }
-        User.findByIdAndUpdate(req.user._id, {
-            $addToSet: {subscriptions: userToSubscribeTo._id}
-        }, (err, user) => {
-            if (err) {
-                return next(err);
-            }
-            if (!user) {
-                return res.status(404).send(`User (_id: ${req.user._id}) not found`);
-            }
-            res.sendStatus(200);
-        });
     });
 });
 
@@ -153,22 +153,22 @@ router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res, next) => {
         $pull: {subscribers: req.user._id}
     }, (err, userToUnsubscribeFrom) => {
         if (err) {
-            return next(err);
+            next(err);
+        } else if (!userToUnsubscribeFrom) {
+            res.status(404).send(`User (username: ${escape(req.body.userToUnsubscribeFrom)}) not found`);
+        } else {
+            User.findByIdAndUpdate(req.user._id, {
+                $pull: {subscriptions: userToUnsubscribeFrom._id}
+            }, (err, user) => {
+                if (err) {
+                    next(err);
+                } else if (!user) {
+                    res.status(404).send(`User (_id: ${req.user._id}) not found`);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
         }
-        if (!userToUnsubscribeFrom) {
-            return res.status(404).send(`User (username: ${escape(req.body.userToUnsubscribeFrom)}) not found`);
-        }
-        User.findByIdAndUpdate(req.user._id, {
-            $pull: {subscriptions: userToUnsubscribeFrom._id}
-        }, (err, user) => {
-            if (err) {
-                return next(err);
-            }
-            if (!user) {
-                return res.status(404).send(`User (_id: ${req.user._id}) not found`);
-            }
-            res.sendStatus(200);
-        });
     });
 });
 
@@ -178,19 +178,19 @@ router.get('/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
         'displayName streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
         (err, user) => {
             if (err) {
-                return next(err);
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${escape(username)}) not found`);
+            } else {
+                res.json({
+                    displayName: user.displayName,
+                    streamKey: user.streamInfo.streamKey,
+                    title: user.streamInfo.title,
+                    genre: user.streamInfo.genre,
+                    category: user.streamInfo.category,
+                    tags: user.streamInfo.tags
+                });
             }
-            if (!user) {
-                return res.status(404).send(`User (username: ${escape(username)}) not found`);
-            }
-            res.json({
-                displayName: user.displayName,
-                streamKey: user.streamInfo.streamKey,
-                title: user.streamInfo.title,
-                genre: user.streamInfo.genre,
-                category: user.streamInfo.category,
-                tags: user.streamInfo.tags
-            });
         });
 });
 
@@ -206,17 +206,17 @@ router.post('/stream-info', (req, res, next) => {
         new: true,
     }, (err, user) => {
         if (err) {
-            return next(err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${req.user.username}) not found`);
+        } else {
+            res.json({
+                title: user.streamInfo.title,
+                genre: user.streamInfo.genre,
+                category: user.streamInfo.category,
+                tags: user.streamInfo.tags
+            });
         }
-        if (!user) {
-            return res.status(404).send(`User (username: ${req.user.username}) not found`);
-        }
-        res.json({
-            title: user.streamInfo.title,
-            genre: user.streamInfo.genre,
-            category: user.streamInfo.category,
-            tags: user.streamInfo.tags
-        });
     });
 });
 
@@ -229,14 +229,14 @@ router.post('/stream-key', loginChecker.ensureLoggedIn(), (req, res, next) => {
         new: true
     }, (err, user) => {
         if (err) {
-            return next(err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${req.user.username}) not found`);
+        } else {
+            res.json({
+                streamKey: user.streamInfo.streamKey
+            });
         }
-        if (!user) {
-            return res.status(404).send(`User (username: ${req.user.username}) not found`);
-        }
-        res.json({
-            streamKey: user.streamInfo.streamKey
-        })
     });
 });
 
@@ -260,12 +260,12 @@ router.get('/schedule', loginChecker.ensureLoggedIn(), (req, res, next) => {
         })
         .exec((err, user) => {
             if (err) {
-                return next(err);
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${req.user.username}) not found`);
+            } else {
+                res.json(user);
             }
-            if (!user) {
-                return res.status(404).send(`User (username: ${req.user.username}) not found`);
-            }
-            res.json(user);
         });
 });
 

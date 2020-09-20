@@ -24,10 +24,9 @@ router.get('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         }
         User.find(query, 'username displayName streamInfo.streamKey', (err, users) => {
             if (err) {
-                return next(err);
-            }
-            if (users) {
-                return res.json(users.map(user => {
+                next(err);
+            } else if (users) {
+                res.json(users.map(user => {
                     return {
                         username: user.username,
                         displayName: user.displayName,
@@ -36,8 +35,9 @@ router.get('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
                 }));
             }
         });
+    } else {
+        res.json({});
     }
-    res.json({});
 });
 
 module.exports = router;

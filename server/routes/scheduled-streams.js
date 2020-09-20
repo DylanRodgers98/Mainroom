@@ -17,17 +17,19 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
     scheduledStream.save(err => {
         if (err) {
             return next(err);
+        } else {
+            User.findOneAndUpdate({
+                username: req.user.username
+            }, {
+                $push: {scheduledStreams: scheduledStream._id}
+            }, err => {
+                if (err) {
+                    return next(err);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
         }
-        User.findOneAndUpdate({
-            username: req.user.username
-        }, {
-            $push: {scheduledStreams: scheduledStream._id}
-        }, err => {
-            if (err) {
-                return next(err);
-            }
-            res.sendStatus(200);
-        });
     });
 });
 
