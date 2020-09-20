@@ -196,7 +196,7 @@ export default class UserProfile extends React.Component {
     renderLinks() {
         return this.state.links.map(link => (
             <div>
-                <a href={link.url} target='_blank'>{link.title}</a>
+                <a href={link.url} target='_blank'>{link.title || link.url}</a>
             </div>
         ));
     }

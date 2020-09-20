@@ -3,6 +3,7 @@ import axios from 'axios';
 import Container from "reactstrap/es/Container";
 import {Button} from "reactstrap";
 import {Redirect} from "react-router-dom";
+import normalizeUrl from "normalize-url";
 
 export default class EditProfile extends React.Component {
 
@@ -85,7 +86,7 @@ export default class EditProfile extends React.Component {
 
     async saveProfile() {
         if (await this.areLinksValid()) {
-            this.fixLinkProtocols();
+            this.normaliseLinkUrls();
             const res = await axios.post('/users', {
                 displayName: this.state.displayName,
                 location: this.state.location,
@@ -102,27 +103,26 @@ export default class EditProfile extends React.Component {
 
     async areLinksValid() {
         let isValid = true;
-        const indexesOfInvalidLinks = this.state.links.map((link, i) => {
-            if (!(link.title && link.url)) {
-                isValid = false;
-                return i;
-            }
-        });
         this.setState({
-            indexesOfInvalidLinks: indexesOfInvalidLinks
+            indexesOfInvalidLinks: this.state.links.map((link, i) => {
+                if (!link.url) {
+                    isValid = false;
+                    return i;
+                }
+            })
         });
         return isValid;
     }
 
-    fixLinkProtocols() {
-        const links = this.state.links.map(link => {
-            if (!link.url.includes('://')) {
-                link.url = 'https://' + link.url;
-            }
-            return link;
-        });
+    normaliseLinkUrls() {
         this.setState({
-            links: links
+            links: this.state.links.map(link => {
+                link.url = normalizeUrl(link.url, {
+                    forceHttps: true,
+                    stripWWW: false
+                });
+                return link;
+            })
         });
     }
 
@@ -151,15 +151,12 @@ export default class EditProfile extends React.Component {
     }
 
     renderLinks() {
-        let headers;
-        if (this.state.links.length) {
-            headers = (
-                <tr>
-                    <td>Title:</td>
-                    <td>URL:</td>
-                </tr>
-            );
-        }
+        const headers = !this.state.links.length ? undefined : (
+            <tr>
+                <td>Title:</td>
+                <td>URL:</td>
+            </tr>
+        );
 
         const links = this.state.links.map((link, i) => (
             <tr>
@@ -176,7 +173,7 @@ export default class EditProfile extends React.Component {
                 </td>
                 <td>
                     <div className='ml-1'>
-                        {this.state.indexesOfInvalidLinks.includes(i) ? 'Link must have a title and a URL' : ''}
+                        {this.state.indexesOfInvalidLinks.includes(i) ? 'Link must have a URL' : ''}
                     </div>
                 </td>
             </tr>
