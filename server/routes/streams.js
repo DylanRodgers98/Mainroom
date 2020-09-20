@@ -4,7 +4,7 @@ const {User} = require('../database/schemas');
 const loginChecker = require('connect-ensure-login');
 const _ = require('lodash');
 
-router.get('/', loginChecker.ensureLoggedIn(), async (req, res) => {
+router.get('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     if (req.query.streamKeys) {
         const query = {
             'streamInfo.streamKey': {$in: req.query.streamKeys}
@@ -19,20 +19,22 @@ router.get('/', loginChecker.ensureLoggedIn(), async (req, res) => {
         if (req.query.category) {
             query['streamInfo.category'] = req.query.category;
         }
-        const users = await User.find(query, 'username displayName streamInfo.streamKey');
-        if (users) {
-            const streamInfo = users.map(user => {
-                return {
-                    username: user.username,
-                    displayName: user.displayName,
-                    streamKey: user.streamInfo.streamKey
-                };
-            })
-            res.json(streamInfo);
-        }
-    } else {
-        res.sendStatus(204);
+        User.find(query, 'username displayName streamInfo.streamKey', (err, users) => {
+            if (err) {
+                return next(err);
+            }
+            if (users) {
+                return res.json(users.map(user => {
+                    return {
+                        username: user.username,
+                        displayName: user.displayName,
+                        streamKey: user.streamInfo.streamKey
+                    };
+                }));
+            }
+        });
     }
+    res.json({});
 });
 
 module.exports = router;

@@ -3,7 +3,7 @@ const router = express.Router();
 const {ScheduledStream, User} = require('../database/schemas');
 const loginChecker = require('connect-ensure-login');
 
-router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
+router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const scheduledStream = new ScheduledStream({
         user: req.user._id,
         startTime: req.body.startTime,
@@ -15,20 +15,19 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res) => {
     });
 
     scheduledStream.save(err => {
-        if (!err) {
-            User.findOneAndUpdate({
-                username: req.user.username
-            }, {
-                $push: {scheduledStreams: scheduledStream._id}
-            },  (err, user) => {
-                if (!err && user.scheduledStreams) {
-                    res.json({
-                        username: user.username,
-                        scheduledStream: scheduledStream
-                    })
-                }
-            });
+        if (err) {
+            return next(err);
         }
+        User.findOneAndUpdate({
+            username: req.user.username
+        }, {
+            $push: {scheduledStreams: scheduledStream._id}
+        }, err => {
+            if (err) {
+                return next(err);
+            }
+            res.sendStatus(200);
+        });
     });
 });
 
