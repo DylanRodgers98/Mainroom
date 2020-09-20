@@ -164,7 +164,8 @@ export default class EditProfile extends React.Component {
                     <input className="mt-1" type="text" value={link.title} onChange={e => this.setLinkTitle(e, i)}/>
                 </td>
                 <td>
-                    <input className="mt-1" type="text" value={link.url} onChange={e => this.setLinkUrl(e, i)} size={40}/>
+                    <input className="mt-1" type="text" value={link.url} onChange={e => this.setLinkUrl(e, i)}
+                           size={40}/>
                 </td>
                 <td>
                     <Button className="btn-dark mt-1 ml-1" size="sm" onClick={() => this.removeLink(i)}>
@@ -197,26 +198,17 @@ export default class EditProfile extends React.Component {
                         <td>
                             <h5 className="mr-3">Display Name:</h5>
                         </td>
-                        <table>
-                            <tr>
-                                <td>
-                                    <input type="text" value={this.state.displayName} onChange={this.setDisplayName}/>
-                                </td>
-                            </tr>
-                        </table>
+                        <td>
+                            <input type="text" value={this.state.displayName} onChange={this.setDisplayName}/>
+                        </td>
                     </tr>
                     <tr>
                         <td>
                             <h5 className="mt-1 mr-3">Location:</h5>
                         </td>
-                        <table>
-                            <tr>
-                                <td>
-                                    <input className="mt-1" type="text" value={this.state.location}
-                                           onChange={this.setLocation}/>
-                                </td>
-                            </tr>
-                        </table>
+                        <td>
+                            <input className="mt-1" type="text" value={this.state.location} onChange={this.setLocation}/>
+                        </td>
                     </tr>
                     <tr>
                         <td valign='top'>

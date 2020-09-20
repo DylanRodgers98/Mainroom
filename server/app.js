@@ -56,6 +56,7 @@ app.use('/filters', require('./routes/filters'));
 app.use('/streams', require('./routes/streams'));
 app.use('/users', require('./routes/users'));
 app.use('/scheduled-streams', require('./routes/scheduled-streams'));
+app.use('/api/settings', require('./routes/settings'));
 
 app.get('/logout', (req, res) => {
     req.logout();

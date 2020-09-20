@@ -15,6 +15,7 @@ import Subscriptions from "./components/Subscriptions";
 import UserStream from "./components/UserStream";
 import Schedule from "./components/Schedule";
 import GoLive from "./components/GoLive";
+import Settings from "./components/Settings";
 import FourOhFour from "./components/FourOhFour";
 import './css/index.scss';
 
@@ -67,10 +68,9 @@ if (document.getElementById('root')) {
                         <Schedule {...props} />
                     )}/>
 
-                    {/*TODO: ADD SETTINGS ROUTE*/}
-                    {/*<Route exact path="/settings" render={props => (*/}
-                    {/*    <Settings {...props} />*/}
-                    {/*)}/>*/}
+                    <Route exact path="/settings" render={props => (
+                        <Settings {...props} />
+                    )}/>
 
                     <Route exact path="/go-live" render={props => (
                         <GoLive {...props} />
