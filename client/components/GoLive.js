@@ -14,11 +14,14 @@ export default class GoLive extends React.Component {
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
         this.setTitle = this.setTitle.bind(this);
         this.setGenre = this.setGenre.bind(this);
+        this.clearGenre = this.clearGenre.bind(this);
         this.setCategory = this.setCategory.bind(this);
+        this.clearCategory = this.clearCategory.bind(this);
         this.setTags = this.setTags.bind(this);
         this.saveSettings = this.saveSettings.bind(this);
 
         this.state = {
+            loaded: false,
             genres: [],
             categories: [],
             genreDropdownOpen: false,
@@ -33,8 +36,15 @@ export default class GoLive extends React.Component {
     }
 
     componentDidMount() {
-        this.getUserSettings();
-        this.getFilters();
+        this.fillComponent();
+    }
+
+    async fillComponent() {
+        await this.getUserSettings();
+        await this.getFilters();
+        this.setState({
+            loaded: true
+        });
     }
 
     async getUserSettings() {
@@ -94,9 +104,23 @@ export default class GoLive extends React.Component {
         });
     }
 
+    clearGenre() {
+        this.setState({
+            streamGenre: '',
+            unsavedChanges: true
+        });
+    }
+
     setCategory(event) {
         this.setState({
             streamCategory: event.currentTarget.textContent,
+            unsavedChanges: true
+        });
+    }
+
+    clearCategory() {
+        this.setState({
+            streamCategory: '',
             unsavedChanges: true
         });
     }
@@ -137,7 +161,7 @@ export default class GoLive extends React.Component {
             return <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
         });
 
-        return (
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
                 <Container className="mt-5">
                     <h4>Stream Settings</h4>
@@ -202,7 +226,13 @@ export default class GoLive extends React.Component {
                                 <Dropdown className="settings-dropdown" isOpen={this.state.genreDropdownOpen}
                                           toggle={this.genreDropdownToggle} size="sm">
                                     <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
-                                    <DropdownMenu>{genres}</DropdownMenu>
+                                    <DropdownMenu>
+                                        <DropdownItem onClick={this.clearGenre} disabled={!this.state.streamGenre}>
+                                            Clear Genre
+                                        </DropdownItem>
+                                        <DropdownItem divider/>
+                                        {genres}
+                                    </DropdownMenu>
                                 </Dropdown>
                             </td>
                         </tr>
@@ -214,7 +244,13 @@ export default class GoLive extends React.Component {
                                 <Dropdown className="settings-dropdown" isOpen={this.state.categoryDropdownOpen}
                                           toggle={this.categoryDropdownToggle} size="sm">
                                     <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
-                                    <DropdownMenu>{categories}</DropdownMenu>
+                                    <DropdownMenu>
+                                        <DropdownItem onClick={this.clearCategory} disabled={!this.state.streamCategory}>
+                                            Clear Category
+                                        </DropdownItem>
+                                        <DropdownItem divider/>
+                                        {categories}
+                                    </DropdownMenu>
                                 </Dropdown>
                             </td>
                         </tr>
