@@ -107,7 +107,7 @@ export default class LiveStreamsByCategory extends React.Component {
     render() {
         const streams = this.state.liveStreams.map((stream, index) => {
             return (
-                <div className="stream col-xs-12 col-sm-12 col-md-3 col-lg-4" key={index}>
+                <Col className='stream' key={index}>
                     <span className="live-label">LIVE</span>
                     <Link to={`/user/${stream.username}/live`}>
                         <div className="stream-thumbnail">
@@ -121,11 +121,11 @@ export default class LiveStreamsByCategory extends React.Component {
                             {stream.displayName || stream.username}
                         </Link>
                     </span>
-                </div>
+                </Col>
             );
         });
 
-        const pageHeader = `${decodeURIComponent(this.props.match.params.genre)} Livestreams`
+        const pageHeader = `${decodeURIComponent(this.props.match.params.genre)} Livestreams`;
 
         const categoryDropdownText = this.state.categoryFilter || 'Filter';
 
@@ -154,7 +154,7 @@ export default class LiveStreamsByCategory extends React.Component {
                     </Col>
                 </Row>
                 <hr className="my-4"/>
-                <Row className="streams">
+                <Row className="streams" xs='1' sm='1' md='2' lg='3' xl='3'>
                     {streams}
                 </Row>
             </Container>
