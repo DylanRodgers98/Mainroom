@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../database/schemas').User;
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
+const escape = require('escape-html');
 const shortid = require('shortid');
 
 router.get('/logged-in', loginChecker.ensureLoggedIn(), (req, res) => {
@@ -26,7 +27,7 @@ router.get('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
                 return next(err);
             }
             if (!user) {
-                return res.status(404).send(`User (username: ${username}) not found`);
+                return res.status(404).send(`User (username: ${escape(username)}) not found`);
             }
             res.json({
                 username: user.username,
@@ -79,7 +80,7 @@ router.get('/subscribers', loginChecker.ensureLoggedIn(), (req, res, next) => {
                 return next(err);
             }
             if (!user) {
-                return res.status(404).send(`User (username: ${username}) not found`);
+                return res.status(404).send(`User (username: ${escape(username)}) not found`);
             }
             res.json({
                 subscribers: user.subscribers
@@ -99,7 +100,7 @@ router.get('/subscriptions', loginChecker.ensureLoggedIn(), (req, res, next) => 
                 return next(err);
             }
             if (!user) {
-                return res.status(404).send(`User (username: ${username}) not found`);
+                return res.status(404).send(`User (username: ${escape(username)}) not found`);
             }
             res.json({
                 subscriptions: user.subscriptions
@@ -113,7 +114,7 @@ router.get('/subscribed-to', loginChecker.ensureLoggedIn(), (req, res, next) => 
             return next(err);
         }
         if (!otherUser) {
-            return res.status(404).send(`User (username: ${req.query.otherUsername}) not found`);
+            return res.status(404).send(`User (username: ${escape(req.query.otherUsername)}) not found`);
         }
         res.send(otherUser.subscribers.includes(req.user._id));
     });
@@ -129,7 +130,7 @@ router.post('/subscribe', loginChecker.ensureLoggedIn(), (req, res, next) => {
             return next(err);
         }
         if (!userToSubscribeTo) {
-            return res.status(404).send(`User (username: ${req.body.userToSubscribeTo}) not found`);
+            return res.status(404).send(`User (username: ${escape(req.body.userToSubscribeTo)}) not found`);
         }
         User.findByIdAndUpdate(req.user._id, {
             $addToSet: {subscriptions: userToSubscribeTo._id}
@@ -155,7 +156,7 @@ router.post('/unsubscribe', loginChecker.ensureLoggedIn(), (req, res, next) => {
             return next(err);
         }
         if (!userToUnsubscribeFrom) {
-            return res.status(404).send(`User (username: ${req.body.userToUnsubscribeFrom}) not found`);
+            return res.status(404).send(`User (username: ${escape(req.body.userToUnsubscribeFrom)}) not found`);
         }
         User.findByIdAndUpdate(req.user._id, {
             $pull: {subscriptions: userToUnsubscribeFrom._id}
@@ -180,7 +181,7 @@ router.get('/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
                 return next(err);
             }
             if (!user) {
-                return res.status(404).send(`User (username: ${username}) not found`);
+                return res.status(404).send(`User (username: ${escape(username)}) not found`);
             }
             res.json({
                 displayName: user.displayName,
