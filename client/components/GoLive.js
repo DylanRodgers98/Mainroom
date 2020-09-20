@@ -3,6 +3,9 @@ import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
 import '../css/go-live.scss';
 import Container from "reactstrap/es/Container";
+import config from '../../mainroom.config';
+
+const RTMP_SERVER_URL = `rtmp://${config.rtmpServer.host}:${config.rtmpServer.rtmp.port}/live`;
 
 export default class GoLive extends React.Component {
 
@@ -175,7 +178,7 @@ export default class GoLive extends React.Component {
                             <table>
                                 <tr>
                                     <td>
-                                        <input id="serverUrlInput" type="text" value="rtmp://127.0.0.1:1935/live"/>
+                                        <input id="serverUrlInput" type="text" value={RTMP_SERVER_URL}/>
                                     </td>
                                     <td>
                                         <Button className="btn-dark ml-1" size="sm"

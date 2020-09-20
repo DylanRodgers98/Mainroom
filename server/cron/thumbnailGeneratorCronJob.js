@@ -4,7 +4,7 @@ const helpers = require('../helpers/thumbnailGenerator');
 const config = require('../../mainroom.config');
 
 const job = new CronJob(config.cron.thumbnailGenerator, async () => {
-    const res = await axios.get(`http://127.0.0.1:${config.rtmpServer.http.port}/api/streams`);
+    const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);
     const streams = res.data['live'];
     if (typeof streams !== undefined) {
         for (const streamKey in streams) {

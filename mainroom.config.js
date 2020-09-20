@@ -8,12 +8,13 @@ module.exports = {
         }
     },
     database: {
-        uri: 'mongodb://127.0.0.1/mainroom',
+        uri: 'mongodb://127.0.0.1:27017/mainroom',
         scheduledStream: {
             ttl: '7d'
         }
     },
     rtmpServer: {
+        host: '127.0.0.1',
         rtmp: {
             port: 1935,
             chunk_size: 60000,
