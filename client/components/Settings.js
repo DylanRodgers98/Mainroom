@@ -2,7 +2,7 @@ import React from "react";
 import axios from 'axios';
 import Container from "reactstrap/es/Container";
 import {Button} from "reactstrap";
-import {Redirect} from "react-router-dom";
+import {Modal} from "react-bootstrap";
 
 export default class Settings extends React.Component {
 
@@ -15,15 +15,23 @@ export default class Settings extends React.Component {
         this.setNewPassword = this.setNewPassword.bind(this);
         this.setConfirmNewPassword = this.setConfirmNewPassword.bind(this);
         this.saveSettings = this.saveSettings.bind(this);
+        this.resetPasswordToggle = this.resetPasswordToggle.bind(this);
+        this.resetPassword = this.resetPassword.bind(this);
 
         this.state = {
+            startingUsername: '',
             username: '',
+            startingEmail: '',
             email: '',
+            usernameInvalidReason: '',
+            emailInvalidReason: '',
+            resetPasswordOpen: false,
             currentPassword: '',
             newPassword: '',
             confirmNewPassword: '',
-            unsavedChanges: false,
-            redirectToHome: false
+            currentPasswordInvalidReason: '',
+            newPasswordInvalidReason: '',
+            confirmNewPasswordInvalidReason: ''
         }
     }
 
@@ -34,40 +42,55 @@ export default class Settings extends React.Component {
     async getUsernameAndEmail() {
         const res = await axios.get('/api/settings');
         this.setState({
+            startingUsername: res.data.username,
             username: res.data.username,
+            startingEmail: res.data.email,
             email: res.data.email
         });
     }
 
     setUsername(event) {
         this.setState({
-            username: event.target.value,
-            unsavedChanges: true
+            username: event.target.value
         });
     }
 
     setEmail(event) {
         this.setState({
-            email: event.target.value,
-            unsavedChanges: true
+            email: event.target.value
         });
+    }
+
+    enableSaveButton() {
+        return this.isUsernameChanged() || this.isEmailChanged();
+    }
+
+    isUsernameChanged() {
+        return this.state.username !== this.state.startingUsername;
+    }
+
+    isEmailChanged() {
+        return this.state.email !== this.state.startingEmail;
     }
 
     async saveSettings() {
-        const res = await axios.post('/api/settings', {
-            username: this.state.username,
-            email: this.state.email
-        });
-        if (res.status === 200) {
-            this.setState({
-                redirectToHome: true
-            });
+        const data = {};
+        if (this.isUsernameChanged()) {
+            data.username = this.state.username;
         }
-    }
-
-    renderRedirectToHome() {
-        if (this.state.redirectToHome) {
-            return <Redirect to={`/`}/>;
+        if (this.isEmailChanged()) {
+            data.email = this.state.email;
+        }
+        const res = await axios.post('/api/settings', data);
+        this.setState({
+            usernameInvalidReason: res.data.usernameInvalidReason || '',
+            emailInvalidReason: res.data.emailInvalidReason || ''
+        });
+        if (!(res.data.usernameInvalidReason || res.data.emailInvalidReason)) {
+            this.setState({
+                startingUsername: this.state.username,
+                startingEmail: this.state.email
+            });
         }
     }
 
@@ -89,74 +112,159 @@ export default class Settings extends React.Component {
         });
     }
 
-    updatePassword() {
+    resetPasswordToggle() {
+        this.setState(prevState => ({
+            resetPasswordOpen: !prevState.resetPasswordOpen,
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: ''
+        }));
+    }
 
+    async resetPassword() {
+        const res = await axios.post('/api/settings/password', {
+            currentPassword: this.state.currentPassword,
+            newPassword: this.state.newPassword,
+            confirmNewPassword: this.state.confirmNewPassword
+        });
+        this.setState({
+            currentPasswordInvalidReason: res.data.currentPasswordInvalidReason || '',
+            newPasswordInvalidReason: res.data.newPasswordInvalidReason || '',
+            confirmNewPasswordInvalidReason: res.data.confirmNewPasswordInvalidReason || ''
+        });
+        if (!(this.state.currentPasswordInvalidReason
+            || this.state.newPasswordInvalidReason
+            || this.state.confirmNewPasswordInvalidReason)) {
+            this.resetPasswordToggle();
+        }
+    }
+
+    getNewPasswordInvalidReason() {
+        return typeof this.state.newPasswordInvalidReason === 'string' ? this.state.newPasswordInvalidReason
+            : this.state.newPasswordInvalidReason.map(line => <div>{line}<br/></div>);
+    }
+
+    enableResetPasswordButton() {
+        return this.state.currentPassword && this.state.newPassword && this.state.confirmNewPassword;
+    }
+
+    renderResetPassword() {
+        return (
+            <Modal show={this.state.resetPasswordOpen} onHide={this.resetPasswordToggle} size='lg' centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Reset Password</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <table>
+                        <tr>
+                            <td>
+                                <h6 className='mr-3'>Current Password:</h6>
+                            </td>
+                            <td>
+                                <input type="password" value={this.state.currentPassword}
+                                       onChange={this.setCurrentPassword}/>
+                            </td>
+                            <td>
+                                <div className='ml-1'>
+                                    {this.state.currentPasswordInvalidReason}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td valign='top'>
+                                <h6 className='mt-1 mr-3'>New Password:</h6>
+                            </td>
+                            <td valign='top'>
+                                <input className='mt-1' type="password" value={this.state.newPassword}
+                                       onChange={this.setNewPassword}/>
+                            </td>
+                            <td>
+                                <div className='ml-1'>
+                                    {this.getNewPasswordInvalidReason()}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <h6 className='mt-1 mr-3'>Confirm New Password:</h6>
+                            </td>
+                            <td>
+                                <input className='mt-1' type="password" value={this.state.confirmNewPassword}
+                                       onChange={this.setConfirmNewPassword}/>
+                            </td>
+                            <td>
+                                <div className='ml-1'>
+                                    {this.state.confirmNewPasswordInvalidReason}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button className='btn-dark' onClick={this.resetPassword}
+                            disabled={!this.enableResetPasswordButton()}>
+                        Reset Password
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
     }
 
     render() {
         return (
-            <Container className="mt-5">
-                <h4>Account Settings</h4>
-                <hr className="mt-4"/>
-                <table className="mt-3">
-                    <tr>
-                        <td>
-                            <h5 className="mr-3">Username:</h5>
-                        </td>
-                        <td>
-                            <input type="text" value={this.state.username} onChange={this.setUsername}/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <h5 className="mt-2 mr-3">Email Address:</h5>
-                        </td>
-                        <td>
-                            <input type="text" value={this.state.email} onChange={this.setEmail}/>
-                        </td>
-                    </tr>
-                </table>
-                // TODO: move this to Modal
-                <h5 className="mt-4">Reset Password:</h5>
-                <hr/>
-                <table>
-                    <tr>
-                        <td>
-                            <h6 className='mr-3'>Current Password:</h6>
-                        </td>
-                        <td>
-                            <input type="password" value={this.state.currentPassword}
-                                   onChange={this.setCurrentPassword}/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <h6 className='mt-1 mr-3'>New Password:</h6>
-                        </td>
-                        <td>
-                            <input className='mt-1' type="password" value={this.state.newPassword}
-                                   onChange={this.setNewPassword}/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <h6 className='mt-1 mr-3'>Confirm New Password:</h6>
-                        </td>
-                        <td>
-                            <input className='mt-1' type="password" value={this.state.confirmNewPassword}
-                                   onChange={this.setConfirmNewPassword}/>
-                        </td>
-                    </tr>
-                </table>
-                <hr className="my-4"/>
-                <div className="float-right">
-                    {this.renderRedirectToHome()}
-                    <Button className="btn-dark" size="lg" disabled={!this.state.unsavedChanges}
-                            onClick={this.saveSettings}>
-                        Save Settings
-                    </Button>
-                </div>
-            </Container>
+            <React.Fragment>
+                <Container className="mt-5">
+                    <h4>Account Settings</h4>
+                    <hr className="mt-4"/>
+                    <table className="mt-3">
+                        <tr>
+                            <td>
+                                <h5 className="mr-3">Username:</h5>
+                            </td>
+                            <td>
+                                <input type="text" value={this.state.username} onChange={this.setUsername}/>
+                            </td>
+                            <td>
+                                <div className='ml-1'>
+                                    {this.state.usernameInvalidReason}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <h5 className="mt-2 mr-3">Email Address:</h5>
+                            </td>
+                            <td>
+                                <input type="text" value={this.state.email} onChange={this.setEmail}/>
+                            </td>
+                            <td>
+                                <div className='ml-1'>
+                                    {this.state.emailInvalidReason}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <h5 className="mt-2">Reset Password:</h5>
+                            </td>
+                            <td>
+                                <Button className='btn-dark' size='sm' onClick={this.resetPasswordToggle}>
+                                    Click to reset password
+                                </Button>
+                            </td>
+                        </tr>
+                    </table>
+                    <hr className="my-4"/>
+                    <div className="float-right">
+                        <Button className="btn-dark" size="lg" disabled={!this.enableSaveButton()}
+                                onClick={this.saveSettings}>
+                            Save Settings
+                        </Button>
+                    </div>
+                </Container>
+
+                {this.renderResetPassword()}
+            </React.Fragment>
         );
     }
 
