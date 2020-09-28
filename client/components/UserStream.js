@@ -32,24 +32,26 @@ export default class UserStream extends React.Component {
     }
 
     componentDidMount() {
-        axios.get(`/api/users/${this.props.match.params.username}/stream-info`).then(res => {
-            this.setState({
-                doesUserExist: !!res
-            });
-            if (res) {
-                this.populateStreamDataIfUserIsLive(res);
-            }
-        });
+        this.fillComponent();
     }
 
-    populateStreamDataIfUserIsLive(res) {
-        axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${res.data.streamKey}`).then(stream => {
-            if (stream.data.isLive) {
-                this.populateStreamData(res);
-                this.getViewerUsername();
-                this.connectToChat();
-            }
+    async fillComponent() {
+        const res = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
+        this.setState({
+            doesUserExist: !!res
         });
+        if (res) {
+            await this.populateStreamDataIfUserIsLive(res);
+        }
+    }
+
+    async populateStreamDataIfUserIsLive(res) {
+        const stream = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${res.data.streamKey}`);
+        if (stream.data.isLive) {
+            this.populateStreamData(res);
+            await this.getViewerUsername();
+            this.connectToChat();
+        }
     }
 
     populateStreamData(res) {
@@ -78,11 +80,10 @@ export default class UserStream extends React.Component {
         });
     }
 
-    getViewerUsername() {
-        axios.get('/api/users/logged-in').then(res => {
-            this.setState({
-                viewerUsername: res.data.username
-            });
+    async getViewerUsername() {
+        const res = await axios.get('/api/users/logged-in');
+        this.setState({
+            viewerUsername: res.data.username
         });
     }
 
@@ -147,6 +148,20 @@ export default class UserStream extends React.Component {
         }
     }
 
+    renderChatTextArea() {
+        return !this.state.viewerUsername ? (
+            <div className='text-center mt-3'>
+                To participate in the chat, please <a href={`/login?redirectTo=${window.location.pathname}`}>log in</a>
+            </div>
+        ) : (
+            <div className='chat-input'>
+                <textarea onChange={this.onMessageTextChange} onKeyDown={this.handleKeyDown}
+                          value={this.state.msg}/>
+                <button onClick={this.onMessageSubmit}>Send</button>
+            </div>
+        );
+    }
+
     render() {
         return this.state.stream ? (
             <Row className="stream-row">
@@ -165,18 +180,16 @@ export default class UserStream extends React.Component {
                             <Link to={`/genre/${this.state.streamGenre}`}>
                                 {this.state.streamGenre}
                             </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                {this.state.streamCategory}
-                            </Link>
+                            {this.state.streamCategory}
+                        </Link>
                         </h5>
                     </div>
                 </div>
                 <div className='col chat-col'>
-                    <div className='chat-messages' id='messages'>{this.renderChat()}</div>
-                    <div className='chat-input'>
-                        <textarea onChange={this.onMessageTextChange} onKeyDown={this.handleKeyDown}
-                                  value={this.state.msg}/>
-                        <button onClick={this.onMessageSubmit}>Send</button>
+                    <div className='chat-messages' id='messages'>
+                        {this.renderChat()}
                     </div>
+                    {this.renderChatTextArea()}
                 </div>
             </Row>
         ) : (

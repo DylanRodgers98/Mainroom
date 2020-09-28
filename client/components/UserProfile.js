@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "axios";
 import {Container, Row, Col, Button} from "reactstrap";
-import {Link, Redirect} from "react-router-dom";
+import {Link} from "react-router-dom";
 import Timeline from "react-calendar-timeline";
 import moment from "moment";
 import FourOhFour from "./FourOhFour";
@@ -72,9 +72,9 @@ export default class UserProfile extends React.Component {
     async fillComponent(user) {
         this.populateProfile(user)
         this.buildSchedule(user.scheduledStreams);
-        this.getLiveStreamIfLive();
+        await this.getLiveStreamIfLive();
         await this.getLoggedInUser();
-        this.isLoggedInUserSubscribed();
+        await this.isLoggedInUserSubscribed();
     }
 
     populateProfile(user) {
@@ -110,7 +110,7 @@ export default class UserProfile extends React.Component {
     }
 
     async isLoggedInUserSubscribed() {
-        if (this.state.loggedInUser !== this.props.match.params.username) {
+        if (this.state.loggedInUser && this.state.loggedInUser !== this.props.match.params.username) {
             const res = await axios.get(`/api/users/${this.state.loggedInUser}/subscribed-to/${this.props.match.params.username}`);
             this.setState({
                 isLoggedInUserSubscribed: res.data

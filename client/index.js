@@ -4,7 +4,7 @@ import {BrowserRouter, Route, Switch} from 'react-router-dom';
 import 'regenerator-runtime/runtime';
 import config from '../mainroom.config';
 import Navbar from "./components/Navbar";
-import LiveStreams from "./components/LiveStreams";
+import Home from "./components/Home";
 import LiveStreamsByGenre from "./components/LiveStreamsByGenre";
 import LiveStreamsByCategory from "./components/LiveStreamsByCategory";
 import Search from "./components/Search";
@@ -27,9 +27,8 @@ if (document.getElementById('root')) {
             <React.Fragment>
                 <Navbar/>
                 <Switch>
-                    {/*TODO: condense the three LiveStreams (and potentially Search) components below into one component and pass in property for ALL/GENRE/CATEGORY*/}
                     <Route exact path="/" render={props => (
-                        <LiveStreams {...props} />
+                        <Home {...props} />
                     )}/>
 
                     <Route exact path="/genre/:genre" render={props => (

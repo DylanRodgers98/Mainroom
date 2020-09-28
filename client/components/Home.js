@@ -5,7 +5,7 @@ import config from '../../mainroom.config';
 import {Container, Row, Col} from "reactstrap";
 import '../css/livestreams.scss';
 
-export default class LiveStreams extends React.Component {
+export default class Home extends React.Component {
 
     constructor(props) {
         super(props);
@@ -19,14 +19,12 @@ export default class LiveStreams extends React.Component {
         this.getLiveStreams();
     }
 
-    getLiveStreams() {
-        axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`).then(res => {
-            const streams = res.data['live'];
-            if (typeof streams !== 'undefined') {
-                const streamKeys = this.extractStreamKeys(streams);
-                this.getStreamsInfo(streamKeys);
-            }
-        });
+    async getLiveStreams() {
+        const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);
+        if (res.data.live) {
+            const streamKeys = this.extractStreamKeys(res.data.live);
+            await this.getStreamsInfo(streamKeys);
+        }
     }
 
     extractStreamKeys(liveStreams) {
@@ -39,15 +37,14 @@ export default class LiveStreams extends React.Component {
         return streamKeys;
     }
 
-    getStreamsInfo(streamKeys) {
-        axios.get('/api/streams', {
+    async getStreamsInfo(streamKeys) {
+        const res = await axios.get('/api/streams', {
             params: {
                 streamKeys: streamKeys
             }
-        }).then(res => {
-            this.setState({
-                liveStreams: res.data
-            });
+        });
+        this.setState({
+            liveStreams: res.data
         });
     }
 

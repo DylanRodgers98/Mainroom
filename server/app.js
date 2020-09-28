@@ -7,7 +7,6 @@ const Session = require('express-session');
 const bodyParser = require('body-parser');
 const passport = require('./auth/passport');
 const mongoose = require('mongoose');
-const loginChecker = require('connect-ensure-login');
 const FileStore = require('session-file-store')(Session);
 const config = require('../mainroom.config');
 const flash = require('connect-flash');
