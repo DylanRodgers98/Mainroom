@@ -32,11 +32,7 @@ export default class UserStream extends React.Component {
     }
 
     componentDidMount() {
-        axios.get('/users/stream-info', {
-            params: {
-                username: this.props.match.params.username
-            }
-        }).then(res => {
+        axios.get(`/api/users/${this.props.match.params.username}/stream-info`).then(res => {
             this.setState({
                 doesUserExist: !!res
             });
@@ -83,7 +79,7 @@ export default class UserStream extends React.Component {
     }
 
     getViewerUsername() {
-        axios.get('/users/logged-in').then(res => {
+        axios.get('/api/users/logged-in').then(res => {
             this.setState({
                 viewerUsername: res.data.username
             });

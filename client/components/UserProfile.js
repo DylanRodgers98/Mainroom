@@ -14,7 +14,7 @@ import defaultProfilePic from '../img/defaultProfilePic.png';
 const STARTING_STATE = {
     loaded: false,
     doesUserExist: false,
-    isProfileOfLoggedInUser: false,
+    loggedInUser: '',
     isLoggedInUserSubscribed: false,
     displayName: '',
     location: '',
@@ -27,6 +27,7 @@ const STARTING_STATE = {
     streamGenre: '',
     streamCategory: '',
     redirectToEditProfile: false,
+    redirectToLogin: false,
     upcomingStreamsStartTime: moment().startOf('day'),
     upcomingStreamsEndTime: moment().startOf('day').add(3, 'day')
 }
@@ -38,7 +39,7 @@ export default class UserProfile extends React.Component {
     constructor(props) {
         super(props);
 
-        this.onClickSubscribeOrEditProfileButton = this.onClickSubscribeOrEditProfileButton.bind(this);
+        this.onClickSubscribeButton = this.onClickSubscribeButton.bind(this);
 
         this.state = STARTING_STATE;
     }
@@ -54,9 +55,8 @@ export default class UserProfile extends React.Component {
     }
 
     async loadUserProfile() {
-        const res = await axios.get('/users/', {
+        const res = await axios.get(`/api/users/${this.props.match.params.username}`, {
             params: {
-                username: this.props.match.params.username,
                 scheduleStartTime: this.state.upcomingStreamsStartTime.toDate(),
                 scheduleEndTime: this.state.upcomingStreamsEndTime.toDate(),
             }
@@ -72,9 +72,9 @@ export default class UserProfile extends React.Component {
     async fillComponent(user) {
         this.populateProfile(user)
         this.buildSchedule(user.scheduledStreams);
-        this.isProfileOfLoggedInUser();
-        this.isLoggedInUserSubscribed();
         this.getLiveStreamIfLive();
+        await this.getLoggedInUser();
+        this.isLoggedInUserSubscribed();
     }
 
     populateProfile(user) {
@@ -102,95 +102,76 @@ export default class UserProfile extends React.Component {
         });
     }
 
-    isProfileOfLoggedInUser() {
-        axios.get('/users/logged-in').then(res => {
+    async getLoggedInUser() {
+        const res = await axios.get('/api/users/logged-in')
+        this.setState({
+            loggedInUser: res.data.username,
+        });
+    }
+
+    async isLoggedInUserSubscribed() {
+        if (this.state.loggedInUser !== this.props.match.params.username) {
+            const res = await axios.get(`/api/users/${this.state.loggedInUser}/subscribed-to/${this.props.match.params.username}`);
             this.setState({
-                isProfileOfLoggedInUser: res.data.username === this.props.match.params.username,
+                isLoggedInUserSubscribed: res.data
             });
-        });
-    }
-
-    isLoggedInUserSubscribed() {
-        if (!this.state.isProfileOfLoggedInUser) {
-            axios.get('/users/subscribed-to', {
-                params: {
-                    otherUsername: this.props.match.params.username
-                }
-            }).then(res => {
-                this.setState({
-                    isLoggedInUserSubscribed: res.data
-                });
-            })
         }
     }
 
-    getSubscribeOrEditProfileButtonText() {
-        return this.state.isProfileOfLoggedInUser ? 'Edit Profile'
-            : this.state.isLoggedInUserSubscribed ? 'Subscribed' : 'Subscribe';
-    }
-
-    onClickSubscribeOrEditProfileButton() {
-        if (this.state.isProfileOfLoggedInUser) {
+    async subscribeToUser() {
+        const res = await axios.post(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username}`);
+        if (res.status === 200) {
             this.setState({
-                redirectToEditProfile: true
+                isLoggedInUserSubscribed: true,
+                numOfSubscribers: this.state.numOfSubscribers + 1
             });
-        } else if (this.state.isLoggedInUserSubscribed) {
-            this.unsubscribeFromUser();
-        } else {
-            this.subscribeToUser();
         }
     }
 
-    subscribeToUser() {
-        axios.post('/users/subscribe', {
-            userToSubscribeTo: this.props.match.params.username
-        }).then(res => {
-            if (res.status === 200) {
-                this.setState({
-                    isLoggedInUserSubscribed: true,
-                    numOfSubscribers: this.state.numOfSubscribers + 1
-                });
-            }
-        });
-    }
-
-    unsubscribeFromUser() {
-        axios.post('/users/unsubscribe', {
-            userToUnsubscribeFrom: this.props.match.params.username
-        }).then(res => {
-            if (res.status === 200) {
-                this.setState({
-                    isLoggedInUserSubscribed: false,
-                    numOfSubscribers: this.state.numOfSubscribers - 1
-                });
-            }
-        });
-    }
-
-    getLiveStreamIfLive() {
-        axios.get('/users/stream-info', {
-            params: {
-                username: this.props.match.params.username
-            }
-        }).then(stream => {
-            const streamKey = stream.data.streamKey;
-            axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${streamKey}`).then(res => {
-                if (res.data.isLive) {
-                    this.setState({
-                        streamKey: streamKey,
-                        streamTitle: stream.data.title,
-                        streamGenre: stream.data.genre,
-                        streamCategory: stream.data.category
-                    });
-                }
+    async unsubscribeFromUser() {
+        const res = await axios.post(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username}`);
+        if (res.status === 200) {
+            this.setState({
+                isLoggedInUserSubscribed: false,
+                numOfSubscribers: this.state.numOfSubscribers - 1
             });
-        });
+        }
     }
 
-    renderRedirectToEditProfile() {
-        if (this.state.redirectToEditProfile) {
-            return <Redirect to={'/edit-profile'}/>;
+    async getLiveStreamIfLive() {
+        const stream = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
+        const streamKey = stream.data.streamKey;
+        const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${streamKey}`);
+        if (res.data.isLive) {
+            this.setState({
+                streamKey: streamKey,
+                streamTitle: stream.data.title,
+                streamGenre: stream.data.genre,
+                streamCategory: stream.data.category
+            });
         }
+    }
+
+    onClickSubscribeButton() {
+        this.state.isLoggedInUserSubscribed ? this.unsubscribeFromUser() : this.subscribeToUser();
+    }
+
+    renderSubscribeButton() {
+        return this.state.loggedInUser ? (
+            this.state.loggedInUser === this.props.match.params.username ? (
+                <Button className='btn-dark subscribe-button' tag={Link} to='/edit-profile'>
+                    Edit Profile
+                </Button>
+            ) : (
+                <Button className='btn-dark subscribe-button' onClick={this.onClickSubscribeButton}>
+                    {this.state.isLoggedInUserSubscribed ? 'Subscribed' : 'Subscribe'}
+                </Button>
+            )
+        ) : (
+            <Button className='btn-dark subscribe-button' href={`/login?redirectTo=${window.location.pathname}`}>
+                Subscribe
+            </Button>
+        );
     }
 
     renderLinks() {
@@ -251,19 +232,14 @@ export default class UserProfile extends React.Component {
                                     {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
                                 </Link>
                             </h5>
-                            <div>
-                                {this.renderRedirectToEditProfile()}
-                                <Button className='btn-dark subscribe-button'
-                                        onClick={this.onClickSubscribeOrEditProfileButton}>
-                                    {this.getSubscribeOrEditProfileButtonText()}
-                                </Button>
-                            </div>
+                            {this.renderSubscribeButton()}
                             <p>{this.state.bio}</p>
                             {this.renderLinks()}
                         </Col>
                         <Col xs='9'>
                             <h3>Upcoming Streams</h3>
-                            <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems} sidebarWidth='0'
+                            <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
+                                      sidebarWidth='0'
                                       visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
                                       visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
                             <hr className="my-4"/>

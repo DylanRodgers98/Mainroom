@@ -52,18 +52,17 @@ app.use(passport.session());
 // Register app routes
 app.use('/login', require('./routes/login'));
 app.use('/register', require('./routes/register'));
-app.use('/filters', require('./routes/filters'));
-app.use('/streams', require('./routes/streams'));
-app.use('/users', require('./routes/users'));
-app.use('/scheduled-streams', require('./routes/scheduled-streams'));
-app.use('/api/settings', require('./routes/settings'));
+app.use('/api/filters', require('./routes/filters'));
+app.use('/api/streams', require('./routes/streams'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/scheduled-streams', require('./routes/scheduled-streams'));
 
 app.get('/logout', (req, res) => {
     req.logout();
-    return res.redirect('/login');
+    return res.redirect(req.query.redirectTo || '/');
 });
 
-app.get('*', loginChecker.ensureLoggedIn(), (req, res) => {
+app.get('*', (req, res) => {
     res.cookie('XSRF-TOKEN', req.csrfToken())
     res.render('index');
 });

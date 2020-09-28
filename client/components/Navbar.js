@@ -29,7 +29,8 @@ export default class Navbar extends React.Component {
             categories: [],
             searchText: '',
             searchSubmitted: false,
-            profileDropdownOpen: false
+            profileDropdownOpen: false,
+            loggedInUser: ''
         };
     }
 
@@ -39,7 +40,7 @@ export default class Navbar extends React.Component {
     }
 
     getLoggedInUser() {
-        axios.get('/users/logged-in').then(res => {
+        axios.get('/api/users/logged-in').then(res => {
             this.setState({
                 loggedInUser: res.data.username,
             });
@@ -47,7 +48,7 @@ export default class Navbar extends React.Component {
     }
 
     getFilters() {
-        axios.get('/filters').then(res => {
+        axios.get('/api/filters').then(res => {
             this.setState({
                 genres: res.data.genres,
                 categories: res.data.categories
@@ -111,6 +112,44 @@ export default class Navbar extends React.Component {
         });
     }
 
+    getRedirectablePath(pathname) {
+        return pathname + (window.location.pathname === '/' ? '' : `?redirectTo=${window.location.pathname}`);
+    }
+
+    renderLoginOrProfileDropdown() {
+        return this.state.loggedInUser ? (
+            <div className="navbar-nav ml-auto">
+                <Button className='nav-item nav-link float-right go-live-button' tag={Link} to='/go-live'>
+                    Go Live
+                </Button>
+                <Dropdown className="nav-item float-left navbar-settings-dropdown"
+                          isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
+                    <DropdownToggle caret>
+                        {/*TODO: get profile pic through API call*/}
+                        <img src={defaultProfilePic} width='25' height='25'
+                             alt={`${this.state.loggedInUser} profile picture as dropdown icon`}/>
+                    </DropdownToggle>
+                    <DropdownMenu right>
+                        <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
+                        <DropdownItem tag={Link} to={'/schedule'}>Schedule</DropdownItem>
+                        <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}/subscriptions`}>Subscriptions</DropdownItem>
+                        <DropdownItem divider/>
+                        <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
+                        <DropdownItem divider/>
+                        <DropdownItem href={'/logout'}>Log Out</DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            </div>
+        ) : (
+            <div className="navbar-nav ml-auto">
+                <a href={this.getRedirectablePath('/login')}
+                   className='nav-item float-right nav-link'>Login</a>
+                <a href={this.getRedirectablePath('/register')}
+                   className='nav-item float-right nav-link'>Register</a>
+            </div>
+        );
+    }
+
     profileDropdownToggle() {
         this.setState(prevState => ({
             profileDropdownOpen: !prevState.profileDropdownOpen
@@ -157,28 +196,7 @@ export default class Navbar extends React.Component {
                             </Button>
                         </div>
                     </div>
-                    <div className="navbar-nav ml-auto">
-                        <Button className='nav-item nav-link float-right go-live-button' tag={Link} to='/go-live'>
-                            Go Live
-                        </Button>
-                        <Dropdown className="nav-item float-left navbar-settings-dropdown"
-                                  isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
-                            <DropdownToggle caret>
-                                {/*TODO: get profile pic through API call*/}
-                                <img src={defaultProfilePic} width='25' height='25'
-                                     alt={`${this.state.loggedInUser} profile picture as dropdown icon`}/>
-                            </DropdownToggle>
-                            <DropdownMenu right>
-                                <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
-                                <DropdownItem tag={Link} to={'/schedule'}>Schedule</DropdownItem>
-                                <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}/subscriptions`}>Subscriptions</DropdownItem>
-                                <DropdownItem divider/>
-                                <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
-                                <DropdownItem divider/>
-                                <DropdownItem href="/logout">Log Out</DropdownItem>
-                            </DropdownMenu>
-                        </Dropdown>
-                    </div>
+                    {this.renderLoginOrProfileDropdown()}
                 </div>
             </nav>
         )

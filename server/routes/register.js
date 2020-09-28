@@ -12,16 +12,17 @@ router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
             password: req.flash('password'),
             confirmPassword: req.flash('confirmPassword')
         },
-        csrfToken: req.csrfToken()
+        csrfToken: req.csrfToken(),
+        redirectTo: req.query.redirectTo
     });
 });
 
-router.post('/', loginChecker.ensureLoggedOut(),
+router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
     passport.authenticate('localRegister', {
-        successRedirect: '/',
+        successRedirect: req.body.redirectTo || '/',
         failureRedirect: '/register',
         failureFlash: true
-    })
-);
+    })(req, res, next);
+});
 
 module.exports = router;

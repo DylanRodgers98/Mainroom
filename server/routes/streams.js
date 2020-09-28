@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const {User} = require('../database/schemas');
-const loginChecker = require('connect-ensure-login');
 const _ = require('lodash');
 const sanitise = require('mongo-sanitize');
 
-router.get('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+router.get('/', async (req, res, next) => {
     if (req.query.streamKeys) {
         const query = {
             'streamInfo.streamKey': {$in: req.query.streamKeys}

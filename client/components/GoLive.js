@@ -25,6 +25,7 @@ export default class GoLive extends React.Component {
 
         this.state = {
             loaded: false,
+            loggedInUser: '',
             genres: [],
             categories: [],
             genreDropdownOpen: false,
@@ -39,7 +40,20 @@ export default class GoLive extends React.Component {
     }
 
     componentDidMount() {
-        this.fillComponent();
+        this.fillComponentIfLoggedIn();
+    }
+
+    async fillComponentIfLoggedIn() {
+        const res = await axios.get('/api/users/logged-in');
+        if (res.data.username) {
+            this.setState({
+                loggedInUser: res.data.username
+            }, () => {
+                this.fillComponent();
+            });
+        } else {
+            window.location.href = `/login?redirectTo=${window.location.pathname}`;
+        }
     }
 
     async fillComponent() {
@@ -51,7 +65,7 @@ export default class GoLive extends React.Component {
     }
 
     async getUserSettings() {
-        const res = await axios.get('/users/stream-info');
+        const res = await axios.get(`/api/users/${this.state.loggedInUser}/stream-info`);
         this.setState({
             streamKey: res.data.streamKey,
             streamTitle: res.data.title,
@@ -62,7 +76,7 @@ export default class GoLive extends React.Component {
     }
 
     async getFilters() {
-        const res = await axios.get('/filters')
+        const res = await axios.get('/api/filters')
         this.setState({
             genres: res.data.genres,
             categories: res.data.categories
@@ -70,7 +84,7 @@ export default class GoLive extends React.Component {
     }
 
     async generateStreamKey() {
-        const res = await axios.post('/users/stream-key');
+        const res = await axios.post(`/api/users/${this.state.loggedInUser}/stream-key`);
         this.setState({
             streamKey: res.data.streamKey
         });
@@ -137,7 +151,7 @@ export default class GoLive extends React.Component {
     }
 
     async saveSettings() {
-        const res = await axios.post('/users/stream-info', {
+        const res = await axios.post(`/api/users/${this.state.loggedInUser}/stream-info`, {
             title: this.state.streamTitle,
             genre: this.state.streamGenre,
             category: this.state.streamCategory,

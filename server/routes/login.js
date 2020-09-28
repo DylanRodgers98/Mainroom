@@ -9,15 +9,18 @@ router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
         errors: {
             login: req.flash('login')
         },
-        csrfToken: req.csrfToken()
+        csrfToken: req.csrfToken(),
+        redirectTo: req.query.redirectTo
     });
 });
 
-router.post('/', passport.authenticate('localLogin', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
-}));
+router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
+    passport.authenticate('localLogin', {
+        successRedirect: req.body.redirectTo || '/',
+        failureRedirect: '/login',
+        failureFlash: true
+    })(req, res, next);
+});
 
 module.exports = router;
 

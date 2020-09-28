@@ -82,7 +82,7 @@ export default class LiveStreams extends React.Component {
             queryParams.params.category = this.state.categoryFilter;
         }
 
-        axios.get('/streams', queryParams).then(res => {
+        axios.get('/api/streams', queryParams).then(res => {
             this.setState({
                 liveStreams: res.data
             });
@@ -90,7 +90,7 @@ export default class LiveStreams extends React.Component {
     }
 
     getFilters() {
-        axios.get('/filters').then(res => {
+        axios.get('/api/filters').then(res => {
             this.setState({
                 genres: res.data.genres,
                 categories: res.data.categories

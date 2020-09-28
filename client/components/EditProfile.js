@@ -19,6 +19,8 @@ export default class EditProfile extends React.Component {
         this.saveProfile = this.saveProfile.bind(this);
 
         this.state = {
+            loggedInUser: '',
+            loaded: false,
             unsavedChanges: false,
             redirectToProfile: false,
             username: '',
@@ -31,17 +33,31 @@ export default class EditProfile extends React.Component {
     }
 
     componentDidMount() {
-        this.getUserProfile();
+        this.getUserProfileIfLoggedIn();
+    }
+
+    async getUserProfileIfLoggedIn() {
+        const res = await axios.get('/api/users/logged-in');
+        if (res.data.username) {
+            this.setState({
+                loggedInUser: res.data.username
+            }, () => {
+                this.getUserProfile();
+            });
+        } else {
+            window.location.href = `/login?redirectTo=${window.location.pathname}`;
+        }
     }
 
     async getUserProfile() {
-        const res = await axios.get('/users');
+        const res = await axios.get(`/api/users/${this.state.loggedInUser}`);
         this.setState({
             username: res.data.username,
             displayName: res.data.displayName,
             location: res.data.location,
             bio: res.data.bio,
-            links: res.data.links
+            links: res.data.links,
+            loaded: true
         })
     }
 
@@ -87,7 +103,7 @@ export default class EditProfile extends React.Component {
     async saveProfile() {
         if (await this.areLinksValid()) {
             this.normaliseLinkUrls();
-            const res = await axios.post('/users', {
+            const res = await axios.post('/api/users', {
                 displayName: this.state.displayName,
                 location: this.state.location,
                 bio: this.state.bio,
@@ -189,7 +205,7 @@ export default class EditProfile extends React.Component {
     }
 
     render() {
-        return (
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <Container className="mt-5">
                 <h4>Edit Profile</h4>
                 <hr className="mt-4"/>

@@ -19,6 +19,8 @@ export default class Settings extends React.Component {
         this.resetPassword = this.resetPassword.bind(this);
 
         this.state = {
+            loggedInUserId: '',
+            loaded: false,
             startingUsername: '',
             username: '',
             startingEmail: '',
@@ -36,16 +38,30 @@ export default class Settings extends React.Component {
     }
 
     componentDidMount() {
-        this.getUsernameAndEmail();
+        this.fillComponentIfLoggedIn();
+    }
+
+    async fillComponentIfLoggedIn() {
+        const res = await axios.get('/api/users/logged-in');
+        if (res.data.username) {
+            this.setState({
+                loggedInUserId: res.data._id
+            }, () => {
+                this.getUsernameAndEmail();
+            });
+        } else {
+            window.location.href = `/login?redirectTo=${window.location.pathname}`;
+        }
     }
 
     async getUsernameAndEmail() {
-        const res = await axios.get('/api/settings');
+        const res = await axios.get(`/api/users/${this.state.loggedInUserId}/settings`);
         this.setState({
             startingUsername: res.data.username,
             username: res.data.username,
             startingEmail: res.data.email,
-            email: res.data.email
+            email: res.data.email,
+            loaded: true
         });
     }
 
@@ -81,7 +97,7 @@ export default class Settings extends React.Component {
         if (this.isEmailChanged()) {
             data.email = this.state.email;
         }
-        const res = await axios.post('/api/settings', data);
+        const res = await axios.post(`/api/users/${this.state.loggedInUserId}/settings`, data);
         this.setState({
             usernameInvalidReason: res.data.usernameInvalidReason || '',
             emailInvalidReason: res.data.emailInvalidReason || ''
@@ -122,7 +138,7 @@ export default class Settings extends React.Component {
     }
 
     async resetPassword() {
-        const res = await axios.post('/api/settings/password', {
+        const res = await axios.post(`/api/users/${this.state.loggedInUserId}/password`, {
             currentPassword: this.state.currentPassword,
             newPassword: this.state.newPassword,
             confirmNewPassword: this.state.confirmNewPassword
@@ -211,7 +227,7 @@ export default class Settings extends React.Component {
     }
 
     render() {
-        return (
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
                 <Container className="mt-5">
                     <h4>Account Settings</h4>

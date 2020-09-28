@@ -16,7 +16,7 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
 
     scheduledStream.save(err => {
         if (err) {
-            return next(err);
+            next(err);
         } else {
             User.findOneAndUpdate({
                 username: req.user.username
@@ -24,7 +24,7 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
                 $push: {scheduledStreams: scheduledStream._id}
             }, err => {
                 if (err) {
-                    return next(err);
+                    next(err);
                 } else {
                     res.sendStatus(200);
                 }

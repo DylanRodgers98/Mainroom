@@ -23,18 +23,14 @@ export default class Subscribers extends React.Component {
     }
 
     async isProfileOfLoggedInUser() {
-        const res = await axios.get('/users/logged-in');
+        const res = await axios.get('/api/users/logged-in');
         this.setState({
             isProfileOfLoggedInUser: res.data.username === this.props.match.params.username,
         });
     }
 
     async getSubscribers() {
-        const res = await axios.get('/users/subscribers', {
-            params: {
-                username: this.props.match.params.username
-            }
-        });
+        const res = await axios.get(`/api/users/${this.props.match.params.username}/subscribers`);
         this.setState({
             subscribers: res.data.subscribers.map(subscriber => {
                 return (
