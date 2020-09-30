@@ -7,6 +7,7 @@ import {Row, Button} from "reactstrap";
 import io from "socket.io-client";
 import FourOhFour from "./FourOhFour";
 import '../css/user-stream.scss';
+import {Col} from "react-bootstrap";
 
 export default class UserStream extends React.Component {
 
@@ -163,34 +164,42 @@ export default class UserStream extends React.Component {
 
     render() {
         return this.state.stream ? (
-            <Row className="stream-row">
-                <div className="col-lg-8 stream-col">
-                    <div data-vjs-player>
-                        <video ref={node => this.videoNode = node} className="video-js vjs-big-play-centered"/>
-                    </div>
-                    <div className="ml-2">
-                        <h3>
-                            <Link to={`/user/${this.props.match.params.username}`}>
-                                {this.state.displayName || this.props.match.params.username}
+            <React.Fragment>
+                <Row className="stream-row">
+                    <Col className='stream-col' lg='8'>
+                        <div data-vjs-player>
+                            <video ref={node => this.videoNode = node} className="video-js vjs-big-play-centered"/>
+                        </div>
+                    </Col>
+                    <Col className='chat-col'>
+                        <div className='chat-messages' id='messages'>
+                            {this.renderChat()}
+                        </div>
+                    </Col>
+                </Row>
+                <Row className="stream-row">
+                    <Col className='stream-col' lg='8'>
+                        <div className="ml-2">
+                            <h3>
+                                <Link to={`/user/${this.props.match.params.username}`}>
+                                    {this.state.displayName || this.props.match.params.username}
+                                </Link>
+                                {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                            </h3>
+                            <h6>
+                                <Link to={`/genre/${this.state.streamGenre}`}>
+                                    {this.state.streamGenre}
+                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                {this.state.streamCategory}
                             </Link>
-                            {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                        </h3>
-                        <h5>
-                            <Link to={`/genre/${this.state.streamGenre}`}>
-                                {this.state.streamGenre}
-                            </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                            {this.state.streamCategory}
-                        </Link>
-                        </h5>
-                    </div>
-                </div>
-                <div className='col chat-col'>
-                    <div className='chat-messages' id='messages'>
-                        {this.renderChat()}
-                    </div>
-                    {this.renderChatInput()}
-                </div>
-            </Row>
+                            </h6>
+                        </div>
+                    </Col>
+                    <Col className='chat-col'>
+                        {this.renderChatInput()}
+                    </Col>
+                </Row>
+            </React.Fragment>
         ) : (
             !this.state.doesUserExist ? <FourOhFour/> : (
                 <div className='mt-5 not-live'>

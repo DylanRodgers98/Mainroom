@@ -19,8 +19,8 @@
 }
 
 .chat-messages {
-  height: #{calc(100vh - 20vh)};
-  max-height: #{calc(100vh - 20vh)};
+  height: 78vh;
+  max-height: 78vh;
   overflow-wrap: break-word;
   overflow-y: auto;
 }
@@ -30,8 +30,7 @@
   bottom: 1%;
   left: 1%;
   width: 99%;
-  height: #{calc(100vh - 90vh)};
-  max-height: #{calc(100vh - 90vh)};
+  height: 100%;
 
   textarea {
     width: 85%;
@@ -50,4 +49,8 @@
     border-bottom-right-radius: 6px;
     position: absolute;
   }
+}
+
+.user-stream-profile-pic {
+  height: 100%;
 }
