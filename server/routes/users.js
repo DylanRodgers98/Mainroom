@@ -43,7 +43,7 @@ router.get('/:username', (req, res, next) => {
         });
 });
 
-router.post('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const updateQuery = {};
 
     if (req.body.displayName) {
@@ -133,7 +133,7 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
     });
 });
 
-router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username);
     User.findOne({username: username}, (err, user) => {
         if (err) {
@@ -167,7 +167,7 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
     });
 });
 
-router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username);
     User.findOne({username: username}, '_id', (err, user) => {
         if (err) {
@@ -223,7 +223,7 @@ router.get('/:username/stream-info', (req, res, next) => {
         });
 });
 
-router.post('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
     User.findOneAndUpdate({
         username: sanitise(req.params.username)
     }, {
@@ -314,7 +314,7 @@ router.get('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) 
     });
 });
 
-router.post('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const findQuery = {$or: []};
     const updateQuery = {};
 
@@ -362,7 +362,7 @@ router.post('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next)
     }
 });
 
-router.post('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const userId = sanitise(req.params.userId);
     User.findById(userId).select('+password').exec((err, user) => {
         if (err) {

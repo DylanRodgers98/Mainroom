@@ -284,8 +284,8 @@ export default class Schedule extends React.Component {
                                 <h5 className="mt-2">Title:</h5>
                             </td>
                             <td>
-                                <input className="settings-title" type="text" value={this.state.scheduleStreamTitle}
-                                       onChange={this.setTitle}/>
+                                <input className="settings-title rounded-border" type="text"
+                                       value={this.state.scheduleStreamTitle} onChange={this.setTitle}/>
                             </td>
                         </tr>
                         <tr>
@@ -319,8 +319,8 @@ export default class Schedule extends React.Component {
                             <table>
                                 <tr>
                                     <td>
-                                        <input className="mt-1" type="text" value={this.state.scheduleStreamTags}
-                                               onChange={this.setTags}/>
+                                        <input className='mt-1 rounded-border' type='text'
+                                               value={this.state.scheduleStreamTags} onChange={this.setTags}/>
                                     </td>
                                     <td>
                                         <i className="ml-1">Comma-separated</i>

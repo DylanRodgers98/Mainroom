@@ -148,15 +148,14 @@ export default class UserStream extends React.Component {
         }
     }
 
-    renderChatTextArea() {
+    renderChatInput() {
         return !this.state.viewerUsername ? (
             <div className='text-center mt-3'>
                 To participate in the chat, please <a href={`/login?redirectTo=${window.location.pathname}`}>log in</a>
             </div>
         ) : (
             <div className='chat-input'>
-                <textarea onChange={this.onMessageTextChange} onKeyDown={this.handleKeyDown}
-                          value={this.state.msg}/>
+                <textarea onChange={this.onMessageTextChange} onKeyDown={this.handleKeyDown} value={this.state.msg}/>
                 <button onClick={this.onMessageSubmit}>Send</button>
             </div>
         );
@@ -189,7 +188,7 @@ export default class UserStream extends React.Component {
                     <div className='chat-messages' id='messages'>
                         {this.renderChat()}
                     </div>
-                    {this.renderChatTextArea()}
+                    {this.renderChatInput()}
                 </div>
             </Row>
         ) : (

@@ -9,7 +9,6 @@ import LiveStreamsByGenre from "./components/LiveStreamsByGenre";
 import LiveStreamsByCategory from "./components/LiveStreamsByCategory";
 import Search from "./components/Search";
 import UserProfile from "./components/UserProfile";
-import EditProfile from "./components/EditProfile";
 import Subscribers from "./components/Subscribers";
 import Subscriptions from "./components/Subscriptions";
 import UserStream from "./components/UserStream";
@@ -45,10 +44,6 @@ if (document.getElementById('root')) {
 
                     <Route exact path="/user/:username" render={props => (
                         <UserProfile {...props} />
-                    )}/>
-
-                    <Route exact path="/edit-profile" render={props => (
-                        <EditProfile {...props} />
                     )}/>
 
                     <Route exact path="/user/:username/subscribers" render={props => (

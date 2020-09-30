@@ -1,11 +1,13 @@
 import React from "react";
 import axios from "axios";
 import {Container, Row, Col, Button} from "reactstrap";
+import {Modal} from "react-bootstrap";
 import {Link} from "react-router-dom";
 import Timeline from "react-calendar-timeline";
 import moment from "moment";
 import FourOhFour from "./FourOhFour";
 import config from "../../mainroom.config";
+import normalizeUrl from "normalize-url";
 import '../css/user-profile.scss';
 import '../css/livestreams.scss';
 
@@ -26,11 +28,16 @@ const STARTING_STATE = {
     streamTitle: '',
     streamGenre: '',
     streamCategory: '',
-    redirectToEditProfile: false,
-    redirectToLogin: false,
     upcomingStreamsStartTime: moment().startOf('day'),
-    upcomingStreamsEndTime: moment().startOf('day').add(3, 'day')
-}
+    upcomingStreamsEndTime: moment().startOf('day').add(3, 'day'),
+    editProfileOpen: false,
+    unsavedChanges: false,
+    editDisplayName: '',
+    editLocation: '',
+    editBio: '',
+    editLinks: [],
+    indexesOfInvalidLinks: []
+};
 
 const SCHEDULE_GROUP = 0;
 
@@ -40,6 +47,14 @@ export default class UserProfile extends React.Component {
         super(props);
 
         this.onClickSubscribeButton = this.onClickSubscribeButton.bind(this);
+        this.editProfileToggle = this.editProfileToggle.bind(this);
+        this.setDisplayName = this.setDisplayName.bind(this);
+        this.setLocation = this.setLocation.bind(this);
+        this.setBio = this.setBio.bind(this);
+        this.addLink = this.addLink.bind(this);
+        this.setLinkTitle = this.setLinkTitle.bind(this);
+        this.setLinkUrl = this.setLinkUrl.bind(this);
+        this.saveProfile = this.saveProfile.bind(this);
 
         this.state = STARTING_STATE;
     }
@@ -50,7 +65,7 @@ export default class UserProfile extends React.Component {
 
     componentDidUpdate(prevProps) {
         if (prevProps.match.params.username !== this.props.match.params.username) {
-            this.setState(STARTING_STATE, () => this.loadUserProfile());
+            this.reloadProfile();
         }
     }
 
@@ -118,8 +133,12 @@ export default class UserProfile extends React.Component {
         }
     }
 
+    reloadProfile() {
+        this.setState(STARTING_STATE, () => this.loadUserProfile());
+    }
+
     async subscribeToUser() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username}`);
+        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username}`);
         if (res.status === 200) {
             this.setState({
                 isLoggedInUserSubscribed: true,
@@ -129,7 +148,7 @@ export default class UserProfile extends React.Component {
     }
 
     async unsubscribeFromUser() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username}`);
+        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username}`);
         if (res.status === 200) {
             this.setState({
                 isLoggedInUserSubscribed: false,
@@ -156,10 +175,10 @@ export default class UserProfile extends React.Component {
         this.state.isLoggedInUserSubscribed ? this.unsubscribeFromUser() : this.subscribeToUser();
     }
 
-    renderSubscribeButton() {
+    renderSubscribeOrEditProfileButton() {
         return this.state.loggedInUser ? (
             this.state.loggedInUser === this.props.match.params.username ? (
-                <Button className='btn-dark subscribe-button' tag={Link} to='/edit-profile'>
+                <Button className='btn-dark subscribe-button' onClick={this.editProfileToggle}>
                     Edit Profile
                 </Button>
             ) : (
@@ -217,36 +236,246 @@ export default class UserProfile extends React.Component {
         ) : <i><h3 className='text-center mt-5'>This user is not currently live</h3></i>;
     }
 
+    editProfileToggle() {
+        this.setState(prevState => ({
+            editProfileOpen: !prevState.editProfileOpen,
+            editDisplayName: this.state.displayName,
+            editLocation: this.state.location,
+            editBio: this.state.bio,
+            editLinks: this.state.links,
+        }));
+    }
+
+    setDisplayName(event) {
+        this.setState({
+            editDisplayName: event.target.value,
+            unsavedChanges: true
+        });
+    }
+
+    setLocation(event) {
+        this.setState({
+            editLocation: event.target.value,
+            unsavedChanges: true
+        });
+    }
+
+    setBio(event) {
+        this.setState({
+            editBio: event.target.value,
+            unsavedChanges: true
+        });
+    }
+
+    setLinkTitle(event, index) {
+        const links = this.state.editLinks;
+        links[index].title = event.target.value;
+        this.setState({
+            editLinks: links,
+            unsavedChanges: true
+        });
+    }
+
+    setLinkUrl(event, index) {
+        const links = this.state.editLinks;
+        links[index].url = event.target.value;
+        this.setState({
+            editLinks: links,
+            unsavedChanges: true
+        });
+    }
+
+    async saveProfile() {
+        if (await this.areLinksValid()) {
+            this.normaliseLinkUrls();
+            const res = await axios.patch(`/api/users/${this.state.loggedInUser}`, {
+                displayName: this.state.editDisplayName,
+                location: this.state.editLocation,
+                bio: this.state.editBio,
+                links: this.state.editLinks
+            });
+            if (res.status === 200) {
+                this.reloadProfile();
+            }
+        }
+    }
+
+    async areLinksValid() {
+        let isValid = true;
+        this.setState({
+            indexesOfInvalidLinks: this.state.editLinks.map((link, i) => {
+                if (!link.url) {
+                    isValid = false;
+                    return i;
+                }
+            })
+        });
+        return isValid;
+    }
+
+    normaliseLinkUrls() {
+        this.setState({
+            editLinks: this.state.editLinks.map(link => {
+                link.url = normalizeUrl(link.url, {
+                    forceHttps: true,
+                    stripWWW: false
+                });
+                return link;
+            })
+        });
+    }
+
+    addLink() {
+        this.setState({
+            editLinks: [...this.state.editLinks, {
+                title: '',
+                url: ''
+            }],
+            unsavedChanges: true
+        });
+    }
+
+    removeLink(index) {
+        const links = this.state.editLinks;
+        links.splice(index, 1);
+        this.setState({
+            editLinks: links,
+            unsavedChanges: true
+        });
+    }
+
+    renderEditLinks() {
+        const headers = !this.state.editLinks.length ? undefined : (
+            <tr>
+                <td>Title:</td>
+                <td>URL:</td>
+            </tr>
+        );
+
+        const links = this.state.editLinks.map((link, i) => (
+            <tr>
+                <td>
+                    <input className="mt-1 rounded-border" type="text" value={link.title}
+                           onChange={e => this.setLinkTitle(e, i)}/>
+                </td>
+                <td>
+                    <input className="mt-1 rounded-border" type="text" value={link.url}
+                           onChange={e => this.setLinkUrl(e, i)} size={40}/>
+                </td>
+                <td>
+                    <Button className="btn-dark mt-1 ml-1" size="sm" onClick={() => this.removeLink(i)}>
+                        Remove Link
+                    </Button>
+                </td>
+                <td>
+                    <div className='ml-1'>
+                        {this.state.indexesOfInvalidLinks.includes(i) ? 'Link must have a URL' : ''}
+                    </div>
+                </td>
+            </tr>
+        ));
+
+        return (
+            <React.Fragment>
+                {headers}
+                {links}
+            </React.Fragment>
+        );
+    }
+
+    renderEditProfile() {
+        return (
+            <Modal show={this.state.editProfileOpen} onHide={this.editProfileToggle} size='lg' centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit Profile</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <table className="mt-3">
+                        <tr>
+                            <td>
+                                <h5 className="mr-3">Display Name:</h5>
+                            </td>
+                            <td>
+                                <input className='rounded-border' type="text" value={this.state.editDisplayName}
+                                       onChange={this.setDisplayName}/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <h5 className="mt-1 mr-3">Location:</h5>
+                            </td>
+                            <td>
+                                <input className="mt-1 rounded-border" type="text" value={this.state.editLocation}
+                                       onChange={this.setLocation}/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td valign='top'>
+                                <h5 className="mt-1">Bio:</h5>
+                            </td>
+                            <td>
+                                <textarea className="mt-1 rounded-border" value={this.state.editBio}
+                                          onChange={this.setBio}/>
+                            </td>
+                        </tr>
+                    </table>
+                    <h5 className="mt-1">Links:</h5>
+                    <hr/>
+                    <table>
+                        {this.renderEditLinks()}
+                        <tr>
+                            <td>
+                                <Button className="btn-dark mt-2" size="sm" onClick={this.addLink}>
+                                    Add Link
+                                </Button>
+                            </td>
+                        </tr>
+                    </table>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button className="btn-dark" disabled={!this.state.unsavedChanges} onClick={this.saveProfile}>
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1>
             : (!this.state.doesUserExist ? <FourOhFour/> : (
-                <Container>
-                    <Row className="mt-5" xs='4'>
-                        <Col>
-                            {/*TODO: get profile pic through API call*/}
-                            <img src={defaultProfilePic} alt={`${this.props.match.params.username} Profile Picture`}/>
-                            <h1>{this.state.displayName || this.props.match.params.username}</h1>
-                            <h5>{this.state.location || 'Planet Earth'}</h5>
-                            <h5 className='black-link'>
-                                <Link to={`/user/${this.props.match.params.username}/subscribers`}>
-                                    {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
-                                </Link>
-                            </h5>
-                            {this.renderSubscribeButton()}
-                            <p>{this.state.bio}</p>
-                            {this.renderLinks()}
-                        </Col>
-                        <Col xs='9'>
-                            <h3>Upcoming Streams</h3>
-                            <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
-                                      sidebarWidth='0'
-                                      visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
-                                      visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
-                            <hr className="my-4"/>
-                            {this.renderLiveStream()}
-                        </Col>
-                    </Row>
-                </Container>
+                <React.Fragment>
+                    <Container>
+                        <Row className="mt-5" xs='4'>
+                            <Col>
+                                {/*TODO: get profile pic through API call*/}
+                                <img src={defaultProfilePic}
+                                     alt={`${this.props.match.params.username} Profile Picture`}/>
+                                <h1>{this.state.displayName || this.props.match.params.username}</h1>
+                                <h5>{this.state.location || 'Planet Earth'}</h5>
+                                <h5 className='black-link'>
+                                    <Link to={`/user/${this.props.match.params.username}/subscribers`}>
+                                        {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
+                                    </Link>
+                                </h5>
+                                {this.renderSubscribeOrEditProfileButton()}
+                                <p>{this.state.bio}</p>
+                                {this.renderLinks()}
+                            </Col>
+                            <Col xs='9'>
+                                <h3>Upcoming Streams</h3>
+                                <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
+                                          sidebarWidth='0'
+                                          visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
+                                          visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
+                                <hr className="my-4"/>
+                                {this.renderLiveStream()}
+                            </Col>
+                        </Row>
+                    </Container>
+
+                    {this.renderEditProfile()}
+                </React.Fragment>
             )
         );
     }

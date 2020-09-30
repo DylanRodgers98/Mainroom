@@ -84,7 +84,7 @@ export default class GoLive extends React.Component {
     }
 
     async generateStreamKey() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/stream-key`);
+        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/stream-key`);
         this.setState({
             streamKey: res.data.streamKey
         });
@@ -151,7 +151,7 @@ export default class GoLive extends React.Component {
     }
 
     async saveSettings() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/stream-info`, {
+        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/stream-info`, {
             title: this.state.streamTitle,
             genre: this.state.streamGenre,
             category: this.state.streamCategory,
@@ -191,7 +191,8 @@ export default class GoLive extends React.Component {
                         <table>
                             <tr>
                                 <td>
-                                    <input id="serverUrlInput" type="text" value={RTMP_SERVER_URL}/>
+                                    <input id="serverUrlInput" className='rounded-border' type="text"
+                                           value={RTMP_SERVER_URL}/>
                                 </td>
                                 <td>
                                     <Button className="btn-dark ml-1" size="sm"
@@ -209,7 +210,7 @@ export default class GoLive extends React.Component {
                         <table>
                             <tr>
                                 <td>
-                                    <input id="streamKeyInput" className="mt-2" type="text"
+                                    <input id="streamKeyInput" className='mt-2 rounded-border' type="text"
                                            value={this.state.streamKey}/>
                                 </td>
                                 <td>
@@ -230,7 +231,7 @@ export default class GoLive extends React.Component {
                             <h5 className="mt-2">Title:</h5>
                         </td>
                         <td>
-                            <input className="settings-title" type="text" value={this.state.streamTitle}
+                            <input className="settings-title rounded-border" type="text" value={this.state.streamTitle}
                                    onChange={this.setTitle}/>
                         </td>
                     </tr>
@@ -277,7 +278,7 @@ export default class GoLive extends React.Component {
                         <table>
                             <tr>
                                 <td>
-                                    <input className="mt-1" type="text" value={this.state.streamTags}
+                                    <input className="mt-1 rounded-border" type="text" value={this.state.streamTags}
                                            onChange={this.setTags}/>
                                 </td>
                                 <td>

@@ -97,7 +97,7 @@ export default class Settings extends React.Component {
         if (this.isEmailChanged()) {
             data.email = this.state.email;
         }
-        const res = await axios.post(`/api/users/${this.state.loggedInUserId}/settings`, data);
+        const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/settings`, data);
         this.setState({
             usernameInvalidReason: res.data.usernameInvalidReason || '',
             emailInvalidReason: res.data.emailInvalidReason || ''
@@ -138,7 +138,7 @@ export default class Settings extends React.Component {
     }
 
     async resetPassword() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUserId}/password`, {
+        const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/password`, {
             currentPassword: this.state.currentPassword,
             newPassword: this.state.newPassword,
             confirmNewPassword: this.state.confirmNewPassword
@@ -166,7 +166,7 @@ export default class Settings extends React.Component {
 
     renderResetPassword() {
         return (
-            <Modal show={this.state.resetPasswordOpen} onHide={this.resetPasswordToggle} size='lg' centered>
+            <Modal show={this.state.resetPasswordOpen} onHide={this.resetPasswordToggle} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Reset Password</Modal.Title>
                 </Modal.Header>
@@ -177,7 +177,7 @@ export default class Settings extends React.Component {
                                 <h6 className='mr-3'>Current Password:</h6>
                             </td>
                             <td>
-                                <input type="password" value={this.state.currentPassword}
+                                <input className='rounded-border' type='password' value={this.state.currentPassword}
                                        onChange={this.setCurrentPassword}/>
                             </td>
                             <td>
@@ -191,7 +191,7 @@ export default class Settings extends React.Component {
                                 <h6 className='mt-1 mr-3'>New Password:</h6>
                             </td>
                             <td valign='top'>
-                                <input className='mt-1' type="password" value={this.state.newPassword}
+                                <input className='mt-1 rounded-border' type='password' value={this.state.newPassword}
                                        onChange={this.setNewPassword}/>
                             </td>
                             <td>
@@ -205,8 +205,8 @@ export default class Settings extends React.Component {
                                 <h6 className='mt-1 mr-3'>Confirm New Password:</h6>
                             </td>
                             <td>
-                                <input className='mt-1' type="password" value={this.state.confirmNewPassword}
-                                       onChange={this.setConfirmNewPassword}/>
+                                <input className='mt-1 rounded-border' type='password'
+                                       value={this.state.confirmNewPassword} onChange={this.setConfirmNewPassword}/>
                             </td>
                             <td>
                                 <div className='ml-1'>
@@ -238,7 +238,8 @@ export default class Settings extends React.Component {
                                 <h5 className="mr-3">Username:</h5>
                             </td>
                             <td>
-                                <input type="text" value={this.state.username} onChange={this.setUsername}/>
+                                <input className='rounded-border' type="text" value={this.state.username}
+                                       onChange={this.setUsername}/>
                             </td>
                             <td>
                                 <div className='ml-1'>
@@ -251,7 +252,8 @@ export default class Settings extends React.Component {
                                 <h5 className="mt-2 mr-3">Email Address:</h5>
                             </td>
                             <td>
-                                <input type="text" value={this.state.email} onChange={this.setEmail}/>
+                                <input className='rounded-border' type="text" value={this.state.email}
+                                       onChange={this.setEmail}/>
                             </td>
                             <td>
                                 <div className='ml-1'>
