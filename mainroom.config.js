@@ -2,7 +2,7 @@ module.exports = {
     siteTitle: 'Mainroom',
     headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
     server: {
-        secretLocation: './sessions/secret.txt',
+        secretLocation: './server/sessions/secret.txt',
         port: {
             http: 8080
         }
@@ -56,7 +56,7 @@ module.exports = {
         scheduledStreamInfoUpdater: '0 0/10 * * * *'
     },
     storage: {
-        thumbnails: 'server/thumbnails',
-        sessions: 'server/sessions'
+        thumbnails: './server/thumbnails',
+        sessions: './server/sessions'
     }
 };

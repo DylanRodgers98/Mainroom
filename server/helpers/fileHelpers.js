@@ -3,7 +3,7 @@ const fs = require('fs');
 
 function resolveFilePath(filePath) {
     return isPathAbsolute(filePath) ? filePath
-        : path.resolve(path.dirname(require.main.filename), filePath);
+        : path.resolve(process.cwd(), filePath);
 }
 
 function isPathAbsolute(path) {
