@@ -58,7 +58,7 @@ app.use('/api/scheduled-streams', require('./routes/scheduled-streams'));
 
 app.get('/logout', (req, res) => {
     req.logout();
-    return res.redirect(req.query.redirectTo || '/');
+    return res.redirect('/');
 });
 
 app.get('*', (req, res) => {
