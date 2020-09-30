@@ -11,7 +11,9 @@ export default class Home extends React.Component {
         super(props);
 
         this.state = {
-            liveStreams: []
+            liveStreams: [],
+            subscriptionLiveStreams: [],
+            loggedInUser: ''
         }
     }
 
@@ -24,6 +26,7 @@ export default class Home extends React.Component {
         if (res.data.live) {
             const streamKeys = this.extractStreamKeys(res.data.live);
             await this.getStreamsInfo(streamKeys);
+            await this.getSubscriptionsIfLoggedIn(streamKeys);
         }
     }
 
@@ -48,38 +51,89 @@ export default class Home extends React.Component {
         });
     }
 
-    render() {
-        const streams = this.state.liveStreams.map((stream, index) => {
+    async getSubscriptionsIfLoggedIn(streamKeys) {
+        const loggedInRes = await axios.get('/api/users/logged-in');
+        if (loggedInRes.data.username) {
+            const subsRes = await axios.get(`/api/users/${loggedInRes.data.username}/subscriptions`);
+            if (subsRes.data.subscriptions) {
+                const subscriptionUsernames = subsRes.data.subscriptions.map(sub => sub.username);
+                const streamsRes = await axios.get(`/api/streams/`, {
+                    params: {
+                        streamKeys: streamKeys,
+                        usernames: subscriptionUsernames
+                    }
+                });
+                this.setState({
+                    subscriptionLiveStreams: streamsRes.data
+                });
+            }
+        }
+    }
+
+    renderSubscriptions() {
+        return !this.state.subscriptionLiveStreams.length ? undefined : (
+            <React.Fragment>
+                {this.renderLiveStreams('Subscriptions', this.state.subscriptionLiveStreams)}
+                <hr className="my-4"/>
+            </React.Fragment>
+        );
+    }
+
+    renderLiveStreams(title, liveStreams) {
+        const streamBoxes = liveStreams.map((liveStream, index) => {
             return (
                 <Col className='stream' key={index}>
                     <span className="live-label">LIVE</span>
-                    <Link to={`/user/${stream.username}/live`}>
+                    <Link to={`/user/${liveStream.username}/live`}>
                         <div className="stream-thumbnail">
-                            <img src={`/thumbnails/${stream.streamKey}.png`}
-                                 alt={`${stream.username} Stream Thumbnail`}/>
+                            <img src={`/thumbnails/${liveStream.streamKey}.png`}
+                                 alt={`${liveStream.username} Stream Thumbnail`}/>
                         </div>
                     </Link>
 
                     <span className="username">
-                        <Link to={`/user/${stream.username}/live`}>
-                            {stream.displayName || stream.username}
+                        <Link to={`/user/${liveStream.username}/live`}>
+                            {liveStream.displayName || liveStream.username}
                         </Link>
                     </span>
                 </Col>
             );
         });
 
-        return (
-            <Container className="mt-5">
+        return !streamBoxes.length ? undefined : (
+            <React.Fragment>
                 <Row>
                     <Col>
-                        <h4>All Livestreams</h4>
+                        <h4>{title}</h4>
                     </Col>
                 </Row>
-                <hr className="my-4"/>
-                <Row className="streams" xs='1' sm='1' md='2' lg='3' xl='3'>
-                    {streams}
+                <Row className="streams mt-3" xs='1' sm='1' md='2' lg='3' xl='3'>
+                    {streamBoxes}
                 </Row>
+            </React.Fragment>
+        );
+    }
+
+    renderStreamBoxes() {
+        const subscriptions = this.renderSubscriptions();
+        const liveStreams = this.renderLiveStreams('Featured', this.state.liveStreams);
+
+        return subscriptions || liveStreams ? (
+            <React.Fragment>
+                {subscriptions}
+                {liveStreams}
+            </React.Fragment>
+        ) : (
+            <p className='my-4 text-center'>
+                No one is live right now :(
+            </p>
+        );
+    }
+
+    render() {
+        return (
+            <Container className="mt-5">
+                {this.renderStreamBoxes()}
             </Container>
         )
     }

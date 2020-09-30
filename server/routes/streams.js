@@ -21,6 +21,9 @@ router.get('/', async (req, res, next) => {
         if (req.query.category) {
             query['streamInfo.category'] = sanitise(req.query.category);
         }
+        if (req.query.usernames) {
+            query.username = {$in: req.query.usernames}
+        }
         User.find(query, 'username displayName streamInfo.streamKey', (err, users) => {
             if (err) {
                 next(err);
