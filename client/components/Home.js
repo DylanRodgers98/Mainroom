@@ -117,6 +117,7 @@ export default class Home extends React.Component {
             <React.Fragment>
                 {this.renderLiveStreams('Featured', this.state.featuredLiveStreams)}
                 {this.state.showLoadMoreFeaturedButton ? loadMoreButton : undefined}
+                <div className="my-4"/>
             </React.Fragment>
         );
     }
@@ -144,9 +145,11 @@ export default class Home extends React.Component {
 
     renderLoadMoreButton(loadMoreOnClick) {
         return (
-            <Button className='btn-dark' onClick={async () => await loadMoreOnClick()}>
-                Load More
-            </Button>
+            <div className='text-center'>
+                <Button className='btn-dark' onClick={async () => await loadMoreOnClick()}>
+                    Load More
+                </Button>
+            </div>
         );
     }
 
