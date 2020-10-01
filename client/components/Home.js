@@ -20,7 +20,9 @@ export default class Home extends React.Component {
             featuredLiveStreams: [],
             subscriptionLiveStreams: [],
             featuredLiveStreamsPage: STARTING_PAGE,
-            subscriptionsLiveStreamsPage: STARTING_PAGE
+            subscriptionsLiveStreamsPage: STARTING_PAGE,
+            showLoadMoreFeaturedButton: false,
+            showLoadMoreSubscriptionsButton: false
         }
     }
 
@@ -76,7 +78,8 @@ export default class Home extends React.Component {
         });
         this.setState({
             featuredLiveStreams: [...this.state.featuredLiveStreams, ...res.data.streams],
-            featuredLiveStreamsPage: res.data.nextPage
+            featuredLiveStreamsPage: res.data.nextPage,
+            showLoadMoreFeaturedButton: !!res.data.nextPage
         });
     }
 
@@ -94,7 +97,8 @@ export default class Home extends React.Component {
             });
             this.setState({
                 subscriptionLiveStreams: [...this.state.subscriptionLiveStreams, ...streamsRes.data.streams],
-                subscriptionLiveStreamsPage: streamsRes.data.nextPage
+                subscriptionLiveStreamsPage: streamsRes.data.nextPage,
+                showLoadMoreSubscriptionsButton: !!streamsRes.data.nextPage
             });
         }
     }
@@ -114,7 +118,7 @@ export default class Home extends React.Component {
         return !this.state.featuredLiveStreams.length ? undefined : (
             <React.Fragment>
                 {this.renderLiveStreams('Featured', this.state.featuredLiveStreams)}
-                {this.state.featuredLiveStreamsPage ? loadMoreButton : undefined}
+                {this.state.showLoadMoreFeaturedButton ? loadMoreButton : undefined}
             </React.Fragment>
         );
     }
@@ -134,7 +138,7 @@ export default class Home extends React.Component {
         return !this.state.subscriptionLiveStreams.length ? undefined : (
             <React.Fragment>
                 {this.renderLiveStreams('Subscriptions', this.state.subscriptionLiveStreams)}
-                {this.state.subscriptionLiveStreamsPage ? loadMoreButton : undefined}
+                {this.state.showLoadMoreSubscriptionsButton ? loadMoreButton : undefined}
                 <hr className="my-4"/>
             </React.Fragment>
         );
