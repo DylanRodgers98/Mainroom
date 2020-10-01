@@ -150,7 +150,7 @@ export default class LiveStreamsByCategory extends React.Component {
             return <DropdownItem onClick={this.setCategoryFilter}>{category}</DropdownItem>
         });
 
-        const loadMoreButton = (
+        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={async () => await this.getLiveStreams()}>
                     Load More
