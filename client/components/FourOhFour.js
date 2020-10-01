@@ -9,7 +9,7 @@ export default class FourOhFour extends React.Component {
             <div className='text-center mt-5'>
                 <h1>404 Page Not Found</h1>
                 <h3>Sorry! The page you tried to visit could not be found</h3>
-                <Button className='btn-dark' tag={Link} to='/'>
+                <Button className='btn-dark mt-2' tag={Link} to='/'>
                     Go Home
                 </Button>
             </div>

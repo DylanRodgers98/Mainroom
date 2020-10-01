@@ -15,7 +15,6 @@ import defaultProfilePic from '../img/defaultProfilePic.png';
 
 const STARTING_STATE = {
     loaded: false,
-    doesUserExist: false,
     loggedInUser: '',
     isLoggedInUserSubscribed: false,
     displayName: '',
@@ -70,18 +69,26 @@ export default class UserProfile extends React.Component {
     }
 
     async loadUserProfile() {
-        const res = await axios.get(`/api/users/${this.props.match.params.username}`, {
-            params: {
-                scheduleStartTime: this.state.upcomingStreamsStartTime.toDate(),
-                scheduleEndTime: this.state.upcomingStreamsEndTime.toDate(),
+        try {
+            const res = await axios.get(`/api/users/${this.props.match.params.username}`, {
+                params: {
+                    scheduleStartTime: this.state.upcomingStreamsStartTime.toDate(),
+                    scheduleEndTime: this.state.upcomingStreamsEndTime.toDate(),
+                }
+            });
+            if (res.data.username) {
+                await this.fillComponent(res.data);
             }
-        });
-        if (res.data.username) {
-            await this.fillComponent(res.data);
+            this.setState({
+                loaded: true
+            });
+        } catch (err) {
+            if (err.response.status === 404) {
+                window.location.href = '/404';
+            } else {
+                throw err;
+            }
         }
-        this.setState({
-            loaded: true
-        });
     }
 
     async fillComponent(user) {
@@ -94,7 +101,6 @@ export default class UserProfile extends React.Component {
 
     populateProfile(user) {
         this.setState({
-            doesUserExist: true,
             displayName: user.displayName,
             location: user.location,
             bio: user.bio,
@@ -442,41 +448,39 @@ export default class UserProfile extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1>
-            : (!this.state.doesUserExist ? <FourOhFour/> : (
-                <React.Fragment>
-                    <Container>
-                        <Row className="mt-5" xs='4'>
-                            <Col>
-                                {/*TODO: get profile pic through API call*/}
-                                <img src={defaultProfilePic}
-                                     alt={`${this.props.match.params.username} Profile Picture`}/>
-                                <h1>{this.state.displayName || this.props.match.params.username}</h1>
-                                <h5>{this.state.location || 'Planet Earth'}</h5>
-                                <h5 className='black-link'>
-                                    <Link to={`/user/${this.props.match.params.username}/subscribers`}>
-                                        {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
-                                    </Link>
-                                </h5>
-                                {this.renderSubscribeOrEditProfileButton()}
-                                <p>{this.state.bio}</p>
-                                {this.renderLinks()}
-                            </Col>
-                            <Col xs='9'>
-                                <h3>Upcoming Streams</h3>
-                                <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
-                                          sidebarWidth='0'
-                                          visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
-                                          visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
-                                <hr className="my-4"/>
-                                {this.renderLiveStream()}
-                            </Col>
-                        </Row>
-                    </Container>
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+            <React.Fragment>
+                <Container>
+                    <Row className="mt-5" xs='4'>
+                        <Col>
+                            {/*TODO: get profile pic through API call*/}
+                            <img src={defaultProfilePic}
+                                 alt={`${this.props.match.params.username} Profile Picture`}/>
+                            <h1>{this.state.displayName || this.props.match.params.username}</h1>
+                            <h5>{this.state.location || 'Planet Earth'}</h5>
+                            <h5 className='black-link'>
+                                <Link to={`/user/${this.props.match.params.username}/subscribers`}>
+                                    {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
+                                </Link>
+                            </h5>
+                            {this.renderSubscribeOrEditProfileButton()}
+                            <p>{this.state.bio}</p>
+                            {this.renderLinks()}
+                        </Col>
+                        <Col xs='9'>
+                            <h3>Upcoming Streams</h3>
+                            <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
+                                      sidebarWidth='0'
+                                      visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
+                                      visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
+                            <hr className="my-4"/>
+                            {this.renderLiveStream()}
+                        </Col>
+                    </Row>
+                </Container>
 
-                    {this.renderEditProfile()}
-                </React.Fragment>
-            )
+                {this.renderEditProfile()}
+            </React.Fragment>
         );
     }
 

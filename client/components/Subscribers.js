@@ -30,24 +30,32 @@ export default class Subscribers extends React.Component {
     }
 
     async getSubscribers() {
-        const res = await axios.get(`/api/users/${this.props.match.params.username}/subscribers`);
-        this.setState({
-            subscribers: res.data.subscribers.map(subscriber => {
-                return (
-                    <Col>
-                        <h5>
-                            <Link to={`/user/${subscriber.username}`}>
-                                {/*TODO: get profile pic through API call*/}
-                                <img src={defaultProfilePic} width='75' height='75' className='mr-3'
-                                     alt={`${subscriber.username} profile picture`}/>
-                                {subscriber.username}
-                            </Link>
-                        </h5>
-                    </Col>
-                );
-            }),
-            loaded: true
-        });
+        try {
+            const res = await axios.get(`/api/users/${this.props.match.params.username}/subscribers`);
+            this.setState({
+                subscribers: res.data.subscribers.map(subscriber => {
+                    return (
+                        <Col>
+                            <h5>
+                                <Link to={`/user/${subscriber.username}`}>
+                                    {/*TODO: get profile pic through API call*/}
+                                    <img src={defaultProfilePic} width='75' height='75' className='mr-3'
+                                         alt={`${subscriber.username} profile picture`}/>
+                                    {subscriber.username}
+                                </Link>
+                            </h5>
+                        </Col>
+                    );
+                }),
+                loaded: true
+            });
+        } catch (err) {
+            if (err.response.status === 404) {
+                window.location.href = '/404';
+            } else {
+                throw err;
+            }
+        }
     }
 
     render() {

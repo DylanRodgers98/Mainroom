@@ -19,7 +19,6 @@ export default class UserStream extends React.Component {
         this.onMessageSubmit = this.onMessageSubmit.bind(this);
 
         this.state = {
-            doesUserExist: false,
             stream: false,
             videoJsOptions: null,
             viewerUsername: '',
@@ -37,40 +36,45 @@ export default class UserStream extends React.Component {
     }
 
     async fillComponent() {
-        const res = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
-        this.setState({
-            doesUserExist: !!res
-        });
-        if (res) {
-            await this.populateStreamDataIfUserIsLive(res);
+        try {
+            const res = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
+            if (res.data) {
+                await this.populateStreamDataIfUserIsLive(res.data);
+            }
+        } catch (err) {
+            if (err.response.status === 404) {
+                window.location.href = '/404';
+            } else {
+                throw err;
+            }
         }
     }
 
-    async populateStreamDataIfUserIsLive(res) {
-        const stream = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${res.data.streamKey}`);
+    async populateStreamDataIfUserIsLive(data) {
+        const stream = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${data.streamKey}`);
         if (stream.data.isLive) {
-            this.populateStreamData(res);
+            this.populateStreamData(data);
             await this.getViewerUsername();
             this.connectToChat();
         }
     }
 
-    populateStreamData(res) {
+    populateStreamData(data) {
         this.setState({
             stream: true,
             videoJsOptions: {
                 autoplay: true,
                 controls: true,
                 sources: [{
-                    src: `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${res.data.streamKey}/index.m3u8`,
+                    src: `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${data.streamKey}/index.m3u8`,
                     type: 'application/x-mpegURL'
                 }],
                 fluid: true
             },
-            displayName: res.data.displayName,
-            streamTitle: res.data.title,
-            streamGenre: res.data.genre,
-            streamCategory: res.data.category
+            displayName: data.displayName,
+            streamTitle: data.title,
+            streamGenre: data.genre,
+            streamCategory: data.category
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [
@@ -201,14 +205,12 @@ export default class UserStream extends React.Component {
                 </Row>
             </React.Fragment>
         ) : (
-            !this.state.doesUserExist ? <FourOhFour/> : (
-                <div className='mt-5 not-live'>
-                    <h3>Cannot find livestream for user {this.props.match.params.username}</h3>
-                    <Button className='btn-dark' tag={Link} to={`/user/${this.props.match.params.username}`}>
-                        Go To Profile
-                    </Button>
-                </div>
-            )
+            <div className='mt-5 not-live'>
+                <h3>{this.props.match.params.username} is not currently live</h3>
+                <Button className='btn-dark mt-2' tag={Link} to={`/user/${this.props.match.params.username}`}>
+                    Go To Profile
+                </Button>
+            </div>
         )
     }
 }

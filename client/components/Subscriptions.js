@@ -30,24 +30,32 @@ export default class Subscribers extends React.Component {
     }
 
     async getSubscriptions() {
-        const res = await axios.get(`/api/users/${this.props.match.params.username}/subscriptions`);
-        this.setState({
-            subscriptions: res.data.subscriptions.map(subscription => {
-                return (
-                    <Col>
-                        <h5>
-                            <Link to={`/user/${subscription.username}`}>
-                                {/*TODO: get profile pic through API call*/}
-                                <img src={defaultProfilePic} width='75' height='75' className='mr-3'
-                                     alt={`${subscription.username} profile picture`}/>
-                                {subscription.username}
-                            </Link>
-                        </h5>
-                    </Col>
-                );
-            }),
-            loaded: true
-        });
+        try {
+            const res = await axios.get(`/api/users/${this.props.match.params.username}/subscriptions`);
+            this.setState({
+                subscriptions: res.data.subscriptions.map(subscription => {
+                    return (
+                        <Col>
+                            <h5>
+                                <Link to={`/user/${subscription.username}`}>
+                                    {/*TODO: get profile pic through API call*/}
+                                    <img src={defaultProfilePic} width='75' height='75' className='mr-3'
+                                         alt={`${subscription.username} profile picture`}/>
+                                    {subscription.username}
+                                </Link>
+                            </h5>
+                        </Col>
+                    );
+                }),
+                loaded: true
+            });
+        } catch (err) {
+            if (err.response.status === 404) {
+                window.location.href = '/404';
+            } else {
+                throw err;
+            }
+        }
     }
 
     render() {
