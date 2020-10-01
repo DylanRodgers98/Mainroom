@@ -4,6 +4,10 @@ import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
 import {Container, Row, Col, DropdownToggle, DropdownMenu, DropdownItem, Dropdown} from "reactstrap";
 import '../css/livestreams.scss';
+import {Button} from "react-bootstrap";
+
+const STARTING_PAGE = 1;
+const LIMIT = 12;
 
 export default class LiveStreamsByCategory extends React.Component {
 
@@ -16,9 +20,11 @@ export default class LiveStreamsByCategory extends React.Component {
 
         this.state = {
             liveStreams: [],
+            nextPage: STARTING_PAGE,
             categories: [],
             categoryDropdownOpen: false,
-            categoryFilter: ''
+            categoryFilter: '',
+            showLoadMoreButton: false
         }
     }
 
@@ -30,22 +36,32 @@ export default class LiveStreamsByCategory extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.match.params.genre !== this.props.match.params.genre) {
             this.setState({
+                liveStreams: [],
+                nextPage: STARTING_PAGE,
                 categoryFilter: ''
-            })
-            this.getLiveStreams();
+            }, async () => {
+                await this.getLiveStreams();
+            });
         } else if (prevState.categoryFilter !== this.state.categoryFilter) {
-            this.getLiveStreams()
+            this.setState({
+                liveStreams: [],
+                nextPage: STARTING_PAGE
+            }, async () => {
+                await this.getLiveStreams();
+            });
         }
     }
 
-    getLiveStreams() {
-        axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`).then(res => {
-            const streams = res.data['live'];
-            if (typeof streams !== 'undefined') {
-                const streamKeys = this.extractStreamKeys(streams);
-                this.getStreamsInfo(streamKeys);
-            }
-        });
+    async getLiveStreams() {
+        const streamKeys = await this.getStreamKeys();
+        if (streamKeys.length) {
+            await this.getStreamsInfo(streamKeys);
+        }
+    }
+
+    async getStreamKeys() {
+        const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);
+        return res.data.live ? this.extractStreamKeys(res.data.live) : [];
     }
 
     extractStreamKeys(liveStreams) {
@@ -58,10 +74,12 @@ export default class LiveStreamsByCategory extends React.Component {
         return streamKeys;
     }
 
-    getStreamsInfo(streamKeys) {
+    async getStreamsInfo(streamKeys) {
         const queryParams = {
             params: {
-                streamKeys: streamKeys
+                streamKeys: streamKeys,
+                page: this.state.nextPage,
+                limit: LIMIT
             }
         };
         if (this.props.match.params.genre) {
@@ -71,19 +89,19 @@ export default class LiveStreamsByCategory extends React.Component {
             queryParams.params.category = this.state.categoryFilter;
         }
 
-        axios.get('/api/streams', queryParams).then(res => {
-            this.setState({
-                liveStreams: res.data
-            });
+        const res = await axios.get('/api/streams', queryParams);
+        this.setState({
+            liveStreams: [...this.state.liveStreams, ...res.data.streams],
+            nextPage: res.data.nextPage,
+            showLoadMoreButton: !!res.data.nextPage
         });
     }
 
-    getFilters() {
-        axios.get('/api/filters/categories').then(res => {
-            this.setState({
-                categories: res.data.categories
-            })
-        });
+    async getFilters() {
+        const res = await axios.get('/api/filters/categories');
+        this.setState({
+            categories: res.data.categories
+        })
     }
 
     categoryDropdownToggle() {
@@ -133,6 +151,12 @@ export default class LiveStreamsByCategory extends React.Component {
             return <DropdownItem onClick={this.setCategoryFilter}>{category}</DropdownItem>
         });
 
+        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+            <Button className='btn-dark' onClick={async () => await this.getLiveStreams()}>
+                Load More
+            </Button>
+        );
+
         return (
             <Container className="mt-5">
                 <Row>
@@ -157,6 +181,7 @@ export default class LiveStreamsByCategory extends React.Component {
                 <Row className="streams" xs='1' sm='1' md='2' lg='3' xl='3'>
                     {streams}
                 </Row>
+                {loadMoreButton}
             </Container>
         )
     }

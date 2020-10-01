@@ -9,7 +9,6 @@ import {Button} from "react-bootstrap";
 const STARTING_PAGE = 1;
 const LIMIT = 12;
 
-
 export default class LiveStreamsByCategory extends React.Component {
 
     constructor(props) {
