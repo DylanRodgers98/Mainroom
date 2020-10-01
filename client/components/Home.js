@@ -4,6 +4,11 @@ import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
 import {Container, Row, Col} from "reactstrap";
 import '../css/livestreams.scss';
+import {Button} from "react-bootstrap";
+
+const STARTING_PAGE = 1;
+const LIMIT_WHEN_LOGGED_IN = 6;
+const LIMIT_WHEN_NOT_LOGGED_IN = 12;
 
 export default class Home extends React.Component {
 
@@ -11,23 +16,44 @@ export default class Home extends React.Component {
         super(props);
 
         this.state = {
-            liveStreams: [],
+            loggedInUser: '',
+            featuredLiveStreams: [],
             subscriptionLiveStreams: [],
-            loggedInUser: ''
+            featuredLiveStreamsPage: STARTING_PAGE,
+            subscriptionsLiveStreamsPage: STARTING_PAGE
         }
     }
 
     componentDidMount() {
-        this.getLiveStreams();
+        this.fillComponent();
     }
 
-    async getLiveStreams() {
-        const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);
-        if (res.data.live) {
-            const streamKeys = this.extractStreamKeys(res.data.live);
-            await this.getStreamsInfo(streamKeys);
-            await this.getSubscriptionsIfLoggedIn(streamKeys);
+    async fillComponent() {
+        await this.getLoggedInUser();
+        const streamKeys = await this.getStreamKeys();
+        if (streamKeys.length) {
+            const params = {
+                streamKeys: streamKeys,
+                page: STARTING_PAGE,
+                limit: this.state.loggedInUser ? LIMIT_WHEN_LOGGED_IN : LIMIT_WHEN_NOT_LOGGED_IN
+            };
+            await this.getFeaturedLiveStreams(params);
+            if (this.state.loggedInUser) {
+                await this.getSubscriptionLiveStreams(params);
+            }
         }
+    }
+
+    async getLoggedInUser() {
+        const res = await axios.get('/api/users/logged-in');
+        this.setState({
+            loggedInUser: res.data.username
+        });
+    }
+
+    async getStreamKeys() {
+        const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);
+        return res.data.live ? this.extractStreamKeys(res.data.live) : [];
     }
 
     extractStreamKeys(liveStreams) {
@@ -40,42 +66,85 @@ export default class Home extends React.Component {
         return streamKeys;
     }
 
-    async getStreamsInfo(streamKeys) {
+    async getFeaturedLiveStreams(params) {
         const res = await axios.get('/api/streams', {
             params: {
-                streamKeys: streamKeys
+                streamKeys: params.streamKeys,
+                page: params.page,
+                limit: params.limit
             }
         });
         this.setState({
-            liveStreams: res.data
+            featuredLiveStreams: [...this.state.featuredLiveStreams, ...res.data.streams],
+            featuredLiveStreamsPage: res.data.nextPage
         });
     }
 
-    async getSubscriptionsIfLoggedIn(streamKeys) {
-        const loggedInRes = await axios.get('/api/users/logged-in');
-        if (loggedInRes.data.username) {
-            const subsRes = await axios.get(`/api/users/${loggedInRes.data.username}/subscriptions`);
-            if (subsRes.data.subscriptions) {
-                const subscriptionUsernames = subsRes.data.subscriptions.map(sub => sub.username);
-                const streamsRes = await axios.get(`/api/streams/`, {
-                    params: {
-                        streamKeys: streamKeys,
-                        usernames: subscriptionUsernames
-                    }
-                });
-                this.setState({
-                    subscriptionLiveStreams: streamsRes.data
-                });
-            }
+    async getSubscriptionLiveStreams(params) {
+        const subsRes = await axios.get(`/api/users/${this.state.loggedInUser}/subscriptions`);
+        if (subsRes.data.subscriptions) {
+            const subscriptionUsernames = subsRes.data.subscriptions.map(sub => sub.username);
+            const streamsRes = await axios.get(`/api/streams/`, {
+                params: {
+                    streamKeys: params.streamKeys,
+                    usernames: subscriptionUsernames,
+                    page: params.page,
+                    limit: params.limit
+                }
+            });
+            this.setState({
+                subscriptionLiveStreams: [...this.state.subscriptionLiveStreams, ...streamsRes.data.streams],
+                subscriptionLiveStreamsPage: streamsRes.data.nextPage
+            });
         }
     }
 
-    renderSubscriptions() {
+    renderFeaturedLiveStreams() {
+        const loadMoreButton = this.renderLoadMoreButton(async () => {
+            const streamKeys = await this.getStreamKeys();
+            if (streamKeys.length) {
+                await this.getFeaturedLiveStreams({
+                    streamKeys: streamKeys,
+                    page: this.state.featuredLiveStreamsPage,
+                    limit: this.state.loggedInUser ? LIMIT_WHEN_LOGGED_IN : LIMIT_WHEN_NOT_LOGGED_IN
+                });
+            }
+        });
+
+        return !this.state.featuredLiveStreams.length ? undefined : (
+            <React.Fragment>
+                {this.renderLiveStreams('Featured', this.state.featuredLiveStreams)}
+                {this.state.featuredLiveStreamsPage ? loadMoreButton : undefined}
+            </React.Fragment>
+        );
+    }
+
+    renderSubscriptionLiveStreams() {
+        const loadMoreButton = this.renderLoadMoreButton(async () => {
+            const streamKeys = await this.getStreamKeys();
+            if (streamKeys.length) {
+                await this.getSubscriptionLiveStreams({
+                    streamKeys: streamKeys,
+                    page: this.state.subscriptionLiveStreamsPage,
+                    limit: LIMIT_WHEN_LOGGED_IN
+                });
+            }
+        });
+
         return !this.state.subscriptionLiveStreams.length ? undefined : (
             <React.Fragment>
                 {this.renderLiveStreams('Subscriptions', this.state.subscriptionLiveStreams)}
+                {this.state.subscriptionLiveStreamsPage ? loadMoreButton : undefined}
                 <hr className="my-4"/>
             </React.Fragment>
+        );
+    }
+
+    renderLoadMoreButton(loadMoreOnClick) {
+        return (
+            <Button className='btn-dark' onClick={async () => await loadMoreOnClick()}>
+                Load More
+            </Button>
         );
     }
 
@@ -115,13 +184,13 @@ export default class Home extends React.Component {
     }
 
     renderStreamBoxes() {
-        const subscriptions = this.renderSubscriptions();
-        const liveStreams = this.renderLiveStreams('Featured', this.state.liveStreams);
+        const subscriptionLiveStreams = this.renderSubscriptionLiveStreams();
+        const featuredLiveStreams = this.renderFeaturedLiveStreams();
 
-        return subscriptions || liveStreams ? (
+        return subscriptionLiveStreams || featuredLiveStreams ? (
             <React.Fragment>
-                {subscriptions}
-                {liveStreams}
+                {subscriptionLiveStreams}
+                {featuredLiveStreams}
             </React.Fragment>
         ) : (
             <p className='my-4 text-center'>

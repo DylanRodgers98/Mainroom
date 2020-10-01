@@ -25,18 +25,28 @@ router.get('/', async (req, res, next) => {
         if (req.query.usernames) {
             query.username = {$in: req.query.usernames}
         }
-        User.find(query, 'username displayName streamInfo.streamKey', (err, users) => {
+
+        const options = {
+            select: 'username displayName streamInfo.streamKey',
+            page: req.query.page,
+            limit: req.query.limit
+        };
+
+        User.paginate(query, options, (err, result) => {
             if (err) {
                 LOGGER.error('An error occurred when finding livestream info: {}', err);
                 next(err);
-            } else if (users) {
-                res.json(users.map(user => {
-                    return {
-                        username: user.username,
-                        displayName: user.displayName,
-                        streamKey: user.streamInfo.streamKey
-                    };
-                }));
+            } else if (result) {
+                res.json({
+                    streams: result.docs.map(user => {
+                        return {
+                            username: user.username,
+                            displayName: user.displayName,
+                            streamKey: user.streamInfo.streamKey
+                        };
+                    }),
+                    nextPage: result.nextPage
+                });
             }
         });
     } else {

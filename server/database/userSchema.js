@@ -1,5 +1,6 @@
-const Schema = require('mongoose').Schema;
+const {Schema} = require('mongoose');
 const bcrypt = require('bcrypt-nodejs');
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const UserSchema = new Schema({
     username: String,
@@ -28,5 +29,7 @@ UserSchema.methods.generateHash = password => {
 UserSchema.methods.checkPassword = function (password) {
     return bcrypt.compareSync(password, this.password);
 };
+
+UserSchema.plugin(mongoosePaginate);
 
 module.exports = UserSchema;
