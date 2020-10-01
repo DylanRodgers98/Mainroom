@@ -7,7 +7,6 @@ import '../css/livestreams.scss';
 import {Button} from "react-bootstrap";
 
 const STARTING_PAGE = 1;
-const LIMIT = 12;
 
 export default class LiveStreamsByCategory extends React.Component {
 
@@ -79,7 +78,7 @@ export default class LiveStreamsByCategory extends React.Component {
             params: {
                 streamKeys: streamKeys,
                 page: this.state.nextPage,
-                limit: LIMIT
+                limit: config.pagination.limit
             }
         };
         if (this.props.match.params.category) {

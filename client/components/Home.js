@@ -7,8 +7,6 @@ import '../css/livestreams.scss';
 import {Button} from "react-bootstrap";
 
 const STARTING_PAGE = 1;
-const LIMIT_WHEN_LOGGED_IN = 6;
-const LIMIT_WHEN_NOT_LOGGED_IN = 12;
 
 export default class Home extends React.Component {
 
@@ -37,7 +35,7 @@ export default class Home extends React.Component {
             const params = {
                 streamKeys: streamKeys,
                 page: STARTING_PAGE,
-                limit: this.state.loggedInUser ? LIMIT_WHEN_LOGGED_IN : LIMIT_WHEN_NOT_LOGGED_IN
+                limit: config.pagination[this.state.loggedInUser ? 'subscriptionsAndFeaturedLimit' : 'limit']
             };
             await this.getFeaturedLiveStreams(params);
             if (this.state.loggedInUser) {
@@ -110,7 +108,7 @@ export default class Home extends React.Component {
                 await this.getFeaturedLiveStreams({
                     streamKeys: streamKeys,
                     page: this.state.featuredLiveStreamsPage,
-                    limit: this.state.loggedInUser ? LIMIT_WHEN_LOGGED_IN : LIMIT_WHEN_NOT_LOGGED_IN
+                    limit: config.pagination[this.state.loggedInUser ? 'subscriptionsAndFeaturedLimit' : 'limit']
                 });
             }
         });
@@ -130,7 +128,7 @@ export default class Home extends React.Component {
                 await this.getSubscriptionLiveStreams({
                     streamKeys: streamKeys,
                     page: this.state.subscriptionLiveStreamsPage,
-                    limit: LIMIT_WHEN_LOGGED_IN
+                    limit: config.pagination.subsAndFeaturedLimit
                 });
             }
         });

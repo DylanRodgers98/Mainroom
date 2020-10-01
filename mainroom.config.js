@@ -58,5 +58,9 @@ module.exports = {
     storage: {
         thumbnails: './server/thumbnails',
         sessions: './server/sessions'
+    },
+    pagination: {
+        limit: 12,
+        subscriptionsAndFeaturedLimit: 6
     }
 };
