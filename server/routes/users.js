@@ -15,7 +15,7 @@ router.get('/logged-in', (req, res) => {
 });
 
 router.get('/:username', (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, 'username displayName location bio links subscribers scheduledStreams')
         .populate({
             path: 'scheduledStreams',
@@ -61,7 +61,7 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
         updateQuery.links = sanitise(req.body.links);
     }
 
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOneAndUpdate({username: username}, updateQuery, (err, user) => {
         if (err) {
             LOGGER.error('An error occurred when updating user {}: {}', username, err);
@@ -75,7 +75,7 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
 });
 
 router.get('/:username/subscribers', (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, 'subscribers')
         .populate({
             path: 'subscribers',
@@ -96,7 +96,7 @@ router.get('/:username/subscribers', (req, res, next) => {
 });
 
 router.get('/:username/subscriptions', (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, 'subscriptions')
         .populate({
             path: 'subscriptions',
@@ -117,18 +117,18 @@ router.get('/:username/subscriptions', (req, res, next) => {
 });
 
 router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
-    const username = sanitise(req.params.username);
-    const otherUsername = sanitise(req.params.otherUsername);
-
+    const otherUsername = sanitise(req.params.otherUsername.toLowerCase());
     User.findOne({username: otherUsername}, 'subscribers', (err, otherUser) => {
         if (err) {
-            LOGGER.error('An error occurred when getting subscription status for user {} to user {}: {}', username, otherUsername, err);
+            LOGGER.error('An error occurred when finding user {}: {}', otherUsername, err);
             next(err);
         } else if (!otherUser) {
             res.status(404).send(`User (username: ${escape(otherUsername)}) not found`);
         } else {
+            const username = sanitise(req.params.username.toLowerCase());
             User.findOne({username: username}, '_id', (err, user) => {
                 if (err) {
+                    LOGGER.error('An error occurred when finding user {}: {}', username, err);
                     next(err);
                 } else if (!user) {
                     res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -141,7 +141,7 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
 });
 
 router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLoggedIn(), (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, (err, user) => {
         if (err) {
             LOGGER.error('An error occurred when finding user {}: {}', username, err);
@@ -149,7 +149,7 @@ router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogge
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
-            const usernameToSubscribeTo = sanitise(req.params.userToSubscribeTo)
+            const usernameToSubscribeTo = sanitise(req.params.userToSubscribeTo.toLowerCase())
             User.findOne({username: usernameToSubscribeTo}, (err, userToSubscribeTo) => {
                 if (err) {
                     LOGGER.error('An error occurred when finding user {}: {}', usernameToSubscribeTo, err);
@@ -179,7 +179,7 @@ router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogge
 });
 
 router.patch('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, '_id', (err, user) => {
         if (err) {
             LOGGER.error('An error occurred when finding user {}: {}', username, err);
@@ -187,7 +187,7 @@ router.patch('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensur
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
-            const usernameToUnsubscribeFrom = sanitise(req.params.userToUnsubscribeFrom)
+            const usernameToUnsubscribeFrom = sanitise(req.params.userToUnsubscribeFrom.toLowerCase())
             User.findOne({username: usernameToUnsubscribeFrom}, '_id', (err, userToUnsubscribeFrom) => {
                 if (err) {
                     LOGGER.error('An error occurred when finding user {}: {}', usernameToUnsubscribeFrom, err);
@@ -217,7 +217,7 @@ router.patch('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensur
 });
 
 router.get('/:username/stream-info', (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username},
         'displayName streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
         (err, user) => {
@@ -240,7 +240,7 @@ router.get('/:username/stream-info', (req, res, next) => {
 });
 
 router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOneAndUpdate({
         username: username
     }, {
@@ -268,7 +268,7 @@ router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res,
 });
 
 router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOneAndUpdate({
         username: username
     }, {
@@ -290,7 +290,7 @@ router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), (req, res, n
 });
 
 router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next) => {
-    const username = sanitise(req.params.username);
+    const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, 'username scheduledStreams subscriptions')
         .populate({
             path: 'scheduledStreams',

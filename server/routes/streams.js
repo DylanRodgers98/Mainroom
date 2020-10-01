@@ -18,7 +18,12 @@ router.get('/', async (req, res, next) => {
             const sanitisedQuery = sanitise(req.query.searchQuery);
             const escapedQuery = _.escapeRegExp(sanitisedQuery)
             const searchQuery = new RegExp(`^${escapedQuery}$`, 'i');
-            query.$or = [{'streamInfo.title': searchQuery}, {'streamInfo.tags': searchQuery}, {username: searchQuery}];
+            query.$or = [
+                {'streamInfo.title': searchQuery},
+                {'streamInfo.tags': searchQuery},
+                {username: searchQuery},
+                {displayName: searchQuery}
+            ];
         }
         if (req.query.genre) {
             query['streamInfo.genre'] = sanitise(req.query.genre);

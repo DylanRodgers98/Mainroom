@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt-nodejs');
 const mongoosePaginate = require('mongoose-paginate-v2');
 
 const UserSchema = new Schema({
-    username: String,
+    username: {type: String, lowercase: true},
     email: String,
     password: {type: String, select: false},
     displayName: String,
