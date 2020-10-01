@@ -30,17 +30,13 @@ export default class Home extends React.Component {
 
     async fillComponent() {
         await this.getLoggedInUser();
-        const streamKeys = await this.getStreamKeys();
-        if (streamKeys.length) {
-            const params = {
-                streamKeys: streamKeys,
-                page: STARTING_PAGE,
-                limit: config.pagination[this.state.loggedInUser ? 'subscriptionsAndFeaturedLimit' : 'limit']
-            };
-            await this.getFeaturedLiveStreams(params);
-            if (this.state.loggedInUser) {
-                await this.getSubscriptionLiveStreams(params);
-            }
+        const params = {
+            page: STARTING_PAGE,
+            limit: config.pagination[this.state.loggedInUser ? 'subscriptionsAndFeaturedLimit' : 'limit']
+        };
+        await this.getFeaturedLiveStreams(params);
+        if (this.state.loggedInUser) {
+            await this.getSubscriptionLiveStreams(params);
         }
     }
 
@@ -51,25 +47,9 @@ export default class Home extends React.Component {
         });
     }
 
-    async getStreamKeys() {
-        const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);
-        return res.data.live ? this.extractStreamKeys(res.data.live) : [];
-    }
-
-    extractStreamKeys(liveStreams) {
-        const streamKeys = [];
-        for (const stream in liveStreams) {
-            if (liveStreams.hasOwnProperty(stream)) {
-                streamKeys.push(stream);
-            }
-        }
-        return streamKeys;
-    }
-
     async getFeaturedLiveStreams(params) {
         const res = await axios.get('/api/streams', {
             params: {
-                streamKeys: params.streamKeys,
                 page: params.page,
                 limit: params.limit
             }
@@ -87,7 +67,6 @@ export default class Home extends React.Component {
             const subscriptionUsernames = subsRes.data.subscriptions.map(sub => sub.username);
             const streamsRes = await axios.get(`/api/streams/`, {
                 params: {
-                    streamKeys: params.streamKeys,
                     usernames: subscriptionUsernames,
                     page: params.page,
                     limit: params.limit
@@ -103,14 +82,10 @@ export default class Home extends React.Component {
 
     renderFeaturedLiveStreams() {
         const loadMoreButton = this.renderLoadMoreButton(async () => {
-            const streamKeys = await this.getStreamKeys();
-            if (streamKeys.length) {
-                await this.getFeaturedLiveStreams({
-                    streamKeys: streamKeys,
-                    page: this.state.featuredLiveStreamsPage,
-                    limit: config.pagination[this.state.loggedInUser ? 'subscriptionsAndFeaturedLimit' : 'limit']
-                });
-            }
+            await this.getFeaturedLiveStreams({
+                page: this.state.featuredLiveStreamsPage,
+                limit: config.pagination[this.state.loggedInUser ? 'subscriptionsAndFeaturedLimit' : 'limit']
+            });
         });
 
         return !this.state.featuredLiveStreams.length ? undefined : (
@@ -124,14 +99,10 @@ export default class Home extends React.Component {
 
     renderSubscriptionLiveStreams() {
         const loadMoreButton = this.renderLoadMoreButton(async () => {
-            const streamKeys = await this.getStreamKeys();
-            if (streamKeys.length) {
-                await this.getSubscriptionLiveStreams({
-                    streamKeys: streamKeys,
-                    page: this.state.subscriptionLiveStreamsPage,
-                    limit: config.pagination.subsAndFeaturedLimit
-                });
-            }
+            await this.getSubscriptionLiveStreams({
+                page: this.state.subscriptionLiveStreamsPage,
+                limit: config.pagination.subscriptionsAndFeaturedLimit
+            });
         });
 
         return !this.state.subscriptionLiveStreams.length ? undefined : (

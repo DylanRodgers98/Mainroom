@@ -1,14 +1,18 @@
 const express = require('express');
 const router = express.Router();
+const config = require('../../mainroom.config');
+const axios = require('axios');
 const {User} = require('../database/schemas');
 const _ = require('lodash');
 const sanitise = require('mongo-sanitize');
 const LOGGER = require('../../logger')('./server/routes/streams.js');
 
 router.get('/', async (req, res, next) => {
-    if (req.query.streamKeys) {
+    const result = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);
+    const streamKeys = result.data.live ? Object.getOwnPropertyNames(result.data.live) : [];
+    if (streamKeys.length) {
         const query = {
-            'streamInfo.streamKey': {$in: req.query.streamKeys}
+            'streamInfo.streamKey': {$in: streamKeys}
         };
         if (req.query.searchQuery) {
             const sanitisedQuery = sanitise(req.query.searchQuery);

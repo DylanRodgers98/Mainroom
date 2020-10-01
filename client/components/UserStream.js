@@ -5,7 +5,6 @@ import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
 import {Row, Button} from "reactstrap";
 import io from "socket.io-client";
-import FourOhFour from "./FourOhFour";
 import '../css/user-stream.scss';
 import {Col} from "react-bootstrap";
 

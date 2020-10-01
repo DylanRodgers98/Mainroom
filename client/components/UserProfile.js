@@ -5,7 +5,6 @@ import {Modal} from "react-bootstrap";
 import {Link} from "react-router-dom";
 import Timeline from "react-calendar-timeline";
 import moment from "moment";
-import FourOhFour from "./FourOhFour";
 import config from "../../mainroom.config";
 import normalizeUrl from "normalize-url";
 import '../css/user-profile.scss';

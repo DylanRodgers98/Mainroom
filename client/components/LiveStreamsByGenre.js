@@ -52,31 +52,8 @@ export default class LiveStreamsByCategory extends React.Component {
     }
 
     async getLiveStreams() {
-        const streamKeys = await this.getStreamKeys();
-        if (streamKeys.length) {
-            await this.getStreamsInfo(streamKeys);
-        }
-    }
-
-    async getStreamKeys() {
-        const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);
-        return res.data.live ? this.extractStreamKeys(res.data.live) : [];
-    }
-
-    extractStreamKeys(liveStreams) {
-        const streamKeys = [];
-        for (const stream in liveStreams) {
-            if (liveStreams.hasOwnProperty(stream)) {
-                streamKeys.push(stream);
-            }
-        }
-        return streamKeys;
-    }
-
-    async getStreamsInfo(streamKeys) {
         const queryParams = {
             params: {
-                streamKeys: streamKeys,
                 page: this.state.nextPage,
                 limit: config.pagination.limit
             }
