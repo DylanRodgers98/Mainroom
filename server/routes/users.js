@@ -5,6 +5,7 @@ const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
 const shortid = require('shortid');
+const LOGGER = require('../../logger')('./server/routes/users.js');
 
 router.get('/logged-in', (req, res) => {
     res.json(!req.user ? {} : {
@@ -26,6 +27,7 @@ router.get('/:username', (req, res, next) => {
         })
         .exec((err, user) => {
             if (err) {
+                LOGGER.error('An error occurred when finding user {}: {}', username, err);
                 next(err);
             } else if (!user) {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -62,6 +64,7 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username);
     User.findOneAndUpdate({username: username}, updateQuery, (err, user) => {
         if (err) {
+            LOGGER.error('An error occurred when updating user {}: {}', username, err);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -80,6 +83,7 @@ router.get('/:username/subscribers', (req, res, next) => {
         })
         .exec((err, user) => {
             if (err) {
+                LOGGER.error('An error occurred when getting subscribers for user {}: {}', username, err);
                 next(err);
             } else if (!user) {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -100,6 +104,7 @@ router.get('/:username/subscriptions', (req, res, next) => {
         })
         .exec((err, user) => {
             if (err) {
+                LOGGER.error('An error occurred when getting subscriptions for user {}: {}', username, err);
                 next(err);
             } else if (!user) {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -112,14 +117,16 @@ router.get('/:username/subscriptions', (req, res, next) => {
 });
 
 router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
+    const username = sanitise(req.params.username);
     const otherUsername = sanitise(req.params.otherUsername);
+
     User.findOne({username: otherUsername}, 'subscribers', (err, otherUser) => {
         if (err) {
+            LOGGER.error('An error occurred when getting subscription status for user {} to user {}: {}', username, otherUsername, err);
             next(err);
         } else if (!otherUser) {
             res.status(404).send(`User (username: ${escape(otherUsername)}) not found`);
         } else {
-            const username = sanitise(req.params.username);
             User.findOne({username: username}, '_id', (err, user) => {
                 if (err) {
                     next(err);
@@ -137,6 +144,7 @@ router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogge
     const username = sanitise(req.params.username);
     User.findOne({username: username}, (err, user) => {
         if (err) {
+            LOGGER.error('An error occurred when finding user {}: {}', username, err);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -144,16 +152,19 @@ router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogge
             const usernameToSubscribeTo = sanitise(req.params.userToSubscribeTo)
             User.findOne({username: usernameToSubscribeTo}, (err, userToSubscribeTo) => {
                 if (err) {
+                    LOGGER.error('An error occurred when finding user {}: {}', usernameToSubscribeTo, err);
                     next(err);
                 } else if (!userToSubscribeTo) {
                     res.status(404).send(`User (username: ${escape(usernameToSubscribeTo)}) not found`);
                 } else {
                     userToSubscribeTo.updateOne({$addToSet: {subscribers: user._id}}, err => {
                         if (err) {
+                            LOGGER.error(`An error occurred when adding user {} to user {}'s subscribers: {}`, username, usernameToSubscribeTo, err);
                             next(err);
                         } else {
                             user.updateOne({$addToSet: {subscriptions: userToSubscribeTo._id}}, err => {
                                 if (err) {
+                                    LOGGER.error(`An error occurred when adding user {} to user {}'s subscriptions: {}`, usernameToSubscribeTo, username, err);
                                     next(err);
                                 } else {
                                     res.sendStatus(200);
@@ -171,6 +182,7 @@ router.patch('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensur
     const username = sanitise(req.params.username);
     User.findOne({username: username}, '_id', (err, user) => {
         if (err) {
+            LOGGER.error('An error occurred when finding user {}: {}', username, err);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -178,16 +190,19 @@ router.patch('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensur
             const usernameToUnsubscribeFrom = sanitise(req.params.userToUnsubscribeFrom)
             User.findOne({username: usernameToUnsubscribeFrom}, '_id', (err, userToUnsubscribeFrom) => {
                 if (err) {
+                    LOGGER.error('An error occurred when finding user {}: {}', usernameToUnsubscribeFrom, err);
                     next(err);
                 } else if (!userToUnsubscribeFrom) {
                     res.status(404).send(`User (username: ${escape(usernameToUnsubscribeFrom)}) not found`);
                 } else {
                     userToUnsubscribeFrom.updateOne({$pull: {subscribers: user._id}}, err => {
                         if (err) {
+                            LOGGER.error(`An error occurred when removing user {} to user {}'s subscribers: {}`, username, userToUnsubscribeFrom, err);
                             next(err);
                         } else {
                             user.updateOne({$pull: {subscriptions: userToUnsubscribeFrom._id}}, err => {
                                 if (err) {
+                                    LOGGER.error(`An error occurred when removing user {} to user {}'s subscriptions: {}`, userToUnsubscribeFrom, username, err);
                                     next(err);
                                 } else {
                                     res.sendStatus(200);
@@ -207,6 +222,7 @@ router.get('/:username/stream-info', (req, res, next) => {
         'displayName streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
         (err, user) => {
             if (err) {
+                LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
                 next(err);
             } else if (!user) {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -224,8 +240,9 @@ router.get('/:username/stream-info', (req, res, next) => {
 });
 
 router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.params.username);
     User.findOneAndUpdate({
-        username: sanitise(req.params.username)
+        username: username
     }, {
         'streamInfo.title': sanitise(req.body.title),
         'streamInfo.genre': sanitise(req.body.genre),
@@ -235,9 +252,10 @@ router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res,
         new: true,
     }, (err, user) => {
         if (err) {
+            LOGGER.error(`An error occurred when updating user {}'s stream info: {}`, username, err);
             next(err);
         } else if (!user) {
-            res.status(404).send(`User (username: ${req.user.username}) not found`);
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
             res.json({
                 title: user.streamInfo.title,
@@ -250,17 +268,19 @@ router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res,
 });
 
 router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.params.username);
     User.findOneAndUpdate({
-        username: sanitise(req.params.username)
+        username: username
     }, {
         'streamInfo.streamKey': shortid.generate()
     }, {
         new: true
     }, (err, user) => {
         if (err) {
+            LOGGER.error(`An error occurred when updating user {}'s stream key: {}`, username, err);
             next(err);
         } else if (!user) {
-            res.status(404).send(`User (username: ${req.user.username}) not found`);
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
             res.json({
                 streamKey: user.streamInfo.streamKey
@@ -270,7 +290,8 @@ router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), (req, res, n
 });
 
 router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next) => {
-    User.findOne({username: sanitise(req.params.username)}, 'username scheduledStreams subscriptions')
+    const username = sanitise(req.params.username);
+    User.findOne({username: username}, 'username scheduledStreams subscriptions')
         .populate({
             path: 'scheduledStreams',
             select: 'title startTime endTime',
@@ -289,9 +310,10 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
         })
         .exec((err, user) => {
             if (err) {
+                LOGGER.error(`An error occurred when getting user {}'s schedule: {}`, username, err);
                 next(err);
             } else if (!user) {
-                res.status(404).send(`User (username: ${req.user.username}) not found`);
+                res.status(404).send(`User (username: ${escape(username)}) not found`);
             } else {
                 res.json(user);
             }
@@ -302,6 +324,7 @@ router.get('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) 
     const userId = sanitise(req.params.userId);
     User.findById(userId, 'username email').exec((err, user) => {
         if (err) {
+            LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, err);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(userId)}) not found`);
@@ -332,6 +355,7 @@ router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next
     if (findQuery.$or.length) {
         User.find(findQuery, 'username email', (err, users) => {
             if (err) {
+                LOGGER.error(`An error occurred when finding users with query {}: {}`, JSON.stringify(findQuery), err);
                 next(err);
             } else if (users) {
                 const invalidReasons = {};
@@ -349,6 +373,7 @@ router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next
                     const userId = sanitise(req.params.userId);
                     User.findByIdAndUpdate(userId, updateQuery, (err, user) => {
                         if (err) {
+                            LOGGER.error(`An error occurred when updating username and/or email for user with _id {}: {}`, userId, err);
                             next(err);
                         } else if (!user) {
                             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
@@ -366,6 +391,7 @@ router.patch('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next
     const userId = sanitise(req.params.userId);
     User.findById(userId).select('+password').exec((err, user) => {
         if (err) {
+            LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, err);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
@@ -390,6 +416,7 @@ router.patch('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next
                 user.password = user.generateHash(req.body.newPassword);
                 user.save(err => {
                     if (err) {
+                        LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, err);
                         next(err);
                     } else {
                         res.sendStatus(200);

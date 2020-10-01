@@ -15,7 +15,7 @@ const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
 const {resolveFilePath, decodeBase64File} = require('./helpers/fileHelpers');
 const csrf = require('csurf');
-const LOGGER = require('./logger')('server/app.js');
+const LOGGER = require('../logger')('./server/app.js');
 
 mongoose.connect(config.database.uri, {
     useNewUrlParser: true,

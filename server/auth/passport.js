@@ -5,7 +5,7 @@ const shortid = require('shortid');
 const passwordValidator = require('./passwordValidator');
 const config = require('../../mainroom.config');
 const mongoose = require('mongoose');
-const LOGGER = require('../logger')('server/passport.js');
+const LOGGER = require('../../logger')('./server/passport.js');
 
 const strategyOptions = {
     usernameField: 'email',

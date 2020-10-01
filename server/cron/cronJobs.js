@@ -1,4 +1,4 @@
-const LOGGER = require('../logger')('server/cron/cronJobs.js');
+const LOGGER = require('../../logger')('./server/cron/cronJobs.js');
 const thumbnailGenerator = require('./thumbnailGeneratorCronJob');
 const scheduledStreamInfoUpdater = require('./scheduledStreamInfoUpdater');
 

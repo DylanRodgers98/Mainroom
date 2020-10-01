@@ -1,7 +1,7 @@
 const {CronJob} = require('cron');
 const config = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../database/schemas');
-const LOGGER = require('../logger')('server/cron/scheduledStreamInfoUpdater.js');
+const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
 
 let lastTimeTriggered = Date.now();
 
@@ -25,7 +25,9 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
                 'streamInfo.category': stream.category,
                 'streamInfo.tags': stream.tags
             }, err => {
-                if (!err) {
+                if (err) {
+                    LOGGER.error('An error occurred when updating stream info for user with _id {}: {}', stream.user._id, err);
+                } else {
                     updated++;
                 }
             });
