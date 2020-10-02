@@ -365,7 +365,7 @@ export default class UserProfile extends React.Component {
                 </td>
                 <td>
                     <input className="mt-1 rounded-border" type="text" value={link.url}
-                           onChange={e => this.setLinkUrl(e, i)} size={40}/>
+                           onChange={e => this.setLinkUrl(e, i)} size={30}/>
                 </td>
                 <td>
                     <Button className="btn-dark mt-1 ml-1" size="sm" onClick={() => this.removeLink(i)}>

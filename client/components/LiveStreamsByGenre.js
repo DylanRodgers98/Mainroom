@@ -119,6 +119,16 @@ export default class LiveStreamsByCategory extends React.Component {
             );
         });
 
+        const streamBoxes = streams.length ? (
+            <Row className="streams" xs='1' sm='1' md='2' lg='3' xl='3'>
+                {streams}
+            </Row>
+        ) : (
+            <p className='my-4 text-center'>
+                No one matching your search is live right now :(
+            </p>
+        );
+
         const pageHeader = `${decodeURIComponent(this.props.match.params.genre)} Livestreams`;
 
         const categoryDropdownText = this.state.categoryFilter || 'Filter';
@@ -156,9 +166,7 @@ export default class LiveStreamsByCategory extends React.Component {
                     </Col>
                 </Row>
                 <hr className="my-4"/>
-                <Row className="streams" xs='1' sm='1' md='2' lg='3' xl='3'>
-                    {streams}
-                </Row>
+                {streamBoxes}
                 {loadMoreButton}
             </Container>
         )

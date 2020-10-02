@@ -82,7 +82,7 @@ export default class Schedule extends React.Component {
         this.setState({
             scheduleGroups: [...this.state.scheduleGroups, {
                 id: 0,
-                title: 'My Scheduled Streams'
+                title: 'My Streams'
             }]
         });
 

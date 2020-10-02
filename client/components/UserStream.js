@@ -181,12 +181,12 @@ export default class UserStream extends React.Component {
         return this.state.stream ? (
             <React.Fragment>
                 <Row className="stream-row">
-                    <Col className='stream-col' lg='8'>
+                    <Col className='stream-col' xs='8' sm='8' md='8' lg='8' xl='8'>
                         <div data-vjs-player>
                             <video ref={node => this.videoNode = node} className="video-js vjs-big-play-centered"/>
                         </div>
                     </Col>
-                    <Col className='chat-col'>
+                    <Col className='chat-col' xs='4' sm='4' md='4' lg='4' xl='4'>
                         <div className='chat-messages' id='messages'
                              style={{height: this.state.chatHeight, maxHeight: this.state.chatHeight}}>
                             {this.renderChat()}
@@ -194,7 +194,7 @@ export default class UserStream extends React.Component {
                     </Col>
                 </Row>
                 <Row className="stream-row">
-                    <Col className='stream-col' lg='8'>
+                    <Col className='stream-col' xs='8' sm='8' md='8' lg='8' xl='8'>
                         <div className="ml-2">
                             <h3>
                                 <Link to={`/user/${this.props.match.params.username}`}>
@@ -211,7 +211,7 @@ export default class UserStream extends React.Component {
                             </h6>
                         </div>
                     </Col>
-                    <Col className='chat-col'>
+                    <Col className='chat-col' xs='4' sm='4' md='4' lg='4' xl='4'>
                         {this.renderChatInput()}
                     </Col>
                 </Row>

@@ -70,7 +70,7 @@ describe('Schedule component', () => {
         const groupNames = Array.from(groups).map(group => group.textContent);
         const items = container.getElementsByClassName('rct-item');
         const itemValues = Array.from(items).map(item => item.textContent);
-        expect(groupNames).toEqual(['My Scheduled Streams', mockUsername1, mockUsername2, mockUsername3]);
+        expect(groupNames).toEqual(['My Streams', mockUsername1, mockUsername2, mockUsername3]);
         expect(itemValues).toEqual([mockOwnUsername, mockUsername1, mockUsername2, mockUsername3]);
     });
 });
