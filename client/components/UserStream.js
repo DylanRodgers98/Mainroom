@@ -3,10 +3,11 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
-import {Row, Button} from "reactstrap";
+import {Row, Button, DropdownToggle} from "reactstrap";
 import io from "socket.io-client";
 import '../css/user-stream.scss';
 import {Col} from "react-bootstrap";
+import defaultProfilePic from "../img/defaultProfilePic.png";
 
 export default class UserStream extends React.Component {
 
@@ -195,21 +196,34 @@ export default class UserStream extends React.Component {
                 </Row>
                 <Row className="stream-row">
                     <Col className='stream-col' xs='8' sm='8' md='8' lg='8' xl='8'>
-                        <div className="ml-2">
-                            <h3>
-                                <Link to={`/user/${this.props.match.params.username}`}>
-                                    {this.state.displayName || this.props.match.params.username}
-                                </Link>
-                                {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                            </h3>
-                            <h6>
-                                <Link to={`/genre/${this.state.streamGenre}`}>
-                                    {this.state.streamGenre}
-                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                {this.state.streamCategory}
-                            </Link>
-                            </h6>
-                        </div>
+                        <table className='ml-2 mt-2 mb-2'>
+                            <tr>
+                                <td>
+                                    <Link to={`/user/${this.props.match.params.username}`}>
+                                        {/*TODO: get profile pic through API call*/}
+                                        <img src={defaultProfilePic} width='75' height='75'
+                                             alt={`${this.props.match.params.username} profile picture`}/>
+                                    </Link>
+                                </td>
+                                <td valign='middle'>
+                                    <div className="ml-2">
+                                        <h3>
+                                            <Link to={`/user/${this.props.match.params.username}`}>
+                                                {this.state.displayName || this.props.match.params.username}
+                                            </Link>
+                                            {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                        </h3>
+                                        <h6>
+                                            <Link to={`/genre/${this.state.streamGenre}`}>
+                                                {this.state.streamGenre}
+                                            </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                            {this.state.streamCategory}
+                                        </Link>
+                                        </h6>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
                     </Col>
                     <Col className='chat-col' xs='4' sm='4' md='4' lg='4' xl='4'>
                         {this.renderChatInput()}

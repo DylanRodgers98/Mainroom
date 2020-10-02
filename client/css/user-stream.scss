@@ -18,13 +18,11 @@
 
 .chat-input {
   position: absolute;
-  bottom: 1%;
-  left: 1%;
-  width: 99%;
+  width: 100%;
   height: 100%;
 
   textarea {
-    width: 85%;
+    width: calc(100% - 90px);
     height: 100%;
     border-width: 1.5px;
     border-top-left-radius: 6px;
@@ -33,7 +31,7 @@
   }
 
   button {
-    width: 14%;
+    width: 90px;
     height: 100%;
     border-width: 2px;
     border-top-right-radius: 6px;
