@@ -26,7 +26,8 @@ export default class UserStream extends React.Component {
             streamGenre: '',
             streamCategory: '',
             msg: '',
-            chat: []
+            chat: [],
+            chatHeight: '0px'
         }
     }
 
@@ -40,6 +41,7 @@ export default class UserStream extends React.Component {
             if (res.data) {
                 await this.populateStreamDataIfUserIsLive(res.data);
             }
+            this.setChatHeight();
         } catch (err) {
             if (err.response.status === 404) {
                 window.location.href = '/404';
@@ -98,6 +100,16 @@ export default class UserStream extends React.Component {
                 chat: [...this.state.chat, {viewerUsername, msg}]
             });
         });
+    }
+
+    setChatHeight() {
+        const messages = document.getElementById('messages');
+        const livestream = document.getElementById('vjs_video_3');
+        if (messages && livestream) {
+            this.setState({
+                chatHeight: livestream.clientHeight.toString() + 'px'
+            })
+        }
     }
 
     componentWillUnmount() {
@@ -175,7 +187,8 @@ export default class UserStream extends React.Component {
                         </div>
                     </Col>
                     <Col className='chat-col'>
-                        <div className='chat-messages' id='messages'>
+                        <div className='chat-messages' id='messages'
+                             style={{height: this.state.chatHeight, maxHeight: this.state.chatHeight}}>
                             {this.renderChat()}
                         </div>
                     </Col>
@@ -204,12 +217,12 @@ export default class UserStream extends React.Component {
                 </Row>
             </React.Fragment>
         ) : (
-            <div className='mt-5 not-live'>
+            <div className='mt-5 text-center'>
                 <h3>{this.props.match.params.username} is not currently live</h3>
                 <Button className='btn-dark mt-2' tag={Link} to={`/user/${this.props.match.params.username}`}>
                     Go To Profile
                 </Button>
             </div>
-        )
+        );
     }
 }
