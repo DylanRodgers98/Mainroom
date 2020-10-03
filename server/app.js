@@ -4,10 +4,10 @@ const httpServer = require('http').createServer(app);
 const io = require('socket.io')(httpServer);
 const path = require('path');
 const Session = require('express-session');
+const MongoStore = require('connect-mongo')(Session);
 const bodyParser = require('body-parser');
 const passport = require('./auth/passport');
 const mongoose = require('mongoose');
-const FileStore = require('session-file-store')(Session);
 const config = require('../mainroom.config');
 const flash = require('connect-flash');
 const cookieParser = require('cookie-parser');
@@ -36,8 +36,8 @@ app.use(bodyParser.json({extended: true}));
 app.use(csrf({cookie: true}))
 
 app.use(Session({
-    store: new FileStore({
-        path: config.storage.sessions
+    store: new MongoStore({
+        mongooseConnection: mongoose.connection
     }),
     secret: decodeBase64File(resolveFilePath(config.server.secretLocation)),
     maxAge: Date.now + (60 * 1000 * 30),
