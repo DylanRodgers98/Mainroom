@@ -95,7 +95,7 @@ export default class UserStream extends React.Component {
     }
 
     connectToChat() {
-        this.socket = io.connect(`http://127.0.0.1:${config.server.port.http}`);
+        this.socket = io.connect(`http://${config.server.host}:${config.server.port.http}`);
         this.socket.on(`chatMessage_${this.props.match.params.username}`, ({viewerUsername, msg}) => {
             this.setState({
                 chat: [...this.state.chat, {viewerUsername, msg}]

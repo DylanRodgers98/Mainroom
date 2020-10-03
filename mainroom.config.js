@@ -3,6 +3,7 @@ module.exports = {
     headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
     server: {
         secretLocation: './secrets/session-secret.txt',
+        host: '127.0.0.1',
         port: {
             http: 8080
         }
