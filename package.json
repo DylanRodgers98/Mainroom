@@ -2,14 +2,19 @@
   "name": "mainroom",
   "version": "0.0.1",
   "description": "Live streaming web application for DJs, bands and artists",
-  "main": "index.js",
+  "license": "CC-BY-NC-SA-4.0",
+  "author": "Dylan Rodgers <dylanirodgers@aol.com> (https://github.com/DylanRodgers98)",
+  "repository": "github:DylanRodgers98/MainRoom",
+  "private": true,
   "scripts": {
     "test": "jest --passWithNoTests --coverage --detectOpenHandles --forceExit",
-    "start": "npm-run-all --parallel start-server start-client",
-    "start-client": "./node_modules/.bin/webpack --watch",
-    "start-server": "./node_modules/.bin/supervisor -w server ./server/app.js"
+    "start:dev": "npm-run-all --parallel start-server start-client",
+    "start-client:dev": "./node_modules/.bin/webpack --watch",
+    "start-server:dev": "./node_modules/.bin/supervisor -w server -s -RV ./server/app.js",
+    "start:prod": "cross-env NODE_ENV=production npm-run-all --parallel start-server:prod start-client:prod",
+    "start-client:prod": "./node_modules/.bin/webpack",
+    "start-server:prod": "./node_modules/.bin/supervisor -i . -s -RV ./server/app.js"
   },
-  "author": "Dylan Rodgers",
   "dependencies": {
     "axios": "^0.19.2",
     "bcrypt-nodejs": "0.0.3",
@@ -52,6 +57,7 @@
     "@babel/preset-env": "^7.11.5",
     "@babel/preset-react": "^7.10.4",
     "babel-loader": "^8.1.0",
+    "cross-env": "^7.0.2",
     "css-loader": "^2.1.0",
     "escape-html": "^1.0.3",
     "file-loader": "^3.0.1",
