@@ -13,7 +13,7 @@ const flash = require('connect-flash');
 const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
-const {resolveFilePath, decodeBase64File} = require('./helpers/fileHelpers');
+const {resolveFilePath, decodeFile} = require('./helpers/fileHelpers');
 const csrf = require('csurf');
 const LOGGER = require('../logger')('./server/app.js');
 
@@ -39,7 +39,7 @@ app.use(Session({
     store: new MongoStore({
         mongooseConnection: mongoose.connection
     }),
-    secret: decodeBase64File(resolveFilePath(config.server.secretLocation)),
+    secret: decodeFile(resolveFilePath(config.server.secretLocation), 'base64'),
     maxAge: Date.now + (60 * 1000 * 30),
     resave: true,
     saveUninitialized: false,

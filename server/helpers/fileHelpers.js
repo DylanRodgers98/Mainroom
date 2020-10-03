@@ -10,12 +10,12 @@ function isPathAbsolute(path) {
     return /^(?:\/|[a-z]+:\/\/)/.test(path);
 }
 
-function decodeBase64File(filePath) {
+function decodeFile(filePath, encoding) {
     const fileContents = fs.readFileSync(filePath, 'utf-8');
-    return Buffer.from(fileContents, 'base64').toString();
+    return Buffer.from(fileContents, encoding).toString();
 }
 
 module.exports = {
     resolveFilePath: resolveFilePath,
-    decodeBase64File: decodeBase64File
+    decodeFile: decodeFile
 }
