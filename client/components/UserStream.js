@@ -3,11 +3,10 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
-import {Row, Button, DropdownToggle} from "reactstrap";
+import {Row, Button} from "reactstrap";
 import io from "socket.io-client";
 import '../css/user-stream.scss';
 import {Col} from "react-bootstrap";
-import defaultProfilePic from "../img/defaultProfilePic.png";
 
 export default class UserStream extends React.Component {
 
@@ -23,6 +22,7 @@ export default class UserStream extends React.Component {
             videoJsOptions: null,
             viewerUsername: '',
             displayName: '',
+            profilePicURL: '',
             streamTitle: '',
             streamGenre: '',
             streamCategory: '',
@@ -74,6 +74,7 @@ export default class UserStream extends React.Component {
                 fluid: true
             },
             displayName: data.displayName,
+            profilePicURL: data.profilePicURL,
             streamTitle: data.title,
             streamGenre: data.genre,
             streamCategory: data.category
@@ -200,8 +201,7 @@ export default class UserStream extends React.Component {
                             <tr>
                                 <td>
                                     <Link to={`/user/${this.props.match.params.username}`}>
-                                        {/*TODO: get profile pic through API call*/}
-                                        <img src={defaultProfilePic} width='75' height='75'
+                                        <img src={this.state.profilePicURL} width='75' height='75'
                                              alt={`${this.props.match.params.username} profile picture`}/>
                                     </Link>
                                 </td>

@@ -3,8 +3,6 @@ import axios from 'axios';
 import {Col, Container, Row} from "reactstrap";
 import {Link} from "react-router-dom";
 
-import defaultProfilePic from '../img/defaultProfilePic.png';
-
 export default class Subscribers extends React.Component {
 
     constructor(props) {
@@ -38,8 +36,7 @@ export default class Subscribers extends React.Component {
                         <Col>
                             <h5>
                                 <Link to={`/user/${subscription.username}`}>
-                                    {/*TODO: get profile pic through API call*/}
-                                    <img src={defaultProfilePic} width='75' height='75' className='mr-3'
+                                    <img src={subscription.profilePicURL} width='75' height='75' className='mr-3'
                                          alt={`${subscription.username} profile picture`}/>
                                     {subscription.username}
                                 </Link>

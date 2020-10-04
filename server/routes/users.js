@@ -118,12 +118,28 @@ router.put('/:username/profile-pic', (req, res, next) => {
     })
 });
 
+router.get('/:username/profile-pic', (req, res, next) => {
+    const username = sanitise(req.params.username);
+    User.findOne({username: username}, 'profilePicURL', (err, user) => {
+        if (err) {
+            LOGGER.error('An error occurred when finding user {}: {}', username, err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
+        } else {
+            res.json({
+                profilePicURL: user.profilePicURL || config.defaultProfilePicURL
+            })
+        }
+    })
+});
+
 router.get('/:username/subscribers', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, 'subscribers')
         .populate({
             path: 'subscribers',
-            select: 'username'
+            select: 'username profilePicURL'
         })
         .exec((err, user) => {
             if (err) {
@@ -133,7 +149,12 @@ router.get('/:username/subscribers', (req, res, next) => {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
             } else {
                 res.json({
-                    subscribers: user.subscribers
+                    subscribers: user.subscribers.map(subscriber => {
+                        return {
+                            username: subscriber.username,
+                            profilePicURL: subscriber.profilePicURL || config.defaultProfilePicURL
+                        };
+                    })
                 });
             }
         });
@@ -144,7 +165,7 @@ router.get('/:username/subscriptions', (req, res, next) => {
     User.findOne({username: username}, 'subscriptions')
         .populate({
             path: 'subscriptions',
-            select: 'username'
+            select: 'username profilePicURL'
         })
         .exec((err, user) => {
             if (err) {
@@ -154,7 +175,12 @@ router.get('/:username/subscriptions', (req, res, next) => {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
             } else {
                 res.json({
-                    subscriptions: user.subscriptions
+                    subscriptions: user.subscriptions.map(subscription => {
+                        return {
+                            username: subscription.username,
+                            profilePicURL: subscription.profilePicURL || config.defaultProfilePicURL
+                        };
+                    })
                 });
             }
         });
@@ -263,7 +289,7 @@ router.patch('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensur
 router.get('/:username/stream-info', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username},
-        'displayName streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
+        'displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
         (err, user) => {
             if (err) {
                 LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
@@ -273,6 +299,7 @@ router.get('/:username/stream-info', (req, res, next) => {
             } else {
                 res.json({
                     displayName: user.displayName,
+                    profilePicURL: user.profilePicURL || config.defaultProfilePicURL,
                     streamKey: user.streamInfo.streamKey,
                     title: user.streamInfo.title,
                     genre: user.streamInfo.genre,

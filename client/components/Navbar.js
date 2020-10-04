@@ -4,7 +4,6 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from 'reac
 import config from '../../mainroom.config';
 import '../css/navbar.scss';
 import axios from 'axios';
-import defaultProfilePic from '../img/defaultProfilePic.png'; //TODO: change this from trollface lmao
 
 export default class Navbar extends React.Component {
 
@@ -30,7 +29,8 @@ export default class Navbar extends React.Component {
             searchText: '',
             searchSubmitted: false,
             profileDropdownOpen: false,
-            loggedInUser: ''
+            loggedInUser: '',
+            profilePicURL: '',
         };
     }
 
@@ -39,20 +39,29 @@ export default class Navbar extends React.Component {
         this.getFilters();
     }
 
-    getLoggedInUser() {
-        axios.get('/api/users/logged-in').then(res => {
+    async getLoggedInUser() {
+        const res = await axios.get('/api/users/logged-in');
+        if (res.data.username) {
             this.setState({
-                loggedInUser: res.data.username,
+                loggedInUser: res.data.username
+            }, () => {
+                this.getProfilePicURL();
             });
+        }
+    }
+
+    async getProfilePicURL() {
+        const res = await axios.get(`/api/users/${this.state.loggedInUser}/profile-pic`);
+        this.setState({
+            profilePicURL: res.data.profilePicURL
         });
     }
 
-    getFilters() {
-        axios.get('/api/filters').then(res => {
-            this.setState({
-                genres: res.data.genres,
-                categories: res.data.categories
-            })
+    async getFilters() {
+        const res = await axios.get('/api/filters');
+        this.setState({
+            genres: res.data.genres,
+            categories: res.data.categories
         });
     }
 
@@ -125,8 +134,7 @@ export default class Navbar extends React.Component {
                 <Dropdown className="nav-item float-left navbar-settings-dropdown"
                           isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
                     <DropdownToggle caret>
-                        {/*TODO: get profile pic through API call*/}
-                        <img src={defaultProfilePic} width='25' height='25'
+                        <img src={this.state.profilePicURL} width='25' height='25'
                              alt={`${this.state.loggedInUser} profile picture as dropdown icon`}/>
                     </DropdownToggle>
                     <DropdownMenu right>
