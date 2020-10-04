@@ -1,11 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../database/schemas').User;
+const config = require('../../mainroom.config');
+const {User} = require('../database/schemas');
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
 const shortid = require('shortid');
+const AWS = require('aws-sdk');
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+const { v4: uuidv4 } = require('uuid');
+const mime = require('mime-types');
 const LOGGER = require('../../logger')('./server/routes/users.js');
+
+const s3 = new AWS.S3();
 
 router.get('/logged-in', (req, res) => {
     res.json(!req.user ? {} : {
@@ -34,6 +42,7 @@ router.get('/:username', (req, res, next) => {
             } else {
                 res.json({
                     username: user.username,
+                    profilePicURL: user.profilePicURL || config.defaultProfilePicURL,
                     displayName: user.displayName,
                     location: user.location,
                     bio: user.bio,
@@ -70,6 +79,41 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
             res.sendStatus(200);
+        }
+    })
+});
+
+const s3UploadProfilePic = multer({
+    storage: multerS3({
+        s3: s3,
+        bucket: config.storage.s3.buckets.staticContent,
+        key: (req, file, cb) => {
+            cb(null, `${config.storage.s3.keyPaths.profilePics}/${uuidv4()}.${mime.extension(file.mimetype)}`);
+        }
+    })
+}).single('profilePic');
+
+router.put('/:username/profile-pic', (req, res, next) => {
+    const username = sanitise(req.params.username);
+    s3UploadProfilePic(req, res, err => {
+        if (err) {
+            LOGGER.error('An error occurred when uploading profile pic to S3 for user {}: {}', username, err);
+            next(err);
+        } else {
+            User.findOneAndUpdate({
+                username: username
+            }, {
+                profilePicURL: req.file.location
+            }, (err, user) => {
+                if (err) {
+                    LOGGER.error('An error occurred when updating user {}: {}', username, err);
+                    next(err);
+                } else if (!user) {
+                    res.status(404).send(`User (username: ${escape(username)}) not found`);
+                } else {
+                    res.sendStatus(200);
+                }
+            })
         }
     })
 });

@@ -7,15 +7,15 @@ import Timeline from "react-calendar-timeline";
 import moment from "moment";
 import config from "../../mainroom.config";
 import normalizeUrl from "normalize-url";
+import ImageUploader from 'react-images-upload';
 import '../css/user-profile.scss';
 import '../css/livestreams.scss';
-
-import defaultProfilePic from '../img/defaultProfilePic.png';
 
 const STARTING_STATE = {
     loaded: false,
     loggedInUser: '',
     isLoggedInUserSubscribed: false,
+    profilePicURL: '',
     displayName: '',
     location: '',
     bio: '',
@@ -34,7 +34,10 @@ const STARTING_STATE = {
     editLocation: '',
     editBio: '',
     editLinks: [],
-    indexesOfInvalidLinks: []
+    indexesOfInvalidLinks: [],
+    showChangeProfilePicButton: false,
+    changeProfilePicOpen: false,
+    uploadedProfilePic: undefined
 };
 
 const SCHEDULE_GROUP = 0;
@@ -53,6 +56,11 @@ export default class UserProfile extends React.Component {
         this.setLinkTitle = this.setLinkTitle.bind(this);
         this.setLinkUrl = this.setLinkUrl.bind(this);
         this.saveProfile = this.saveProfile.bind(this);
+        this.mouseEnterProfilePic = this.mouseEnterProfilePic.bind(this);
+        this.mouseLeaveProfilePic = this.mouseLeaveProfilePic.bind(this);
+        this.changeProfilePicToggle = this.changeProfilePicToggle.bind(this);
+        this.onProfilePicUpload = this.onProfilePicUpload.bind(this);
+        this.saveNewProfilePic = this.saveNewProfilePic.bind(this);
 
         this.state = STARTING_STATE;
     }
@@ -100,6 +108,7 @@ export default class UserProfile extends React.Component {
 
     populateProfile(user) {
         this.setState({
+            profilePicURL: user.profilePicURL,
             displayName: user.displayName,
             location: user.location,
             bio: user.bio,
@@ -125,7 +134,7 @@ export default class UserProfile extends React.Component {
     async getLoggedInUser() {
         const res = await axios.get('/api/users/logged-in')
         this.setState({
-            loggedInUser: res.data.username,
+            loggedInUser: res.data.username
         });
     }
 
@@ -395,7 +404,7 @@ export default class UserProfile extends React.Component {
                     <Modal.Title>Edit Profile</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <table className="mt-3">
+                    <table>
                         <tr>
                             <td>
                                 <h5 className="mr-3">Display Name:</h5>
@@ -446,15 +455,95 @@ export default class UserProfile extends React.Component {
         );
     }
 
+    mouseEnterProfilePic() {
+        this.setState({
+            showChangeProfilePicButton: true
+        });
+    }
+
+    mouseLeaveProfilePic() {
+        this.setState({
+            showChangeProfilePicButton: false
+        });
+    }
+
+    changeProfilePicToggle() {
+        this.setState(prevState => ({
+            changeProfilePicOpen: !prevState.changeProfilePicOpen
+        }));
+    }
+
+    onProfilePicUpload(pictureFiles, pictureDataURLs) {
+        this.setState({
+            uploadedProfilePic: pictureFiles[0]
+        });
+    }
+
+    async saveNewProfilePic() {
+        const data = new FormData();
+        data.append('profilePic', this.state.uploadedProfilePic);
+
+        const res = await axios.put(`/api/users/${this.state.loggedInUser}/profile-pic`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        if (res.status === 200) {
+            this.reloadProfile();
+        }
+    }
+
+    renderChangeProfilePic() {
+        return (
+            <Modal show={this.state.changeProfilePicOpen} onHide={this.changeProfilePicToggle} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Change Profile Picture</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <ImageUploader buttonText='Choose Image' imgExtension={['.jpg', '.gif', '.png']}
+                                   maxFileSize={5242880} onChange={this.onProfilePicUpload}
+                                   withPreview={true} singleImage={true} />
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button className="btn-dark" disabled={!this.state.uploadedProfilePic}
+                            onClick={this.saveNewProfilePic}>
+                        Upload
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    renderProfilePic() {
+        const profilePic = <img src={this.state.profilePicURL}
+                                alt={`${this.props.match.params.username} Profile Picture`}/>;
+
+        const changeProfilePicButton = (
+            <Button className='btn-dark change-profile-pic-btn' onClick={this.changeProfilePicToggle}>
+                Change Profile Picture
+            </Button>
+        );
+
+        return this.state.loggedInUser === this.props.match.params.username ? (
+            <div className='profile-pic'
+                 onMouseEnter={this.mouseEnterProfilePic} onMouseLeave={this.mouseLeaveProfilePic}>
+                {profilePic}
+                {this.state.showChangeProfilePicButton ? changeProfilePicButton : undefined}
+            </div>
+        ) : (
+            <div className='profile-pic'>
+                {profilePic}
+            </div>
+        );
+    }
+
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
                 <Container>
                     <Row className="mt-5" xs='4'>
                         <Col>
-                            {/*TODO: get profile pic through API call*/}
-                            <img src={defaultProfilePic}
-                                 alt={`${this.props.match.params.username} Profile Picture`}/>
+                            {this.renderProfilePic()}
                             <h1>{this.state.displayName || this.props.match.params.username}</h1>
                             <h5>{this.state.location || 'Planet Earth'}</h5>
                             <h5 className='black-link'>
@@ -478,6 +567,7 @@ export default class UserProfile extends React.Component {
                     </Row>
                 </Container>
 
+                {this.renderChangeProfilePic()}
                 {this.renderEditProfile()}
             </React.Fragment>
         );

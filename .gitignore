@@ -6,7 +6,7 @@ npm-debug.log
 server/thumbnails/*
 !server/thumbnails/.gitkeep
 
-secrets/
+server/secrets/
 
 # ignore media but keep folder
 server/media/*

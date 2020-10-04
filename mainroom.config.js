@@ -2,10 +2,9 @@ module.exports = {
     siteTitle: 'Mainroom',
     headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
     server: {
-        secretLocation: './secrets/session-secret.txt',
         host: '127.0.0.1',
-        port: {
-            http: 8080
+        http: {
+            port: 8080
         }
     },
     database: {
@@ -53,14 +52,24 @@ module.exports = {
         }
     },
     cron: {
-        thumbnailGenerator: '*/5 * * * * *',
-        scheduledStreamInfoUpdater: '0 0/10 * * * *'
+        thumbnailGenerator: '*/30 * * * * *',
+        scheduledStreamInfoUpdater: '0 0/5 * * * *'
     },
     storage: {
-        thumbnails: './server/thumbnails'
+        sessionSecret: './server/secrets/session-secret.txt',
+        thumbnails: './server/thumbnails',
+        s3: {
+            buckets: {
+                staticContent: 'mainroom-static-content'
+            },
+            keyPaths: {
+                profilePics: 'profile-pics'
+            }
+        }
     },
     pagination: {
         limit: 12,
         subscriptionsAndFeaturedLimit: 6
-    }
+    },
+    defaultProfilePicURL: 'https://upload.wikimedia.org/wikipedia/en/9/9a/Trollface_non-free.png'
 };

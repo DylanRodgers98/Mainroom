@@ -39,7 +39,7 @@ app.use(Session({
     store: new MongoStore({
         mongooseConnection: mongoose.connection
     }),
-    secret: decodeFile(resolveFilePath(config.server.secretLocation), 'base64'),
+    secret: decodeFile(resolveFilePath(config.storage.sessionSecret), 'base64'),
     maxAge: Date.now + (60 * 1000 * 30),
     resave: true,
     saveUninitialized: false,
@@ -75,8 +75,8 @@ io.on('connection', socket => {
 });
 
 // Start server
-httpServer.listen(config.server.port.http || 8080, () => {
-    LOGGER.info('{} HTTP server listening on port: {}', config.siteTitle, config.server.port.http || 8080);
+httpServer.listen(config.server.http.port || 8080, () => {
+    LOGGER.info('{} HTTP server listening on port: {}', config.siteTitle, config.server.http.port || 8080);
 });
 nodeMediaServer.run();
 cronJobs.startAll();

@@ -1,11 +1,13 @@
 const {Schema} = require('mongoose');
 const bcrypt = require('bcrypt-nodejs');
 const mongoosePaginate = require('mongoose-paginate-v2');
+const config = require('../../mainroom.config');
 
 const UserSchema = new Schema({
     username: {type: String, lowercase: true},
     email: String,
     password: {type: String, select: false},
+    profilePicURL: {type: String, default: config.defaultProfilePicURL},
     displayName: String,
     location: String,
     bio: String,
