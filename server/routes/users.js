@@ -24,7 +24,7 @@ router.get('/logged-in', (req, res) => {
 
 router.get('/:username', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, 'username displayName location bio links subscribers scheduledStreams')
+    User.findOne({username: username}, 'username displayName profilePicURL location bio links subscribers scheduledStreams')
         .populate({
             path: 'scheduledStreams',
             select: 'title startTime endTime',
