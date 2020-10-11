@@ -9,11 +9,8 @@ const shortid = require('shortid');
 const AWS = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
-const { v4: uuidv4 } = require('uuid');
 const mime = require('mime-types');
 const LOGGER = require('../../logger')('./server/routes/users.js');
-
-const s3 = new AWS.S3();
 
 router.get('/logged-in', (req, res) => {
     res.json(!req.user ? {} : {
@@ -83,49 +80,52 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
     })
 });
 
+const s3 = new AWS.S3();
+
 const s3UploadProfilePic = multer({
     storage: multerS3({
         s3: s3,
         bucket: config.storage.s3.buckets.staticContent,
         key: (req, file, cb) => {
-            cb(null, `${config.storage.s3.keyPaths.profilePics}/${uuidv4()}.${mime.extension(file.mimetype)}`);
+            const path = config.storage.s3.keyPaths.profilePics;
+            const userId = sanitise(req.params.userId);
+            const extension = mime.extension(file.mimetype);
+            cb(null, `${path}/${userId}.${extension}`);
         }
     })
 }).single('profilePic');
 
-router.put('/:username/profile-pic', (req, res, next) => {
-    const username = sanitise(req.params.username);
-    s3UploadProfilePic(req, res, err => {
-        if (err) {
-            LOGGER.error('An error occurred when uploading profile pic to S3 for user {}: {}', username, err);
-            next(err);
-        } else {
-            User.findOneAndUpdate({
-                username: username
-            }, {
-                profilePicURL: req.file.location
-            }, (err, user) => {
-                if (err) {
-                    LOGGER.error('An error occurred when updating user {}: {}', username, err);
-                    next(err);
-                } else if (!user) {
-                    res.status(404).send(`User (username: ${escape(username)}) not found`);
-                } else {
-                    res.sendStatus(200);
-                }
-            })
-        }
-    })
+router.put('/:userId/profile-pic', (req, res, next) => {
+    const userId = sanitise(req.params.userId);
+    if (userId) {
+        s3UploadProfilePic(req, res, err => {
+            if (err) {
+                LOGGER.error('An error occurred when uploading profile pic to S3 for user {}: {}', userId, err);
+                next(err);
+            } else {
+                User.findById(userId, {profilePicURL: req.file.location}, (err, user) => {
+                    if (err) {
+                        LOGGER.error('An error occurred when updating user with _id {}: {}', userId, err);
+                        next(err);
+                    } else if (!user) {
+                        res.status(404).send(`User (_id: ${escape(userId)}) not found`);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                })
+            }
+        });
+    }
 });
 
-router.get('/:username/profile-pic', (req, res, next) => {
-    const username = sanitise(req.params.username);
-    User.findOne({username: username}, 'profilePicURL', (err, user) => {
+router.get('/:userId/profile-pic', (req, res, next) => {
+    const userId = sanitise(req.params.userId);
+    User.findById(userId, 'profilePicURL', (err, user) => {
         if (err) {
-            LOGGER.error('An error occurred when finding user {}: {}', username, err);
+            LOGGER.error('An error occurred when finding user with _id {}: {}', userId, err);
             next(err);
         } else if (!user) {
-            res.status(404).send(`User (username: ${escape(username)}) not found`);
+            res.status(404).send(`User (_id: ${escape(userId)}) not found`);
         } else {
             res.json({
                 profilePicURL: user.profilePicURL || config.defaultProfilePicURL

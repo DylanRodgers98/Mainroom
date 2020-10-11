@@ -14,6 +14,7 @@ import '../css/livestreams.scss';
 const STARTING_STATE = {
     loaded: false,
     loggedInUser: '',
+    loggedInUserId: '',
     isLoggedInUserSubscribed: false,
     profilePicURL: '',
     displayName: '',
@@ -134,7 +135,8 @@ export default class UserProfile extends React.Component {
     async getLoggedInUser() {
         const res = await axios.get('/api/users/logged-in')
         this.setState({
-            loggedInUser: res.data.username
+            loggedInUser: res.data.username,
+            loggedInUserId: res.data._id
         });
     }
 
@@ -483,7 +485,7 @@ export default class UserProfile extends React.Component {
         const data = new FormData();
         data.append('profilePic', this.state.uploadedProfilePic);
 
-        const res = await axios.put(`/api/users/${this.state.loggedInUser}/profile-pic`, data, {
+        const res = await axios.put(`/api/users/${this.state.loggedInUserId}/profile-pic`, data, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -500,9 +502,9 @@ export default class UserProfile extends React.Component {
                     <Modal.Title>Change Profile Picture</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <ImageUploader buttonText='Choose Image' imgExtension={['.jpg', '.gif', '.png']}
-                                   maxFileSize={5242880} onChange={this.onProfilePicUpload}
-                                   withPreview={true} singleImage={true} />
+                    <ImageUploader buttonText='Choose Image' label='Maximum file size: 2MB'
+                                   maxFileSize={2 * 1024 * 1024} onChange={this.onProfilePicUpload}
+                                   withPreview={true} singleImage={true} withIcon={false}/>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button className="btn-dark" disabled={!this.state.uploadedProfilePic}

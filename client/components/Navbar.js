@@ -43,7 +43,8 @@ export default class Navbar extends React.Component {
         const res = await axios.get('/api/users/logged-in');
         if (res.data.username) {
             this.setState({
-                loggedInUser: res.data.username
+                loggedInUser: res.data.username,
+                loggedInUserId: res.data._id
             }, () => {
                 this.getProfilePicURL();
             });
@@ -51,7 +52,7 @@ export default class Navbar extends React.Component {
     }
 
     async getProfilePicURL() {
-        const res = await axios.get(`/api/users/${this.state.loggedInUser}/profile-pic`);
+        const res = await axios.get(`/api/users/${this.state.loggedInUserId}/profile-pic`);
         this.setState({
             profilePicURL: res.data.profilePicURL
         });
@@ -134,8 +135,7 @@ export default class Navbar extends React.Component {
                 <Dropdown className="nav-item float-left navbar-settings-dropdown"
                           isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
                     <DropdownToggle caret>
-                        <img src={this.state.profilePicURL} width='25' height='25'
-                             alt={`${this.state.loggedInUser} profile picture as dropdown icon`}/>
+                        <img src={this.state.profilePicURL} width='25' height='25' alt={`Menu`}/>
                     </DropdownToggle>
                     <DropdownMenu right>
                         <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
