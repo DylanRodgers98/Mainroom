@@ -135,56 +135,46 @@ router.get('/:userId/profile-pic', (req, res, next) => {
 });
 
 router.get('/:username/subscribers', (req, res, next) => {
-    const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, 'subscribers')
-        .populate({
-            path: 'subscribers',
-            select: 'username profilePicURL'
-        })
-        .exec((err, user) => {
-            if (err) {
-                LOGGER.error('An error occurred when getting subscribers for user {}: {}', username, err);
-                next(err);
-            } else if (!user) {
-                res.status(404).send(`User (username: ${escape(username)}) not found`);
-            } else {
-                res.json({
-                    subscribers: user.subscribers.map(subscriber => {
-                        return {
-                            username: subscriber.username,
-                            profilePicURL: subscriber.profilePicURL || config.defaultProfilePicURL
-                        };
-                    })
-                });
-            }
-        });
+    getSubscribersOrSubscriptions('subscribers', req, res, next);
 });
 
 router.get('/:username/subscriptions', (req, res, next) => {
-    const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, 'subscriptions')
-        .populate({
-            path: 'subscriptions',
-            select: 'username profilePicURL'
-        })
-        .exec((err, user) => {
-            if (err) {
-                LOGGER.error('An error occurred when getting subscriptions for user {}: {}', username, err);
-                next(err);
-            } else if (!user) {
-                res.status(404).send(`User (username: ${escape(username)}) not found`);
-            } else {
-                res.json({
-                    subscriptions: user.subscriptions.map(subscription => {
-                        return {
-                            username: subscription.username,
-                            profilePicURL: subscription.profilePicURL || config.defaultProfilePicURL
-                        };
-                    })
-                });
-            }
-        });
+    getSubscribersOrSubscriptions('subscriptions', req, res, next);
 });
+
+function getSubscribersOrSubscriptions(subsKey, req, res, next) {
+    const username = sanitise(req.params.username.toLowerCase());
+    User.findOne({username: username}, subsKey, (err, user) => {
+        if (err) {
+            LOGGER.error('An error occurred when finding user {}: {}', username, err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
+        } else {
+            const options = {
+                select: 'username profilePicURL',
+                page: req.query.page,
+                limit: req.query.limit
+            };
+            User.paginate({_id: {$in: user[subsKey]}}, options, (err, result) => {
+                if (err) {
+                    LOGGER.error('An error occurred when getting {} for user {}: {}', subsKey, username, err);
+                    next(err);
+                } else if (result) {
+                    res.json({
+                        [subsKey]: result.docs.map(sub => {
+                            return {
+                                username: sub.username,
+                                profilePicURL: sub.profilePicURL || config.defaultProfilePicURL
+                            };
+                        }),
+                        nextPage: result.nextPage
+                    });
+                }
+            });
+        }
+    });
+}
 
 router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
     const otherUsername = sanitise(req.params.otherUsername.toLowerCase());
