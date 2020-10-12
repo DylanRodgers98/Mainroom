@@ -134,47 +134,58 @@ router.get('/:userId/profile-pic', (req, res, next) => {
     })
 });
 
-router.get('/:username/subscribers', (req, res, next) => {
-    getSubscribersOrSubscriptions('subscribers', req, res, next);
-});
-
-router.get('/:username/subscriptions', (req, res, next) => {
-    getSubscribersOrSubscriptions('subscriptions', req, res, next);
-});
-
-function getSubscribersOrSubscriptions(subsKey, req, res, next) {
+const getSubscribersOrSubscriptions = key => (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, subsKey, (err, user) => {
+    // count number of subscribers for calculating 'nextPage' pagination property on result JSON
+    User.aggregate([
+        {
+            $match: {username}
+        },
+        {
+            $project: {count: {$size: '$' + key}}
+        }
+    ], (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when finding user {}: {}', username, err);
+            LOGGER.error('An error occurred when counting number of {} for user {}: {}', key, username, err);
             next(err);
-        } else if (!user) {
-            res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
-            const options = {
-                select: 'username profilePicURL',
-                page: req.query.page,
-                limit: req.query.limit
-            };
-            User.paginate({_id: {$in: user[subsKey]}}, options, (err, result) => {
-                if (err) {
-                    LOGGER.error('An error occurred when getting {} for user {}: {}', subsKey, username, err);
-                    next(err);
-                } else if (result) {
-                    res.json({
-                        [subsKey]: result.docs.map(sub => {
-                            return {
-                                username: sub.username,
-                                profilePicURL: sub.profilePicURL || config.defaultProfilePicURL
-                            };
-                        }),
-                        nextPage: result.nextPage
-                    });
-                }
-            });
+            // populate subscribers, paginated
+            const limit = req.query.limit
+            const page = req.query.page;
+            const pages = Math.ceil(result.count / limit);
+            const skip = (page - 1) * limit;
+            User.findOne({username}, key)
+                .populate({
+                    path: key,
+                    select: 'username profilePicURL',
+                    skip,
+                    limit
+                })
+                .exec((err, user) => {
+                    if (err) {
+                        LOGGER.error('An error occurred when getting {} for user {}: {}', key, username, err);
+                        next(err);
+                    } else if (!user) {
+                        res.status(404).send(`User (username: ${escape(username)}) not found`);
+                    } else {
+                        res.json({
+                            [key]: (user[key] || []).map(sub => {
+                                return {
+                                    username: sub.username,
+                                    profilePicURL: sub.profilePicURL || config.defaultProfilePicURL
+                                };
+                            }),
+                            nextPage: page < pages ? page + 1 : null
+                        });
+                    }
+                });
         }
     });
 }
+
+router.get('/:username/subscribers', getSubscribersOrSubscriptions('subscribers'));
+
+router.get('/:username/subscriptions', getSubscribersOrSubscriptions('subscriptions'));
 
 router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
     const otherUsername = sanitise(req.params.otherUsername.toLowerCase());
