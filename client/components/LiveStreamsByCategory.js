@@ -18,6 +18,7 @@ export default class LiveStreamsByCategory extends React.Component {
         this.clearGenreFilter = this.clearGenreFilter.bind(this);
 
         this.state = {
+            loaded: false,
             liveStreams: [],
             nextPage: STARTING_PAGE,
             genres: [],
@@ -35,6 +36,7 @@ export default class LiveStreamsByCategory extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.match.params.category !== this.props.match.params.category) {
             this.setState({
+                loaded: false,
                 liveStreams: [],
                 nextPage: STARTING_PAGE,
                 genreFilter: ''
@@ -43,6 +45,7 @@ export default class LiveStreamsByCategory extends React.Component {
             });
         } else if (prevState.genreFilter !== this.state.genreFilter) {
             this.setState({
+                loaded: false,
                 liveStreams: [],
                 nextPage: STARTING_PAGE
             }, async () => {
@@ -69,7 +72,8 @@ export default class LiveStreamsByCategory extends React.Component {
         this.setState({
             liveStreams: [...this.state.liveStreams, ...res.data.streams],
             nextPage: res.data.nextPage,
-            showLoadMoreButton: !!res.data.nextPage
+            showLoadMoreButton: !!res.data.nextPage,
+            loaded: true
         });
     }
 
@@ -99,20 +103,20 @@ export default class LiveStreamsByCategory extends React.Component {
     }
 
     render() {
-        const streams = this.state.liveStreams.map((stream, index) => {
+        const streams = this.state.liveStreams.map((liveStream, index) => {
             return (
                 <Col className='stream' key={index}>
                     <span className="live-label">LIVE</span>
-                    <Link to={`/user/${stream.username}/live`}>
+                    <Link to={`/user/${liveStream.username}/live`}>
                         <div className="stream-thumbnail">
-                            <img src={`/thumbnails/${stream.streamKey}.png`}
-                                 alt={`${stream.username} Stream Thumbnail`}/>
+                            <img src={liveStream.thumbnailURL}
+                                 alt={`${liveStream.username} Stream Thumbnail`}/>
                         </div>
                     </Link>
 
                     <span className="username">
-                        <Link to={`/user/${stream.username}/live`}>
-                            {stream.displayName || stream.username}
+                        <Link to={`/user/${liveStream.username}/live`}>
+                            {liveStream.displayName || liveStream.username}
                         </Link>
                     </span>
                 </Col>
@@ -145,7 +149,7 @@ export default class LiveStreamsByCategory extends React.Component {
             </div>
         );
 
-        return (
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <Container className="mt-5">
                 <Row>
                     <Col>

@@ -27,6 +27,7 @@ const STARTING_STATE = {
     streamTitle: '',
     streamGenre: '',
     streamCategory: '',
+    streamThumbnailUrl: '',
     upcomingStreamsStartTime: moment().startOf('day'),
     upcomingStreamsEndTime: moment().startOf('day').add(3, 'day'),
     editProfileOpen: false,
@@ -182,7 +183,8 @@ export default class UserProfile extends React.Component {
                 streamKey: streamKey,
                 streamTitle: stream.data.title,
                 streamGenre: stream.data.genre,
-                streamCategory: stream.data.category
+                streamCategory: stream.data.category,
+                streamThumbnailUrl: stream.data.thumbnailURL
             });
         }
     }
@@ -224,7 +226,7 @@ export default class UserProfile extends React.Component {
                     <span className="live-label">LIVE</span>
                     <Link to={`/user/${this.props.match.params.username}/live`}>
                         <div className="stream-thumbnail">
-                            <img src={`/thumbnails/${this.state.streamKey}.png`}
+                            <img src={this.state.streamThumbnailUrl}
                                  alt={`${this.props.match.params.username} Stream Thumbnail`}/>
                         </div>
                     </Link>

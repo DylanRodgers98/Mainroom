@@ -47,21 +47,18 @@ router.get('/', async (req, res, next) => {
                 LOGGER.error('An error occurred when finding livestream info: {}', err);
                 next(err);
             } else if (result) {
-                const streams = [];
-                result.docs.forEach(user => {
-                    getThumbnail(user.streamInfo.streamKey, (err, thumbnailUrl) => {
-                        if (err) {
-                            LOGGER.error('An error occurred when getting thumbnail for user {}: {}', user.username, err);
-                            next(err);
-                        } else {
-                            streams.push({
-                                username: user.username,
-                                displayName: user.displayName,
-                                thumbnailUrl
-                            });
-                        }
-                    });
-                })
+                const streams = result.docs.map(async user => {
+                    try {
+                        return {
+                            username: user.username,
+                            displayName: user.displayName,
+                            thumbnailURL: await getThumbnail(user.streamInfo.streamKey)
+                        };
+                    } catch (err) {
+                        LOGGER.error('An error occurred when getting thumbnail for user {}: {}', user.username, err);
+                        next(err);
+                    }
+                });
                 res.json({
                     streams,
                     nextPage: result.nextPage

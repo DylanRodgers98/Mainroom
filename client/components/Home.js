@@ -14,6 +14,7 @@ export default class Home extends React.Component {
         super(props);
 
         this.state = {
+            loaded: false,
             loggedInUser: '',
             featuredLiveStreams: [],
             subscriptionLiveStreams: [],
@@ -38,6 +39,9 @@ export default class Home extends React.Component {
         if (this.state.loggedInUser) {
             await this.getSubscriptionLiveStreams(params);
         }
+        this.setState({
+            loaded: true
+        });
     }
 
     async getLoggedInUser() {
@@ -131,7 +135,7 @@ export default class Home extends React.Component {
                     <span className="live-label">LIVE</span>
                     <Link to={`/user/${liveStream.username}/live`}>
                         <div className="stream-thumbnail">
-                            <img src={`/thumbnails/${liveStream.streamKey}.png`}
+                            <img src={liveStream.thumbnailURL}
                                  alt={`${liveStream.username} Stream Thumbnail`}/>
                         </div>
                     </Link>
@@ -176,7 +180,7 @@ export default class Home extends React.Component {
     }
 
     render() {
-        return (
+        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <Container className="mt-5">
                 {this.renderStreamBoxes()}
             </Container>
