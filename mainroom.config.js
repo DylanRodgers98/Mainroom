@@ -76,5 +76,6 @@ module.exports = {
         limit: 12,
         subscriptionsAndFeaturedLimit: 6
     },
-    defaultProfilePicURL: 'https://upload.wikimedia.org/wikipedia/en/9/9a/Trollface_non-free.png'
+    defaultProfilePicURL: 'https://upload.wikimedia.org/wikipedia/en/9/9a/Trollface_non-free.png',
+    defaultThumbnailURL: 'https://mainroom-static-content.s3.amazonaws.com/stream-thumbnails/3--tczpr6.png'
 };

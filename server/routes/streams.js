@@ -42,23 +42,27 @@ router.get('/', async (req, res, next) => {
             limit: req.query.limit
         };
 
-        User.paginate(query, options, (err, result) => {
+        User.paginate(query, options, async (err, result) => {
             if (err) {
                 LOGGER.error('An error occurred when finding livestream info: {}', err);
                 next(err);
             } else if (result) {
-                const streams = result.docs.map(async user => {
+                const streams = [];
+                for (const user of result.docs) {
+                    const streamKey = user.streamInfo.streamKey;
+                    let thumbnailURL;
                     try {
-                        return {
-                            username: user.username,
-                            displayName: user.displayName,
-                            thumbnailURL: await getThumbnail(user.streamInfo.streamKey)
-                        };
+                        thumbnailURL = await getThumbnail(streamKey);
                     } catch (err) {
-                        LOGGER.error('An error occurred when getting thumbnail for user {}: {}', user.username, err);
-                        next(err);
+                        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
+                        thumbnailURL = config.defaultThumbnailURL;
                     }
-                });
+                    streams.push({
+                        username: user.username,
+                        displayName: user.displayName,
+                        thumbnailURL
+                    });
+                }
                 res.json({
                     streams,
                     nextPage: result.nextPage
@@ -67,6 +71,19 @@ router.get('/', async (req, res, next) => {
         });
     } else {
         res.json({});
+    }
+});
+
+router.get('/:streamKey/thumbnail', async (req, res, next) => {
+    const streamKey = sanitise(req.params.streamKey);
+    try {
+        const thumbnailUrl = await getThumbnail(streamKey);
+        res.json({ thumbnailUrl });
+    } catch (err) {
+        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
+        res.json({
+            thumbnailUrl: config.defaultThumbnailURL
+        });
     }
 });
 

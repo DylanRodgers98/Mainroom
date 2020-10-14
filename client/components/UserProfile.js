@@ -179,12 +179,13 @@ export default class UserProfile extends React.Component {
         const streamKey = stream.data.streamKey;
         const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${streamKey}`);
         if (res.data.isLive) {
+            const thumbnail = await axios.get(`/api/streams/${streamKey}/thumbnail`);
             this.setState({
                 streamKey: streamKey,
                 streamTitle: stream.data.title,
                 streamGenre: stream.data.genre,
                 streamCategory: stream.data.category,
-                streamThumbnailUrl: stream.data.thumbnailURL
+                streamThumbnailUrl: thumbnail.data.thumbnailURL
             });
         }
     }

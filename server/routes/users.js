@@ -10,7 +10,6 @@ const AWS = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const mime = require('mime-types');
-const {getThumbnail} = require('../helpers/thumbnailRetriever');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 router.get('/logged-in', (req, res) => {
@@ -292,7 +291,7 @@ router.get('/:username/stream-info', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username},
         'displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
-        async (err, user) => {
+        (err, user) => {
             if (err) {
                 LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
                 next(err);
@@ -306,8 +305,7 @@ router.get('/:username/stream-info', (req, res, next) => {
                     title: user.streamInfo.title,
                     genre: user.streamInfo.genre,
                     category: user.streamInfo.category,
-                    tags: user.streamInfo.tags,
-                    thumbnailURL: await getThumbnail(user.streamInfo.streamKey())
+                    tags: user.streamInfo.tags
                 });
             }
         });
