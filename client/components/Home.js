@@ -59,7 +59,7 @@ export default class Home extends React.Component {
             }
         });
         this.setState({
-            featuredLiveStreams: [...this.state.featuredLiveStreams, ...res.data.streams],
+            featuredLiveStreams: [...this.state.featuredLiveStreams, ...(res.data.streams || [])],
             featuredLiveStreamsPage: res.data.nextPage,
             showLoadMoreFeaturedButton: !!res.data.nextPage
         });
@@ -77,7 +77,7 @@ export default class Home extends React.Component {
                 }
             });
             this.setState({
-                subscriptionLiveStreams: [...this.state.subscriptionLiveStreams, ...streamsRes.data.streams],
+                subscriptionLiveStreams: [...this.state.subscriptionLiveStreams, ...(streamsRes.data.streams || [])],
                 subscriptionLiveStreamsPage: streamsRes.data.nextPage,
                 showLoadMoreSubscriptionsButton: !!streamsRes.data.nextPage
             });

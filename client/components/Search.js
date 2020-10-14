@@ -81,7 +81,7 @@ export default class LiveStreams extends React.Component {
 
         const res = await axios.get('/api/streams', queryParams);
         this.setState({
-            liveStreams: [...this.state.liveStreams, ...res.data.streams],
+            liveStreams: [...this.state.liveStreams, ...(res.data.streams || [])],
             nextPage: res.data.nextPage,
             showLoadMoreButton: !!res.data.nextPage,
             loaded: true

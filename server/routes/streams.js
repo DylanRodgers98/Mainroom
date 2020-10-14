@@ -77,12 +77,12 @@ router.get('/', async (req, res, next) => {
 router.get('/:streamKey/thumbnail', async (req, res, next) => {
     const streamKey = sanitise(req.params.streamKey);
     try {
-        const thumbnailUrl = await getThumbnail(streamKey);
-        res.json({ thumbnailUrl });
+        const thumbnailURL = await getThumbnail(streamKey);
+        res.json({ thumbnailURL });
     } catch (err) {
         LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
         res.json({
-            thumbnailUrl: config.defaultThumbnailURL
+            thumbnailURL: config.defaultThumbnailURL
         });
     }
 });
