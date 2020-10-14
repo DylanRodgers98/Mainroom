@@ -1,7 +1,6 @@
 const NodeMediaServer = require('node-media-server');
 const config = require('../mainroom.config');
 const User = require('./database/schemas').User;
-const helpers = require('./helpers/thumbnailGenerator');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const nms = new NodeMediaServer(config.rtmpServer);
@@ -13,13 +12,9 @@ nms.on('prePublish', async (id, streamPath) => {
     }, (err, user) => {
         if (err) {
             LOGGER.error('An error occurred during prePublish event for stream [session ID: {}, stream key: {}]', id, streamKey);
-        } else {
-            if (!user) {
-                LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', id, streamKey);
-                nms.getSession(id).reject();
-            } else {
-                helpers.generateStreamThumbnail(streamKey);
-            }
+        } else if (!user) {
+            LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', id, streamKey);
+            nms.getSession(id).reject();
         }
     });
 });

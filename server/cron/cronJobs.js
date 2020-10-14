@@ -1,8 +1,7 @@
 const LOGGER = require('../../logger')('./server/cron/cronJobs.js');
-const thumbnailGenerator = require('./thumbnailGeneratorCronJob');
 const scheduledStreamInfoUpdater = require('./scheduledStreamInfoUpdater');
 
-const cronJobs = [thumbnailGenerator, scheduledStreamInfoUpdater];
+const cronJobs = [scheduledStreamInfoUpdater];
 
 module.exports.startAll = () => {
     cronJobs.forEach(async cronJob => {

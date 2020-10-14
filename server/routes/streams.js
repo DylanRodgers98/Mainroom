@@ -5,6 +5,7 @@ const axios = require('axios');
 const {User} = require('../database/schemas');
 const _ = require('lodash');
 const sanitise = require('mongo-sanitize');
+const {getThumbnail} = require('../helpers/thumbnailRetriever');
 const LOGGER = require('../../logger')('./server/routes/streams.js');
 
 router.get('/', async (req, res, next) => {
@@ -46,14 +47,23 @@ router.get('/', async (req, res, next) => {
                 LOGGER.error('An error occurred when finding livestream info: {}', err);
                 next(err);
             } else if (result) {
+                const streams = [];
+                result.docs.forEach(user => {
+                    getThumbnail(user.streamInfo.streamKey, (err, thumbnailUrl) => {
+                        if (err) {
+                            LOGGER.error('An error occurred when getting thumbnail for user {}: {}', user.username, err);
+                            next(err);
+                        } else {
+                            streams.push({
+                                username: user.username,
+                                displayName: user.displayName,
+                                thumbnailUrl
+                            });
+                        }
+                    });
+                })
                 res.json({
-                    streams: result.docs.map(user => {
-                        return {
-                            username: user.username,
-                            displayName: user.displayName,
-                            streamKey: user.streamInfo.streamKey
-                        };
-                    }),
+                    streams,
                     nextPage: result.nextPage
                 });
             }

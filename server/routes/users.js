@@ -85,9 +85,9 @@ const s3 = new AWS.S3();
 const s3UploadProfilePic = multer({
     storage: multerS3({
         s3: s3,
-        bucket: config.storage.s3.buckets.staticContent,
+        bucket: config.storage.s3.staticContent.bucketName,
         key: (req, file, cb) => {
-            const path = config.storage.s3.keyPaths.profilePics;
+            const path = config.storage.s3.staticContent.keyPrefixes.profilePics;
             const userId = sanitise(req.params.userId);
             const extension = mime.extension(file.mimetype);
             cb(null, `${path}/${userId}.${extension}`);

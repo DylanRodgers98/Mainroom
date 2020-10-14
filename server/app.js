@@ -27,7 +27,6 @@ mongoose.connect(config.database.uri, {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, './views'));
 app.use(express.static('public'));
-app.use('/thumbnails', express.static(config.storage.thumbnails));
 app.use(flash());
 
 app.use(cookieParser());
@@ -39,8 +38,8 @@ app.use(Session({
     store: new MongoStore({
         mongooseConnection: mongoose.connection
     }),
-    secret: decodeFile(resolveFilePath(config.storage.sessionSecret), 'base64'),
-    maxAge: Date.now + (60 * 1000 * 30),
+    secret: decodeFile(resolveFilePath(config.storage.sessionSecret.path), 'base64'),
+    maxAge: Date.now() + config.storage.sessionSecret.ttl,
     resave: true,
     saveUninitialized: false,
 }));

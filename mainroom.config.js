@@ -52,18 +52,23 @@ module.exports = {
         }
     },
     cron: {
-        thumbnailGenerator: '*/30 * * * * *',
         scheduledStreamInfoUpdater: '0 0/5 * * * *'
     },
     storage: {
-        sessionSecret: './server/secrets/session-secret.txt',
-        thumbnails: './server/thumbnails',
+        sessionSecret: {
+            path: './server/secrets/session-secret.txt',
+            ttl: 60 * 1000 * 30 // 30 minutes
+        },
+        thumbnails: {
+            ttl: 30 * 1000 // 30 seconds
+        },
         s3: {
-            buckets: {
-                staticContent: 'mainroom-static-content'
-            },
-            keyPaths: {
-                profilePics: 'profile-pics'
+            staticContent: {
+                bucketName: 'mainroom-static-content',
+                keyPrefixes: {
+                    profilePics: 'profile-pics',
+                    streamThumbnails: 'stream-thumbnails'
+                }
             }
         }
     },
