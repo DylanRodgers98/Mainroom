@@ -28,7 +28,7 @@ module.exports = {
             allow_origin: '*'
         },
         trans: {
-            ffmpeg: 'C:/Program Files/ffmpeg/bin/ffmpeg.exe',
+            ffmpeg: process.env.FFMPEG_PATH,
             tasks: [
                 {
                     app: 'live',

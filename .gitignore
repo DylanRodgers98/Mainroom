@@ -3,9 +3,6 @@ public
 node_modules
 npm-debug.log
 
-server/thumbnails/*
-!server/thumbnails/.gitkeep
-
 server/secrets/
 
 # ignore media but keep folder

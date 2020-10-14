@@ -28,7 +28,8 @@ function generateStreamThumbnail(streamKey, cb) {
     ffmpeg(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`)
         .seek('00:00:01')
         .frames(1)
-        .complexFilter('scale=-2:300')
+        .videoFilter({ filter: 'scale', options: [-2, 300] })
+        .format('singlejpeg')
         .on('error', err => {
             LOGGER.error('An error occurred when generating stream thumbnail (stream key: {}): {}', streamKey, err);
             cb(err, null);
