@@ -3,6 +3,7 @@ import axios from 'axios';
 import Container from "reactstrap/es/Container";
 import {Button} from "reactstrap";
 import {Modal} from "react-bootstrap";
+import _ from 'lodash';
 
 export default class Settings extends React.Component {
 
@@ -17,6 +18,7 @@ export default class Settings extends React.Component {
         this.saveSettings = this.saveSettings.bind(this);
         this.resetPasswordToggle = this.resetPasswordToggle.bind(this);
         this.resetPassword = this.resetPassword.bind(this);
+        this.handleEmailSettingsChange = this.handleEmailSettingsChange.bind(this);
 
         this.state = {
             loggedInUserId: '',
@@ -25,6 +27,8 @@ export default class Settings extends React.Component {
             username: '',
             startingEmail: '',
             email: '',
+            startingEmailSettings: undefined,
+            emailSettings: undefined,
             usernameInvalidReason: '',
             emailInvalidReason: '',
             resetPasswordOpen: false,
@@ -61,6 +65,8 @@ export default class Settings extends React.Component {
             username: res.data.username,
             startingEmail: res.data.email,
             email: res.data.email,
+            startingEmailSettings: Object.assign({}, res.data.emailSettings),
+            emailSettings: res.data.emailSettings,
             loaded: true
         });
     }
@@ -78,7 +84,7 @@ export default class Settings extends React.Component {
     }
 
     enableSaveButton() {
-        return this.isUsernameChanged() || this.isEmailChanged();
+        return this.isUsernameChanged() || this.isEmailChanged() || this.isEmailSettingsChanged();
     }
 
     isUsernameChanged() {
@@ -89,13 +95,19 @@ export default class Settings extends React.Component {
         return this.state.email !== this.state.startingEmail;
     }
 
+    isEmailSettingsChanged() {
+        return !_.isEqual(this.state.emailSettings, this.state.startingEmailSettings);
+    }
+
     async saveSettings() {
-        const data = {};
-        if (this.isUsernameChanged()) {
-            data.username = this.state.username;
-        }
-        if (this.isEmailChanged()) {
-            data.email = this.state.email;
+        const data = {
+            username: this.state.username,
+            updateUsername: this.isUsernameChanged(),
+            email: this.state.email,
+            updateEmail: this.isEmailChanged()
+        };
+        if (this.isEmailSettingsChanged()) {
+            data.emailSettings = this.state.emailSettings;
         }
         const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/settings`, data);
         this.setState({
@@ -105,7 +117,8 @@ export default class Settings extends React.Component {
         if (!(res.data.usernameInvalidReason || res.data.emailInvalidReason)) {
             this.setState({
                 startingUsername: this.state.username,
-                startingEmail: this.state.email
+                startingEmail: this.state.email,
+                startingEmailSettings: this.state.emailSettings
             });
         }
     }
@@ -226,6 +239,16 @@ export default class Settings extends React.Component {
         );
     }
 
+    handleEmailSettingsChange(event) {
+        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+        const name = event.target.name;
+        const newEmailSettings = this.state.emailSettings;
+        newEmailSettings[name] = value;
+        this.setState({
+            emailSettings: newEmailSettings
+        });
+    }
+
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
@@ -272,8 +295,61 @@ export default class Settings extends React.Component {
                             </td>
                         </tr>
                     </table>
+                    <hr />
+                    <table>
+                        <tr>
+                            <td valign='top'>
+                                <h5>Email Settings:</h5>
+                            </td>
+                            <td>
+                                <form className='ml-2'>
+                                    <label>
+                                        Send an email when I get a new subscriber:
+                                        <input name='newSubscriber' className='ml-1' type='checkbox'
+                                               checked={this.state.emailSettings.newSubscriber}
+                                               onChange={this.handleEmailSettingsChange}/>
+                                    </label>
+                                    <br />
+                                    <label>
+                                        Send an email when someone I am subscribed to goes live:
+                                        <input name='subscriptionWentLive' className='ml-1' type='checkbox'
+                                               checked={this.state.emailSettings.subscriptionWentLive}
+                                               onChange={this.handleEmailSettingsChange}/>
+                                    </label>
+                                    <br />
+                                    <label>
+                                        Send an email when someone I am subscribed to schedules a livestream:
+                                        <input name='subscriptionCreatedScheduledStream' className='ml-1' type='checkbox'
+                                               checked={this.state.emailSettings.subscriptionCreatedScheduledStream}
+                                               onChange={this.handleEmailSettingsChange}/>
+                                    </label>
+                                    <br />
+                                    <label>Send an email when someone I am subscribed to has a stream scheduled to start:
+                                        <select name='subscriptionScheduledStreamStartingIn' className='ml-1'
+                                                value={this.state.emailSettings.subscriptionScheduledStreamStartingIn}
+                                                onChange={this.handleEmailSettingsChange}>
+                                            <option value={-1}>Never</option>
+                                            <option value={10}>10 minutes before</option>
+                                            <option value={30}>30 minutes before</option>
+                                            <option value={60}>1 hour before</option>
+                                            <option value={60 * 2}>2 hours before</option>
+                                            <option value={60 * 6}>6 hours before</option>
+                                            <option value={60 * 24}>1 day before</option>
+                                        </select>
+                                    </label>
+                                    <br />
+                                    <label>
+                                        Send marketing emails:
+                                        <input name='marketing' className='ml-1' type='checkbox'
+                                               checked={this.state.emailSettings.marketing}
+                                               onChange={this.handleEmailSettingsChange}/>
+                                    </label>
+                                </form>
+                            </td>
+                        </tr>
+                    </table>
                     <hr className="my-4"/>
-                    <div className="float-right">
+                    <div className="float-right mb-4">
                         <Button className="btn-dark" size="lg" disabled={!this.enableSaveButton()}
                                 onClick={this.saveSettings}>
                             Save Settings

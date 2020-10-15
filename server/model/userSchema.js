@@ -21,7 +21,14 @@ const UserSchema = new Schema({
     },
     subscribers: [{type: Schema.Types.ObjectId, ref: 'User'}],
     subscriptions: [{type: Schema.Types.ObjectId, ref: 'User'}],
-    scheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}]
+    scheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}],
+    emailSettings: {
+        newSubscriber: Boolean,
+        subscriptionWentLive: Boolean,
+        subscriptionCreatedScheduledStream: Boolean,
+        subscriptionScheduledStreamStartingIn: Number,
+        marketing: Boolean
+    }
 });
 
 UserSchema.methods.generateHash = password => {

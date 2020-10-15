@@ -394,7 +394,7 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
 
 router.get('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const userId = sanitise(req.params.userId);
-    User.findById(userId, 'username email').exec((err, user) => {
+    User.findById(userId, 'username email emailSettings').exec((err, user) => {
         if (err) {
             LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, err);
             next(err);
@@ -403,7 +403,8 @@ router.get('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) 
         } else {
             res.json({
                 username: user.username,
-                email: user.email
+                email: user.email,
+                emailSettings: user.emailSettings
             });
         }
     });
@@ -413,18 +414,28 @@ router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next
     const findQuery = {$or: []};
     const updateQuery = {};
 
-    if (req.body.username) {
-        const username = sanitise(req.body.username);
+    let isUpdatingUsernameOrEmail = false;
+
+    const username = sanitise(req.body.username);
+    const email = sanitise(req.body.email);
+
+    if (req.body.updateUsername) {
         findQuery.$or.push({username: username});
         updateQuery.username = username;
+        isUpdatingUsernameOrEmail = true;
     }
-    if (req.body.email) {
-        const email = sanitise(req.body.email);
+    if (req.body.updateEmail) {
         findQuery.$or.push({email: email});
         updateQuery.email = email;
+        isUpdatingUsernameOrEmail = true
+    }
+    if (req.body.emailSettings) {
+        Object.entries(req.body.emailSettings).forEach(entry => {
+            updateQuery[`emailSettings.${entry[0]}`] = entry[1];
+        });
     }
 
-    if (findQuery.$or.length) {
+    if (isUpdatingUsernameOrEmail) {
         User.find(findQuery, 'username email', (err, users) => {
             if (err) {
                 LOGGER.error(`An error occurred when finding users with query {}: {}`, JSON.stringify(findQuery), err);
@@ -442,22 +453,28 @@ router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next
                 if (invalidReasons.emailInvalidReason || invalidReasons.usernameInvalidReason) {
                     res.json(invalidReasons);
                 } else {
-                    const userId = sanitise(req.params.userId);
-                    User.findByIdAndUpdate(userId, updateQuery, (err, user) => {
-                        if (err) {
-                            LOGGER.error(`An error occurred when updating username and/or email for user with _id {}: {}`, userId, err);
-                            next(err);
-                        } else if (!user) {
-                            res.status(404).send(`User (_id: ${escape(userId)}) not found`);
-                        } else {
-                            res.sendStatus(200);
-                        }
-                    });
+                    updateUserSettings(updateQuery, req, res, next);
                 }
             }
         });
+    } else {
+        updateUserSettings(updateQuery, req, res, next);
     }
 });
+
+function updateUserSettings(updateQuery, req, res, next) {
+    const userId = sanitise(req.params.userId);
+    User.findByIdAndUpdate(userId, updateQuery, (err, user) => {
+        if (err) {
+            LOGGER.error(`An error occurred when updating user settings for user with _id {}: {}`, userId, err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (_id: ${escape(userId)}) not found`);
+        } else {
+            res.sendStatus(200);
+        }
+    });
+}
 
 router.patch('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const userId = sanitise(req.params.userId);

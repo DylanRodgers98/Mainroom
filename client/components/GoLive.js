@@ -289,7 +289,7 @@ export default class GoLive extends React.Component {
                     </tr>
                 </table>
                 <hr className="my-4"/>
-                <div className="float-right">
+                <div className="float-right mb-4">
                     <Button className="btn-dark" size="lg" disabled={!this.state.unsavedChanges}
                             onClick={this.saveSettings}>
                         Save Settings
