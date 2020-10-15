@@ -11,3 +11,6 @@ server/media/*
 
 #ignore test coverage
 coverage/
+
+#ignore environment variables
+.env
