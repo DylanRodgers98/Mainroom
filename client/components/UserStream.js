@@ -3,10 +3,10 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from "react-router-dom";
-import {Row, Button} from "reactstrap";
+import {Button} from "reactstrap";
 import io from "socket.io-client";
 import '../css/user-stream.scss';
-import {Col} from "react-bootstrap";
+import {Row, Col} from "react-bootstrap";
 
 export default class UserStream extends React.Component {
 
@@ -110,7 +110,7 @@ export default class UserStream extends React.Component {
         if (messages && livestream) {
             this.setState({
                 chatHeight: livestream.clientHeight.toString() + 'px'
-            })
+            });
         }
     }
 
@@ -181,22 +181,12 @@ export default class UserStream extends React.Component {
 
     render() {
         return this.state.stream ? (
-            <React.Fragment>
-                <Row className="stream-row">
-                    <Col className='stream-col' xs='8' sm='8' md='8' lg='8' xl='8'>
-                        <div data-vjs-player>
-                            <video ref={node => this.videoNode = node} className="video-js vjs-big-play-centered"/>
-                        </div>
-                    </Col>
-                    <Col className='chat-col' xs='4' sm='4' md='4' lg='4' xl='4'>
-                        <div className='chat-messages' id='messages'
-                             style={{height: this.state.chatHeight, maxHeight: this.state.chatHeight}}>
-                            {this.renderChat()}
-                        </div>
-                    </Col>
-                </Row>
-                <Row className="stream-row">
-                    <Col className='stream-col' xs='8' sm='8' md='8' lg='8' xl='8'>
+            <Row className='stream-row'>
+                <Col className='stream-col' xs='8' sm='8' md='8' lg='8' xl='8'>
+                    <div data-vjs-player>
+                        <video ref={node => this.videoNode = node} className="video-js vjs-big-play-centered"/>
+                    </div>
+                    <div>
                         <table className='ml-2 mt-2 mb-2'>
                             <tr>
                                 <td>
@@ -224,12 +214,18 @@ export default class UserStream extends React.Component {
                                 </td>
                             </tr>
                         </table>
-                    </Col>
-                    <Col className='chat-col' xs='4' sm='4' md='4' lg='4' xl='4'>
+                    </div>
+                </Col>
+                <Col className='chat-col' xs='4' sm='4' md='4' lg='4' xl='4'>
+                    <div className='chat-messages' id='messages'
+                         style={{height: this.state.chatHeight, maxHeight: this.state.chatHeight}}>
+                        {this.renderChat()}
+                    </div>
+                    <div>
                         {this.renderChatInput()}
-                    </Col>
-                </Row>
-            </React.Fragment>
+                    </div>
+                </Col>
+            </Row>
         ) : (
             <div className='mt-5 text-center'>
                 <h3>{this.props.match.params.username} is not currently live</h3>
