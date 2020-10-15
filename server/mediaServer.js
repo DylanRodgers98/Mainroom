@@ -1,6 +1,6 @@
 const NodeMediaServer = require('node-media-server');
 const config = require('../mainroom.config');
-const User = require('./database/schemas').User;
+const User = require('./model/schemas').User;
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const nms = new NodeMediaServer(config.rtmpServer);

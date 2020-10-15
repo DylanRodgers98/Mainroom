@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 module.exports = {
     siteTitle: 'Mainroom',
     headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
@@ -15,6 +17,7 @@ module.exports = {
     },
     rtmpServer: {
         host: '127.0.0.1',
+        logType: logger.resolveLogLevel(),
         rtmp: {
             port: 1935,
             chunk_size: 60000,
@@ -56,7 +59,6 @@ module.exports = {
     },
     storage: {
         sessionSecret: {
-            path: './server/secrets/session-secret.txt',
             ttl: 60 * 1000 * 30 // 30 minutes
         },
         thumbnails: {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {ScheduledStream, User} = require('../database/schemas');
+const {ScheduledStream, User} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const LOGGER = require('../../logger')('./server/routes/scheduled-streams.js');
 

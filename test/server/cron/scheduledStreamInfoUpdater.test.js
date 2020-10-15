@@ -11,7 +11,7 @@ const mockStream = {
     tags: ['test', 'stream']
 }
 
-jest.mock('../../../server/database/schemas', () => {
+jest.mock('../../../server/model/schemas', () => {
     return {
         ScheduledStream: {
             find: jest.fn(async () => [mockStream])

@@ -1,6 +1,6 @@
 const {CronJob} = require('cron');
 const config = require('../../mainroom.config');
-const {ScheduledStream, User} = require('../database/schemas');
+const {ScheduledStream, User} = require('../model/schemas');
 const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
 
 let lastTimeTriggered = Date.now();
