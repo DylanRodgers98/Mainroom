@@ -1,7 +1,9 @@
 const LOGGER = require('../../logger')('./server/cron/cronJobs.js');
-const scheduledStreamInfoUpdater = require('./scheduledStreamInfoUpdater');
 
-const cronJobs = [scheduledStreamInfoUpdater];
+const cronJobs = [
+    require('./scheduledStreamInfoUpdater'),
+    require('./upcomingScheduledStreamEmailer')
+];
 
 module.exports.startAll = () => {
     cronJobs.forEach(async cronJob => {

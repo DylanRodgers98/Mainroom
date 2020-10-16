@@ -2,7 +2,7 @@ const config = require('../../mainroom.config');
 const ffmpeg = require('fluent-ffmpeg');
 const concatStream = require('concat-stream');
 const AWS = require('aws-sdk');
-const LOGGER = require('../../logger')('./server/helpers/thumbnailRetriever.js');
+const LOGGER = require('../../logger')('./server/helpers/s3ThumbnailRetriever.js');
 
 const S3 = new AWS.S3();
 

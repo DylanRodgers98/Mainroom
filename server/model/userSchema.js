@@ -26,8 +26,7 @@ const UserSchema = new Schema({
         newSubscriber: Boolean,
         subscriptionWentLive: Boolean,
         subscriptionCreatedScheduledStream: Boolean,
-        subscriptionScheduledStreamStartingIn: Number,
-        marketing: Boolean
+        subscriptionScheduledStreamStartingIn: Number
     }
 });
 

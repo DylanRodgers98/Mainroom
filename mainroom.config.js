@@ -55,7 +55,8 @@ module.exports = {
         }
     },
     cron: {
-        scheduledStreamInfoUpdater: '0 0/5 * * * *'
+        scheduledStreamInfoUpdater: '* * * * *',
+        upcomingScheduledStreamEmailer: '* * * * *'
     },
     storage: {
         sessionSecret: {
@@ -79,5 +80,15 @@ module.exports = {
         subscriptionsAndFeaturedLimit: 6
     },
     defaultProfilePicURL: 'https://upload.wikimedia.org/wikipedia/en/9/9a/Trollface_non-free.png',
-    defaultThumbnailURL: 'https://mainroom-static-content.s3.amazonaws.com/stream-thumbnails/3--tczpr6.png'
+    defaultThumbnailURL: 'https://mainroom-static-content.s3.amazonaws.com/stream-thumbnails/3--tczpr6.png',
+    email: {
+        ses: {
+            templateNames: {
+                newSubscriber: 'newSubscriber',
+                subscriptionWentLive: 'subscriptionWentLive',
+                subscriptionCreatedScheduledStream: 'subscriptionCreatedScheduledStream',
+                subscriptionScheduledStreamStartingIn: 'subscriptionScheduledStreamStartingIn'
+            }
+        }
+    }
 };

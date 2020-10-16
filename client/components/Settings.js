@@ -337,13 +337,6 @@ export default class Settings extends React.Component {
                                             <option value={60 * 24}>1 day before</option>
                                         </select>
                                     </label>
-                                    <br />
-                                    <label>
-                                        Send marketing emails:
-                                        <input name='marketing' className='ml-1' type='checkbox'
-                                               checked={this.state.emailSettings.marketing}
-                                               onChange={this.handleEmailSettingsChange}/>
-                                    </label>
                                 </form>
                             </td>
                         </tr>

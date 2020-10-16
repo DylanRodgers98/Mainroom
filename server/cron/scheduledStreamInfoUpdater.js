@@ -3,9 +3,13 @@ const config = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
 const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
 
+const jobName = 'Scheduled Stream Info Updater';
+
 let lastTimeTriggered = Date.now();
 
 const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
+    LOGGER.debug(`${jobName} triggered`);
+
     const thisTimeTriggered = job.lastDate().valueOf();
 
     const streams = await ScheduledStream.find({
@@ -37,7 +41,4 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
     lastTimeTriggered = thisTimeTriggered;
 });
 
-module.exports = {
-    jobName: 'Scheduled Stream Info Updater',
-    job: job
-};
+module.exports = {jobName, job};

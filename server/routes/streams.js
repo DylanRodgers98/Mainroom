@@ -5,7 +5,7 @@ const axios = require('axios');
 const {User} = require('../model/schemas');
 const _ = require('lodash');
 const sanitise = require('mongo-sanitize');
-const {getThumbnail} = require('../aws/thumbnailRetriever');
+const {getThumbnail} = require('../aws/s3ThumbnailRetriever');
 const LOGGER = require('../../logger')('./server/routes/streams.js');
 
 router.get('/', async (req, res, next) => {

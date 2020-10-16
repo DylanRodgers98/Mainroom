@@ -10,6 +10,7 @@ const AWS = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const mime = require('mime-types');
+const {emailEventEmitter} = require('../emailEventEmitter');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 router.get('/logged-in', (req, res) => {
@@ -238,6 +239,7 @@ router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogge
                                     LOGGER.error(`An error occurred when adding user {} to user {}'s subscriptions: {}`, usernameToSubscribeTo, username, err);
                                     next(err);
                                 } else {
+                                    emailEventEmitter.emit('onNewSubscriber', userToSubscribeTo, user)
                                     res.sendStatus(200);
                                 }
                             });
