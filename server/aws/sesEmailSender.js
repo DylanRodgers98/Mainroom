@@ -78,7 +78,9 @@ module.exports.notifySubscribersUserCreatedScheduledStream = (user, stream) => {
                         profilePicURL: user.profilePicURL
                     },
                     stream: {
-                        title: stream.title
+                        title: stream.title,
+                        startTime: stream.startTime,
+                        endTime: stream.endTime
                     },
                 })
             };
@@ -139,7 +141,9 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = (user, streams) =>
                         profilePicURL: stream.user.profilePicURL
                     },
                     stream: {
-                        title: stream.title
+                        title: stream.title,
+                        startTime: stream.startTime,
+                        endTime: stream.endTime
                     },
                 }
             })

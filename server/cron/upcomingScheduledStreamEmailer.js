@@ -15,11 +15,12 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, () => {
         (err, users) => {
             if (err) {
                 LOGGER.error('An error occurred when looking for users to email about streams starting soon: {}', err);
+                throw err;
             } else {
                 users.forEach(user => {
                     const startTime = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn, 'minutes').toDate();
                     ScheduledStream.find({user: {$in: user.subscriptions}, startTime})
-                        .select('user title')
+                        .select('user title startTime endTime')
                         .populate({
                             path: 'user',
                             select: 'username displayName profilePicURL'
@@ -27,6 +28,7 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, () => {
                         .exec((err, streams) => {
                             if (err) {
                                 LOGGER.error('An error occurred when looking for streams starting soon: {}', err);
+                                throw err;
                             } else {
                                 const userData = {
                                     email: user.email,

@@ -31,6 +31,7 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
             }, err => {
                 if (err) {
                     LOGGER.error('An error occurred when updating stream info for user with _id {}: {}', stream.user._id, err);
+                    throw err;
                 } else {
                     updated++;
                 }

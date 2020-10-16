@@ -16,7 +16,10 @@ const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
 const csrf = require('csurf');
+const awsResourceProvisioner = require('./aws/resourceProvisioner');
 const LOGGER = require('../logger')('./server/app.js');
+
+awsResourceProvisioner.provisionResources();
 
 mongoose.connect(config.database.uri, {
     useNewUrlParser: true,
