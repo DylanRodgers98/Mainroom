@@ -2,10 +2,10 @@ const config = require('../../mainroom.config');
 const AWS = require('aws-sdk');
 const LOGGER = require('../../logger')('./server/aws/sesEmailSender.js');
 
-const SES = new AWS.SESV2();
+const SES = new AWS.SES();
 const BULK_EMAIL_MAX_DESTINATIONS = 50;
 
-module.exports.notifyUserOfNewSubscriber = (user, subscriber) => {
+module.exports.notifyUserOfNewSubscriber = async (user, subscriber) => {
     const params = {
         Destination: {
             ToAddresses: [user.email]
@@ -23,21 +23,23 @@ module.exports.notifyUserOfNewSubscriber = (user, subscriber) => {
             }
         })
     };
-    SES.sendTemplatedEmail(params, err => {
+    try {
+        await SES.sendTemplatedEmail(params).promise();
+    } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'newSubscriber' email to {} using SES: {}`, user.email, err);
         } else {
             LOGGER.debug(`Successfully sent 'newSubscriber' email to {} using SES`, user.email);
         }
-    });
+    }
 }
 
-module.exports.notifySubscribersUserWentLive = (user) => {
+module.exports.notifySubscribersUserWentLive = user => {
     const emailType = 'subscriptionWentLive';
     const destinations = getSubscriberDestinations(user.subscribers, emailType);
 
     if (destinations.length) {
-        splitDestinations(destinations).forEach((Destinations, i) => {
+        splitDestinations(destinations).forEach(async (Destinations, i) => {
             const params = {
                 Destinations,
                 Source: process.env.NO_REPLY_EMAIL,
@@ -50,13 +52,15 @@ module.exports.notifySubscribersUserWentLive = (user) => {
                     }
                 })
             };
-            SES.sendBulkTemplatedEmail(params, err => {
+            try {
+                await SES.sendBulkTemplatedEmail(params).promise();
+            } catch (err) {
                 if (err) {
                     LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`, i + 1, emailType, err);
                 } else {
                     LOGGER.debug(`Successfully sent bulk '{}' email {} using SES`, i + 1, emailType);
                 }
-            });
+            }
         });
     }
 }
@@ -66,7 +70,7 @@ module.exports.notifySubscribersUserCreatedScheduledStream = (user, stream) => {
     const destinations = getSubscriberDestinations(user.subscribers, emailType);
 
     if (destinations.length) {
-        splitDestinations(destinations).forEach((Destinations, i) => {
+        splitDestinations(destinations).forEach(async (Destinations, i) => {
             const params = {
                 Destinations,
                 Source: process.env.NO_REPLY_EMAIL,
@@ -84,13 +88,15 @@ module.exports.notifySubscribersUserCreatedScheduledStream = (user, stream) => {
                     },
                 })
             };
-            SES.sendBulkTemplatedEmail(params, err => {
+            try {
+                await SES.sendBulkTemplatedEmail(params).promise();
+            } catch (err) {
                 if (err) {
                     LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`, i + 1, emailType, err);
                 } else {
                     LOGGER.debug(`Successfully sent bulk '{}' email {} using SES`, i + 1, emailType);
                 }
-            });
+            }
         });
     }
 }
@@ -122,7 +128,7 @@ function splitDestinations(destinations) {
     return splits;
 }
 
-module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = (user, streams) => {
+module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, streams) => {
     const params = {
         Destination: {
             ToAddresses: [user.email]
@@ -149,11 +155,13 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = (user, streams) =>
             })
         })
     };
-    SES.sendTemplatedEmail(params, err => {
+    try {
+        await SES.sendTemplatedEmail(params).promise();
+    } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'subscriptionScheduledStreamStartingIn' email to {} using SES: {}`, user.email, err);
         } else {
             LOGGER.debug(`Successfully sent 'subscriptionScheduledStreamStartingIn' email to {} using SES`, user.email);
         }
-    });
+    }
 }

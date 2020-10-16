@@ -2,7 +2,7 @@ const config = require('../../mainroom.config');
 const AWS = require('aws-sdk');
 const LOGGER = require('../../logger')('./server/aws/sesTemplateCreator.js');
 
-const SES = new AWS.SESV2();
+const SES = new AWS.SES();
 
 module.exports.createEmailTemplates = async () => {
     if (config.email.enabled) {
@@ -61,7 +61,7 @@ async function createSubscriptionScheduledStreamStartingInTemplate() {
 async function createEmailTemplate(template) {
     try {
         LOGGER.info(`Creating '{}' email template`, template.TemplateName);
-        await SES.createEmailTemplate(template).promise();
+        await SES.createTemplate(template).promise();
         LOGGER.info(`'{}' email template created`, template.TemplateName);
     } catch (err) {
         if (err.code === 'AlreadyExists') {
