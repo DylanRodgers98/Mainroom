@@ -82,6 +82,7 @@ module.exports = {
     defaultProfilePicURL: 'https://upload.wikimedia.org/wikipedia/en/9/9a/Trollface_non-free.png',
     defaultThumbnailURL: 'https://mainroom-static-content.s3.amazonaws.com/stream-thumbnails/3--tczpr6.png',
     email: {
+        enabled: false,
         ses: {
             templateNames: {
                 newSubscriber: 'newSubscriber',
