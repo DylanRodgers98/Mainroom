@@ -39,10 +39,8 @@ app.use(bodyParser.json({extended: true}));
 app.use(csrf({cookie: true}))
 
 app.use(Session({
-    store: new MongoStore({
-        mongooseConnection: mongoose.connection,
-        ttl: Date.now() + config.storage.sessionSecret.ttl
-    }),
+    store: new MongoStore({ mongooseConnection: mongoose.connection }),
+    cookie: { maxAge: config.storage.session.maxAge },
     secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: false,

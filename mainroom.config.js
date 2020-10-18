@@ -59,8 +59,8 @@ module.exports = {
         upcomingScheduledStreamEmailer: '* * * * *'
     },
     storage: {
-        sessionSecret: {
-            ttl: 60 * 1000 * 30 // 30 minutes
+        session: {
+            maxAge: 4 * 60 * 60 * 1000 // 4 hours
         },
         thumbnails: {
             ttl: 30 * 1000 // 30 seconds
