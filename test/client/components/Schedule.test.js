@@ -63,7 +63,7 @@ afterEach(() => {
     container = null;
 });
 
-describe('Schedule component', () => {
+describe('Schedule', () => {
     it('should build schedule when component gets mounted', async () => {
         await act(async () => render(<Schedule/>, container));
         const groups = container.getElementsByClassName('rct-sidebar-row');

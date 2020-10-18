@@ -1,42 +1,58 @@
 const config = require('../../mainroom.config');
-const sesEmailSender = require('../../server/aws/sesEmailSender');
+
+const user = 'hello';
+const subscriber = 'world';
+const stream = 'foo';
+const streams = 'bar';
+
+const mockNotifyUserOfNewSubscriber = jest.fn();
+const mockNotifySubscribersUserWentLive = jest.fn();
+const mockNotifySubscribersUserCreatedScheduledStream = jest.fn();
+const mockNotifyUserOfSubscriptionsStreamsStartingSoon = jest.fn();
+
+jest.mock('../../server/aws/sesEmailSender', () => {
+    return {
+        notifyUserOfNewSubscriber: mockNotifyUserOfNewSubscriber,
+        notifySubscribersUserWentLive: mockNotifySubscribersUserWentLive,
+        notifySubscribersUserCreatedScheduledStream: mockNotifySubscribersUserCreatedScheduledStream,
+        notifyUserOfSubscriptionsStreamsStartingSoon: mockNotifyUserOfSubscriptionsStreamsStartingSoon
+    };
+});
 
 const originalEmailEnabled = config.email.enabled;
+let emailEventEmitter;
 
 beforeAll(() => {
     config.email.enabled = true;
+    emailEventEmitter = require('../../server/emailEventEmitter');
 });
+
+afterEach(() => {
+    jest.clearAllMocks();
+})
 
 afterAll(() => {
     config.email.enabled = originalEmailEnabled;
 });
 
 describe('EmailEventEmitter', () => {
-    // TODO: split into separate tests, figure out why passing individually but not as a suite
-    it('should call sesEmailSender functions on receiving events', () => {
-        // spies
-        const onNewSubscriberSpy = jest.spyOn(sesEmailSender, 'notifyUserOfNewSubscriber');
-        const onWentLiveSpy = jest.spyOn(sesEmailSender, 'notifySubscribersUserWentLive');
-        const onCreateScheduledStreamSpy = jest.spyOn(sesEmailSender, 'notifySubscribersUserCreatedScheduledStream');
-        const onScheduledStreamStartingSoonSpy = jest.spyOn(sesEmailSender, 'notifyUserOfSubscriptionsStreamsStartingSoon');
-
-        //given
-        const user = { subscribers: [] };
-        const subscriber = 'foo';
-        const stream = 'bar';
-        const streams = [stream];
-
-        // when
-        const emailEventEmitter = require('../../server/emailEventEmitter');
+    it('should call sesEmailSender.notifyUserOfNewSubscriber() on emission onNewSubscriber event', () => {
         emailEventEmitter.emit('onNewSubscriber', user, subscriber);
-        emailEventEmitter.emit('onWentLive', user);
-        emailEventEmitter.emit('onCreateScheduledStream', user, stream);
-        emailEventEmitter.emit('onScheduledStreamStartingSoon', user, streams);
+        expect(mockNotifyUserOfNewSubscriber).toHaveBeenCalledWith(user, subscriber);
+    });
 
-        // then
-        expect(onNewSubscriberSpy).toHaveBeenCalledWith(user, subscriber);
-        expect(onWentLiveSpy).toHaveBeenCalledWith(user);
-        expect(onCreateScheduledStreamSpy).toHaveBeenCalledWith(user, stream);
-        expect(onScheduledStreamStartingSoonSpy).toHaveBeenCalledWith(user, streams);
+    it('should call sesEmailSender.notifySubscribersUserWentLive() on emission onWentLive event', () => {
+        emailEventEmitter.emit('onWentLive', user);
+        expect(mockNotifySubscribersUserWentLive).toHaveBeenCalledWith(user);
+    });
+
+    it('should call sesEmailSender.notifySubscribersUserCreatedScheduledStream() on emission onCreateScheduledStream event', () => {
+        emailEventEmitter.emit('onCreateScheduledStream', user, stream);
+        expect(mockNotifySubscribersUserCreatedScheduledStream).toHaveBeenCalledWith(user, stream);
+    });
+
+    it('should call sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon() on emission onScheduledStreamStartingSoon event', () => {
+        emailEventEmitter.emit('onScheduledStreamStartingSoon', user, streams);
+        expect(mockNotifyUserOfSubscriptionsStreamsStartingSoon).toHaveBeenCalledWith(user, streams);
     });
 });

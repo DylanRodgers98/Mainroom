@@ -7,7 +7,7 @@
   "repository": "github:DylanRodgers98/MainRoom",
   "private": true,
   "scripts": {
-    "test": "jest --passWithNoTests --coverage --detectOpenHandles --forceExit",
+    "test": "jest --coverage --detectOpenHandles --forceExit --verbose",
     "start:dev": "npm-run-all --parallel start-server:dev start-client:dev",
     "start-client:dev": "./node_modules/.bin/webpack --watch",
     "start-server:dev": "./node_modules/.bin/supervisor -w server -s -RV ./server/app.js",
