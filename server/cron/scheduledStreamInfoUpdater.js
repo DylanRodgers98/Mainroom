@@ -40,6 +40,8 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, async () => {
         LOGGER.info(`Successfully updated {}/{} user{} stream info from scheduled streams`, updated, streams.length, streams.length === 1 ? `'s` : `s'`);
     }
     lastTimeTriggered = thisTimeTriggered;
+
+    LOGGER.debug(`${jobName} finished`);
 });
 
 module.exports = {jobName, job};
