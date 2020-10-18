@@ -1,7 +1,7 @@
 const NodeMediaServer = require('node-media-server');
 const config = require('../mainroom.config');
 const User = require('./model/schemas').User;
-const {emailEventEmitter} = require('./emailEventEmitter');
+const emailEventEmitter = require('./emailEventEmitter');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const nms = new NodeMediaServer(config.rtmpServer);
