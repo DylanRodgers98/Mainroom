@@ -1,3 +1,6 @@
+const {CronTime} = require('cron');
+const {sleep} = require('../../testUtils');
+
 const mockStream = {
     user: {_id: 0},
     startTime: new Date(2020, 8, 17, 16),
@@ -8,12 +11,12 @@ const mockStream = {
     tags: ['test', 'stream']
 }
 
-const mockFindByIdAndUpdate = jest.fn((id, update, callback) => callback());
+const mockFindByIdAndUpdate = jest.fn((update, options, callback) => callback());
 
 jest.mock('../../../server/model/schemas', () => {
     return {
         ScheduledStream: {
-            find: jest.fn(async () => [mockStream])
+            find: (query, callback) => callback(null, [mockStream])
         },
         User: {
             findByIdAndUpdate: mockFindByIdAndUpdate
@@ -21,7 +24,6 @@ jest.mock('../../../server/model/schemas', () => {
     }
 });
 
-const {CronTime} = require('cron');
 const {job} = require('../../../server/cron/scheduledStreamInfoUpdater');
 
 describe('scheduledStreamInfoUpdater', () => {
@@ -45,7 +47,3 @@ describe('scheduledStreamInfoUpdater', () => {
         });
     });
 });
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}

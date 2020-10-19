@@ -4,6 +4,8 @@ const LOGGER = require('../../logger')('./server/aws/sesTemplateCreator.js');
 
 const SES = new AWS.SES();
 
+// TODO: REPLACE THIS WITH CLOUDFORMATION TEMPLATE
+
 module.exports.createEmailTemplates = async () => {
     if (config.email.enabled) {
         LOGGER.info('Creating email templates');

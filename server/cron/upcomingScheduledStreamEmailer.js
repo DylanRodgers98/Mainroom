@@ -11,7 +11,7 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, () => {
     LOGGER.debug(`${jobName} triggered`);
 
     if (!config.email.enabled) {
-        LOGGER.info("Email is not enabled, so will not send emails about upcoming scheduled streams");
+        LOGGER.info('Email is not enabled, so will not send emails about upcoming scheduled streams');
     } else {
         User.find({emailSettings: {subscriptionScheduledStreamStartingIn: {$gte: 0}}},
             'username displayName email emailSettings.subscriptionScheduledStreamStartingIn subscriptions',
@@ -21,7 +21,7 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, () => {
                     throw err;
                 } else {
                     users.forEach(user => {
-                        const startTime = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn, 'minutes').toDate();
+                        const startTime = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn, 'minutes').valueOf();
                         ScheduledStream.find({user: {$in: user.subscriptions}, startTime})
                             .select('user title startTime endTime')
                             .populate({

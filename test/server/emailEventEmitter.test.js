@@ -29,7 +29,7 @@ beforeAll(() => {
 
 afterEach(() => {
     jest.clearAllMocks();
-})
+});
 
 afterAll(() => {
     config.email.enabled = originalEmailEnabled;
