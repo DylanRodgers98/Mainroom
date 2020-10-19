@@ -38,14 +38,15 @@ function generateStreamThumbnail(streamKey) {
             })
             .pipe(concatStream({encoding: 'buffer'}, Body => {
                 const Bucket = config.storage.s3.staticContent.bucketName;
-                const Key = `${config.storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.png`;
+                const Key = `${config.storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
                 S3.upload({Bucket, Key, Body}, (err, output) => {
                     if (err) {
                         LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
                         reject(err);
                     } else {
-                        LOGGER.debug('Successfully uploaded thumbnail to S3 (bucket: {}, key: {})', Bucket, Key);
-                        resolve(output.Location);
+                        const location = output.Location;
+                        LOGGER.debug('Successfully uploaded thumbnail to {}', location);
+                        resolve(location);
                     }
                 });
             }));
