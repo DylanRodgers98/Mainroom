@@ -1,6 +1,6 @@
 import React from "react";
 import axios from "axios";
-import {Container, Row, Col, Button} from "reactstrap";
+import {Container, Row, Col, Button, Dropdown, DropdownToggle} from "reactstrap";
 import {Image, Modal} from "react-bootstrap";
 import {Link} from "react-router-dom";
 import Timeline from "react-calendar-timeline";
@@ -10,6 +10,7 @@ import normalizeUrl from "normalize-url";
 import ImageUploader from 'react-images-upload';
 import '../css/user-profile.scss';
 import '../css/livestreams.scss';
+import DateTimeRangeContainer from "react-advanced-datetimerange-picker";
 
 const STARTING_STATE = {
     loaded: false,
@@ -63,6 +64,7 @@ export default class UserProfile extends React.Component {
         this.changeProfilePicToggle = this.changeProfilePicToggle.bind(this);
         this.onProfilePicUpload = this.onProfilePicUpload.bind(this);
         this.saveNewProfilePic = this.saveNewProfilePic.bind(this);
+        this.applyDate = this.applyDate.bind(this);
 
         this.state = STARTING_STATE;
     }
@@ -218,6 +220,68 @@ export default class UserProfile extends React.Component {
                 <a href={link.url} target='_blank' rel="noopener noreferrer">{link.title || link.url}</a>
             </div>
         ));
+    }
+
+    getDatePickerRange() {
+        return {
+            'Next 6 Hours': [moment(), moment().add(6, 'hours')],
+            'Next 12 Hours': [moment(), moment().add(12, 'hours')],
+            'Next 24 Hours': [moment(), moment().add(24, 'hours')],
+            'Today': [moment().startOf('day'), moment().endOf('day')],
+            'Tomorrow': [moment().startOf('day').add(1, 'day'), moment().endOf('day').add(1, 'day')],
+            'Next 3 Days': [moment().startOf('day'), moment().add(3, 'days').startOf('day')],
+            'Next 7 Days': [moment().startOf('day'), moment().add(1, 'week').startOf('day')],
+            'This Weekend': [moment().isoWeekday('Saturday').startOf('day'), moment().isoWeekday('Sunday').endOf('day')],
+            'This Week': [moment().startOf('isoWeek'), moment().endOf('isoWeek')],
+            'Next Weekend': [moment().isoWeekday('Saturday').startOf('day').add(1, 'week'), moment().isoWeekday('Sunday').endOf('day').add(1, 'week')],
+            'Next Week': [moment().startOf('isoWeek').add(1, 'week'), moment().endOf('isoWeek').add(1, 'week')]
+        };
+    }
+
+    getDatePickerFormat() {
+        return {
+            'format': 'DD/MM/YYYY HH:mm',
+            'sundayFirst': false
+        };
+    }
+
+    applyDate(startTime, endTime) {
+        this.setState({
+            loaded: false,
+            scheduleItems: [],
+            upcomingStreamsStartTime: startTime,
+            upcomingStreamsEndTime: endTime
+        }, () => {
+            this.loadUserProfile();
+        });
+    }
+
+    renderSchedule() {
+        return (
+            <React.Fragment>
+                <Row>
+                    <Col>
+                        <h3>Upcoming Streams</h3>
+                    </Col>
+                    <Col>
+                        <div className='float-right mb-1'>
+                            <DateTimeRangeContainer ranges={this.getDatePickerRange()} local={this.getDatePickerFormat()}
+                                                    start={this.state.upcomingStreamsStartTime} end={this.state.upcomingStreamsEndTime}
+                                                    applyCallback={this.applyDate} leftMode={true} noMobileMode={true}>
+                                <Dropdown className='date-picker-dropdown' size='sm' toggle={() => {}}>
+                                    <DropdownToggle caret>Select Time Period</DropdownToggle>
+                                </Dropdown>
+                            </DateTimeRangeContainer>
+                        </div>
+                    </Col>
+                </Row>
+                <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
+                          sidebarWidth='0'
+                          visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
+                          visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
+                <hr className="my-4"/>
+            </React.Fragment>
+        );
     }
 
     renderLiveStream() {
@@ -545,8 +609,8 @@ export default class UserProfile extends React.Component {
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
-                <Container>
-                    <Row className="mt-5" xs='4'>
+                <Container className='my-5'>
+                    <Row xs='4'>
                         <Col>
                             {this.renderProfilePic()}
                             <h1>{this.state.displayName || this.props.match.params.username}</h1>
@@ -561,12 +625,7 @@ export default class UserProfile extends React.Component {
                             {this.renderLinks()}
                         </Col>
                         <Col xs='9'>
-                            <h3>Upcoming Streams</h3>
-                            <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
-                                      sidebarWidth='0'
-                                      visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
-                                      visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
-                            <hr className="my-4"/>
+                            {this.renderSchedule()}
                             {this.renderLiveStream()}
                         </Col>
                     </Row>
