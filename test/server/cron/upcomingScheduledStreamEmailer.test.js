@@ -46,11 +46,9 @@ jest.mock('../../../server/model/schemas', () => {
 
 const mockEmit = jest.fn();
 
-jest.mock('../../../server/emailEventEmitter', () => {
+jest.mock('../../../server/mainroomEventEmitter', () => {
     return {
-        emailEventEmitter: {
-            emit: mockEmit
-        }
+        emit: mockEmit
     };
 });
 
@@ -67,7 +65,7 @@ afterAll(() => {
 });
 
 describe('upcomingScheduledStreamEmailer', () => {
-    it('should emit onScheduledStreamStartingSoon event from emailEventEmitter when cron job triggers', async() => {
+    it('should emit onScheduledStreamStartingSoon event from mainroomEventEmitter when cron job triggers', async() => {
         // given
         job.setTime(new CronTime('* * * * * *'));
 

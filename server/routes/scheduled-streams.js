@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {ScheduledStream, User} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
-const {emailEventEmitter} = require('../emailEventEmitter');
+const mainroomEventEmitter = require('../mainroomEventEmitter');
 const LOGGER = require('../../logger')('./server/routes/scheduled-streams.js');
 
 router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
@@ -37,7 +37,7 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
                                 LOGGER.error('An error occurred when adding ID of new ScheduledStream to User {}: {}', user.username, err);
                                 next(err);
                             } else {
-                                emailEventEmitter.emit('onCreateScheduledStream', user, scheduledStream)
+                                mainroomEventEmitter.emit('onCreateScheduledStream', user, scheduledStream)
                                 res.sendStatus(200);
                             }
                         });

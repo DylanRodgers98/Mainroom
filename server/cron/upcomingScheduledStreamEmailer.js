@@ -2,7 +2,7 @@ const {CronJob} = require('cron');
 const config = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
 const moment = require('moment');
-const {emailEventEmitter} = require('../emailEventEmitter');
+const mainroomEventEmitter = require('../mainroomEventEmitter');
 const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
 
 const jobName = 'Upcoming Scheduled Stream Emailer';
@@ -38,7 +38,7 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, () => {
                                         displayName: user.displayName,
                                         username: user.username
                                     };
-                                    emailEventEmitter.emit('onScheduledStreamStartingSoon', userData, streams);
+                                    mainroomEventEmitter.emit('onScheduledStreamStartingSoon', userData, streams);
                                 }
                             });
                     });
