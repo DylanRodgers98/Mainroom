@@ -12,19 +12,23 @@ const LOGGER = require('../../logger')('./server/routes/forgot-password.js');
 
 router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
     res.render('forgotPassword', {
-        emailSent: req.query.emailSent,
+        messages: {
+            info: req.flash('info'),
+            errors: req.flash('errors')
+        },
         csrfToken: req.csrfToken()
     });
 });
 
 router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
-    const email = sanitise(req.query.email);
+    const email = sanitise(req.body.email);
     User.findOne({email}, '_id email username displayName', (err, user) => {
         if (err) {
             LOGGER.error('An error occurred when finding user with email {}: {}', email, err);
             next(err);
         } else if (!user) {
-            res.status(404).send(`User with email ${escape(email)}) not found`);
+            req.flash('errors', `Could not find a user with the email address ${email}`);
+            res.redirect('/forgot-password');
         } else {
             randomBytes(16, (err, token) => {
                 if (err) {
@@ -42,8 +46,14 @@ router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
                             next(err);
                         } else {
                             sesEmailSender.sendResetPasswordEmail(user, token)
-                                .then(() => res.redirect('/forgot-password?emailSent=true'))
-                                .catch(err => next(err));
+                                .then(() => {
+                                    req.flash('info', `An email has been sent to ${email} with a password reset link.`);
+                                    res.redirect('/forgot-password');
+                                })
+                                .catch(() => {
+                                    req.flash('errors', `An error occurred when trying to send an email to ${email}. Please try again.`);
+                                    res.redirect('/forgot-password');
+                                });
                         }
                     });
                 }
@@ -53,16 +63,25 @@ router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
 });
 
 router.get('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
+    if (!req.query.token) {
+        return res.redirect('/');
+    }
     const sanitisedToken = sanitise(req.query.token);
     const tokenHash = hashToken(sanitisedToken);
     PasswordResetToken.findOne({tokenHash}, (err, token) => {
         if (err) {
             LOGGER.error('An error occurred when finding password reset token: {}', err);
             next(err);
+        } else if (!token) {
+            req.flash('errors', 'Password reset link does not exist or has expired. Please send email again.');
+            return res.redirect('/forgot-password');
         } else {
             res.render('resetPassword', {
+                errors: {
+                    password: req.flash('password'),
+                    confirmPassword: req.flash('confirmPassword')
+                },
                 passwordResetToken: token,
-                errors: req.flash('errors'),
                 csrfToken: req.csrfToken()
             });
         }
@@ -76,12 +95,16 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
             LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, err);
             next(err);
         } else if (!user) {
+            LOGGER.error(`Could not find user (_id: {}) when resetting password: {}`, userId, err);
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
-        } else if (!passwordValidator.validate(req.body.newPassword)) {
+        }  else if (!passwordValidator.validate(req.body.password)) {
             flashInvalidPassword(req);
-            res.redirect('/reset-password');
+            res.redirect('/forgot-password/reset');
+        } else if (req.body.password !== req.body.confirmPassword) {
+            req.flash('confirmPassword', 'Passwords do not match')
+            res.redirect('/forgot-password/reset');
         } else {
-            user.password = user.generateHash(req.body.newPassword);
+            user.password = user.generateHash(req.body.password);
             user.save(err => {
                 if (err) {
                     LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, err);
@@ -102,24 +125,24 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
 const hashToken = token => createHash('sha256').update(token).digest('hex');
 
 function flashInvalidPassword(req) {
-    req.flash('errors', 'Invalid password. Password must contain:');
+    req.flash('password', 'Invalid password. Password must contain:');
 
     const minLength = config.validation.password.minLength;
     const maxLength = config.validation.password.maxLength;
-    req.flash('errors', `• Between ${minLength}-${maxLength} characters`);
+    req.flash('password', `• Between ${minLength}-${maxLength} characters`);
 
     const minLowercase = config.validation.password.minLowercase;
-    req.flash('errors', `• At least ${minLowercase} lowercase character${minLowercase > 1 ? 's' : ''}`);
+    req.flash('password', `• At least ${minLowercase} lowercase character${minLowercase > 1 ? 's' : ''}`);
 
     const minUppercase = config.validation.password.minUppercase;
-    req.flash('errors', `• At least ${minUppercase} uppercase character${minUppercase > 1 ? 's' : ''}`);
+    req.flash('password', `• At least ${minUppercase} uppercase character${minUppercase > 1 ? 's' : ''}`);
 
     const minNumeric = config.validation.password.minUppercase;
-    req.flash('errors', `• At least ${minNumeric} number${minNumeric > 1 ? 's' : ''}`);
+    req.flash('password', `• At least ${minNumeric} number${minNumeric > 1 ? 's' : ''}`);
 
     const minSpecialChars = config.validation.password.minSpecialChars;
     const allowedSpecialChars = Array.from(config.validation.password.allowedSpecialChars).join(' ');
-    req.flash('errors', `• At least ${minSpecialChars} of the following special characters: ${allowedSpecialChars}`);
+    req.flash('password', `• At least ${minSpecialChars} of the following special characters: ${allowedSpecialChars}`);
 }
 
 module.exports = router;

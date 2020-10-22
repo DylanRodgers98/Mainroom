@@ -5,35 +5,38 @@
 <% include navbar.ejs %>
 
 <div class="container app mt-5">
-    <h4>Login</h4>
-
-    <hr class="my-4">
-
     <div class="row">
-        <form action='/login' method="post" class="col-xs-12 col-sm-12 col-md-8 col-lg-6">
-            <div class="form-group">
-                <label for="email">Email address</label>
-                <input id="email" type="email" name="email" class="form-control" placeholder="Enter email" required>
-            </div>
+        <div class="col-4"></div>
+        <div class="col-4">
+            <h4>Log in to Mainroom</h4>
+            <hr class="my-4">
+            <form action='/login' method="post">
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input id="email" type="email" name="email" class="form-control" placeholder="Enter email" required>
+                </div>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input id="password" type="password" name="password" class="form-control" placeholder="Password" required>
-                <% if (errors.login.length) { %>
-                    <small class="form-text text-danger"><%= errors.login %></small>
-                <% } %>
-            </div>
+                <div class="form-group">
+                    <div>
+                        <label for="password">Password</label>
+                        <a class="float-right" href="/forgot-password">Forgot password?</a>
+                    </div>
+                    <input id="password" type="password" name="password" class="form-control" placeholder="Password" required>
+                    <% if (errors.login.length) { %>
+                        <small class="form-text text-danger"><%= errors.login %></small>
+                    <% } %>
+                </div>
 
-            <div class="form-group">
-                <div class="leader">
+                <div class="form-group">
                     Don't have an account? Register <a href="/register">here</a>.
                 </div>
-            </div>
 
-            <button type="submit" class="btn btn-dark btn-block mb-3">Login</button>
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-            <input type="hidden" name="redirectTo" value="<%= redirectTo %>" />
-        </form>
+                <button type="submit" class="btn btn-dark btn-block mb-5">Log In</button>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <input type="hidden" name="redirectTo" value="<%= redirectTo %>" />
+            </form>
+        </div>
+        <div class="col-4"></div>
     </div>
 </div>
 

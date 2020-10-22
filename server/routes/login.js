@@ -5,7 +5,6 @@ const loginChecker = require('connect-ensure-login');
 
 router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
     res.render('login', {
-        user: null,
         errors: {
             login: req.flash('login')
         },

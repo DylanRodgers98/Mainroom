@@ -126,7 +126,7 @@ export default class Navbar extends React.Component {
         return pathname + (window.location.pathname === '/' ? '' : `?redirectTo=${window.location.pathname}`);
     }
 
-    renderLoginOrProfileDropdown() {
+    renderLogInOrProfileDropdown() {
         return this.state.loggedInUser ? (
             <div className="navbar-nav ml-auto">
                 <Button className='nav-item nav-link float-right go-live-button' tag={Link} to='/go-live'>
@@ -151,7 +151,7 @@ export default class Navbar extends React.Component {
         ) : (
             <div className="navbar-nav ml-auto">
                 <a href={this.getRedirectablePath('/login')}
-                   className='nav-item float-right nav-link'>Login</a>
+                   className='nav-item float-right nav-link'>Log In</a>
                 <a href={this.getRedirectablePath('/register')}
                    className='nav-item float-right nav-link'>Register</a>
             </div>
@@ -204,7 +204,7 @@ export default class Navbar extends React.Component {
                             </Button>
                         </div>
                     </div>
-                    {this.renderLoginOrProfileDropdown()}
+                    {this.renderLogInOrProfileDropdown()}
                 </div>
             </nav>
         )
