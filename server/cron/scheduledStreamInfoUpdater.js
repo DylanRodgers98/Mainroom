@@ -22,7 +22,7 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, () => {
             LOGGER.error('An error occurred when finding scheduled streams starting between {} and {}: {}', lastTimeTriggered, thisTimeTriggered, err);
             throw err;
         } else if (!streams.length) {
-            LOGGER.info('No streams found starting between {} and {}, so nothing to update', lastTimeTriggered, thisTimeTriggered)
+            LOGGER.info('No streams found starting between {} and {}, so nothing to update', lastTimeTriggered, thisTimeTriggered);
         } else {
             LOGGER.info('Updating {} user{} stream info from scheduled streams', streams.length, streams.length === 1 ? `'s` : `s'`);
             let updated = 0;
@@ -43,9 +43,9 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, () => {
             });
             LOGGER.info(`Successfully updated {}/{} user{} stream info from scheduled streams`, updated, streams.length, streams.length === 1 ? `'s` : `s'`);
         }
-    });
 
-    lastTimeTriggered = thisTimeTriggered;
+        lastTimeTriggered = thisTimeTriggered;
+    });
 
     LOGGER.debug(`${jobName} finished`);
 });

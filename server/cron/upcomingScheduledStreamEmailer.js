@@ -3,7 +3,7 @@ const config = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
 const moment = require('moment');
 const mainroomEventEmitter = require('../mainroomEventEmitter');
-const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
+const LOGGER = require('../../logger')('./server/cron/upcomingScheduledStreamEmailer.js');
 
 const jobName = 'Upcoming Scheduled Stream Emailer';
 
