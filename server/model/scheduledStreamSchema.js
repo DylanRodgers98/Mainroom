@@ -1,5 +1,5 @@
-const Schema = require('mongoose').Schema;
-const config = require('../../mainroom.config')
+const {Schema} = require('mongoose');
+const config = require('../../mainroom.config');
 
 const ScheduledStreamSchema = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},

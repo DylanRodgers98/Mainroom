@@ -52,11 +52,18 @@ app.use(passport.session());
 // Register app routes
 app.use('/login', require('./routes/login'));
 app.use('/register', require('./routes/register'));
-app.use('/auth', require('./routes/auth'));
+app.use('/forgot-password', require('./routes/forgot-password'));
 app.use('/api/filters', require('./routes/filters'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/livestreams', require('./routes/livestreams'));
 app.use('/api/scheduled-streams', require('./routes/scheduled-streams'));
+
+app.get('/logged-in-user', (req, res) => {
+    res.json(!req.user ? {} : {
+        _id: req.user._id,
+        username: req.user.username
+    });
+});
 
 app.get('/logout', (req, res) => {
     req.logout();

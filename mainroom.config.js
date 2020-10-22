@@ -65,6 +65,9 @@ module.exports = {
         thumbnails: {
             ttl: 30 * 1000 // 30 seconds
         },
+        passwordResetToken: {
+            expiryInMinutes: 10
+        },
         s3: {
             staticContent: {
                 bucketName: 'mainroom-static-content',
@@ -88,7 +91,8 @@ module.exports = {
                 newSubscriber: 'newSubscriber',
                 subscriptionWentLive: 'subscriptionWentLive',
                 subscriptionCreatedScheduledStream: 'subscriptionCreatedScheduledStream',
-                subscriptionScheduledStreamStartingIn: 'subscriptionScheduledStreamStartingIn'
+                subscriptionScheduledStreamStartingIn: 'subscriptionScheduledStreamStartingIn',
+                resetPassword: 'resetPassword'
             }
         }
     }

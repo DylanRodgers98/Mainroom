@@ -45,7 +45,7 @@ export default class Home extends React.Component {
     }
 
     async getLoggedInUser() {
-        const res = await axios.get('/auth/logged-in');
+        const res = await axios.get('/logged-in-user');
         this.setState({
             loggedInUser: res.data.username
         });

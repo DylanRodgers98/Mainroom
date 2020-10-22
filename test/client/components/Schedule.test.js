@@ -16,7 +16,7 @@ const mockScheduledStreams = [{
 jest.mock('axios', () => {
     return {
         get: jest.fn(async (url, config) => {
-            if (url === '/auth/logged-in') {
+            if (url === '/logged-in-user') {
                 return {
                     data: {
                         username: mockOwnUsername

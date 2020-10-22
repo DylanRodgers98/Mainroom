@@ -46,7 +46,7 @@ export default class Settings extends React.Component {
     }
 
     async fillComponentIfLoggedIn() {
-        const res = await axios.get('/auth/logged-in');
+        const res = await axios.get('/logged-in-user');
         if (res.data.username) {
             this.setState({
                 loggedInUserId: res.data._id

@@ -165,3 +165,29 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
         }
     }
 }
+
+module.exports.sendResetPasswordEmail = async (user, token) => {
+    const params = {
+        Destination: {
+            ToAddresses: [user.email]
+        },
+        Source: process.env.NO_REPLY_EMAIL,
+        Template: config.email.ses.templateNames.resetPassword,
+        TemplateData: JSON.stringify({
+            user: {
+                displayName: user.displayName || user.username
+            },
+            token
+        })
+    };
+    try {
+        await SES.sendTemplatedEmail(params).promise();
+    } catch (err) {
+        if (err) {
+            LOGGER.error(`An error occurred when sending 'resetPassword' email to {} using SES: {}`, user.email, err);
+            throw err;
+        } else {
+            LOGGER.debug(`Successfully sent 'resetPassword' email to {} using SES`, user.email);
+        }
+    }
+}
