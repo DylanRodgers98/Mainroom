@@ -6,7 +6,7 @@ const {User} = require('../model/schemas');
 const _ = require('lodash');
 const sanitise = require('mongo-sanitize');
 const {getThumbnail} = require('../aws/s3ThumbnailRetriever');
-const LOGGER = require('../../logger')('./server/routes/streams.js');
+const LOGGER = require('../../logger')('./server/routes/livestreams.js');
 
 router.get('/', async (req, res, next) => {
     const result = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams`);

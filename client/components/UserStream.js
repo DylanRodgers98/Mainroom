@@ -89,7 +89,7 @@ export default class UserStream extends React.Component {
     }
 
     async getViewerUsername() {
-        const res = await axios.get('/api/users/logged-in');
+        const res = await axios.get('/auth/logged-in');
         this.setState({
             viewerUsername: res.data.username
         });

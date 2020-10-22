@@ -27,7 +27,7 @@ export default class Subscribers extends React.Component {
     }
 
     async isProfileOfLoggedInUser() {
-        const res = await axios.get('/api/users/logged-in');
+        const res = await axios.get('/auth/logged-in');
         this.setState({
             isProfileOfLoggedInUser: res.data.username === this.props.match.params.username,
         });

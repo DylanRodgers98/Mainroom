@@ -11,14 +11,8 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const mime = require('mime-types');
 const mainroomEventEmitter = require('../mainroomEventEmitter');
+const passwordValidator = require('../auth/passwordValidator');
 const LOGGER = require('../../logger')('./server/routes/users.js');
-
-router.get('/logged-in', (req, res) => {
-    res.json(!req.user ? {} : {
-        _id: req.user._id,
-        username: req.user.username
-    });
-});
 
 router.get('/:username', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
@@ -212,7 +206,7 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
     });
 });
 
-router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, (err, user) => {
         if (err) {
@@ -251,7 +245,7 @@ router.patch('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogge
     });
 });
 
-router.patch('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, '_id', (err, user) => {
         if (err) {
@@ -418,7 +412,7 @@ router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next
 
     let isUpdatingUsernameOrEmail = false;
 
-    const username = sanitise(req.body.username);
+    const username = sanitise(req.body.username.toLowercase());
     const email = sanitise(req.body.email);
 
     if (req.body.updateUsername) {
@@ -445,10 +439,10 @@ router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next
             } else if (users) {
                 const invalidReasons = {};
                 for (const user of users) {
-                    if (user.email === req.body.email) {
+                    if (user.email === email) {
                         invalidReasons.emailInvalidReason = 'Email is already taken';
                     }
-                    if (user.username === req.body.username) {
+                    if (user.username === username) {
                         invalidReasons.usernameInvalidReason = 'Username is already taken';
                     }
                 }
@@ -478,7 +472,7 @@ function updateUserSettings(updateQuery, req, res, next) {
     });
 }
 
-router.patch('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.post('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const userId = sanitise(req.params.userId);
     User.findById(userId).select('+password').exec((err, user) => {
         if (err) {

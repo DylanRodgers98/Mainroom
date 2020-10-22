@@ -46,7 +46,7 @@ export default class Settings extends React.Component {
     }
 
     async fillComponentIfLoggedIn() {
-        const res = await axios.get('/api/users/logged-in');
+        const res = await axios.get('/auth/logged-in');
         if (res.data.username) {
             this.setState({
                 loggedInUserId: res.data._id
@@ -151,7 +151,7 @@ export default class Settings extends React.Component {
     }
 
     async resetPassword() {
-        const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/password`, {
+        const res = await axios.post(`/api/users/${this.state.loggedInUserId}/password`, {
             currentPassword: this.state.currentPassword,
             newPassword: this.state.newPassword,
             confirmNewPassword: this.state.confirmNewPassword

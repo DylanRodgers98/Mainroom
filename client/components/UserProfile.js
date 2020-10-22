@@ -134,7 +134,7 @@ export default class UserProfile extends React.Component {
     }
 
     async getLoggedInUser() {
-        const res = await axios.get('/api/users/logged-in')
+        const res = await axios.get('/auth/logged-in')
         this.setState({
             loggedInUser: res.data.username,
             loggedInUserId: res.data._id
@@ -155,7 +155,7 @@ export default class UserProfile extends React.Component {
     }
 
     async subscribeToUser() {
-        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username}`);
+        const res = await axios.post(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username}`);
         if (res.status === 200) {
             this.setState({
                 isLoggedInUserSubscribed: true,
@@ -165,7 +165,7 @@ export default class UserProfile extends React.Component {
     }
 
     async unsubscribeFromUser() {
-        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username}`);
+        const res = await axios.post(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username}`);
         if (res.status === 200) {
             this.setState({
                 isLoggedInUserSubscribed: false,
@@ -179,7 +179,7 @@ export default class UserProfile extends React.Component {
         const streamKey = stream.data.streamKey;
         const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${streamKey}`);
         if (res.data.isLive) {
-            const thumbnail = await axios.get(`/api/streams/${streamKey}/thumbnail`);
+            const thumbnail = await axios.get(`/api/livestreams/${streamKey}/thumbnail`);
             this.setState({
                 streamKey: streamKey,
                 streamTitle: stream.data.title,

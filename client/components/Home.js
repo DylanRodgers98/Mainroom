@@ -45,14 +45,14 @@ export default class Home extends React.Component {
     }
 
     async getLoggedInUser() {
-        const res = await axios.get('/api/users/logged-in');
+        const res = await axios.get('/auth/logged-in');
         this.setState({
             loggedInUser: res.data.username
         });
     }
 
     async getFeaturedLiveStreams(params) {
-        const res = await axios.get('/api/streams', {
+        const res = await axios.get('/api/livestreams', {
             params: {
                 page: params.page,
                 limit: params.limit
@@ -69,7 +69,7 @@ export default class Home extends React.Component {
         const subsRes = await axios.get(`/api/users/${this.state.loggedInUser}/subscriptions`);
         if (subsRes.data.subscriptions && subsRes.data.subscriptions.length) {
             const subscriptionUsernames = subsRes.data.subscriptions.map(sub => sub.username);
-            const streamsRes = await axios.get(`/api/streams/`, {
+            const streamsRes = await axios.get(`/api/livestreams/`, {
                 params: {
                     usernames: subscriptionUsernames,
                     page: params.page,
