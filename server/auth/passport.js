@@ -3,7 +3,6 @@ const LocalStrategy = require('passport-local').Strategy;
 const User = require('../model/schemas').User;
 const shortid = require('shortid');
 const passwordValidator = require('./passwordValidator');
-const config = require('../../mainroom.config');
 const mongoose = require('mongoose');
 const LOGGER = require('../../logger')('./server/passport.js');
 
@@ -33,7 +32,8 @@ passport.deserializeUser((id, done) => {
 
 passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, password, done) => {
     if (!passwordValidator.validate(password)) {
-        return done(null, false, flashInvalidPassword(req));
+        const message = passwordValidator.getInvalidPasswordMessage();
+        return done(null, false, message.forEach(line => req.flash('password', line)));
     }
     if (password !== req.body.confirmPassword) {
         return done(null, false, req.flash('confirmPassword', 'Passwords do not match'));
@@ -68,27 +68,6 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
         }
     });
 }));
-
-function flashInvalidPassword(req) {
-    req.flash('password', 'Invalid password. Password must contain:');
-
-    const minLength = config.validation.password.minLength;
-    const maxLength = config.validation.password.maxLength;
-    req.flash('password', `• Between ${minLength}-${maxLength} characters`);
-
-    const minLowercase = config.validation.password.minLowercase;
-    req.flash('password', `• At least ${minLowercase} lowercase character${minLowercase > 1 ? 's' : ''}`);
-
-    const minUppercase = config.validation.password.minUppercase;
-    req.flash('password', `• At least ${minUppercase} uppercase character${minUppercase > 1 ? 's' : ''}`);
-
-    const minNumeric = config.validation.password.minUppercase;
-    req.flash('password', `• At least ${minNumeric} number${minNumeric > 1 ? 's' : ''}`);
-
-    const minSpecialChars = config.validation.password.minSpecialChars;
-    const allowedSpecialChars = Array.from(config.validation.password.allowedSpecialChars).join(' ');
-    req.flash('password', `• At least ${minSpecialChars} of the following special characters: ${allowedSpecialChars}`);
-}
 
 passport.use('localLogin', new LocalStrategy(strategyOptions, (req, email, password, done) => {
     User.findOne({'email': email}).select('+password').exec((err, user) => {

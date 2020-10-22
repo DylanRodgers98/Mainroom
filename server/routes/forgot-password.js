@@ -8,6 +8,7 @@ const sesEmailSender = require('../aws/sesEmailSender');
 const passwordValidator = require('../auth/passwordValidator');
 const loginChecker = require('connect-ensure-login');
 const config = require('../../mainroom.config');
+const {getInvalidPasswordMessage} = require("../auth/passwordValidator");
 const LOGGER = require('../../logger')('./server/routes/forgot-password.js');
 
 router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
@@ -30,11 +31,12 @@ router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
             req.flash('errors', `Could not find a user with the email address ${email}`);
             res.redirect('/forgot-password');
         } else {
-            randomBytes(16, (err, token) => {
+            randomBytes(16, (err, bytes) => {
                 if (err) {
                     LOGGER.error('An error occurred when generating random bytes for password reset token: {}', err);
                     next(err);
                 } else {
+                    const token = bytes.toString('hex');
                     const passwordResetToken = new PasswordResetToken({
                         user: user._id,
                         tokenHash: hashToken(token),
@@ -98,7 +100,7 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
             LOGGER.error(`Could not find user (_id: {}) when resetting password: {}`, userId, err);
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
         }  else if (!passwordValidator.validate(req.body.password)) {
-            flashInvalidPassword(req);
+            getInvalidPasswordMessage().forEach(line => req.flash('password', line));
             res.redirect('/forgot-password/reset');
         } else if (req.body.password !== req.body.confirmPassword) {
             req.flash('confirmPassword', 'Passwords do not match')
@@ -122,27 +124,6 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
     });
 });
 
-const hashToken = token => createHash('sha256').update(token).digest('hex');
-
-function flashInvalidPassword(req) {
-    req.flash('password', 'Invalid password. Password must contain:');
-
-    const minLength = config.validation.password.minLength;
-    const maxLength = config.validation.password.maxLength;
-    req.flash('password', `• Between ${minLength}-${maxLength} characters`);
-
-    const minLowercase = config.validation.password.minLowercase;
-    req.flash('password', `• At least ${minLowercase} lowercase character${minLowercase > 1 ? 's' : ''}`);
-
-    const minUppercase = config.validation.password.minUppercase;
-    req.flash('password', `• At least ${minUppercase} uppercase character${minUppercase > 1 ? 's' : ''}`);
-
-    const minNumeric = config.validation.password.minUppercase;
-    req.flash('password', `• At least ${minNumeric} number${minNumeric > 1 ? 's' : ''}`);
-
-    const minSpecialChars = config.validation.password.minSpecialChars;
-    const allowedSpecialChars = Array.from(config.validation.password.allowedSpecialChars).join(' ');
-    req.flash('password', `• At least ${minSpecialChars} of the following special characters: ${allowedSpecialChars}`);
-}
+const hashToken = token => createHash('sha256').update(token).digest('hex')
 
 module.exports = router;
