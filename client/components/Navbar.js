@@ -4,6 +4,7 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from 'reac
 import config from '../../mainroom.config';
 import '../css/navbar.scss';
 import axios from 'axios';
+import {Image} from "react-bootstrap";
 
 export default class Navbar extends React.Component {
 
@@ -135,7 +136,7 @@ export default class Navbar extends React.Component {
                 <Dropdown className="nav-item float-left navbar-settings-dropdown"
                           isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
                     <DropdownToggle caret>
-                        <img src={this.state.profilePicURL} width='25' height='25' alt={`Menu`}/>
+                        <Image src={this.state.profilePicURL} width='25' height='25' alt={`Menu`} roundedCircle/>
                     </DropdownToggle>
                     <DropdownMenu right>
                         <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>

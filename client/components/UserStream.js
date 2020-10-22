@@ -6,7 +6,7 @@ import {Link} from "react-router-dom";
 import {Button} from "reactstrap";
 import io from "socket.io-client";
 import '../css/user-stream.scss';
-import {Row, Col} from "react-bootstrap";
+import {Row, Col, Image} from "react-bootstrap";
 
 export default class UserStream extends React.Component {
 
@@ -81,7 +81,7 @@ export default class UserStream extends React.Component {
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [
-                this.props.match.params.username,
+                (this.state.displayName || this.props.match.params.username),
                 this.state.streamTitle,
                 config.siteTitle
             ].filter(Boolean).join(' - ');
@@ -191,7 +191,7 @@ export default class UserStream extends React.Component {
                             <tr>
                                 <td>
                                     <Link to={`/user/${this.props.match.params.username}`}>
-                                        <img src={this.state.profilePicURL} width='75' height='75'
+                                        <Image src={this.state.profilePicURL} width='75' height='75' roundedCircle
                                              alt={`${this.props.match.params.username} profile picture`}/>
                                     </Link>
                                 </td>

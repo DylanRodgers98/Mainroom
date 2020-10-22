@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "axios";
 import {Container, Row, Col, Button} from "reactstrap";
-import {Modal} from "react-bootstrap";
+import {Image, Modal} from "react-bootstrap";
 import {Link} from "react-router-dom";
 import Timeline from "react-calendar-timeline";
 import moment from "moment";
@@ -520,7 +520,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderProfilePic() {
-        const profilePic = <img src={this.state.profilePicURL}
+        const profilePic = <Image src={this.state.profilePicURL} roundedCircle
                                 alt={`${this.props.match.params.username} Profile Picture`}/>;
 
         const changeProfilePicButton = (
