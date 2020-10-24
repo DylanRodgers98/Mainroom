@@ -34,7 +34,8 @@ class Logger {
 function resolveLogLevel() {
     if (process.env.LOG_LEVEL) {
         const logLevelInt = parseInt(process.env.LOG_LEVEL);
-        return !Number.isNaN(logLevelInt) ? logLevelInt : LOG_LEVELS[process.env.LOG_LEVEL.toUpperCase()];
+        return !Number.isNaN(logLevelInt) ? logLevelInt
+            : LOG_LEVELS[process.env.LOG_LEVEL.toUpperCase()] || DEFAULT_LOG_LEVEL;
     } else {
         return DEFAULT_LOG_LEVEL;
     }
