@@ -556,7 +556,7 @@ export default class UserProfile extends React.Component {
             }
         });
         if (res.status === 200) {
-            this.reloadProfile();
+            location.reload();
         }
     }
 

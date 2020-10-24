@@ -98,7 +98,7 @@ router.put('/:userId/profile-pic', (req, res, next) => {
                 LOGGER.error('An error occurred when uploading profile pic to S3 for user {}: {}', userId, err);
                 next(err);
             } else {
-                User.findById(userId, {profilePicURL: req.file.location}, (err, user) => {
+                User.findByIdAndUpdate(userId, {profilePicURL: req.file.location}, (err, user) => {
                     if (err) {
                         LOGGER.error('An error occurred when updating user with _id {}: {}', userId, err);
                         next(err);
