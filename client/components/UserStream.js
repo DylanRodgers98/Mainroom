@@ -26,8 +26,7 @@ export default class UserStream extends React.Component {
             streamGenre: '',
             streamCategory: '',
             msg: '',
-            chat: [],
-            chatHeight: '0px'
+            chat: []
         }
     }
 
@@ -41,7 +40,6 @@ export default class UserStream extends React.Component {
             if (res.data) {
                 await this.populateStreamDataIfUserIsLive(res.data);
             }
-            this.setChatHeight();
         } catch (err) {
             if (err.response.status === 404) {
                 window.location.href = '/404';
@@ -101,16 +99,6 @@ export default class UserStream extends React.Component {
                 chat: [...this.state.chat, {viewerUsername, msg}]
             });
         });
-    }
-
-    setChatHeight() {
-        const messages = document.getElementById('messages');
-        const livestream = document.getElementById('vjs_video_3');
-        if (messages && livestream) {
-            this.setState({
-                chatHeight: livestream.clientHeight.toString() + 'px'
-            });
-        }
     }
 
     componentWillUnmount() {
@@ -178,6 +166,18 @@ export default class UserStream extends React.Component {
         );
     }
 
+    setChatHeight() {
+        const messages = document.getElementById('messages');
+        const livestream = document.getElementById('vjs_video_3');
+        let chatHeight;
+        while (!chatHeight) {
+            if (messages && livestream) {
+                chatHeight = livestream.clientHeight.toString() + 'px';
+            }
+        }
+        return {height: chatHeight, maxHeight: chatHeight};
+    }
+
     render() {
         return this.state.stream ? (
             <Row className='stream-row'>
@@ -216,8 +216,7 @@ export default class UserStream extends React.Component {
                     </div>
                 </Col>
                 <Col className='chat-col' xs='4' sm='4' md='4' lg='4' xl='4'>
-                    <div className='chat-messages' id='messages'
-                         style={{height: this.state.chatHeight, maxHeight: this.state.chatHeight}}>
+                    <div className='chat-messages' id='messages' style={this.setChatHeight()}>
                         {this.renderChat()}
                     </div>
                     <div>
