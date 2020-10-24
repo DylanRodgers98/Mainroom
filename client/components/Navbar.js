@@ -181,13 +181,13 @@ export default class Navbar extends React.Component {
                 <div className='container'>
                     <div className='navbar-nav mr-auto'>
                         <Link to={'/'} className={'navbar-brand'}>{config.siteTitle}</Link>
-                        <Dropdown className='nav-item float-left' onMouseOver={this.onMouseEnterGenreDropdown}
+                        <Dropdown className='nav-item float-left navbar-dropdown' onMouseOver={this.onMouseEnterGenreDropdown}
                                   onMouseLeave={this.onMouseLeaveGenreDropdown} isOpen={this.state.genreDropdownOpen}
                                   toggle={this.genreDropdownToggle}>
                             <DropdownToggle caret>Genre</DropdownToggle>
                             <DropdownMenu>{genres}</DropdownMenu>
                         </Dropdown>
-                        <Dropdown className='nav-item float-left' onMouseOver={this.onMouseEnterCategoryDropdown}
+                        <Dropdown className='nav-item float-left navbar-dropdown' onMouseOver={this.onMouseEnterCategoryDropdown}
                                   onMouseLeave={this.onMouseLeaveCategoryDropdown}
                                   isOpen={this.state.categoryDropdownOpen} toggle={this.categoryDropdownToggle}>
                             <DropdownToggle caret>Category</DropdownToggle>

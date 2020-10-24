@@ -66,6 +66,14 @@ i {
     }
 }
 
+.navbar-dropdown {
+    .btn-secondary {
+        color: rgba(255, 255, 255, 0.5);
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+}
+
 .dropdown-hover-darkred {
     .btn-secondary:hover {
         background-color: darkred !important;
