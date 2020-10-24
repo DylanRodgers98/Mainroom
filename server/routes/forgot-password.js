@@ -3,12 +3,10 @@ const router = express.Router();
 const {User, PasswordResetToken} = require('../model/schemas');
 const sanitise = require('mongo-sanitize');
 const {randomBytes, createHash} = require('crypto');
-const moment = require('moment');
 const sesEmailSender = require('../aws/sesEmailSender');
 const passwordValidator = require('../auth/passwordValidator');
 const loginChecker = require('connect-ensure-login');
-const config = require('../../mainroom.config');
-const {getInvalidPasswordMessage} = require("../auth/passwordValidator");
+const {getInvalidPasswordMessage} = require('../auth/passwordValidator');
 const LOGGER = require('../../logger')('./server/routes/forgot-password.js');
 
 router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
@@ -40,7 +38,7 @@ router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
                     const passwordResetToken = new PasswordResetToken({
                         user: user._id,
                         tokenHash: hashToken(token),
-                        expires: moment().add(config.storage.passwordResetToken.expiryInMinutes, 'minutes').toDate()
+                        created: Date.now()
                     });
                     passwordResetToken.save(err => {
                         if (err) {

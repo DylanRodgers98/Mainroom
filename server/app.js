@@ -16,12 +16,13 @@ const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
 const csrf = require('csurf');
-const awsResourceProvisioner = require('./aws/resourceProvisioner');
 const LOGGER = require('../logger')('./server/app.js');
 
-awsResourceProvisioner.provisionResources();
+const databaseUri = 'mongodb://'
+    + (process.env.DB_USER && process.env.DB_PASSWORD ? `${process.env.DB_USER}:${process.env.DB_PASSWORD}@` : '')
+    + `${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}`;
 
-mongoose.connect(config.database.uri, {
+mongoose.connect(databaseUri, {
     useNewUrlParser: true,
     useFindAndModify: false,
     useUnifiedTopology: true,
@@ -40,7 +41,6 @@ app.use(csrf({cookie: true}))
 
 app.use(Session({
     store: new MongoStore({ mongooseConnection: mongoose.connection }),
-    cookie: { maxAge: config.storage.session.maxAge },
     secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: false,

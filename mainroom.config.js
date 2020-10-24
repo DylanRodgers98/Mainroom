@@ -9,12 +9,6 @@ module.exports = {
             port: 8080
         }
     },
-    database: {
-        uri: 'mongodb://127.0.0.1:27017/mainroom',
-        scheduledStream: {
-            ttl: '7d'
-        }
-    },
     rtmpServer: {
         host: '127.0.0.1',
         logType: logger.resolveLogLevel(),
@@ -59,14 +53,14 @@ module.exports = {
         upcomingScheduledStreamEmailer: '* * * * *'
     },
     storage: {
-        session: {
-            maxAge: 4 * 60 * 60 * 1000 // 4 hours
-        },
         thumbnails: {
             ttl: 30 * 1000 // 30 seconds
         },
+        scheduledStream: {
+            ttl: 7 * 24 * 60 * 60 * 1000 // 7 days
+        },
         passwordResetToken: {
-            expiryInMinutes: 10
+            ttl: 10 * 60 * 1000 // 10 minutes
         },
         s3: {
             staticContent: {
@@ -82,8 +76,8 @@ module.exports = {
         limit: 12,
         subscriptionsAndFeaturedLimit: 6
     },
-    defaultProfilePicURL: 'https://upload.wikimedia.org/wikipedia/en/9/9a/Trollface_non-free.png',
-    defaultThumbnailURL: 'https://mainroom-static-content.s3.amazonaws.com/stream-thumbnails/3--tczpr6.png',
+    defaultProfilePicURL: 'https://mainroom-static-content.s3.amazonaws.com/default_profile_pic.png',
+    defaultThumbnailURL: 'https://mainroom-static-content.s3.amazonaws.com/default_stream_thumbnail.png',
     email: {
         enabled: false,
         ses: {

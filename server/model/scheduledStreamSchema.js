@@ -4,7 +4,7 @@ const config = require('../../mainroom.config');
 const ScheduledStreamSchema = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},
     startTime: Date,
-    endTime: {type: Date, index: {expires: config.database.scheduledStream.ttl}},
+    endTime: {type: Date, index: {expires: config.storage.scheduledStream.ttl}},
     title: String,
     genre: String,
     category: String,

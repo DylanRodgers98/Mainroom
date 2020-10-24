@@ -1,9 +1,10 @@
 const {Schema} = require('mongoose');
+const config = require('../../mainroom.config');
 
 const PasswordResetToken = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},
     tokenHash: String,
-    expires: {type: Date, index: {expires: 0}}
+    created: {type: Date, index: {expires: config.storage.passwordResetToken.ttl}}
 });
 
 module.exports = PasswordResetToken;
