@@ -2,9 +2,8 @@ import React from 'react';
 import {Link} from 'react-router-dom';
 import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from 'reactstrap';
 import config from '../../mainroom.config';
-import '../css/navbar.scss';
 import axios from 'axios';
-import {Image} from "react-bootstrap";
+import {Image} from 'react-bootstrap';
 
 export default class Navbar extends React.Component {
 
@@ -112,8 +111,8 @@ export default class Navbar extends React.Component {
 
     searchHandleKeyDown(e) {
         if (e.key === 'Enter' && this.state.searchText) {
-            document.getElementById("searchButton").click();
-            document.getElementById("searchBox").blur();
+            document.getElementById('searchButton').click();
+            document.getElementById('searchBox').blur();
         }
     }
 
@@ -129,11 +128,11 @@ export default class Navbar extends React.Component {
 
     renderLogInOrProfileDropdown() {
         return this.state.loggedInUser ? (
-            <div className="navbar-nav ml-auto">
+            <div className='navbar-nav ml-auto'>
                 <Button className='nav-item nav-link float-right go-live-button' tag={Link} to='/go-live'>
                     Go Live
                 </Button>
-                <Dropdown className="nav-item float-left navbar-settings-dropdown"
+                <Dropdown className='nav-item float-left navbar-menu'
                           isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
                     <DropdownToggle caret>
                         <Image src={this.state.profilePicURL} width='25' height='25' alt={`Menu`} roundedCircle/>
@@ -150,7 +149,7 @@ export default class Navbar extends React.Component {
                 </Dropdown>
             </div>
         ) : (
-            <div className="navbar-nav ml-auto">
+            <div className='navbar-nav ml-auto'>
                 <a href={this.getRedirectablePath('/login')}
                    className='nav-item float-right nav-link'>Log In</a>
                 <a href={this.getRedirectablePath('/register')}
@@ -179,27 +178,27 @@ export default class Navbar extends React.Component {
         const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText}` : '';
 
         return (
-            <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-                <div className="container">
-                    <div className="navbar-nav mr-auto">
+            <nav className='navbar navbar-expand-lg navbar-dark bg-dark'>
+                <div className='container'>
+                    <div className='navbar-nav mr-auto'>
                         <Link to={'/'} className={'navbar-brand'}>{config.siteTitle}</Link>
-                        <Dropdown className="nav-item float-left" onMouseOver={this.onMouseEnterGenreDropdown}
+                        <Dropdown className='nav-item float-left' onMouseOver={this.onMouseEnterGenreDropdown}
                                   onMouseLeave={this.onMouseLeaveGenreDropdown} isOpen={this.state.genreDropdownOpen}
                                   toggle={this.genreDropdownToggle}>
                             <DropdownToggle caret>Genre</DropdownToggle>
                             <DropdownMenu>{genres}</DropdownMenu>
                         </Dropdown>
-                        <Dropdown className="nav-item float-left" onMouseOver={this.onMouseEnterCategoryDropdown}
+                        <Dropdown className='nav-item float-left' onMouseOver={this.onMouseEnterCategoryDropdown}
                                   onMouseLeave={this.onMouseLeaveCategoryDropdown}
                                   isOpen={this.state.categoryDropdownOpen} toggle={this.categoryDropdownToggle}>
                             <DropdownToggle caret>Category</DropdownToggle>
                             <DropdownMenu>{categories}</DropdownMenu>
                         </Dropdown>
-                        <div className="navbar-nav ml-2">
-                            <input id="searchBox" className="form-control search-box" placeholder="Search..."
+                        <div className='navbar-nav ml-2'>
+                            <input id='searchBox' className='form-control search-box' placeholder='Search...'
                                    onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
                                    value={this.state.searchText}/>
-                            <Button id="searchButton" className="form-control" onClick={this.clearSearchBox}
+                            <Button id='searchButton' className='form-control' onClick={this.clearSearchBox}
                                     tag={Link} to={searchButtonLink}>
                                 Search
                             </Button>

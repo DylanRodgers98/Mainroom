@@ -1,9 +1,9 @@
-import React from "react";
+import React from 'react';
 import axios from 'axios';
-import {Col, Container, Row} from "reactstrap";
-import {Link} from "react-router-dom";
-import config from "../../mainroom.config";
-import {Button} from "react-bootstrap";
+import {Col, Container, Row} from 'reactstrap';
+import {Link} from 'react-router-dom';
+import config from '../../mainroom.config';
+import {Button} from 'react-bootstrap';
 
 const STARTING_PAGE = 1;
 

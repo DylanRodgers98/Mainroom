@@ -1,11 +1,9 @@
-import React from "react";
+import React from 'react';
 import axios from 'axios';
 import config from '../../mainroom.config';
-import {Link} from "react-router-dom";
-import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Col} from "reactstrap";
-import '../css/livestreams.scss';
-import '../css/search.scss';
-import {Button} from "react-bootstrap";
+import {Link} from 'react-router-dom';
+import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Col} from 'reactstrap';
+import {Button} from 'react-bootstrap';
 
 const STARTING_PAGE = 1;
 
@@ -136,15 +134,15 @@ export default class LiveStreams extends React.Component {
         const streams = this.state.liveStreams.map((liveStream, index) => {
             return (
                 <Col className='stream' key={index}>
-                    <span className="live-label">LIVE</span>
+                    <span className='live-label'>LIVE</span>
                     <Link to={`/user/${liveStream.username}/live`}>
-                        <div className="stream-thumbnail">
+                        <div className='stream-thumbnail'>
                             <img src={liveStream.thumbnailURL}
                                  alt={`${liveStream.username} Stream Thumbnail`}/>
                         </div>
                     </Link>
 
-                    <span className="username">
+                    <span className='username'>
                         <Link to={`/user/${liveStream.username}/live`}>
                             {liveStream.displayName || liveStream.username}
                         </Link>
@@ -154,7 +152,7 @@ export default class LiveStreams extends React.Component {
         });
 
         const streamBoxes = streams.length ? (
-            <Row className="streams" xs='1' sm='1' md='2' lg='3' xl='3'>
+            <Row xs='1' sm='1' md='2' lg='3' xl='3'>
                 {streams}
             </Row>
         ) : (
@@ -183,17 +181,17 @@ export default class LiveStreams extends React.Component {
         );
 
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
-            <Container className="mt-5">
+            <Container className='mt-5'>
                 <Row>
                     <Col>
-                        <h4>Search: "{this.props.match.params.query}"</h4>
+                        <h4>Search: '{this.props.match.params.query}'</h4>
                     </Col>
                     <Col>
-                        <table className="float-right">
+                        <table className='float-right'>
                             <tr>
                                 <td>
-                                    <Dropdown className="filter-dropdown" isOpen={this.state.genreDropdownOpen}
-                                              toggle={this.genreDropdownToggle} size="sm">
+                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
+                                              toggle={this.genreDropdownToggle} size='sm'>
                                         <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
                                         <DropdownMenu right>
                                             <DropdownItem onClick={this.clearGenreFilter}
@@ -206,8 +204,8 @@ export default class LiveStreams extends React.Component {
                                     </Dropdown>
                                 </td>
                                 <td>
-                                    <Dropdown className="filter-dropdown" isOpen={this.state.categoryDropdownOpen}
-                                              toggle={this.categoryDropdownToggle} size="sm">
+                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
+                                              toggle={this.categoryDropdownToggle} size='sm'>
                                         <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
                                         <DropdownMenu right>
                                             <DropdownItem onClick={this.clearCategoryFilter}
@@ -223,7 +221,7 @@ export default class LiveStreams extends React.Component {
                         </table>
                     </Col>
                 </Row>
-                <hr className="my-4"/>
+                <hr className='my-4'/>
                 {streamBoxes}
                 {loadMoreButton}
             </Container>

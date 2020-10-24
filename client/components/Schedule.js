@@ -1,12 +1,10 @@
-import React from "react";
+import React from 'react';
 import axios from 'axios';
 import Timeline from 'react-calendar-timeline'
 import moment from 'moment'
 import {Col, Container, Row, Button, DropdownToggle, Dropdown, DropdownMenu, DropdownItem} from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
-import 'react-calendar-timeline/lib/Timeline.css'
-import '../css/schedule.scss';
-import {Modal} from "react-bootstrap";
+import {Modal} from 'react-bootstrap';
 
 export default class Schedule extends React.Component {
 
@@ -270,7 +268,7 @@ export default class Schedule extends React.Component {
                                                         local={this.getDatePickerFormat()} noMobileMode={true}
                                                         applyCallback={this.scheduleStreamApplyDate} autoApply
                                                         style={{standaloneLayout: {display: 'flex', maxWidth: 'fit-content'}}}>
-                                    <Dropdown className='date-picker-dropdown' size='sm' toggle={() => {}}>
+                                    <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
                                         <DropdownToggle caret>
                                             {this.state.scheduleStreamStartTime.format(dateFormat) + ' - '
                                             + this.state.scheduleStreamEndTime.format(dateFormat)}
@@ -281,20 +279,20 @@ export default class Schedule extends React.Component {
                         </tr>
                         <tr>
                             <td>
-                                <h5 className="mt-2">Title:</h5>
+                                <h5 className='mt-2'>Title:</h5>
                             </td>
                             <td>
-                                <input className="settings-title rounded-border" type="text"
+                                <input className='settings-title rounded-border' type='text'
                                        value={this.state.scheduleStreamTitle} onChange={this.setTitle}/>
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <h5 className="mt-2">Genre:</h5>
+                                <h5 className='mt-2'>Genre:</h5>
                             </td>
                             <td>
-                                <Dropdown className="settings-dropdown" isOpen={this.state.genreDropdownOpen}
-                                          toggle={this.genreDropdownToggle} size="sm">
+                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
+                                          toggle={this.genreDropdownToggle} size='sm'>
                                     <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
                                     <DropdownMenu>{genres}</DropdownMenu>
                                 </Dropdown>
@@ -302,11 +300,11 @@ export default class Schedule extends React.Component {
                         </tr>
                         <tr>
                             <td>
-                                <h5 className="mt-2">Category:</h5>
+                                <h5 className='mt-2'>Category:</h5>
                             </td>
                             <td>
-                                <Dropdown className="settings-dropdown" isOpen={this.state.categoryDropdownOpen}
-                                          toggle={this.categoryDropdownToggle} size="sm">
+                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
+                                          toggle={this.categoryDropdownToggle} size='sm'>
                                     <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
                                     <DropdownMenu>{categories}</DropdownMenu>
                                 </Dropdown>
@@ -314,7 +312,7 @@ export default class Schedule extends React.Component {
                         </tr>
                         <tr>
                             <td>
-                                <h5 className="mt-2">Tags:</h5>
+                                <h5 className='mt-2'>Tags:</h5>
                             </td>
                             <table>
                                 <tr>
@@ -323,7 +321,7 @@ export default class Schedule extends React.Component {
                                                value={this.state.scheduleStreamTags} onChange={this.setTags}/>
                                     </td>
                                     <td>
-                                        <i className="ml-1">Comma-separated</i>
+                                        <i className='ml-1'>Comma-separated</i>
                                     </td>
                                 </tr>
                             </table>
@@ -357,7 +355,7 @@ export default class Schedule extends React.Component {
                         <DateTimeRangeContainer ranges={this.getDatePickerRange()} local={this.getDatePickerFormat()}
                                                 start={this.state.startTime} end={this.state.endTime}
                                                 applyCallback={this.applyDate} leftMode={true} noMobileMode={true}>
-                            <Dropdown className='date-picker-dropdown' size='sm' toggle={() => {}}>
+                            <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
                                 <DropdownToggle caret>Select Time Period</DropdownToggle>
                             </Dropdown>
                         </DateTimeRangeContainer>

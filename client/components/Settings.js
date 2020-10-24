@@ -1,8 +1,8 @@
-import React from "react";
+import React from 'react';
 import axios from 'axios';
-import Container from "reactstrap/es/Container";
-import {Button} from "reactstrap";
-import {Modal} from "react-bootstrap";
+import Container from 'reactstrap/es/Container';
+import {Button} from 'reactstrap';
+import {Modal} from 'react-bootstrap';
 import _ from 'lodash';
 
 export default class Settings extends React.Component {
@@ -252,16 +252,16 @@ export default class Settings extends React.Component {
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
-                <Container className="mt-5">
+                <Container className='mt-5'>
                     <h4>Account Settings</h4>
-                    <hr className="mt-4"/>
-                    <table className="mt-3">
+                    <hr className='mt-4'/>
+                    <table className='mt-3'>
                         <tr>
                             <td>
-                                <h5 className="mr-3">Username:</h5>
+                                <h5 className='mr-3'>Username:</h5>
                             </td>
                             <td>
-                                <input className='rounded-border' type="text" value={this.state.username}
+                                <input className='rounded-border' type='text' value={this.state.username}
                                        onChange={this.setUsername}/>
                             </td>
                             <td>
@@ -272,10 +272,10 @@ export default class Settings extends React.Component {
                         </tr>
                         <tr>
                             <td>
-                                <h5 className="mt-2 mr-3">Email Address:</h5>
+                                <h5 className='mt-2 mr-3'>Email Address:</h5>
                             </td>
                             <td>
-                                <input className='rounded-border' type="text" value={this.state.email}
+                                <input className='rounded-border' type='text' value={this.state.email}
                                        onChange={this.setEmail}/>
                             </td>
                             <td>
@@ -286,7 +286,7 @@ export default class Settings extends React.Component {
                         </tr>
                         <tr>
                             <td>
-                                <h5 className="mt-2">Reset Password:</h5>
+                                <h5 className='mt-2'>Reset Password:</h5>
                             </td>
                             <td>
                                 <Button className='btn-dark' size='sm' onClick={this.resetPasswordToggle}>
@@ -304,7 +304,7 @@ export default class Settings extends React.Component {
                             <td>
                                 <form className='ml-2'>
                                     <label>
-                                        Send an email when I get a new subscriber:
+                                        Send an email when someone subscribes to me:
                                         <input name='newSubscriber' className='ml-1' type='checkbox'
                                                checked={this.state.emailSettings.newSubscriber}
                                                onChange={this.handleEmailSettingsChange}/>
@@ -341,9 +341,9 @@ export default class Settings extends React.Component {
                             </td>
                         </tr>
                     </table>
-                    <hr className="my-4"/>
-                    <div className="float-right mb-4">
-                        <Button className="btn-dark" size="lg" disabled={!this.enableSaveButton()}
+                    <hr className='my-4'/>
+                    <div className='float-right mb-4'>
+                        <Button className='btn-dark' size='lg' disabled={!this.enableSaveButton()}
                                 onClick={this.saveSettings}>
                             Save Settings
                         </Button>

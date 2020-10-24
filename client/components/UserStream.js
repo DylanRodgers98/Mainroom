@@ -2,11 +2,10 @@ import React from 'react';
 import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
-import {Link} from "react-router-dom";
-import {Button} from "reactstrap";
-import io from "socket.io-client";
-import '../css/user-stream.scss';
-import {Row, Col, Image} from "react-bootstrap";
+import {Link} from 'react-router-dom';
+import {Button} from 'reactstrap';
+import io from 'socket.io-client';
+import {Row, Col, Image} from 'react-bootstrap';
 
 export default class UserStream extends React.Component {
 
@@ -139,9 +138,9 @@ export default class UserStream extends React.Component {
             const streamUsername = this.props.match.params.username;
             const viewerUsername = this.state.viewerUsername;
             const msg = this.state.msg;
-            this.socket.emit("chatMessage", {streamUsername, viewerUsername, msg});
+            this.socket.emit('chatMessage', {streamUsername, viewerUsername, msg});
             this.setState({
-                msg: ""
+                msg: ''
             });
         }
     }
@@ -149,7 +148,7 @@ export default class UserStream extends React.Component {
     renderChat() {
         return this.state.chat.map(({viewerUsername, msg}, i) => (
             <div className='ml-1' key={i}>
-                <span style={{color: "green"}}>{viewerUsername}: </span>
+                <span style={{color: 'green'}}>{viewerUsername}: </span>
                 <span>{msg}</span>
             </div>
         ));
@@ -184,7 +183,7 @@ export default class UserStream extends React.Component {
             <Row className='stream-row'>
                 <Col className='stream-col' xs='8' sm='8' md='8' lg='8' xl='8'>
                     <div data-vjs-player>
-                        <video ref={node => this.videoNode = node} className="video-js vjs-big-play-centered"/>
+                        <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
                     </div>
                     <div>
                         <table className='ml-2 mt-2 mb-2'>
@@ -196,7 +195,7 @@ export default class UserStream extends React.Component {
                                     </Link>
                                 </td>
                                 <td valign='middle'>
-                                    <div className="ml-2">
+                                    <div className='ml-2'>
                                         <h3>
                                             <Link to={`/user/${this.props.match.params.username}`}>
                                                 {this.state.displayName || this.props.match.params.username}

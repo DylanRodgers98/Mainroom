@@ -2,9 +2,8 @@ import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
-import {Container, Row, Col} from "reactstrap";
-import '../css/livestreams.scss';
-import {Button} from "react-bootstrap";
+import {Container, Row, Col} from 'reactstrap';
+import {Button} from 'react-bootstrap';
 
 const STARTING_PAGE = 1;
 
@@ -96,7 +95,7 @@ export default class Home extends React.Component {
             <React.Fragment>
                 {this.renderLiveStreams('Featured', this.state.featuredLiveStreams)}
                 {this.state.showLoadMoreFeaturedButton ? loadMoreButton : undefined}
-                <div className="my-4"/>
+                <div className='my-4'/>
             </React.Fragment>
         );
     }
@@ -113,7 +112,7 @@ export default class Home extends React.Component {
             <React.Fragment>
                 {this.renderLiveStreams('Subscriptions', this.state.subscriptionLiveStreams)}
                 {this.state.showLoadMoreSubscriptionsButton ? loadMoreButton : undefined}
-                <hr className="my-4"/>
+                <hr className='my-4'/>
             </React.Fragment>
         );
     }
@@ -132,15 +131,15 @@ export default class Home extends React.Component {
         const streamBoxes = liveStreams.map((liveStream, index) => {
             return (
                 <Col className='stream' key={index}>
-                    <span className="live-label">LIVE</span>
+                    <span className='live-label'>LIVE</span>
                     <Link to={`/user/${liveStream.username}/live`}>
-                        <div className="stream-thumbnail">
+                        <div className='stream-thumbnail'>
                             <img src={liveStream.thumbnailURL}
                                  alt={`${liveStream.username} Stream Thumbnail`}/>
                         </div>
                     </Link>
 
-                    <span className="username">
+                    <span className='username'>
                         <Link to={`/user/${liveStream.username}/live`}>
                             {liveStream.displayName || liveStream.username}
                         </Link>
@@ -156,7 +155,7 @@ export default class Home extends React.Component {
                         <h4>{title}</h4>
                     </Col>
                 </Row>
-                <Row className="streams mt-3" xs='1' sm='1' md='2' lg='3' xl='3'>
+                <Row className='mt-3' xs='1' sm='1' md='2' lg='3' xl='3'>
                     {streamBoxes}
                 </Row>
             </React.Fragment>
@@ -181,7 +180,7 @@ export default class Home extends React.Component {
 
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
-            <Container className="mt-5">
+            <Container className='mt-5'>
                 {this.renderStreamBoxes()}
             </Container>
         )

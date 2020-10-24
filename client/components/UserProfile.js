@@ -1,16 +1,14 @@
-import React from "react";
-import axios from "axios";
-import {Container, Row, Col, Button, Dropdown, DropdownToggle} from "reactstrap";
-import {Image, Modal} from "react-bootstrap";
-import {Link} from "react-router-dom";
-import Timeline from "react-calendar-timeline";
-import moment from "moment";
-import config from "../../mainroom.config";
-import normalizeUrl from "normalize-url";
+import React from 'react';
+import axios from 'axios';
+import {Container, Row, Col, Button, Dropdown, DropdownToggle} from 'reactstrap';
+import {Image, Modal} from 'react-bootstrap';
+import {Link} from 'react-router-dom';
+import Timeline from 'react-calendar-timeline';
+import moment from 'moment';
+import config from '../../mainroom.config';
+import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
-import '../css/user-profile.scss';
-import '../css/livestreams.scss';
-import DateTimeRangeContainer from "react-advanced-datetimerange-picker";
+import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 
 const STARTING_STATE = {
     loaded: false,
@@ -217,7 +215,7 @@ export default class UserProfile extends React.Component {
     renderLinks() {
         return this.state.links.map(link => (
             <div>
-                <a href={link.url} target='_blank' rel="noopener noreferrer">{link.title || link.url}</a>
+                <a href={link.url} target='_blank' rel='noopener noreferrer'>{link.title || link.url}</a>
             </div>
         ));
     }
@@ -268,7 +266,7 @@ export default class UserProfile extends React.Component {
                             <DateTimeRangeContainer ranges={this.getDatePickerRange()} local={this.getDatePickerFormat()}
                                                     start={this.state.upcomingStreamsStartTime} end={this.state.upcomingStreamsEndTime}
                                                     applyCallback={this.applyDate} leftMode={true} noMobileMode={true}>
-                                <Dropdown className='date-picker-dropdown' size='sm' toggle={() => {}}>
+                                <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
                                     <DropdownToggle caret>Select Time Period</DropdownToggle>
                                 </Dropdown>
                             </DateTimeRangeContainer>
@@ -279,7 +277,7 @@ export default class UserProfile extends React.Component {
                           sidebarWidth='0'
                           visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
                           visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
-                <hr className="my-4"/>
+                <hr className='my-4'/>
             </React.Fragment>
         );
     }
@@ -288,14 +286,14 @@ export default class UserProfile extends React.Component {
         return this.state.streamKey ? (
             <Row className='streams' xs='2'>
                 <Col className='stream mb-4'>
-                    <span className="live-label">LIVE</span>
+                    <span className='live-label'>LIVE</span>
                     <Link to={`/user/${this.props.match.params.username}/live`}>
-                        <div className="stream-thumbnail">
+                        <div className='stream-thumbnail'>
                             <img src={this.state.streamThumbnailUrl}
                                  alt={`${this.props.match.params.username} Stream Thumbnail`}/>
                         </div>
                     </Link>
-                    <span className="username">
+                    <span className='username'>
                         <Link to={`/user/${this.props.match.params.username}/live`}>
                             {this.state.displayName || this.props.match.params.username}
                         </Link>
@@ -438,15 +436,15 @@ export default class UserProfile extends React.Component {
         const links = this.state.editLinks.map((link, i) => (
             <tr>
                 <td>
-                    <input className="mt-1 rounded-border" type="text" value={link.title}
+                    <input className='mt-1 rounded-border' type='text' value={link.title}
                            onChange={e => this.setLinkTitle(e, i)}/>
                 </td>
                 <td>
-                    <input className="mt-1 rounded-border" type="text" value={link.url}
+                    <input className='mt-1 rounded-border' type='text' value={link.url}
                            onChange={e => this.setLinkUrl(e, i)} size={30}/>
                 </td>
                 <td>
-                    <Button className="btn-dark mt-1 ml-1" size="sm" onClick={() => this.removeLink(i)}>
+                    <Button className='btn-dark mt-1 ml-1' size='sm' onClick={() => this.removeLink(i)}>
                         Remove Link
                     </Button>
                 </td>
@@ -476,39 +474,39 @@ export default class UserProfile extends React.Component {
                     <table>
                         <tr>
                             <td>
-                                <h5 className="mr-3">Display Name:</h5>
+                                <h5 className='mr-3'>Display Name:</h5>
                             </td>
                             <td>
-                                <input className='rounded-border' type="text" value={this.state.editDisplayName}
+                                <input className='rounded-border' type='text' value={this.state.editDisplayName}
                                        onChange={this.setDisplayName}/>
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <h5 className="mt-1 mr-3">Location:</h5>
+                                <h5 className='mt-1 mr-3'>Location:</h5>
                             </td>
                             <td>
-                                <input className="mt-1 rounded-border" type="text" value={this.state.editLocation}
+                                <input className='mt-1 rounded-border' type='text' value={this.state.editLocation}
                                        onChange={this.setLocation}/>
                             </td>
                         </tr>
                         <tr>
                             <td valign='top'>
-                                <h5 className="mt-1">Bio:</h5>
+                                <h5 className='mt-1'>Bio:</h5>
                             </td>
                             <td>
-                                <textarea className="mt-1 rounded-border" value={this.state.editBio}
+                                <textarea className='mt-1 rounded-border' value={this.state.editBio}
                                           onChange={this.setBio}/>
                             </td>
                         </tr>
                     </table>
-                    <h5 className="mt-1">Links:</h5>
+                    <h5 className='mt-1'>Links:</h5>
                     <hr/>
                     <table>
                         {this.renderEditLinks()}
                         <tr>
                             <td>
-                                <Button className="btn-dark mt-2" size="sm" onClick={this.addLink}>
+                                <Button className='btn-dark mt-2' size='sm' onClick={this.addLink}>
                                     Add Link
                                 </Button>
                             </td>
@@ -516,7 +514,7 @@ export default class UserProfile extends React.Component {
                     </table>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button className="btn-dark" disabled={!this.state.unsavedChanges} onClick={this.saveProfile}>
+                    <Button className='btn-dark' disabled={!this.state.unsavedChanges} onClick={this.saveProfile}>
                         Save Changes
                     </Button>
                 </Modal.Footer>
@@ -574,7 +572,7 @@ export default class UserProfile extends React.Component {
                                    withPreview={true} singleImage={true} withIcon={false}/>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button className="btn-dark" disabled={!this.state.uploadedProfilePic}
+                    <Button className='btn-dark' disabled={!this.state.uploadedProfilePic}
                             onClick={this.saveNewProfilePic}>
                         Upload
                     </Button>

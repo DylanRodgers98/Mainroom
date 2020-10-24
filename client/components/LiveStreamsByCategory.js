@@ -2,9 +2,8 @@ import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
-import {Container, Row, Col, DropdownToggle, DropdownMenu, DropdownItem, Dropdown} from "reactstrap";
-import '../css/livestreams.scss';
-import {Button} from "react-bootstrap";
+import {Container, Row, Col, DropdownToggle, DropdownMenu, DropdownItem, Dropdown} from 'reactstrap';
+import {Button} from 'react-bootstrap';
 
 const STARTING_PAGE = 1;
 
@@ -106,15 +105,15 @@ export default class LiveStreamsByCategory extends React.Component {
         const streams = this.state.liveStreams.map((liveStream, index) => {
             return (
                 <Col className='stream' key={index}>
-                    <span className="live-label">LIVE</span>
+                    <span className='live-label'>LIVE</span>
                     <Link to={`/user/${liveStream.username}/live`}>
-                        <div className="stream-thumbnail">
+                        <div className='stream-thumbnail'>
                             <img src={liveStream.thumbnailURL}
                                  alt={`${liveStream.username} Stream Thumbnail`}/>
                         </div>
                     </Link>
 
-                    <span className="username">
+                    <span className='username'>
                         <Link to={`/user/${liveStream.username}/live`}>
                             {liveStream.displayName || liveStream.username}
                         </Link>
@@ -124,7 +123,7 @@ export default class LiveStreamsByCategory extends React.Component {
         });
 
         const streamBoxes = streams.length ? (
-            <Row className="streams" xs='1' sm='1' md='2' lg='3' xl='3'>
+            <Row xs='1' sm='1' md='2' lg='3' xl='3'>
                 {streams}
             </Row>
         ) : (
@@ -150,14 +149,14 @@ export default class LiveStreamsByCategory extends React.Component {
         );
 
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
-            <Container className="mt-5">
+            <Container className='mt-5'>
                 <Row>
                     <Col>
                         <h4>{pageHeader}</h4>
                     </Col>
                     <Col>
-                        <Dropdown className="filter-dropdown float-right" isOpen={this.state.genreDropdownOpen}
-                                  toggle={this.genreDropdownToggle} size="sm">
+                        <Dropdown className='dropdown-hover-darkred float-right' isOpen={this.state.genreDropdownOpen}
+                                  toggle={this.genreDropdownToggle} size='sm'>
                             <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
                             <DropdownMenu right>
                                 <DropdownItem onClick={this.clearGenreFilter} disabled={!this.state.genreFilter}>
@@ -169,7 +168,7 @@ export default class LiveStreamsByCategory extends React.Component {
                         </Dropdown>
                     </Col>
                 </Row>
-                <hr className="my-4"/>
+                <hr className='my-4'/>
                 {streamBoxes}
                 {loadMoreButton}
             </Container>

@@ -1,8 +1,7 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from "reactstrap";
-import '../css/go-live.scss';
-import Container from "reactstrap/es/Container";
+import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from 'reactstrap';
+import Container from 'reactstrap/es/Container';
 import config from '../../mainroom.config';
 
 const RTMP_SERVER_URL = `rtmp://${config.rtmpServer.host}:${config.rtmpServer.rtmp.port}/live`;
@@ -179,23 +178,23 @@ export default class GoLive extends React.Component {
         });
 
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
-            <Container className="mt-5">
+            <Container className='mt-5'>
                 <h4>Stream Settings</h4>
-                <hr className="mt-4"/>
+                <hr className='mt-4'/>
                 <i>Copy and paste the Server URL and Stream Key into your streaming software</i>
-                <table className="mt-3">
+                <table className='mt-3'>
                     <tr>
                         <td>
-                            <h5 className="mr-3">Server URL:</h5>
+                            <h5 className='mr-3'>Server URL:</h5>
                         </td>
                         <table>
                             <tr>
                                 <td>
-                                    <input id="serverUrlInput" className='rounded-border' type="text"
+                                    <input id='serverUrlInput' className='rounded-border' type='text'
                                            value={RTMP_SERVER_URL}/>
                                 </td>
                                 <td>
-                                    <Button className="btn-dark ml-1" size="sm"
+                                    <Button className='btn-dark ml-1' size='sm'
                                             onClick={() => this.copyFrom('serverUrlInput')}>
                                         Copy
                                     </Button>
@@ -205,20 +204,20 @@ export default class GoLive extends React.Component {
                     </tr>
                     <tr>
                         <td>
-                            <h5 className="mt-2 mr-3">Stream Key:</h5>
+                            <h5 className='mt-2 mr-3'>Stream Key:</h5>
                         </td>
                         <table>
                             <tr>
                                 <td>
-                                    <input id="streamKeyInput" className='mt-2 rounded-border' type="text"
+                                    <input id='streamKeyInput' className='mt-2 rounded-border' type='text'
                                            value={this.state.streamKey}/>
                                 </td>
                                 <td>
-                                    <Button className="btn-dark mt-2 ml-1" size="sm"
+                                    <Button className='btn-dark mt-2 ml-1' size='sm'
                                             onClick={() => this.copyFrom('streamKeyInput')}>
                                         Copy
                                     </Button>
-                                    <Button className="btn-dark mt-2 ml-1" size="sm"
+                                    <Button className='btn-dark mt-2 ml-1' size='sm'
                                             onClick={this.generateStreamKey}>
                                         Generate a new key
                                     </Button>
@@ -228,20 +227,20 @@ export default class GoLive extends React.Component {
                     </tr>
                     <tr>
                         <td>
-                            <h5 className="mt-2">Title:</h5>
+                            <h5 className='mt-2'>Title:</h5>
                         </td>
                         <td>
-                            <input className="settings-title rounded-border" type="text" value={this.state.streamTitle}
+                            <input className='settings-title rounded-border' type='text' value={this.state.streamTitle}
                                    onChange={this.setTitle}/>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <h5 className="mt-2">Genre:</h5>
+                            <h5 className='mt-2'>Genre:</h5>
                         </td>
                         <td>
-                            <Dropdown className="settings-dropdown" isOpen={this.state.genreDropdownOpen}
-                                      toggle={this.genreDropdownToggle} size="sm">
+                            <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
+                                      toggle={this.genreDropdownToggle} size='sm'>
                                 <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
                                 <DropdownMenu>
                                     <DropdownItem onClick={this.clearGenre} disabled={!this.state.streamGenre}>
@@ -255,11 +254,11 @@ export default class GoLive extends React.Component {
                     </tr>
                     <tr>
                         <td>
-                            <h5 className="mt-2">Category:</h5>
+                            <h5 className='mt-2'>Category:</h5>
                         </td>
                         <td>
-                            <Dropdown className="settings-dropdown" isOpen={this.state.categoryDropdownOpen}
-                                      toggle={this.categoryDropdownToggle} size="sm">
+                            <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
+                                      toggle={this.categoryDropdownToggle} size='sm'>
                                 <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
                                 <DropdownMenu>
                                     <DropdownItem onClick={this.clearCategory} disabled={!this.state.streamCategory}>
@@ -273,24 +272,24 @@ export default class GoLive extends React.Component {
                     </tr>
                     <tr>
                         <td>
-                            <h5 className="mt-2">Tags:</h5>
+                            <h5 className='mt-2'>Tags:</h5>
                         </td>
                         <table>
                             <tr>
                                 <td>
-                                    <input className="mt-1 rounded-border" type="text" value={this.state.streamTags}
+                                    <input className='mt-1 rounded-border' type='text' value={this.state.streamTags}
                                            onChange={this.setTags}/>
                                 </td>
                                 <td>
-                                    <i className="ml-1">Comma-separated</i>
+                                    <i className='ml-1'>Comma-separated</i>
                                 </td>
                             </tr>
                         </table>
                     </tr>
                 </table>
-                <hr className="my-4"/>
-                <div className="float-right mb-4">
-                    <Button className="btn-dark" size="lg" disabled={!this.state.unsavedChanges}
+                <hr className='my-4'/>
+                <div className='float-right mb-4'>
+                    <Button className='btn-dark' size='lg' disabled={!this.state.unsavedChanges}
                             onClick={this.saveSettings}>
                         Save Settings
                     </Button>
