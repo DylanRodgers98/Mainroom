@@ -5,7 +5,7 @@ import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button} from 'reactstrap';
 import io from 'socket.io-client';
-import {Row, Col, Image} from 'react-bootstrap';
+import {Row, Col} from 'react-bootstrap';
 
 export default class UserStream extends React.Component {
 
@@ -190,7 +190,7 @@ export default class UserStream extends React.Component {
                             <tr>
                                 <td>
                                     <Link to={`/user/${this.props.match.params.username}`}>
-                                        <Image src={this.state.profilePicURL} width='75' height='75' roundedCircle
+                                        <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
                                              alt={`${this.props.match.params.username} profile picture`}/>
                                     </Link>
                                 </td>
