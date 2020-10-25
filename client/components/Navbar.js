@@ -131,7 +131,7 @@ export default class Navbar extends React.Component {
                 <Button className='nav-item nav-link float-right go-live-button' tag={Link} to='/go-live'>
                     Go Live
                 </Button>
-                <Dropdown className='nav-item float-left navbar-menu'
+                <Dropdown className='nav-item float-left navbar-menu navbar-dropdown'
                           isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
                     <DropdownToggle caret>
                         <img className='rounded-circle' src={this.state.profilePicURL} width='25' height='25' alt={`Menu`}/>
