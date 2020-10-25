@@ -102,25 +102,21 @@ export default class LiveStreamsByCategory extends React.Component {
     }
 
     render() {
-        const streams = this.state.liveStreams.map((liveStream, index) => {
-            return (
-                <Col className='stream' key={index}>
-                    <span className='live-label'>LIVE</span>
+        const streams = this.state.liveStreams.map((liveStream, index) => (
+            <Col className='stream' key={index}>
+                <span className='live-label'>LIVE</span>
+                <Link to={`/user/${liveStream.username}/live`}>
+                    <div className='stream-thumbnail'>
+                        <img src={liveStream.thumbnailURL} alt={`${liveStream.username} Stream Thumbnail`}/>
+                    </div>
+                </Link>
+                <span className='username'>
                     <Link to={`/user/${liveStream.username}/live`}>
-                        <div className='stream-thumbnail'>
-                            <img src={liveStream.thumbnailURL}
-                                 alt={`${liveStream.username} Stream Thumbnail`}/>
-                        </div>
+                        {liveStream.displayName || liveStream.username}
                     </Link>
-
-                    <span className='username'>
-                        <Link to={`/user/${liveStream.username}/live`}>
-                            {liveStream.displayName || liveStream.username}
-                        </Link>
-                    </span>
-                </Col>
-            );
-        });
+                </span>
+            </Col>
+        ));
 
         const streamBoxes = streams.length ? (
             <Row xs='1' sm='1' md='2' lg='3' xl='3'>
@@ -136,9 +132,11 @@ export default class LiveStreamsByCategory extends React.Component {
 
         const genreDropdownText = this.state.genreFilter || 'Filter';
 
-        const genres = this.state.genres.map((genre) => {
-            return <DropdownItem onClick={this.setGenreFilter}>{genre}</DropdownItem>
-        });
+        const genres = this.state.genres.map((genre, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setGenreFilter}>{genre}</DropdownItem>
+            </div>
+        ));
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4 mb-4'>
@@ -148,7 +146,7 @@ export default class LiveStreamsByCategory extends React.Component {
             </div>
         );
 
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+        return (
             <Container className='mt-5'>
                 <Row>
                     <Col>
@@ -169,9 +167,13 @@ export default class LiveStreamsByCategory extends React.Component {
                     </Col>
                 </Row>
                 <hr className='my-4'/>
-                {streamBoxes}
-                {loadMoreButton}
+                {!this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+                    <React.Fragment>
+                        {streamBoxes}
+                        {loadMoreButton}
+                    </React.Fragment>
+                )}
             </Container>
-        )
+        );
     }
 }

@@ -213,8 +213,8 @@ export default class UserProfile extends React.Component {
     }
 
     renderLinks() {
-        return this.state.links.map(link => (
-            <div>
+        return this.state.links.map((link, index) => (
+            <div key={index}>
                 <a href={link.url} target='_blank' rel='noopener noreferrer'>{link.title || link.url}</a>
             </div>
         ));
@@ -274,7 +274,7 @@ export default class UserProfile extends React.Component {
                     </Col>
                 </Row>
                 <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
-                          sidebarWidth='0'
+                          sidebarWidth={0}
                           visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
                           visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
                 <hr className='my-4'/>
@@ -384,10 +384,10 @@ export default class UserProfile extends React.Component {
     async areLinksValid() {
         let isValid = true;
         this.setState({
-            indexesOfInvalidLinks: this.state.editLinks.map((link, i) => {
+            indexesOfInvalidLinks: this.state.editLinks.map((link, index) => {
                 if (!link.url) {
                     isValid = false;
-                    return i;
+                    return index;
                 }
             })
         });
@@ -433,24 +433,24 @@ export default class UserProfile extends React.Component {
             </tr>
         );
 
-        const links = this.state.editLinks.map((link, i) => (
-            <tr>
+        const links = this.state.editLinks.map((link, index) => (
+            <tr key={index}>
                 <td>
                     <input className='mt-1 rounded-border' type='text' value={link.title}
-                           onChange={e => this.setLinkTitle(e, i)}/>
+                           onChange={e => this.setLinkTitle(e, index)}/>
                 </td>
                 <td>
                     <input className='mt-1 rounded-border' type='text' value={link.url}
-                           onChange={e => this.setLinkUrl(e, i)} size={30}/>
+                           onChange={e => this.setLinkUrl(e, index)} size={30}/>
                 </td>
                 <td>
-                    <Button className='btn-dark mt-1 ml-1' size='sm' onClick={() => this.removeLink(i)}>
+                    <Button className='btn-dark mt-1 ml-1' size='sm' onClick={() => this.removeLink(index)}>
                         Remove Link
                     </Button>
                 </td>
                 <td>
                     <div className='ml-1'>
-                        {this.state.indexesOfInvalidLinks.includes(i) ? 'Link must have a URL' : ''}
+                        {this.state.indexesOfInvalidLinks.includes(index) ? 'Link must have a URL' : ''}
                     </div>
                 </td>
             </tr>
@@ -472,45 +472,49 @@ export default class UserProfile extends React.Component {
                 </Modal.Header>
                 <Modal.Body>
                     <table>
-                        <tr>
-                            <td>
-                                <h5 className='mr-3'>Display Name:</h5>
-                            </td>
-                            <td>
-                                <input className='rounded-border' type='text' value={this.state.editDisplayName}
-                                       onChange={this.setDisplayName}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h5 className='mt-1 mr-3'>Location:</h5>
-                            </td>
-                            <td>
-                                <input className='mt-1 rounded-border' type='text' value={this.state.editLocation}
-                                       onChange={this.setLocation}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td valign='top'>
-                                <h5 className='mt-1'>Bio:</h5>
-                            </td>
-                            <td>
-                                <textarea className='mt-1 rounded-border' value={this.state.editBio}
-                                          onChange={this.setBio}/>
-                            </td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <h5 className='mr-3'>Display Name:</h5>
+                                </td>
+                                <td>
+                                    <input className='rounded-border' type='text' value={this.state.editDisplayName}
+                                           onChange={this.setDisplayName}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-1 mr-3'>Location:</h5>
+                                </td>
+                                <td>
+                                    <input className='mt-1 rounded-border' type='text' value={this.state.editLocation}
+                                           onChange={this.setLocation}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td valign='top'>
+                                    <h5 className='mt-1'>Bio:</h5>
+                                </td>
+                                <td>
+                                    <textarea className='mt-1 rounded-border' value={this.state.editBio}
+                                              onChange={this.setBio}/>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                     <h5 className='mt-1'>Links:</h5>
                     <hr/>
                     <table>
-                        {this.renderEditLinks()}
-                        <tr>
-                            <td>
-                                <Button className='btn-dark mt-2' size='sm' onClick={this.addLink}>
-                                    Add Link
-                                </Button>
-                            </td>
-                        </tr>
+                        <tbody>
+                            {this.renderEditLinks()}
+                            <tr>
+                                <td>
+                                    <Button className='btn-dark mt-2' size='sm' onClick={this.addLink}>
+                                        Add Link
+                                    </Button>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </Modal.Body>
                 <Modal.Footer>

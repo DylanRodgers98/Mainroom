@@ -164,14 +164,22 @@ export default class Navbar extends React.Component {
     }
 
     render() {
-        const genres = this.state.genres.map((genre) => {
+        const genres = this.state.genres.map((genre, index) => {
             const link = encodeURIComponent(genre.trim());
-            return <DropdownItem tag={Link} to={`/genre/${link}`}>{genre}</DropdownItem>;
+            return (
+                <div key={index}>
+                    <DropdownItem tag={Link} to={`/genre/${link}`}>{genre}</DropdownItem>
+                </div>
+            );
         })
 
-        const categories = this.state.categories.map((category) => {
+        const categories = this.state.categories.map((category, index) => {
             const link = encodeURIComponent(category.trim());
-            return <DropdownItem tag={Link} to={`/category/${link}`}>{category}</DropdownItem>;
+            return (
+                <div key={index}>
+                    <DropdownItem tag={Link} to={`/category/${link}`}>{category}</DropdownItem>
+                </div>
+            );
         })
 
         const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText}` : '';

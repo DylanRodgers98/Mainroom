@@ -240,13 +240,17 @@ export default class Schedule extends React.Component {
         const genreDropdownText = this.state.scheduleStreamGenre || 'Select a genre...';
         const categoryDropdownText = this.state.scheduleStreamCategory || 'Select a category...';
 
-        const genres = this.state.genres.map((genre) => {
-            return <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
-        });
+        const genres = this.state.genres.map((genre, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
+            </div>
+        ));
 
-        const categories = this.state.categories.map((category) => {
-            return <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
-        });
+        const categories = this.state.categories.map((category, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
+            </div>
+        ));
 
         const dateFormat = this.getDatePickerFormat().format;
 
@@ -257,75 +261,81 @@ export default class Schedule extends React.Component {
                 </Modal.Header>
                 <Modal.Body>
                     <table>
-                        <tr>
-                            <td>
-                                <h5>Date & Time:</h5>
-                            </td>
-                            <td>
-                                <DateTimeRangeContainer start={this.state.scheduleStreamStartTime}
-                                                        end={this.state.scheduleStreamEndTime}
-                                                        ranges={this.getDatePickerRange()}
-                                                        local={this.getDatePickerFormat()} noMobileMode={true}
-                                                        applyCallback={this.scheduleStreamApplyDate} autoApply
-                                                        style={{standaloneLayout: {display: 'flex', maxWidth: 'fit-content'}}}>
-                                    <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
-                                        <DropdownToggle caret>
-                                            {this.state.scheduleStreamStartTime.format(dateFormat) + ' - '
-                                            + this.state.scheduleStreamEndTime.format(dateFormat)}
-                                        </DropdownToggle>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <h5>Date & Time:</h5>
+                                </td>
+                                <td>
+                                    <DateTimeRangeContainer start={this.state.scheduleStreamStartTime}
+                                                            end={this.state.scheduleStreamEndTime}
+                                                            ranges={this.getDatePickerRange()}
+                                                            local={this.getDatePickerFormat()} noMobileMode={true}
+                                                            applyCallback={this.scheduleStreamApplyDate} autoApply
+                                                            style={{standaloneLayout: {display: 'flex', maxWidth: 'fit-content'}}}>
+                                        <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
+                                            <DropdownToggle caret>
+                                                {this.state.scheduleStreamStartTime.format(dateFormat) + ' - '
+                                                + this.state.scheduleStreamEndTime.format(dateFormat)}
+                                            </DropdownToggle>
+                                        </Dropdown>
+                                    </DateTimeRangeContainer>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-2'>Title:</h5>
+                                </td>
+                                <td>
+                                    <input className='settings-title rounded-border' type='text'
+                                           value={this.state.scheduleStreamTitle} onChange={this.setTitle}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-2'>Genre:</h5>
+                                </td>
+                                <td>
+                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
+                                              toggle={this.genreDropdownToggle} size='sm'>
+                                        <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
+                                        <DropdownMenu>{genres}</DropdownMenu>
                                     </Dropdown>
-                                </DateTimeRangeContainer>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h5 className='mt-2'>Title:</h5>
-                            </td>
-                            <td>
-                                <input className='settings-title rounded-border' type='text'
-                                       value={this.state.scheduleStreamTitle} onChange={this.setTitle}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h5 className='mt-2'>Genre:</h5>
-                            </td>
-                            <td>
-                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
-                                          toggle={this.genreDropdownToggle} size='sm'>
-                                    <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
-                                    <DropdownMenu>{genres}</DropdownMenu>
-                                </Dropdown>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h5 className='mt-2'>Category:</h5>
-                            </td>
-                            <td>
-                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
-                                          toggle={this.categoryDropdownToggle} size='sm'>
-                                    <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
-                                    <DropdownMenu>{categories}</DropdownMenu>
-                                </Dropdown>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h5 className='mt-2'>Tags:</h5>
-                            </td>
-                            <table>
-                                <tr>
-                                    <td>
-                                        <input className='mt-1 rounded-border' type='text'
-                                               value={this.state.scheduleStreamTags} onChange={this.setTags}/>
-                                    </td>
-                                    <td>
-                                        <i className='ml-1'>Comma-separated</i>
-                                    </td>
-                                </tr>
-                            </table>
-                        </tr>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-2'>Category:</h5>
+                                </td>
+                                <td>
+                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
+                                              toggle={this.categoryDropdownToggle} size='sm'>
+                                        <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
+                                        <DropdownMenu>{categories}</DropdownMenu>
+                                    </Dropdown>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-2'>Tags:</h5>
+                                </td>
+                                <td>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <input className='mt-1 rounded-border' type='text'
+                                                           value={this.state.scheduleStreamTags} onChange={this.setTags}/>
+                                                </td>
+                                                <td>
+                                                    <i className='ml-1'>Comma-separated</i>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </Modal.Body>
                 <Modal.Footer>

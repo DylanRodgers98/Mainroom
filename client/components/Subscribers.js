@@ -41,8 +41,8 @@ export default class Subscribers extends React.Component {
                     limit: config.pagination.limit
                 }
             });
-            const subscribers = res.data.subscribers.map(subscriber => {
-                return (
+            const subscribers = res.data.subscribers.map((subscriber, index) => (
+                <div key={index}>
                     <Col>
                         <h5>
                             <Link to={`/user/${subscriber.username}`}>
@@ -52,8 +52,8 @@ export default class Subscribers extends React.Component {
                             </Link>
                         </h5>
                     </Col>
-                );
-            });
+                </div>
+            ));
             this.setState({
                 subscribers: [...this.state.subscribers, ...subscribers],
                 nextPage: res.data.nextPage,

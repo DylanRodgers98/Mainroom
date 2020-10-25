@@ -136,8 +136,8 @@ export default class UserStream extends React.Component {
     }
 
     renderChat() {
-        return this.state.chat.map(({viewerUsername, msg}, i) => (
-            <div className='ml-1' key={i}>
+        return this.state.chat.map(({viewerUsername, msg}, index) => (
+            <div className='ml-1' key={index}>
                 <span style={{color: 'green'}}>{viewerUsername}: </span>
                 <span>{msg}</span>
             </div>

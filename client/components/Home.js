@@ -128,25 +128,21 @@ export default class Home extends React.Component {
     }
 
     renderLiveStreams(title, liveStreams) {
-        const streamBoxes = liveStreams.map((liveStream, index) => {
-            return (
-                <Col className='stream' key={index}>
-                    <span className='live-label'>LIVE</span>
+        const streamBoxes = liveStreams.map((liveStream, index) => (
+            <Col className='stream' key={index}>
+                <span className='live-label'>LIVE</span>
+                <Link to={`/user/${liveStream.username}/live`}>
+                    <div className='stream-thumbnail'>
+                        <img src={liveStream.thumbnailURL} alt={`${liveStream.username} Stream Thumbnail`}/>
+                    </div>
+                </Link>
+                <span className='username'>
                     <Link to={`/user/${liveStream.username}/live`}>
-                        <div className='stream-thumbnail'>
-                            <img src={liveStream.thumbnailURL}
-                                 alt={`${liveStream.username} Stream Thumbnail`}/>
-                        </div>
+                        {liveStream.displayName || liveStream.username}
                     </Link>
-
-                    <span className='username'>
-                        <Link to={`/user/${liveStream.username}/live`}>
-                            {liveStream.displayName || liveStream.username}
-                        </Link>
-                    </span>
-                </Col>
-            );
-        });
+                </span>
+            </Col>
+        ));
 
         return !streamBoxes.length ? undefined : (
             <React.Fragment>
