@@ -11,7 +11,7 @@ module.exports.getThumbnail = async streamKey => {
     const Key = `${config.storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
     try {
         const output = await S3.headObject({Bucket, Key}).promise();
-        return output.LastModified.getTime() + config.storage.thumbnails.ttl > Date.now()
+        return Date.now() > output.LastModified.getTime() + config.storage.thumbnails.ttl
             ? await generateStreamThumbnail(streamKey)
             : `https://${Bucket}.s3.amazonaws.com/${Key}`;
     } catch (err) {
