@@ -1,7 +1,8 @@
+import 'regenerator-runtime/runtime';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
-import 'regenerator-runtime/runtime';
 import config from '../mainroom.config';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
@@ -13,8 +14,8 @@ import Subscribers from './components/Subscribers';
 import Subscriptions from './components/Subscriptions';
 import UserStream from './components/UserStream';
 import Schedule from './components/Schedule';
-import GoLive from './components/GoLive';
 import Settings from './components/Settings';
+import GoLive from './components/GoLive';
 import FourOhFour from './components/FourOhFour';
 import './mainroom.scss';
 

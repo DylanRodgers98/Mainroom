@@ -1,5 +1,5 @@
 const path = require('path');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const webpack = require('webpack');
 
 const devMode = process.env.NODE_ENV !== 'production';
@@ -23,7 +23,12 @@ module.exports = {
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
-                use: "babel-loader"
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['@babel/preset-env', '@babel/preset-react']
+                    }
+                }
             },
             {
                 test: /\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)|\.svg($|\?)/,
@@ -43,7 +48,7 @@ module.exports = {
     devtool: 'source-map',
     plugins: [
         new MiniCssExtractPlugin({
-            filename: "style.css"
+            filename: 'style.css'
         }),
         new webpack.ProvidePlugin({
             $: 'jquery',
@@ -53,6 +58,6 @@ module.exports = {
     mode : devMode ? 'development' : 'production',
     watch : devMode,
     performance: {
-        hints: process.env.NODE_ENV === 'production' ? "warning" : false
+        hints: process.env.NODE_ENV === 'production' ? 'warning' : false
     },
 };
