@@ -1,7 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import {Container, Row, Col, Button, Dropdown, DropdownToggle} from 'reactstrap';
-import {Modal} from 'react-bootstrap';
+import {Container, Row, Col, Button, Dropdown, DropdownToggle, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import Timeline from 'react-calendar-timeline';
 import moment from 'moment';
@@ -466,11 +465,9 @@ export default class UserProfile extends React.Component {
 
     renderEditProfile() {
         return (
-            <Modal show={this.state.editProfileOpen} onHide={this.editProfileToggle} size='lg' centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Edit Profile</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
+            <Modal isOpen={this.state.editProfileOpen} toggle={this.editProfileToggle} size='lg' centered={true}>
+                <ModalHeader toggle={this.editProfileToggle}>Edit Profile</ModalHeader>
+                <ModalBody>
                     <table>
                         <tbody>
                             <tr>
@@ -516,12 +513,12 @@ export default class UserProfile extends React.Component {
                             </tr>
                         </tbody>
                     </table>
-                </Modal.Body>
-                <Modal.Footer>
+                </ModalBody>
+                <ModalFooter>
                     <Button className='btn-dark' disabled={!this.state.unsavedChanges} onClick={this.saveProfile}>
                         Save Changes
                     </Button>
-                </Modal.Footer>
+                </ModalFooter>
             </Modal>
         );
     }
@@ -566,21 +563,19 @@ export default class UserProfile extends React.Component {
 
     renderChangeProfilePic() {
         return (
-            <Modal show={this.state.changeProfilePicOpen} onHide={this.changeProfilePicToggle} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Change Profile Picture</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
+            <Modal show={this.state.changeProfilePicOpen} toggle={this.changeProfilePicToggle} centered={true}>
+                <ModalHeader toggle={this.changeProfilePicToggle}>Change Profile Picture</ModalHeader>
+                <ModalBody>
                     <ImageUploader buttonText='Choose Image' label='Maximum file size: 2MB'
                                    maxFileSize={2 * 1024 * 1024} onChange={this.onProfilePicUpload}
                                    withPreview={true} singleImage={true} withIcon={false}/>
-                </Modal.Body>
-                <Modal.Footer>
+                </ModalBody>
+                <ModalFooter>
                     <Button className='btn-dark' disabled={!this.state.uploadedProfilePic}
                             onClick={this.saveNewProfilePic}>
                         Upload
                     </Button>
-                </Modal.Footer>
+                </ModalFooter>
             </Modal>
         );
     }

@@ -3,10 +3,9 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button} from 'reactstrap';
+import {Button, Container, Row, Col} from 'reactstrap';
 import io from 'socket.io-client';
-import {Container, Row, Col} from 'react-bootstrap';
-import {ReactHeight} from "react-height/lib/ReactHeight";
+import {ReactHeight} from 'react-height/lib/ReactHeight';
 
 export default class UserStream extends React.Component {
 

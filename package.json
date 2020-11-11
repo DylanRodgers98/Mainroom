@@ -50,7 +50,6 @@
     "popper.js": "^1.16.1",
     "react": "^16.14.0",
     "react-advanced-datetimerange-picker": "^1.0.13",
-    "react-bootstrap": "^1.4.0",
     "react-calendar-timeline": "^0.27.0",
     "react-dom": "^16.14.0",
     "react-height": "^3.0.1",

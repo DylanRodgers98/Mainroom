@@ -1,8 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import Container from 'reactstrap/es/Container';
-import {Button} from 'reactstrap';
-import {Modal} from 'react-bootstrap';
+import {Button, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import _ from 'lodash';
 
 export default class Settings extends React.Component {
@@ -183,11 +182,9 @@ export default class Settings extends React.Component {
 
     renderResetPassword() {
         return (
-            <Modal show={this.state.resetPasswordOpen} onHide={this.resetPasswordToggle} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Reset Password</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
+            <Modal isOpen={this.state.resetPasswordOpen} toggle={this.resetPasswordToggle} centered={true}>
+                <ModalHeader toggle={this.resetPasswordToggle}>Reset Password</ModalHeader>
+                <ModalBody>
                     <table>
                         <tbody>
                             <tr>
@@ -234,13 +231,13 @@ export default class Settings extends React.Component {
                             </tr>
                         </tbody>
                     </table>
-                </Modal.Body>
-                <Modal.Footer>
+                </ModalBody>
+                <ModalFooter>
                     <Button className='btn-dark' onClick={this.resetPassword}
                             disabled={!this.enableResetPasswordButton()}>
                         Reset Password
                     </Button>
-                </Modal.Footer>
+                </ModalFooter>
             </Modal>
         );
     }

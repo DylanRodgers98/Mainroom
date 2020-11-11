@@ -2,9 +2,8 @@ import React from 'react';
 import axios from 'axios';
 import Timeline from 'react-calendar-timeline'
 import moment from 'moment'
-import {Col, Container, Row, Button, DropdownToggle, Dropdown, DropdownMenu, DropdownItem} from 'reactstrap';
+import {Col, Container, Row, Button, DropdownToggle, Dropdown, DropdownMenu, DropdownItem, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
-import {Modal} from 'react-bootstrap';
 
 export default class Schedule extends React.Component {
 
@@ -255,11 +254,9 @@ export default class Schedule extends React.Component {
         const dateFormat = this.getDatePickerFormat().format;
 
         return (
-            <Modal show={this.state.scheduleStreamOpen} onHide={this.scheduleStreamToggle} size='lg' centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Schedule a Stream</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
+            <Modal isOpen={this.state.scheduleStreamOpen} toggle={this.scheduleStreamToggle} size='lg' centered={true}>
+                <ModalHeader toggle={this.scheduleStreamToggle}>Schedule a Stream</ModalHeader>
+                <ModalBody>
                     <table>
                         <tbody>
                             <tr>
@@ -337,10 +334,10 @@ export default class Schedule extends React.Component {
                             </tr>
                         </tbody>
                     </table>
-                </Modal.Body>
-                <Modal.Footer>
+                </ModalBody>
+                <ModalFooter>
                     <Button className='btn-dark' onClick={this.addToSchedule}>Add to Schedule</Button>
-                </Modal.Footer>
+                </ModalFooter>
             </Modal>
         );
     }
