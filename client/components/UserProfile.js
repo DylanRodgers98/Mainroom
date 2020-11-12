@@ -1,13 +1,11 @@
 import React from 'react';
 import axios from 'axios';
-import {Container, Row, Col, Button, Dropdown, DropdownToggle, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import {Container, Row, Col, Button, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import {Link} from 'react-router-dom';
-import Timeline from 'react-calendar-timeline';
 import moment from 'moment';
 import config from '../../mainroom.config';
 import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
-import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 
 const STARTING_STATE = {
     loaded: false,
@@ -20,7 +18,7 @@ const STARTING_STATE = {
     bio: '',
     links: [],
     numOfSubscribers: 0,
-    scheduleItems: [],
+    scheduledStreams: [],
     streamKey: '',
     streamTitle: '',
     streamGenre: '',
@@ -39,8 +37,6 @@ const STARTING_STATE = {
     changeProfilePicOpen: false,
     uploadedProfilePic: undefined
 };
-
-const SCHEDULE_GROUP = 0;
 
 export default class UserProfile extends React.Component {
 
@@ -101,10 +97,8 @@ export default class UserProfile extends React.Component {
 
     async fillComponent(user) {
         this.populateProfile(user)
-        this.buildSchedule(user.scheduledStreams);
         await this.getLiveStreamIfLive();
         await this.getLoggedInUser();
-        await this.isLoggedInUserSubscribed();
     }
 
     populateProfile(user) {
@@ -114,21 +108,8 @@ export default class UserProfile extends React.Component {
             location: user.location,
             bio: user.bio,
             links: user.links,
-            numOfSubscribers: user.numOfSubscribers
-        });
-    }
-
-    buildSchedule(scheduledStreams) {
-        scheduledStreams.forEach(scheduledStream => {
-            this.setState({
-                scheduleItems: [...this.state.scheduleItems, {
-                    id: this.state.scheduleItems.length,
-                    group: SCHEDULE_GROUP,
-                    title: scheduledStream.title || this.props.match.params.username,
-                    start_time: moment(scheduledStream.startTime),
-                    end_time: moment(scheduledStream.endTime)
-                }]
-            });
+            numOfSubscribers: user.numOfSubscribers,
+            scheduledStreams: user.scheduledStreams
         });
     }
 
@@ -137,6 +118,8 @@ export default class UserProfile extends React.Component {
         this.setState({
             loggedInUser: res.data.username,
             loggedInUserId: res.data._id
+        }, async () => {
+            await this.isLoggedInUserSubscribed()
         });
     }
 
@@ -219,33 +202,10 @@ export default class UserProfile extends React.Component {
         ));
     }
 
-    getDatePickerRange() {
-        return {
-            'Next 6 Hours': [moment(), moment().add(6, 'hours')],
-            'Next 12 Hours': [moment(), moment().add(12, 'hours')],
-            'Next 24 Hours': [moment(), moment().add(24, 'hours')],
-            'Today': [moment().startOf('day'), moment().endOf('day')],
-            'Tomorrow': [moment().startOf('day').add(1, 'day'), moment().endOf('day').add(1, 'day')],
-            'Next 3 Days': [moment().startOf('day'), moment().add(3, 'days').startOf('day')],
-            'Next 7 Days': [moment().startOf('day'), moment().add(1, 'week').startOf('day')],
-            'This Weekend': [moment().isoWeekday('Saturday').startOf('day'), moment().isoWeekday('Sunday').endOf('day')],
-            'This Week': [moment().startOf('isoWeek'), moment().endOf('isoWeek')],
-            'Next Weekend': [moment().isoWeekday('Saturday').startOf('day').add(1, 'week'), moment().isoWeekday('Sunday').endOf('day').add(1, 'week')],
-            'Next Week': [moment().startOf('isoWeek').add(1, 'week'), moment().endOf('isoWeek').add(1, 'week')]
-        };
-    }
-
-    getDatePickerFormat() {
-        return {
-            'format': 'DD/MM/YYYY HH:mm',
-            'sundayFirst': false
-        };
-    }
-
     applyDate(startTime, endTime) {
         this.setState({
             loaded: false,
-            scheduleItems: [],
+            scheduledStreams: [],
             upcomingStreamsStartTime: startTime,
             upcomingStreamsEndTime: endTime
         }, () => {
@@ -253,67 +213,105 @@ export default class UserProfile extends React.Component {
         });
     }
 
-    renderSchedule() {
-        return (
+    renderLiveStream() {
+        return !this.state.streamKey ?  undefined : (
             <React.Fragment>
-                <Row>
+                <Row className='mb-2'>
                     <Col>
-                        <h3>Upcoming Streams</h3>
-                    </Col>
-                    <Col>
-                        <div className='float-right mb-1'>
-                            <DateTimeRangeContainer ranges={this.getDatePickerRange()} local={this.getDatePickerFormat()}
-                                                    start={this.state.upcomingStreamsStartTime} end={this.state.upcomingStreamsEndTime}
-                                                    applyCallback={this.applyDate} leftMode={true} noMobileMode={true}>
-                                <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
-                                    <DropdownToggle caret>Select Time Period</DropdownToggle>
-                                </Dropdown>
-                            </DateTimeRangeContainer>
-                        </div>
+                        <h2>Live Now</h2>
                     </Col>
                 </Row>
-                <Timeline groups={[{id: SCHEDULE_GROUP}]} items={this.state.scheduleItems}
-                          sidebarWidth={0}
-                          visibleTimeStart={this.state.upcomingStreamsStartTime.valueOf()}
-                          visibleTimeEnd={this.state.upcomingStreamsEndTime.valueOf()}/>
-                <hr className='my-4'/>
+                <Row className='streams'>
+                    <Col className='stream' md='6'>
+                        <span className='live-label'>LIVE</span>
+                        <Link to={`/user/${this.props.match.params.username}/live`}>
+                            <div className='stream-thumbnail'>
+                                <img src={this.state.streamThumbnailUrl}
+                                     alt={`${this.props.match.params.username} Stream Thumbnail`}/>
+                            </div>
+                        </Link>
+                        <span className='username'>
+                            <Link to={`/user/${this.props.match.params.username}/live`}>
+                                {this.state.displayName || this.props.match.params.username}
+                            </Link>
+                        </span>
+                    </Col>
+                    <Col md='6'>
+                        <h3 className='black-link'>
+                            <Link to={`/user/${this.props.match.params.username}/live`}>
+                                {this.state.streamTitle}
+                            </Link>
+                        </h3>
+                        <h5>
+                            <Link to={`/genre/${this.state.streamGenre}`}>
+                                {this.state.streamGenre}
+                            </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                            {this.state.streamCategory}
+                        </Link>
+                        </h5>
+                    </Col>
+                </Row>
+                <hr className='mb-4'/>
             </React.Fragment>
         );
     }
 
-    renderLiveStream() {
-        return this.state.streamKey ? (
-            <Row className='streams' xs='2'>
-                <Col className='stream mb-4'>
-                    <span className='live-label'>LIVE</span>
-                    <Link to={`/user/${this.props.match.params.username}/live`}>
-                        <div className='stream-thumbnail'>
-                            <img src={this.state.streamThumbnailUrl}
-                                 alt={`${this.props.match.params.username} Stream Thumbnail`}/>
-                        </div>
-                    </Link>
-                    <span className='username'>
-                        <Link to={`/user/${this.props.match.params.username}/live`}>
-                            {this.state.displayName || this.props.match.params.username}
-                        </Link>
-                    </span>
+    renderUpcomingStreams() {
+        const scheduledStreams = this.state.scheduledStreams.map((stream, index) => {
+            const genreAndCategory = (
+                <i>
+                    - <Link to={`/genre/${stream.genre}`}>
+                    {stream.genre}
+                </Link> <Link to={`/category/${stream.category}`}>
+                    {stream.category}
+                </Link>
+                </i>
+            );
+            return (
+                <Col key={index} md='6'>
+                    <h5>{stream.title}{stream.genre || stream.category ? genreAndCategory : undefined}</h5>
+                    <p>Starts: {stream.startTime}<br/>Ends: {stream.endTime}</p>
                 </Col>
-                <Col>
-                    <h3 className='black-link'>
-                        <Link to={`/user/${this.props.match.params.username}/live`}>
-                            {this.state.streamTitle}
-                        </Link>
-                    </h3>
-                    <h5>
-                        <Link to={`/genre/${this.state.streamGenre}`}>
-                            {this.state.streamGenre}
-                        </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                        {this.state.streamCategory}
-                    </Link>
-                    </h5>
-                </Col>
-            </Row>
-        ) : <i><h3 className='text-center mt-5'>This user is not currently live</h3></i>;
+            );
+        });
+
+        return (
+            <React.Fragment>
+                <Row className='mb-2'>
+                    <Col>
+                        <h2>Upcoming Streams</h2>
+                    </Col>
+                </Row>
+                <Row>
+                    {scheduledStreams.length ? scheduledStreams : (
+                        <Col>
+                            <p>{this.state.displayName || this.props.match.params.username} has no upcoming streams.</p>
+                        </Col>
+                    )}
+                </Row>
+            </React.Fragment>
+        );
+    }
+
+    renderPastStreams() {
+        const pastStreams = [];
+
+        return (
+            <React.Fragment>
+                <Row className='mb-2'>
+                    <Col>
+                        <h2>Past Streams</h2>
+                    </Col>
+                </Row>
+                <Row>
+                    {pastStreams.length ? pastStreams : (
+                        <Col>
+                            <p>{this.state.displayName || this.props.match.params.username} has no past streams.</p>
+                        </Col>
+                    )}
+                </Row>
+            </React.Fragment>
+        );
     }
 
     editProfileToggle() {
@@ -622,8 +620,10 @@ export default class UserProfile extends React.Component {
                             {this.renderLinks()}
                         </Col>
                         <Col xs='9'>
-                            {this.renderSchedule()}
                             {this.renderLiveStream()}
+                            {this.renderUpcomingStreams()}
+                            <hr className='my-4'/>
+                            {this.renderPastStreams()}
                         </Col>
                     </Row>
                 </Container>
