@@ -2,43 +2,42 @@ const config = require('../../mainroom.config');
 const ffmpeg = require('fluent-ffmpeg');
 const concatStream = require('concat-stream');
 const AWS = require('aws-sdk');
-const LOGGER = require('../../logger')('./server/helpers/s3ThumbnailRetriever.js');
+const LOGGER = require('../../logger')('./server/helpers/s3ThumbnailGenerator.js');
 
 const S3 = new AWS.S3();
 
-module.exports.getThumbnail = async streamKey => {
+async function getThumbnail(streamKey) {
+    const inputURL = `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`;
     const Bucket = config.storage.s3.staticContent.bucketName;
     const Key = `${config.storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
     try {
         const output = await S3.headObject({Bucket, Key}).promise();
         return Date.now() > output.LastModified.getTime() + config.storage.thumbnails.ttl
-            ? await generateStreamThumbnail(streamKey)
+            ? await generateStreamThumbnail({inputURL, Bucket, Key})
             : `https://${Bucket}.s3.amazonaws.com/${Key}`;
     } catch (err) {
         if (err.code === 'NotFound') {
-            return await generateStreamThumbnail(streamKey);
+            return await generateStreamThumbnail({inputURL, Bucket, Key});
         }
         throw err;
     }
 }
 
-function generateStreamThumbnail(streamKey) {
+function generateStreamThumbnail({inputURL, Bucket, Key}) {
     return new Promise((resolve, reject) => {
-        ffmpeg(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`)
+        ffmpeg(inputURL)
             .seek('00:00:01')
             .frames(1)
             .videoFilter({filter: 'scale', options: [-2, 720]})
             .format('singlejpeg')
             .on('error', err => {
-                LOGGER.error('An error occurred when generating stream thumbnail (stream key: {}): {}', streamKey, err);
+                LOGGER.error('An error occurred when generating stream thumbnail (stream URL: {}): {}', inputURL, err);
                 reject(err);
             })
             .on('end', () => {
-                LOGGER.debug('Finished generating stream thumbnail (stream key: {})', streamKey);
+                LOGGER.debug('Finished generating stream thumbnail (stream URL: {})', inputURL);
             })
             .pipe(concatStream({encoding: 'buffer'}, Body => {
-                const Bucket = config.storage.s3.staticContent.bucketName;
-                const Key = `${config.storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
                 S3.upload({Bucket, Key, Body}, (err, output) => {
                     if (err) {
                         LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
@@ -51,4 +50,9 @@ function generateStreamThumbnail(streamKey) {
                 });
             }));
     });
+}
+
+module.exports = {
+    getThumbnail,
+    generateStreamThumbnail
 }

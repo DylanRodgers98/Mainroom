@@ -69,6 +69,12 @@ module.exports = {
                     profilePics: 'profile-pics',
                     streamThumbnails: 'stream-thumbnails'
                 }
+            },
+            streams: {
+                bucketName: 'mainroom-streams',
+                keyPrefixes : {
+                    recordedStreams: 'recorded'
+                }
             }
         }
     },
