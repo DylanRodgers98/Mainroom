@@ -65,7 +65,7 @@ export default class LiveStreams extends React.Component {
             params: {
                 searchQuery: this.props.match.params.query,
                 page: this.state.nextPage,
-                limit: config.pagination.limit
+                limit: config.pagination.large
             }
         };
 

@@ -56,7 +56,7 @@ export default class LiveStreamsByCategory extends React.Component {
         const queryParams = {
             params: {
                 page: this.state.nextPage,
-                limit: config.pagination.limit
+                limit: config.pagination.large
             }
         };
         if (this.props.match.params.category) {

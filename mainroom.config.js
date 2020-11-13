@@ -79,8 +79,8 @@ module.exports = {
         }
     },
     pagination: {
-        limit: 12,
-        subscriptionsAndFeaturedLimit: 6
+        small: 6,
+        large: 12
     },
     defaultProfilePicURL: 'https://mainroom-static-content.s3.amazonaws.com/default_profile_pic.png',
     defaultThumbnailURL: 'https://mainroom-static-content.s3.amazonaws.com/default_stream_thumbnail.png',

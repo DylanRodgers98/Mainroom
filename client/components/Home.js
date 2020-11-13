@@ -31,7 +31,7 @@ export default class Home extends React.Component {
         await this.getLoggedInUser();
         const params = {
             page: STARTING_PAGE,
-            limit: config.pagination[this.state.loggedInUser ? 'subscriptionsAndFeaturedLimit' : 'limit']
+            limit: config.pagination[this.state.loggedInUser ? 'small' : 'large']
         };
         await this.getFeaturedLiveStreams(params);
         if (this.state.loggedInUser) {
@@ -86,7 +86,7 @@ export default class Home extends React.Component {
         const loadMoreButton = this.renderLoadMoreButton(async () => {
             await this.getFeaturedLiveStreams({
                 page: this.state.featuredLiveStreamsPage,
-                limit: config.pagination[this.state.loggedInUser ? 'subscriptionsAndFeaturedLimit' : 'limit']
+                limit: config.pagination[this.state.loggedInUser ? 'small' : 'large']
             });
         });
 
@@ -103,7 +103,7 @@ export default class Home extends React.Component {
         const loadMoreButton = this.renderLoadMoreButton(async () => {
             await this.getSubscriptionLiveStreams({
                 page: this.state.subscriptionLiveStreamsPage,
-                limit: config.pagination.subscriptionsAndFeaturedLimit
+                limit: config.pagination.small
             });
         });
 

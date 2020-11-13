@@ -46,7 +46,7 @@ router.get('/', async (req, res, next) => {
             if (err) {
                 LOGGER.error('An error occurred when finding livestream info: {}', err);
                 next(err);
-            } else if (result) {
+            } else {
                 const streams = [];
                 for (const user of result.docs) {
                     const streamKey = user.streamInfo.streamKey;

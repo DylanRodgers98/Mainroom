@@ -57,6 +57,7 @@ app.use('/api/filters', require('./routes/filters'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/livestreams', require('./routes/livestreams'));
 app.use('/api/scheduled-streams', require('./routes/scheduled-streams'));
+app.use('/api/recorded-streams', require('./routes/recorded-streams'));
 
 app.get('/logged-in-user', (req, res) => {
     res.json(!req.user ? {} : {

@@ -7,6 +7,8 @@ import config from '../../mainroom.config';
 import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
 
+const STARTING_PAGE = 1;
+
 const STARTING_STATE = {
     loaded: false,
     loggedInUser: '',
@@ -35,7 +37,9 @@ const STARTING_STATE = {
     indexesOfInvalidLinks: [],
     showChangeProfilePicButton: false,
     changeProfilePicOpen: false,
-    uploadedProfilePic: undefined
+    uploadedProfilePic: undefined,
+    recordedStreams: [],
+    nextPage: STARTING_PAGE
 };
 
 export default class UserProfile extends React.Component {
@@ -80,9 +84,7 @@ export default class UserProfile extends React.Component {
                     scheduleEndTime: this.state.upcomingStreamsEndTime.toDate(),
                 }
             });
-            if (res.data.username) {
-                await this.fillComponent(res.data);
-            }
+            await this.fillComponent(res.data);
             this.setState({
                 loaded: true
             });
@@ -98,6 +100,7 @@ export default class UserProfile extends React.Component {
     async fillComponent(user) {
         this.populateProfile(user)
         await this.getLiveStreamIfLive();
+        await this.getRecordedStreams();
         await this.getLoggedInUser();
     }
 
@@ -170,6 +173,20 @@ export default class UserProfile extends React.Component {
                 streamThumbnailUrl: thumbnail.data.thumbnailURL
             });
         }
+    }
+
+    async getRecordedStreams() {
+        const res = await axios.get(`/api/recorded-streams`, {
+            params: {
+                username: this.props.match.params.username,
+                page: this.state.nextPage,
+                limit: config.pagination.small
+            }
+        });
+        this.setState({
+            recordedStreams: res.data.recordedStreams,
+            nextPage: res.data.nextPage
+        });
     }
 
     onClickSubscribeButton() {
@@ -294,7 +311,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderPastStreams() {
-        const pastStreams = [];
+        const pastStreams = JSON.stringify(this.state.recordedStreams);
 
         return (
             <React.Fragment>

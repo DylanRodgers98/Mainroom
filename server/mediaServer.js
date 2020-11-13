@@ -12,7 +12,7 @@ const isRecordingToMP4 = config.rtmpServer.trans.tasks.some(task => task.mp4);
 const S3 = new AWS.S3();
 const nms = new NodeMediaServer(config.rtmpServer);
 
-nms.on('prePublish', (id, streamPath) => {
+nms.on('prePublish', (sessionId, streamPath) => {
     const streamKey = getStreamKeyFromStreamPath(streamPath);
     User.findOne({'streamInfo.streamKey': streamKey})
         .select('_id streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category username displayName subscribers profilePicURL')
@@ -25,28 +25,24 @@ nms.on('prePublish', (id, streamPath) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
             } else if (!user) {
-                nms.getSession(id).reject();
-                LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', id, streamKey);
+                nms.getSession(sessionId).reject();
+                LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', sessionId, streamKey);
             } else {
                 mainroomEventEmitter.emit('onWentLive', user);
                 if (isRecordingToMP4) {
-                    saveRecordedStreamDetails(user, id, streamPath);
+                    saveRecordedStreamDetails(user, sessionId);
                 }
             }
         });
 });
 
-function saveRecordedStreamDetails(user, id, streamPath) {
-    const bucket = config.storage.s3.streams.bucketName;
-    const key = streamPath + '/' + getVideoFileName(id) + '.mp4';
-    const videoURL = `https://${bucket}.s3.amazonaws.com/${key}`;
-
+function saveRecordedStreamDetails(user, sessionId) {
     const recordedStream = new RecordedStream({
         user: user._id,
+        timestamp: getSessionConnectTime(sessionId),
         title: user.streamInfo.title,
         genre: user.streamInfo.genre,
-        category: user.streamInfo.category,
-        videoURL,
+        category: user.streamInfo.category
     });
     recordedStream.save(err => {
         if (err) {
@@ -55,32 +51,27 @@ function saveRecordedStreamDetails(user, id, streamPath) {
     });
 }
 
-nms.on('donePublish', async (id, streamPath) => {
+nms.on('donePublish', async (sessionId, streamPath) => {
     if (isRecordingToMP4) {
-        const videoFileName = getVideoFileName(id);
+        const videoFileName = getVideoFileName(sessionId);
         const streamKey = getStreamKeyFromStreamPath(streamPath);
 
         const Bucket = config.storage.s3.streams.bucketName;
         const videoSourceKey = `${streamPath}/${videoFileName}.mp4`;
         const destinationKey = `${config.storage.s3.streams.keyPrefixes.recordedStreams}/${streamKey}/${videoFileName}`;
         const videoDestinationKey = `${destinationKey}.mp4`;
+        const imageDestinationKey = `${destinationKey}.jpg`;
 
-        await S3.copyObject({
-            CopySource: `${Bucket}${videoSourceKey}`,
+        const videoURL = await moveFileInS3({
             Bucket,
-            Key: videoDestinationKey
-        }).promise();
-
-        await S3.deleteObject({
-            Bucket,
-            Key: videoSourceKey
-        }).promise();
-
-        const videoURL = `https://${Bucket}.s3.amazonaws.com/${videoDestinationKey}`;
+            sourceKey: videoSourceKey,
+            destinationKey: videoDestinationKey
+        });
+        
         const thumbnailURL = await generateStreamThumbnail({
             inputURL: videoURL,
             Bucket,
-            Key: `${destinationKey}.jpg`
+            Key: imageDestinationKey
         });
 
         User.findOne({'streamInfo.streamKey': streamKey}, '_id', (err, user) => {
@@ -89,9 +80,9 @@ nms.on('donePublish', async (id, streamPath) => {
             } else if (!user) {
                 LOGGER.info('Could not find user with stream key {}', streamKey);
             } else {
-                RecordedStream.findOneAndUpdate({user}, {videoURL, thumbnailURL}, (err, recordedStream) => {
+                RecordedStream.findOneAndUpdate({user, videoURL: null}, {videoURL, thumbnailURL}, err => {
                     if (err) {
-                        LOGGER.error('An error occurred when updating RecordedStream: {}, Error: {}', JSON.stringify(recordedStream), err);
+                        LOGGER.error('An error occurred when updating RecordedStream: {}', err);
                     }
                 });
             }
@@ -99,14 +90,30 @@ nms.on('donePublish', async (id, streamPath) => {
     }
 });
 
+async function moveFileInS3({Bucket, sourceKey, destinationKey}) {
+    await S3.copyObject({
+        CopySource: `${Bucket}${sourceKey}`,
+        Bucket,
+        Key: destinationKey
+    }).promise();
+
+    await S3.deleteObject({
+        Bucket,
+        Key: sourceKey
+    }).promise();
+
+    return `https://${Bucket}.s3.amazonaws.com/${destinationKey}`;
+}
+
 const getStreamKeyFromStreamPath = path => {
     const parts = path.split('/');
     return parts[parts.length - 1];
 };
 
-const getVideoFileName = id => {
-    const sessionConnectTime = nms.getSession(id).connectTime;
-    return moment(sessionConnectTime).format('yyyy-MM-DD-HH-mm-ss');
+const getSessionConnectTime = sessionId => nms.getSession(sessionId).connectTime;
+
+const getVideoFileName = sessionId => {
+    return moment(getSessionConnectTime(sessionId)).format('yyyy-MM-DD-HH-mm-ss');
 };
 
 module.exports = nms;

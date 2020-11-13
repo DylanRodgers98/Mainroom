@@ -37,7 +37,7 @@ export default class Subscribers extends React.Component {
             const res = await axios.get(`/api/users/${this.props.match.params.username}/subscriptions`, {
                 params: {
                     page: this.state.nextPage,
-                    limit: config.pagination.limit
+                    limit: config.pagination.large
                 }
             });
             const subscriptions = res.data.subscriptions.map((subscription, index) => (
