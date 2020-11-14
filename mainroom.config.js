@@ -73,7 +73,7 @@ module.exports = {
             streams: {
                 bucketName: 'mainroom-streams',
                 keyPrefixes : {
-                    recordedStreams: 'recorded'
+                    recorded: 'recorded'
                 }
             }
         }

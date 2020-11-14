@@ -134,7 +134,7 @@ export default class Navbar extends React.Component {
                 <Dropdown className='nav-item float-left navbar-menu navbar-dropdown'
                           isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
                     <DropdownToggle caret>
-                        <img className='rounded-circle' src={this.state.profilePicURL} width='25' height='25' alt={`Menu`}/>
+                        <img className='rounded-circle' src={this.state.profilePicURL} width='25' height='25' alt='Menu'/>
                     </DropdownToggle>
                     <DropdownMenu right>
                         <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>

@@ -128,7 +128,7 @@ export default class Home extends React.Component {
 
     renderLiveStreams(title, liveStreams) {
         const streamBoxes = liveStreams.map((liveStream, index) => (
-            <Col className='stream' key={index}>
+            <Col className='stream margin-bottom-thick' key={index}>
                 <span className='live-label'>LIVE</span>
                 <Link to={`/user/${liveStream.username}/live`}>
                     <div className='stream-thumbnail'>

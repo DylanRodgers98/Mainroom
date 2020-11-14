@@ -45,8 +45,8 @@ export default class Subscribers extends React.Component {
                     <Col>
                         <h5>
                             <Link to={`/user/${subscription.username}`}>
-                                <img src={subscription.profilePicURL} width='75' height='75' className='mr-3'
-                                     alt={`${subscription.username} profile picture`}/>
+                                <img src={subscription.profilePicURL} width='75' height='75'
+                                     alt={`${subscription.username} profile picture`} className='mr-3 rounded-circle'/>
                                 {subscription.username}
                             </Link>
                         </h5>

@@ -61,7 +61,6 @@ export default class UserProfile extends React.Component {
         this.changeProfilePicToggle = this.changeProfilePicToggle.bind(this);
         this.onProfilePicUpload = this.onProfilePicUpload.bind(this);
         this.saveNewProfilePic = this.saveNewProfilePic.bind(this);
-        this.applyDate = this.applyDate.bind(this);
 
         this.state = STARTING_STATE;
     }
@@ -219,17 +218,6 @@ export default class UserProfile extends React.Component {
         ));
     }
 
-    applyDate(startTime, endTime) {
-        this.setState({
-            loaded: false,
-            scheduledStreams: [],
-            upcomingStreamsStartTime: startTime,
-            upcomingStreamsEndTime: endTime
-        }, () => {
-            this.loadUserProfile();
-        });
-    }
-
     renderLiveStream() {
         return !this.state.streamKey ?  undefined : (
             <React.Fragment>
@@ -238,7 +226,7 @@ export default class UserProfile extends React.Component {
                         <h2>Live Now</h2>
                     </Col>
                 </Row>
-                <Row className='streams'>
+                <Row>
                     <Col className='stream' md='6'>
                         <span className='live-label'>LIVE</span>
                         <Link to={`/user/${this.props.match.params.username}/live`}>
@@ -278,10 +266,10 @@ export default class UserProfile extends React.Component {
             const genreAndCategory = (
                 <i>
                     - <Link to={`/genre/${stream.genre}`}>
-                    {stream.genre}
-                </Link> <Link to={`/category/${stream.category}`}>
-                    {stream.category}
-                </Link>
+                        {stream.genre}
+                    </Link> <Link to={`/category/${stream.category}`}>
+                        {stream.category}
+                    </Link>
                 </i>
             );
             return (
@@ -311,7 +299,37 @@ export default class UserProfile extends React.Component {
     }
 
     renderPastStreams() {
-        const pastStreams = JSON.stringify(this.state.recordedStreams);
+        const pastStreams = this.state.recordedStreams.map((stream, index) => {
+            const genreAndCategory = (
+                <i>
+                    <Link to={`/genre/${stream.genre}`}>
+                        {stream.genre}
+                    </Link> <Link to={`/category/${stream.category}`}>
+                        {stream.category}
+                    </Link>
+                </i>
+            );
+            return (
+                <Row key={index} className='margin-bottom-thick'>
+                    <Col className='stream' md='6' lg='4'>
+                        <Link to={`/stream/${stream._id}`}>
+                            <div className='stream-thumbnail'>
+                                <img src={stream.thumbnailURL} alt={`${stream.title} Stream Thumbnail`}/>
+                            </div>
+                        </Link>
+                    </Col>
+                    <Col md='6' lg='8'>
+                        <h5 className='black-link'>
+                            <Link to={`/stream/${stream._id}`}>
+                                {stream.title}
+                            </Link>
+                        </h5>
+                        {stream.genre || stream.category ? genreAndCategory : undefined}
+                        <p>{stream.timestamp}</p>
+                    </Col>
+                </Row>
+            );
+        });
 
         return (
             <React.Fragment>
@@ -320,13 +338,13 @@ export default class UserProfile extends React.Component {
                         <h2>Past Streams</h2>
                     </Col>
                 </Row>
-                <Row>
-                    {pastStreams.length ? pastStreams : (
+                {pastStreams.length ? pastStreams : (
+                    <Row>
                         <Col>
                             <p>{this.state.displayName || this.props.match.params.username} has no past streams.</p>
                         </Col>
-                    )}
-                </Row>
+                    </Row>
+                )}
             </React.Fragment>
         );
     }
@@ -556,7 +574,7 @@ export default class UserProfile extends React.Component {
         }));
     }
 
-    onProfilePicUpload(pictureFiles, pictureDataURLs) {
+    onProfilePicUpload(pictureFiles) {
         this.setState({
             uploadedProfilePic: pictureFiles[0]
         });
@@ -596,7 +614,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderProfilePic() {
-        const profilePic = <img src={this.state.profilePicURL} className='rounded-circle'
+        const profilePic = <img src={this.state.profilePicURL}
                                 alt={`${this.props.match.params.username} Profile Picture`}/>;
 
         const changeProfilePicButton = (
@@ -622,8 +640,8 @@ export default class UserProfile extends React.Component {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
                 <Container className='my-5'>
-                    <Row xs='4'>
-                        <Col>
+                    <Row>
+                        <Col md='4' lg='3'>
                             {this.renderProfilePic()}
                             <h1>{this.state.displayName || this.props.match.params.username}</h1>
                             <h5>{this.state.location || 'Planet Earth'}</h5>
@@ -635,8 +653,9 @@ export default class UserProfile extends React.Component {
                             {this.renderSubscribeOrEditProfileButton()}
                             <p>{this.state.bio}</p>
                             {this.renderLinks()}
+                            <hr className='my-4'/>
                         </Col>
-                        <Col xs='9'>
+                        <Col md='8' lg='9'>
                             {this.renderLiveStream()}
                             {this.renderUpcomingStreams()}
                             <hr className='my-4'/>

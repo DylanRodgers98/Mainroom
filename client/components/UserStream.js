@@ -198,7 +198,7 @@ export default class UserStream extends React.Component {
                             <tr>
                                 <td>
                                     <Link to={`/user/${this.props.match.params.username}`}>
-                                        <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
+                                        <img className='profile-pic' src={this.state.profilePicURL} width='75' height='75'
                                              alt={`${this.props.match.params.username} profile picture`}/>
                                     </Link>
                                 </td>

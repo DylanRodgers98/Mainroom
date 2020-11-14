@@ -24,6 +24,7 @@ nms.on('prePublish', (sessionId, streamPath) => {
         .exec((err, user) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
+                throw err;
             } else if (!user) {
                 nms.getSession(sessionId).reject();
                 LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', sessionId, streamKey);
@@ -47,43 +48,44 @@ function saveRecordedStreamDetails(user, sessionId) {
     recordedStream.save(err => {
         if (err) {
             LOGGER.error('An error occurred when saving new RecordedStream: {}, Error: {}', JSON.stringify(recordedStream), err);
+            throw err;
         }
     });
 }
 
-nms.on('donePublish', async (sessionId, streamPath) => {
+nms.on('donePublish', (sessionId, streamPath) => {
     if (isRecordingToMP4) {
-        const videoFileName = getVideoFileName(sessionId);
         const streamKey = getStreamKeyFromStreamPath(streamPath);
-
-        const Bucket = config.storage.s3.streams.bucketName;
-        const videoSourceKey = `${streamPath}/${videoFileName}.mp4`;
-        const destinationKey = `${config.storage.s3.streams.keyPrefixes.recordedStreams}/${streamKey}/${videoFileName}`;
-        const videoDestinationKey = `${destinationKey}.mp4`;
-        const imageDestinationKey = `${destinationKey}.jpg`;
-
-        const videoURL = await moveFileInS3({
-            Bucket,
-            sourceKey: videoSourceKey,
-            destinationKey: videoDestinationKey
-        });
-        
-        const thumbnailURL = await generateStreamThumbnail({
-            inputURL: videoURL,
-            Bucket,
-            Key: imageDestinationKey
-        });
-
-        User.findOne({'streamInfo.streamKey': streamKey}, '_id', (err, user) => {
+        User.findOne({'streamInfo.streamKey': streamKey}, '_id', async (err, user) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
             } else if (!user) {
                 LOGGER.info('Could not find user with stream key {}', streamKey);
             } else {
+                const Bucket = config.storage.s3.streams.bucketName;
+                const videoFileName = getVideoFileName(sessionId);
+                const videoSourceKey = `${streamPath}/${videoFileName}.mp4`;
+                const destinationKey = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${videoFileName}`;
+                const videoDestinationKey = `${destinationKey}.mp4`;
+                const imageDestinationKey = `${destinationKey}.jpg`;
+
+                const videoURL = await moveFileInS3({
+                    Bucket,
+                    sourceKey: videoSourceKey,
+                    destinationKey: videoDestinationKey
+                });
+
+                const thumbnailURL = await generateStreamThumbnail({
+                    inputURL: videoURL,
+                    Bucket,
+                    Key: imageDestinationKey
+                });
+
                 RecordedStream.findOneAndUpdate({user, videoURL: null}, {videoURL, thumbnailURL}, err => {
                     if (err) {
                         LOGGER.error('An error occurred when updating RecordedStream: {}', err);
                     }
+                    throw err;
                 });
             }
         });
@@ -91,17 +93,22 @@ nms.on('donePublish', async (sessionId, streamPath) => {
 });
 
 async function moveFileInS3({Bucket, sourceKey, destinationKey}) {
-    await S3.copyObject({
-        CopySource: `${Bucket}${sourceKey}`,
-        Bucket,
-        Key: destinationKey
-    }).promise();
+    try {
+        await S3.copyObject({
+            CopySource: `${Bucket}${sourceKey}`,
+            Bucket,
+            Key: destinationKey
+        }).promise();
 
-    await S3.deleteObject({
-        Bucket,
-        Key: sourceKey
-    }).promise();
+        await S3.deleteObject({
+            Bucket,
+            Key: sourceKey
+        }).promise();
 
+    } catch (err) {
+        LOGGER.error('An error occurred when moving file from {} to {} in S3 bucket {}: {}', sourceKey, destinationKey, Bucket, err);
+        throw err;
+    }
     return `https://${Bucket}.s3.amazonaws.com/${destinationKey}`;
 }
 
@@ -112,8 +119,6 @@ const getStreamKeyFromStreamPath = path => {
 
 const getSessionConnectTime = sessionId => nms.getSession(sessionId).connectTime;
 
-const getVideoFileName = sessionId => {
-    return moment(getSessionConnectTime(sessionId)).format('yyyy-MM-DD-HH-mm-ss');
-};
+const getVideoFileName = sessionId => moment(getSessionConnectTime(sessionId)).format('yyyy-MM-DD-HH-mm-ss');
 
 module.exports = nms;
