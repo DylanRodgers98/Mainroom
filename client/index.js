@@ -12,7 +12,8 @@ import Search from './components/Search';
 import UserProfile from './components/UserProfile';
 import Subscribers from './components/Subscribers';
 import Subscriptions from './components/Subscriptions';
-import UserStream from './components/UserStream';
+import LiveStream from './components/LiveStream';
+import RecordedStream from './components/RecordedStream';
 import Schedule from './components/Schedule';
 import Settings from './components/Settings';
 import GoLive from './components/GoLive';
@@ -56,7 +57,11 @@ if (document.getElementById('root')) {
                     )}/>
 
                     <Route exact path='/user/:username/live' render={props => (
-                        <UserStream {...props} />
+                        <LiveStream {...props} />
+                    )}/>
+
+                    <Route exact path='/stream/:streamId' render={props => (
+                        <RecordedStream {...props} />
                     )}/>
 
                     <Route exact path='/schedule' render={props => (

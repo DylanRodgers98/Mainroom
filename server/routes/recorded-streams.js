@@ -18,7 +18,7 @@ router.get('/', (req, res, next) => {
                 limit: req.query.limit,
                 sort: '-timestamp'
             };
-            RecordedStream.paginate({user: user._id, videoURL: {$ne: null}}, options, (err, result) => {
+            RecordedStream.paginate({user, videoURL: {$ne: null}}, options, (err, result) => {
                 if (err) {
                     LOGGER.error('An error occurred when finding recorded streams for user with _id {}: {}', user._id, err);
                     next(err);
@@ -31,6 +31,27 @@ router.get('/', (req, res, next) => {
             });
         }
     });
+});
+
+router.get('/:streamId', (req, res, next) => {
+    const streamId = sanitise(req.params.streamId);
+    RecordedStream.findById(streamId)
+        .populate({
+            path: 'user',
+            select: 'username displayName profilePicURL'
+        })
+        .exec((err, recordedStream) => {
+            if (err) {
+                LOGGER.error('An error occurred when finding recorded stream (_id: {}): {}', streamId, err);
+                next(err);
+            } else if (!recordedStream) {
+                res.status(404).send(`Recorded stream (_id: ${escape(streamId)}) not found`);
+            } else {
+                res.json({
+                    recordedStream
+                });
+            }
+        });
 });
 
 module.exports = router;

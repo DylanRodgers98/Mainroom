@@ -7,7 +7,7 @@ import {Button, Container, Row, Col} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 
-export default class UserStream extends React.Component {
+export default class LiveStream extends React.Component {
 
     constructor(props) {
         super(props);
@@ -195,31 +195,33 @@ export default class UserStream extends React.Component {
                 <Row className='remove-margin-r'>
                     <Col className='remove-padding-r stream-headings' xs='9'>
                         <table className='ml-2 mt-2 mb-2'>
-                            <tr>
-                                <td>
-                                    <Link to={`/user/${this.props.match.params.username}`}>
-                                        <img className='profile-pic' src={this.state.profilePicURL} width='75' height='75'
-                                             alt={`${this.props.match.params.username} profile picture`}/>
-                                    </Link>
-                                </td>
-                                <td valign='middle'>
-                                    <div className='ml-2'>
-                                        <h3 className='text-nowrap'>
-                                            <Link to={`/user/${this.props.match.params.username}`}>
-                                                {this.state.displayName || this.props.match.params.username}
-                                            </Link>
-                                                {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                                            </h3>
-                                        <h6>
-                                            <Link to={`/genre/${this.state.streamGenre}`}>
-                                                {this.state.streamGenre}
-                                            </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                                {this.state.streamCategory}
-                                            </Link>
-                                        </h6>
-                                    </div>
-                                </td>
-                            </tr>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <Link to={`/user/${this.props.match.params.username}`}>
+                                            <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
+                                                 alt={`${this.props.match.params.username} profile picture`}/>
+                                        </Link>
+                                    </td>
+                                    <td valign='middle'>
+                                        <div className='ml-2'>
+                                            <h3 className='text-nowrap'>
+                                                <Link to={`/user/${this.props.match.params.username}`}>
+                                                    {this.state.displayName || this.props.match.params.username}
+                                                </Link>
+                                                    {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                                </h3>
+                                            <h6>
+                                                <Link to={`/genre/${this.state.streamGenre}`}>
+                                                    {this.state.streamGenre}
+                                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                                    {this.state.streamCategory}
+                                                </Link>
+                                            </h6>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
                         </table>
                     </Col>
                     <Col className='remove-padding-lr' xs='3'>
