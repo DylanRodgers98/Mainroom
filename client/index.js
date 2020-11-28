@@ -4,7 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
 import config from '../mainroom.config';
-import Navbar from './components/Navbar';
+import MainroomNavbar from './components/MainroomNavbar';
 import Home from './components/Home';
 import LiveStreamsByGenre from './components/LiveStreamsByGenre';
 import LiveStreamsByCategory from './components/LiveStreamsByCategory';
@@ -26,7 +26,7 @@ if (document.getElementById('root')) {
     ReactDOM.render(
         <BrowserRouter>
             <React.Fragment>
-                <Navbar/>
+                <MainroomNavbar/>
                 <Switch>
                     <Route exact path='/' render={props => (
                         <Home {...props} />

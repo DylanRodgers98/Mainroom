@@ -255,7 +255,7 @@ export default class Settings extends React.Component {
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
-                <Container className='mt-5'>
+                <Container fluid className='mt-5'>
                     <h4>Account Settings</h4>
                     <hr className='mt-4'/>
                     <table className='mt-3'>

@@ -1,10 +1,10 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button} from 'reactstrap';
+import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Button, Navbar, NavbarBrand, Nav, NavItem, NavLink, Collapse, NavbarToggler} from 'reactstrap';
 import config from '../../mainroom.config';
 import axios from 'axios';
 
-export default class Navbar extends React.Component {
+export default class MainroomNavbar extends React.Component {
 
     constructor(props) {
         super(props);
@@ -19,6 +19,7 @@ export default class Navbar extends React.Component {
         this.searchHandleKeyDown = this.searchHandleKeyDown.bind(this);
         this.clearSearchBox = this.clearSearchBox.bind(this);
         this.profileDropdownToggle = this.profileDropdownToggle.bind(this);
+        this.navbarToggle = this.navbarToggle.bind(this);
 
         this.state = {
             genreDropdownOpen: false,
@@ -30,6 +31,7 @@ export default class Navbar extends React.Component {
             profileDropdownOpen: false,
             loggedInUser: '',
             profilePicURL: '',
+            navbarOpen: false
         };
     }
 
@@ -127,39 +129,51 @@ export default class Navbar extends React.Component {
 
     renderLogInOrProfileDropdown() {
         return this.state.loggedInUser ? (
-            <div className='navbar-nav ml-auto'>
-                <Button className='nav-item nav-link float-right go-live-button' tag={Link} to='/go-live'>
-                    Go Live
-                </Button>
-                <Dropdown className='nav-item float-left navbar-menu navbar-dropdown'
-                          isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
-                    <DropdownToggle caret>
-                        <img className='rounded-circle' src={this.state.profilePicURL} width='25' height='25' alt='Menu'/>
-                    </DropdownToggle>
-                    <DropdownMenu right>
-                        <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
-                        <DropdownItem tag={Link} to={'/schedule'}>Schedule</DropdownItem>
-                        <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}/subscriptions`}>Subscriptions</DropdownItem>
-                        <DropdownItem divider/>
-                        <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
-                        <DropdownItem divider/>
-                        <DropdownItem href={'/logout'}>Log Out</DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-            </div>
+            <Nav navbar>
+                <NavItem>
+                    <Dropdown className='navbar-menu navbar-dropdown text-center' nav inNavbar
+                              isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
+                        <DropdownToggle caret>
+                            <img className='rounded-circle' src={this.state.profilePicURL} width='25' height='25'
+                                 alt='Menu'/>
+                        </DropdownToggle>
+                        <DropdownMenu right>
+                            <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
+                            <DropdownItem tag={Link} to={'/schedule'}>Schedule</DropdownItem>
+                            <DropdownItem tag={Link}
+                                          to={`/user/${this.state.loggedInUser}/subscriptions`}>Subscriptions</DropdownItem>
+                            <DropdownItem divider/>
+                            <DropdownItem tag={Link} to={'/go-live'}>Go Live</DropdownItem>
+                            <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
+                            <DropdownItem divider/>
+                            <DropdownItem href={'/logout'}>Log Out</DropdownItem>
+                        </DropdownMenu>
+                    </Dropdown>
+                </NavItem>
+            </Nav>
         ) : (
-            <div className='navbar-nav ml-auto'>
-                <a href={this.getRedirectablePath('/login')}
-                   className='nav-item float-right nav-link'>Log In</a>
-                <a href={this.getRedirectablePath('/register')}
-                   className='nav-item float-right nav-link'>Register</a>
-            </div>
+            <Nav navbar>
+                <NavItem>
+                    <NavLink href={this.getRedirectablePath('/login')}
+                             className='text-center text-nowrap'>Log In</NavLink>
+                </NavItem>
+                <NavItem>
+                    <NavLink href={this.getRedirectablePath('/register')}
+                             className='text-center'>Register</NavLink>
+                </NavItem>
+            </Nav>
         );
     }
 
     profileDropdownToggle() {
         this.setState(prevState => ({
             profileDropdownOpen: !prevState.profileDropdownOpen
+        }));
+    }
+
+    navbarToggle() {
+        this.setState(prevState => ({
+            navbarOpen: !prevState.navbarOpen
         }));
     }
 
@@ -185,35 +199,44 @@ export default class Navbar extends React.Component {
         const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText}` : '';
 
         return (
-            <nav className='navbar navbar-expand-lg navbar-dark bg-dark'>
-                <div className='container'>
-                    <div className='navbar-nav mr-auto'>
-                        <Link to={'/'} className={'navbar-brand'}>{config.siteTitle}</Link>
-                        <Dropdown className='nav-item float-left navbar-dropdown' onMouseOver={this.onMouseEnterGenreDropdown}
-                                  onMouseLeave={this.onMouseLeaveGenreDropdown} isOpen={this.state.genreDropdownOpen}
-                                  toggle={this.genreDropdownToggle}>
+            <Navbar color='dark' dark expand='md'>
+                <NavbarBrand tag={Link} to={'/'}>{config.siteTitle}</NavbarBrand>
+                <NavbarToggler onClick={this.navbarToggle} />
+                <Collapse isOpen={this.state.navbarOpen} navbar>
+                <Nav className='mr-auto' navbar>
+                    <NavItem>
+                        <Dropdown className='navbar-dropdown navbar-menu text-center' nav inNavbar
+                            onMouseOver={this.onMouseEnterGenreDropdown} onMouseLeave={this.onMouseLeaveGenreDropdown}
+                            isOpen={this.state.genreDropdownOpen}
+                            toggle={this.genreDropdownToggle}>
                             <DropdownToggle caret>Genre</DropdownToggle>
                             <DropdownMenu>{genres}</DropdownMenu>
                         </Dropdown>
-                        <Dropdown className='nav-item float-left navbar-dropdown' onMouseOver={this.onMouseEnterCategoryDropdown}
+                    </NavItem>
+                    <NavItem>
+                        <Dropdown className='navbar-dropdown navbar-menu text-center' nav inNavbar
+                                  onMouseOver={this.onMouseEnterCategoryDropdown}
                                   onMouseLeave={this.onMouseLeaveCategoryDropdown}
                                   isOpen={this.state.categoryDropdownOpen} toggle={this.categoryDropdownToggle}>
                             <DropdownToggle caret>Category</DropdownToggle>
                             <DropdownMenu>{categories}</DropdownMenu>
                         </Dropdown>
-                        <div className='navbar-nav ml-2'>
-                            <input id='searchBox' className='form-control search-box' placeholder='Search...'
-                                   onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
-                                   value={this.state.searchText}/>
-                            <Button id='searchButton' className='form-control' onClick={this.clearSearchBox}
-                                    tag={Link} to={searchButtonLink}>
-                                Search
-                            </Button>
-                        </div>
-                    </div>
+                    </NavItem>
+                    <NavItem>
+                        <input id='searchBox' className='form-control' placeholder='Search...'
+                               onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
+                              value={this.state.searchText}/>
+                    </NavItem>
+                    <NavItem>
+                        <Button id='searchButton' className='form-control' onClick={this.clearSearchBox}
+                                tag={Link} to={searchButtonLink}>
+                            Search
+                        </Button>
+                    </NavItem>
+                    </Nav>
                     {this.renderLogInOrProfileDropdown()}
-                </div>
-            </nav>
-        )
+                </Collapse>
+            </Navbar>
+        );
     }
 }

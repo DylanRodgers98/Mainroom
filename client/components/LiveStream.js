@@ -27,7 +27,8 @@ export default class LiveStream extends React.Component {
             streamCategory: '',
             msg: '',
             chat: [],
-            chatHeight: 0
+            chatHeight: 0,
+            chatInputHeight: 0
         }
     }
 
@@ -162,13 +163,21 @@ export default class LiveStream extends React.Component {
         }
     }
 
+    setChatInputHeight(height) {
+        if (height !== this.state.chatInputHeight) {
+            this.setState({
+                chatInputHeight: height
+            });
+        }
+    }
+
     renderChatInput() {
         return !this.state.viewerUsername ? (
             <div className='text-center mt-3'>
                 To participate in the chat, please <a href={`/login?redirectTo=${window.location.pathname}`}>log in</a>
             </div>
         ) : (
-            <div className='chat-input'>
+            <div className='chat-input' style={{height: this.state.chatInputHeight + 'px'}}>
                 <textarea onChange={this.onMessageTextChange} onKeyDown={this.handleKeyDown} value={this.state.msg}/>
                 <button onClick={this.onMessageSubmit}>Send</button>
             </div>
@@ -178,53 +187,52 @@ export default class LiveStream extends React.Component {
     render() {
         return this.state.stream ? (
             <Container fluid className='remove-padding-lr'>
-                <Row className='remove-margin-r'>
-                    <Col className='remove-padding-r' xs='9'>
-                        <div data-vjs-player>
-                            <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
-                        </div>
-                    </Col>
-                    <Col className='remove-padding-lr' xs='3'>
-                        <ReactHeight className='full-height' onHeightReady={height => this.setChatHeight(height)}>
-                            <div id='messages' className='chat-messages' style={{height: this.state.chatHeight + 'px'}}>
-                                {this.renderChat()}
+                <Row className='remove-margin-r no-gutters'>
+                    <Col xs='12' sm='9'>
+                        <ReactHeight onHeightReady={height => this.setChatHeight(height)}>
+                            <div data-vjs-player>
+                                <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
+                            </div>
+                        </ReactHeight>
+                        <ReactHeight onHeightReady={height => this.setChatInputHeight(height)}>
+                            <div className='stream-headings'>
+                                <table className='ml-2'>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <Link to={`/user/${this.props.match.params.username}`}>
+                                                    <img className='rounded-circle my-2' src={this.state.profilePicURL}
+                                                         width='75' height='75'
+                                                         alt={`${this.props.match.params.username} profile picture`}/>
+                                                </Link>
+                                            </td>
+                                            <td valign='middle'>
+                                                <div className='ml-2'>
+                                                    <h3>
+                                                        <Link to={`/user/${this.props.match.params.username}`}>
+                                                            {this.state.displayName || this.props.match.params.username}
+                                                        </Link>
+                                                        {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                                    </h3>
+                                                    <h6>
+                                                        <Link to={`/genre/${this.state.streamGenre}`}>
+                                                            {this.state.streamGenre}
+                                                        </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                                            {this.state.streamCategory}
+                                                        </Link>
+                                                    </h6>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </ReactHeight>
                     </Col>
-                </Row>
-                <Row className='remove-margin-r'>
-                    <Col className='remove-padding-r stream-headings' xs='9'>
-                        <table className='ml-2 mt-2 mb-2'>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Link to={`/user/${this.props.match.params.username}`}>
-                                            <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
-                                                 alt={`${this.props.match.params.username} profile picture`}/>
-                                        </Link>
-                                    </td>
-                                    <td valign='middle'>
-                                        <div className='ml-2'>
-                                            <h3 className='text-nowrap'>
-                                                <Link to={`/user/${this.props.match.params.username}`}>
-                                                    {this.state.displayName || this.props.match.params.username}
-                                                </Link>
-                                                    {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                                                </h3>
-                                            <h6>
-                                                <Link to={`/genre/${this.state.streamGenre}`}>
-                                                    {this.state.streamGenre}
-                                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                                    {this.state.streamCategory}
-                                                </Link>
-                                            </h6>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </Col>
-                    <Col className='remove-padding-lr' xs='3'>
+                    <Col xs='12' sm='3'>
+                        <div id='messages' className='chat-messages' style={{height: this.state.chatHeight + 'px'}}>
+                            {this.renderChat()}
+                        </div>
                         {this.renderChatInput()}
                     </Col>
                 </Row>

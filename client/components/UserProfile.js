@@ -235,11 +235,6 @@ export default class UserProfile extends React.Component {
                                      alt={`${this.props.match.params.username} Stream Thumbnail`}/>
                             </div>
                         </Link>
-                        <span className='username'>
-                            <Link to={`/user/${this.props.match.params.username}/live`}>
-                                {this.state.displayName || this.props.match.params.username}
-                            </Link>
-                        </span>
                     </Col>
                     <Col md='6'>
                         <h3 className='black-link'>
@@ -639,7 +634,7 @@ export default class UserProfile extends React.Component {
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
-                <Container className='my-5'>
+                <Container fluid className='my-5'>
                     <Row>
                         <Col md='4' lg='3'>
                             {this.renderProfilePic()}

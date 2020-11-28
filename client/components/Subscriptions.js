@@ -83,7 +83,7 @@ export default class Subscribers extends React.Component {
         );
 
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
-            <Container className='my-5'>
+            <Container fluid className='my-5'>
                 <Row>
                     <Col>
                         <h4>{this.props.match.params.username}'s Subscriptions</h4>

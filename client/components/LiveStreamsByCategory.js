@@ -146,7 +146,7 @@ export default class LiveStreamsByCategory extends React.Component {
         );
 
         return (
-            <Container className='mt-5'>
+            <Container fluid className='mt-5'>
                 <Row>
                     <Col>
                         <h4>{pageHeader}</h4>

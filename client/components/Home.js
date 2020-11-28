@@ -175,7 +175,7 @@ export default class Home extends React.Component {
 
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
-            <Container className='mt-5'>
+            <Container fluid className='mt-5'>
                 {this.renderStreamBoxes()}
             </Container>
         )
