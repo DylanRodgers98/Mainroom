@@ -5,6 +5,7 @@ const mainroomEventEmitter = require('./mainroomEventEmitter');
 const moment = require('moment');
 const AWS = require('aws-sdk');
 const {generateStreamThumbnail} = require('../server/aws/s3ThumbnailGenerator');
+const {uploadVideoToS3} = require('../server/aws/s3VideoUploader');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const isRecordingToMP4 = config.rtmpServer.trans.tasks.some(task => task.mp4);
@@ -62,55 +63,41 @@ nms.on('donePublish', (sessionId, streamPath) => {
             } else if (!user) {
                 LOGGER.info('Could not find user with stream key {}', streamKey);
             } else {
+                const recordedStreamURL = `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`;
                 const Bucket = config.storage.s3.streams.bucketName;
                 const videoFileName = getVideoFileName(sessionId);
-                const videoSourceKey = `${streamPath}/${videoFileName}.mp4`;
+                const recordedStreamKey = `${streamPath}/${videoFileName}.mp4`;
                 const destinationKey = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${videoFileName}`;
-                const videoDestinationKey = `${destinationKey}.mp4`;
-                const imageDestinationKey = `${destinationKey}.jpg`;
 
-                const videoURL = await moveFileInS3({
+                const videoURL = await uploadVideoToS3({
+                    inputURL: recordedStreamURL,
                     Bucket,
-                    sourceKey: videoSourceKey,
-                    destinationKey: videoDestinationKey
+                    Key: `${destinationKey}.mp4`
+                });
+
+                S3.deleteObject({Bucket, Key: recordedStreamKey}, err => {
+                    if (err) {
+                        LOGGER.error('An error occurred when deleting object in S3 (bucket: {}, key: {}): {}', Bucket, recordedStreamKey, err);
+                        throw err;
+                    }
                 });
 
                 const thumbnailURL = await generateStreamThumbnail({
                     inputURL: videoURL,
                     Bucket,
-                    Key: imageDestinationKey
+                    Key: `${destinationKey}.jpg`
                 });
 
                 RecordedStream.findOneAndUpdate({user, videoURL: null}, {videoURL, thumbnailURL}, err => {
                     if (err) {
                         LOGGER.error('An error occurred when updating RecordedStream: {}', err);
+                        throw err;
                     }
-                    throw err;
                 });
             }
         });
     }
 });
-
-async function moveFileInS3({Bucket, sourceKey, destinationKey}) {
-    try {
-        await S3.copyObject({
-            CopySource: `${Bucket}${sourceKey}`,
-            Bucket,
-            Key: destinationKey
-        }).promise();
-
-        await S3.deleteObject({
-            Bucket,
-            Key: sourceKey
-        }).promise();
-
-    } catch (err) {
-        LOGGER.error('An error occurred when moving file from {} to {} in S3 bucket {}: {}', sourceKey, destinationKey, Bucket, err);
-        throw err;
-    }
-    return `https://${Bucket}.s3.amazonaws.com/${destinationKey}`;
-}
 
 const getStreamKeyFromStreamPath = path => {
     const parts = path.split('/');

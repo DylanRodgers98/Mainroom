@@ -1,10 +1,9 @@
 const config = require('../../mainroom.config');
 const ffmpeg = require('fluent-ffmpeg');
-const concatStream = require('concat-stream');
 const AWS = require('aws-sdk');
-const LOGGER = require('../../logger')('./server/helpers/s3ThumbnailGenerator.js');
-
 const S3 = new AWS.S3();
+const s3UploadStream = require('s3-upload-stream')(S3);
+const LOGGER = require('../../logger')('./server/aws/s3ThumbnailGenerator.js');
 
 async function getThumbnail(streamKey) {
     const inputURL = `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`;
@@ -37,18 +36,22 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
             .on('end', () => {
                 LOGGER.debug('Finished generating stream thumbnail (stream URL: {})', inputURL);
             })
-            .pipe(concatStream({encoding: 'buffer'}, Body => {
-                S3.upload({Bucket, Key, Body}, (err, output) => {
-                    if (err) {
-                        LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
-                        reject(err);
-                    } else {
-                        const location = output.Location;
-                        LOGGER.debug('Successfully uploaded thumbnail to {}', location);
-                        resolve(location);
-                    }
-                });
-            }));
+            .pipe(s3UploadStream.upload({Bucket, Key})
+                .on('part', details => {
+                    const uploaded = details.uploadedSize;
+                    const received = details.receivedSize;
+                    LOGGER.debug('Uploaded {}/{} of stream thumbnail to S3 (bucket: {}, key: {})', uploaded, received, Bucket, Key);
+                })
+                .on('error', err => {
+                    LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
+                    reject(err);
+                })
+                .on('uploaded', details => {
+                    const location = details.Location;
+                    LOGGER.debug('Successfully uploaded thumbnail to {}', location);
+                    resolve(location);
+                })
+            );
     });
 }
 
