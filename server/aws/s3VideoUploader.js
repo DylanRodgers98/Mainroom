@@ -17,7 +17,7 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
             reject(err);
         });
         ffmpeg.on('close', code => {
-            LOGGER.debug('FFMPEG child process finished adding moov atom to recorded stream {} with exit code {}', outputURL, code);
+            LOGGER.debug('FFMPEG child process exited with code {}', code);
             if (code === 0) {
                 LOGGER.debug('Uploading video file at {} to S3 (bucket: {}, key: {})', outputURL, Bucket, Key);
                 fs.createReadStream(outputURL)

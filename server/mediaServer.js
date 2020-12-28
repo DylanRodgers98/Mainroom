@@ -6,7 +6,7 @@ const moment = require('moment');
 const {generateStreamThumbnail} = require('../server/aws/s3ThumbnailGenerator');
 const {uploadVideoToS3} = require('../server/aws/s3VideoUploader');
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const isRecordingToMP4 = config.rtmpServer.trans.tasks.some(task => task.mp4);
@@ -81,7 +81,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
                         Key: `${destinationKey}.jpg`
                     });
 
-                    await fs.rm(inputURL);
+                    fs.unlinkSync(inputURL);
 
                     await RecordedStream.findOneAndUpdate({user, videoURL: null}, {videoURL, thumbnailURL});
                 } catch (err) {
