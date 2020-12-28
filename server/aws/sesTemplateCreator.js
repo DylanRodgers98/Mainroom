@@ -21,7 +21,7 @@ async function createNewSubscriberTemplateTemplate() {
         TemplateName: config.email.ses.templateNames.newSubscriber,
         TemplateContent: {
             Subject: '{{subscriber.displayName}} subscribed to you on Mainroom',
-            Text: `Hey {{user.displayName}},\r\n{{subscriber.displayName}} just subscribed to you on Mainroom!\r\nCheck out their profile: https://${config.server.host}/user/{{subscriber.username}}`,
+            Text: `Hey {{user.displayName}},\r\n{{subscriber.displayName}} just subscribed to you on Mainroom!\r\nCheck out their profile: https://${process.env.SERVER_HOST}/user/{{subscriber.username}}`,
             Html: '' //TODO: ADD HTML EMAIL CONTENT
         }
     });
@@ -32,7 +32,7 @@ async function createSubscriptionWentLiveTemplate() {
         TemplateName: config.email.ses.templateNames.subscriptionWentLive,
         TemplateContent: {
             Subject: '{{user.displayName}} just went live on Mainroom',
-            Text: `Hey {{subscriber.displayName}},\r\n{{user.displayName}} just went live on Mainroom!\\r\\nWatch the stream now: https://${config.server.host}/user/{{user.username}}/live`,
+            Text: `Hey {{subscriber.displayName}},\r\n{{user.displayName}} just went live on Mainroom!\\r\\nWatch the stream now: https://${process.env.SERVER_HOST}/user/{{user.username}}/live`,
             Html: '' //TODO: ADD HTML EMAIL CONTENT
         }
     });

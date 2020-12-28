@@ -95,7 +95,7 @@ export default class LiveStream extends React.Component {
     }
 
     connectToChat() {
-        this.socket = io.connect(`http://${config.server.host}:${config.server.http.port}`);
+        this.socket = io.connect(`http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}`);
         this.socket.on(`chatMessage_${this.props.match.params.username}`, ({viewerUsername, msg}) => {
             this.setState({
                 chat: [...this.state.chat, {viewerUsername, msg}]

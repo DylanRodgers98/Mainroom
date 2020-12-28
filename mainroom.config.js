@@ -3,14 +3,8 @@ const logger = require('./logger');
 module.exports = {
     siteTitle: 'Mainroom',
     headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
-    server: {
-        host: '192.168.0.15',
-        http: {
-            port: 8080
-        }
-    },
     rtmpServer: {
-        host: '192.168.0.15',
+        host: process.env.RTMP_SERVER_HOST,
         logType: logger.resolveLogLevel(),
         rtmp: {
             port: 1935,
