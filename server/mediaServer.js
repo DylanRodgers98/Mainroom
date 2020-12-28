@@ -3,14 +3,14 @@ const config = require('../mainroom.config');
 const {User, RecordedStream} = require('./model/schemas');
 const mainroomEventEmitter = require('./mainroomEventEmitter');
 const moment = require('moment');
-const AWS = require('aws-sdk');
 const {generateStreamThumbnail} = require('../server/aws/s3ThumbnailGenerator');
 const {uploadVideoToS3} = require('../server/aws/s3VideoUploader');
+const path = require('path');
+const fs = require('fs').promises;
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const isRecordingToMP4 = config.rtmpServer.trans.tasks.some(task => task.mp4);
 
-const S3 = new AWS.S3();
 const nms = new NodeMediaServer(config.rtmpServer);
 
 nms.on('prePublish', (sessionId, streamPath) => {
@@ -63,24 +63,24 @@ nms.on('donePublish', (sessionId, streamPath) => {
             } else if (!user) {
                 LOGGER.info('Could not find user with stream key {}', streamKey);
             } else {
-                const recordedStreamURL = `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`;
                 const Bucket = config.storage.s3.streams.bucketName;
                 const videoFileName = getVideoFileName(sessionId);
-                const recordedStreamKey = `${streamPath}/${videoFileName}.mp4`;
                 const destinationKey = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${videoFileName}`;
 
                 const videoURL = await uploadVideoToS3({
-                    inputURL: recordedStreamURL,
+                    inputURL: `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`,
                     Bucket,
                     Key: `${destinationKey}.mp4`
                 });
 
-                S3.deleteObject({Bucket, Key: recordedStreamKey}, err => {
-                    if (err) {
-                        LOGGER.error('An error occurred when deleting object in S3 (bucket: {}, key: {}): {}', Bucket, recordedStreamKey, err);
-                        throw err;
-                    }
-                });
+                let directoryToRemove;
+                try {
+                    directoryToRemove = path.join(__dirname, '..', config.rtmpServer.http.mediaroot, 'live', streamKey);
+                    await fs.rmdir(directoryToRemove, {recursive: true});
+                } catch (err) {
+                    LOGGER.error('An error occurred when deleting video file at {}: {}', directoryToRemove, err);
+                    throw err;
+                }
 
                 const thumbnailURL = await generateStreamThumbnail({
                     inputURL: videoURL,
