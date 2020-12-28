@@ -7,14 +7,14 @@ module.exports = {
         host: process.env.RTMP_SERVER_HOST,
         logType: logger.resolveLogLevel(),
         rtmp: {
-            port: 1935,
+            port: process.env.RTMP_SERVER_RTMP_PORT,
             chunk_size: 60000,
             gop_cache: true,
             ping: 60,
             ping_timeout: 30
         },
         http: {
-            port: 8888,
+            port: process.env.RTMP_SERVER_HTTP_PORT,
             mediaroot: './server/media',
             allow_origin: '*'
         },

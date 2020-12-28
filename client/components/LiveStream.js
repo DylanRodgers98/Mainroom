@@ -52,7 +52,7 @@ export default class LiveStream extends React.Component {
     }
 
     async populateStreamDataIfUserIsLive(data) {
-        const stream = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${data.streamKey}`);
+        const stream = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${data.streamKey}`);
         if (stream.data.isLive) {
             this.populateStreamData(data);
             await this.getViewerUsername();
@@ -67,7 +67,7 @@ export default class LiveStream extends React.Component {
                 autoplay: true,
                 controls: true,
                 sources: [{
-                    src: `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${data.streamKey}/index.m3u8`,
+                    src: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/live/${data.streamKey}/index.m3u8`,
                     type: 'application/x-mpegURL'
                 }],
                 fluid: true

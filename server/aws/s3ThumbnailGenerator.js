@@ -6,7 +6,7 @@ const s3UploadStream = require('s3-upload-stream')(S3);
 const LOGGER = require('../../logger')('./server/aws/s3ThumbnailGenerator.js');
 
 async function getThumbnail(streamKey) {
-    const inputURL = `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`;
+    const inputURL = `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/live/${streamKey}/index.m3u8`;
     const Bucket = config.storage.s3.staticContent.bucketName;
     const Key = `${config.storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
     try {

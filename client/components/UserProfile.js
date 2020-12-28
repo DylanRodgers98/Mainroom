@@ -161,7 +161,7 @@ export default class UserProfile extends React.Component {
     async getLiveStreamIfLive() {
         const stream = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
         const streamKey = stream.data.streamKey;
-        const res = await axios.get(`http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/api/streams/live/${streamKey}`);
+        const res = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
         if (res.data.isLive) {
             const thumbnail = await axios.get(`/api/livestreams/${streamKey}/thumbnail`);
             this.setState({

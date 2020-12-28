@@ -68,7 +68,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
                 const destinationKey = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${videoFileName}`;
 
                 const videoURL = await uploadVideoToS3({
-                    inputURL: `http://${config.rtmpServer.host}:${config.rtmpServer.http.port}/live/${streamKey}/index.m3u8`,
+                    inputURL: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/live/${streamKey}/index.m3u8`,
                     Bucket,
                     Key: `${destinationKey}.mp4`
                 });
