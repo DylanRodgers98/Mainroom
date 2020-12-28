@@ -57,6 +57,7 @@ function saveRecordedStreamDetails(user, sessionId) {
 nms.on('donePublish', (sessionId, streamPath) => {
     if (isRecordingToMP4) {
         const streamKey = getStreamKeyFromStreamPath(streamPath);
+        const videoFileName = getVideoFileName(sessionId);
         User.findOne({'streamInfo.streamKey': streamKey}, '_id', async (err, user) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
@@ -64,36 +65,29 @@ nms.on('donePublish', (sessionId, streamPath) => {
                 LOGGER.info('Could not find user with stream key {}', streamKey);
             } else {
                 const Bucket = config.storage.s3.streams.bucketName;
-                const videoFileName = getVideoFileName(sessionId);
+                const inputURL = path.join(__dirname, '..', config.rtmpServer.http.mediaroot, 'live', streamKey, `${videoFileName}.mp4`);
                 const destinationKey = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${videoFileName}`;
 
-                const videoURL = await uploadVideoToS3({
-                    inputURL: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/live/${streamKey}/index.m3u8`,
-                    Bucket,
-                    Key: `${destinationKey}.mp4`
-                });
-
-                let directoryToRemove;
                 try {
-                    directoryToRemove = path.join(__dirname, '..', config.rtmpServer.http.mediaroot, 'live', streamKey);
-                    await fs.rmdir(directoryToRemove, {recursive: true});
+                    const videoURL = await uploadVideoToS3({
+                        inputURL,
+                        Bucket,
+                        Key: `${destinationKey}.mp4`
+                    });
+
+                    const thumbnailURL = await generateStreamThumbnail({
+                        inputURL,
+                        Bucket,
+                        Key: `${destinationKey}.jpg`
+                    });
+
+                    await fs.rm(inputURL);
+
+                    await RecordedStream.findOneAndUpdate({user, videoURL: null}, {videoURL, thumbnailURL});
                 } catch (err) {
-                    LOGGER.error('An error occurred when deleting video file at {}: {}', directoryToRemove, err);
+                    LOGGER.error('An error occurred when uploading recorded stream at {} to S3 (bucket: {}, key(s): {}.(mp4|jpg): {}', inputURL, Bucket, destinationKey, err);
                     throw err;
                 }
-
-                const thumbnailURL = await generateStreamThumbnail({
-                    inputURL: videoURL,
-                    Bucket,
-                    Key: `${destinationKey}.jpg`
-                });
-
-                RecordedStream.findOneAndUpdate({user, videoURL: null}, {videoURL, thumbnailURL}, err => {
-                    if (err) {
-                        LOGGER.error('An error occurred when updating RecordedStream: {}', err);
-                        throw err;
-                    }
-                });
             }
         });
     }
@@ -104,8 +98,12 @@ const getStreamKeyFromStreamPath = path => {
     return parts[parts.length - 1];
 };
 
-const getSessionConnectTime = sessionId => nms.getSession(sessionId).connectTime;
+function getSessionConnectTime(sessionId) {
+    return nms.getSession(sessionId).connectTime;
+}
 
-const getVideoFileName = sessionId => moment(getSessionConnectTime(sessionId)).format('yyyy-MM-DD-HH-mm-ss');
+function getVideoFileName(sessionId) {
+    return moment(getSessionConnectTime(sessionId)).format('yyyy-MM-DD-HH-mm-ss');
+}
 
 module.exports = nms;
