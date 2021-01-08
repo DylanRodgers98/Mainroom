@@ -8,11 +8,11 @@
   "private": true,
   "scripts": {
     "test": "jest --coverage --detectOpenHandles --forceExit --verbose",
-    "start:dev": "npm-run-all --parallel start-server:dev start-client:dev",
-    "start-client:dev": "./node_modules/.bin/webpack --watch",
+    "start:dev": "cross-env NODE_ENV=development npm-run-all --parallel !(start):dev",
+    "start:prod": "cross-env NODE_ENV=production npm-run-all !(start):prod",
+    "webpack:dev": "./node_modules/.bin/webpack --watch",
+    "webpack:prod": "./node_modules/.bin/webpack",
     "start-server:dev": "./node_modules/.bin/supervisor -w server -s -RV ./server/app.js",
-    "start:prod": "cross-env NODE_ENV=production npm-run-all --parallel start-server:prod start-client:prod",
-    "start-client:prod": "./node_modules/.bin/webpack",
     "start-server:prod": "./node_modules/.bin/supervisor -i . -s -RV ./server/app.js"
   },
   "dependencies": {
