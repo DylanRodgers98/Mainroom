@@ -30,6 +30,7 @@
     "dotenv": "^8.2.0",
     "ejs": "^2.7.4",
     "express": "^4.17.1",
+    "express-rate-limit": "^5.2.3",
     "express-session": "^1.17.1",
     "fluent-ffmpeg": "^2.1.2",
     "history": "^4.10.1",

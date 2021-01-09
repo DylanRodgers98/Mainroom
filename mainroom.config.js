@@ -89,5 +89,9 @@ module.exports = {
                 resetPassword: 'resetPassword'
             }
         }
+    },
+    rateLimiter: {
+        windowMs: 60 * 1000, // 1 minute
+        maxRequests: 100
     }
 };

@@ -16,8 +16,10 @@ const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
 const csrf = require('csurf');
+const rateLimit = require("express-rate-limit");
 const LOGGER = require('../logger')('./server/app.js');
 
+// connect to database
 const databaseUri = 'mongodb://'
     + (process.env.DB_USER && process.env.DB_PASSWORD ? `${process.env.DB_USER}:${process.env.DB_PASSWORD}@` : '')
     + `${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}`;
@@ -29,16 +31,19 @@ mongoose.connect(databaseUri, {
     useCreateIndex: true
 });
 
+// set up views
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, './views'));
 app.use(express.static('public'));
 app.use(flash());
 
+// set up cookies and CSRF token
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json({extended: true}));
 app.use(csrf({cookie: true}))
 
+// store session data in MongoDB
 app.use(Session({
     store: new MongoStore({ mongooseConnection: mongoose.connection }),
     secret: process.env.SESSION_SECRET,
@@ -46,8 +51,18 @@ app.use(Session({
     saveUninitialized: false,
 }));
 
+// set up Passport for authentication
 app.use(passport.initialize());
 app.use(passport.session());
+
+// if in prod, app will be behind Nginx reverse proxy, so tell express to trust proxy
+app.set('trust proxy', process.env.NODE_ENV === 'production');
+
+// apply rate limiter to all requests
+app.use(rateLimit({
+    windowMs: config.rateLimiter.windowMs,
+    max: config.rateLimiter.maxRequests
+}));
 
 // Register app routes
 app.use('/login', require('./routes/login'));
