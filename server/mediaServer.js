@@ -112,10 +112,11 @@ function findMP4FileName(inputDirectory, sessionId) {
         return mp4FileNames[0];
     } else {
         LOGGER.error('{} MP4 files found in {} but expected 1', mp4FileNames.length, inputDirectory);
-        LOGGER.info('Attempting to find MP4 file for stream (ID: {}) using formatted session connectTime', sessionId);
-        const possibleMP4FileName = `${moment(getSessionConnectTime(sessionId)).format('yyyy-MM-DD-HH-mm-ss')}.mp4`;
-        let mp4FileName;
 
+        const possibleMP4FileName = `${moment(getSessionConnectTime(sessionId)).format('yyyy-MM-DD-HH-mm-ss')}.mp4`;
+        LOGGER.info('Attempting to find MP4 file for stream (ID: {}) using formatted session connectTime. Possible file name: {}', sessionId, possibleMP4FileName);
+
+        let mp4FileName;
         mp4FileNames.forEach(filename => {
             if (path.basename(filename) !== possibleMP4FileName) {
                 const filePath = path.join(inputDirectory, filename);
