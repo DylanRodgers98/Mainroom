@@ -117,8 +117,16 @@ function findMP4FileName(inputDirectory, sessionId) {
 
         mp4FileNames.forEach(filename => {
             if (path.basename(filename) !== possibleMP4FileName) {
-                LOGGER.info('Deleting {}', filename);
-                fs.unlinkSync(filename);
+                const filePath = path.join(inputDirectory, filename);
+                LOGGER.info('Deleting file at {}', filePath);
+                fs.unlink(filename, err => {
+                    if (err) {
+                        LOGGER.error('An error occurred when deleting file at {}: {}', filePath, err);
+                        throw err;
+                    } else {
+                        LOGGER.info('Successfully deleted file at {}', filePath);
+                    }
+                });
             } else {
                 mp4FileName = possibleMP4FileName;
                 LOGGER.info('Found matching MP4 file for stream (ID: {}): {}', sessionId, mp4FileName);
