@@ -72,15 +72,15 @@ nms.on('donePublish', (sessionId, streamPath) => {
                 const Key = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${mp4FileName}`;
 
                 try {
-                    const videoURL = await uploadVideoToS3({inputURL, Bucket, Key});
+                    const {originalFilePaths, videoURL} = await uploadVideoToS3({inputURL, Bucket, Key});
                     const thumbnailURL = await generateStreamThumbnail({
                         inputURL,
                         Bucket,
                         Key: Key.replace('.mp4', '.jpg')
                     });
 
-                    // delete original MP4 file
-                    fs.unlinkSync(inputURL);
+                    // delete original MP4 files
+                    originalFilePaths.forEach(filePath => deleteFile(filePath));
 
                     await RecordedStream.findOneAndUpdate(
                         {user, timestamp, videoURL: null},
@@ -119,15 +119,7 @@ function findMP4FileName(inputDirectory, sessionId) {
         mp4FileNames.forEach(filename => {
             if (path.basename(filename) !== possibleMP4FileName) {
                 const filePath = path.join(inputDirectory, filename);
-                LOGGER.info('Deleting file at {}', filePath);
-                fs.unlink(filename, err => {
-                    if (err) {
-                        LOGGER.error('An error occurred when deleting file at {}: {}', filePath, err);
-                        throw err;
-                    } else {
-                        LOGGER.info('Successfully deleted file at {}', filePath);
-                    }
-                });
+                deleteFile(filePath);
             } else {
                 mp4FileName = possibleMP4FileName;
                 LOGGER.info('Found matching MP4 file for stream (ID: {}): {}', sessionId, mp4FileName);
@@ -140,6 +132,18 @@ function findMP4FileName(inputDirectory, sessionId) {
         }
         return mp4FileName;
     }
+}
+
+function deleteFile(filePath) {
+    LOGGER.info('Deleting file at {}', filePath);
+    fs.unlink(filePath, err => {
+        if (err) {
+            LOGGER.error('An error occurred when deleting file at {}: {}', filePath, err);
+            throw err;
+        } else {
+            LOGGER.info('Successfully deleted file at {}', filePath);
+        }
+    });
 }
 
 module.exports = nms;
