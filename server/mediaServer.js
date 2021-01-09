@@ -57,6 +57,8 @@ function saveRecordedStreamDetails(user, sessionId) {
 nms.on('donePublish', (sessionId, streamPath) => {
     if (isRecordingToMP4) {
         const streamKey = getStreamKeyFromStreamPath(streamPath);
+        const timestamp = getSessionConnectTime(sessionId);
+
         User.findOne({'streamInfo.streamKey': streamKey}, '_id', async (err, user) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
@@ -80,7 +82,6 @@ nms.on('donePublish', (sessionId, streamPath) => {
                     // delete original MP4 file
                     fs.unlinkSync(inputURL);
 
-                    const timestamp = getSessionConnectTime(sessionId);
                     await RecordedStream.findOneAndUpdate(
                         {user, timestamp, videoURL: null},
                         {videoURL, thumbnailURL}
