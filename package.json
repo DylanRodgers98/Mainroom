@@ -8,8 +8,8 @@
   "private": true,
   "scripts": {
     "test": "jest --coverage --detectOpenHandles --forceExit --verbose",
-    "start:dev": "cross-env NODE_ENV=development npm-run-all --parallel !(start):dev",
-    "start:prod": "cross-env NODE_ENV=production npm-run-all !(start):prod",
+    "start:dev": "cross-env NODE_ENV=development npm-run-all --parallel webpack:dev start-server:dev",
+    "start:prod": "cross-env NODE_ENV=production npm-run-all webpack:prod start-server:prod",
     "webpack:dev": "./node_modules/.bin/webpack --watch",
     "webpack:prod": "./node_modules/.bin/webpack",
     "start-server:dev": "./node_modules/.bin/supervisor -w server -s -RV ./server/app.js",
