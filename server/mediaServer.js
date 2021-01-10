@@ -158,7 +158,7 @@ function getVideoDurationString(inputURL) {
         LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, ffprobe.error);
         throw ffprobe.error;
     }
-    const durationString = ffprobe.stdout;
+    const durationString = ffprobe.stdout.toString();
     const indexOfMillis = durationString.indexOf('.')
     return durationString.substring(0, indexOfMillis);
 }

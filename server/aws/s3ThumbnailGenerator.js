@@ -38,9 +38,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
             })
             .pipe(s3UploadStream.upload({Bucket, Key})
                 .on('part', details => {
-                    const uploaded = details.uploadedSize;
-                    const received = details.receivedSize;
-                    LOGGER.debug('Uploaded {}/{} of stream thumbnail to S3 (bucket: {}, key: {})', uploaded, received, Bucket, Key);
+                    LOGGER.debug('Uploaded {} bytes of stream thumbnail to S3 (bucket: {}, key: {})', details.uploadedSize, Bucket, Key);
                 })
                 .on('error', err => {
                     LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
