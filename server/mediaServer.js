@@ -2,12 +2,11 @@ const NodeMediaServer = require('node-media-server');
 const config = require('../mainroom.config');
 const {User, RecordedStream} = require('./model/schemas');
 const mainroomEventEmitter = require('./mainroomEventEmitter');
-const moment = require('moment');
 const {generateStreamThumbnail} = require('../server/aws/s3ThumbnailGenerator');
 const {uploadVideoToS3} = require('../server/aws/s3VideoUploader');
 const path = require('path');
 const fs = require('fs');
-const {spawnSync} = require('child_process');
+const {spawn} = require('child_process');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const isRecordingToMP4 = config.rtmpServer.trans.tasks.some(task => task.mp4);
@@ -74,14 +73,19 @@ nms.on('donePublish', (sessionId, streamPath) => {
                 const Key = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${mp4FileName}`;
 
                 try {
-                    const videoDuration = getVideoDurationString(inputURL);
-
-                    const {originalFileURLs, videoURL} = await uploadVideoToS3({inputURL, Bucket, Key});
-                    const thumbnailURL = await generateStreamThumbnail({
+                    const videoDurationPromise = getVideoDurationString(inputURL);
+                    const uploadVideoPromise = uploadVideoToS3({inputURL, Bucket, Key});
+                    const generateThumbnailPromise = generateStreamThumbnail({
                         inputURL,
                         Bucket,
                         Key: Key.replace('.mp4', '.jpg')
                     });
+
+                    const promiseResults = await Promise.all([videoDurationPromise, uploadVideoPromise, generateThumbnailPromise]);
+
+                    const videoDuration = promiseResults[0];
+                    const {originalFileURLs, videoURL} = promiseResults[1];
+                    const thumbnailURL = promiseResults[2];
 
                     // delete original MP4 files
                     originalFileURLs.forEach(filePath => deleteFile(filePath));
@@ -108,7 +112,7 @@ function getSessionConnectTime(sessionId) {
     return nms.getSession(sessionId).connectTime;
 }
 
-function findMP4FileName(inputDirectory, sessionId) {
+function findMP4FileName(inputDirectory, sessionConnectTime) {
     const mp4FileNames = fs.readdirSync(inputDirectory)
         .filter(fileName => path.extname(fileName).toLowerCase() === '.mp4');
 
@@ -116,25 +120,27 @@ function findMP4FileName(inputDirectory, sessionId) {
         return mp4FileNames[0];
     } else {
         LOGGER.error('{} MP4 files found in {} but expected 1', mp4FileNames.length, inputDirectory);
+        LOGGER.info('Attempting to find MP4 file comparing file creation times against session connect time of {}', sessionConnectTime);
 
-        const possibleMP4FileName = `${moment(getSessionConnectTime(sessionId)).format('yyyy-MM-DD-HH-mm-ss')}.mp4`;
-        LOGGER.info('Attempting to find MP4 file for stream (ID: {}) using formatted session connectTime. Possible file name: {}', sessionId, possibleMP4FileName);
-
-        let mp4FileName;
+        const possibleMp4FileNames = [];
         mp4FileNames.forEach(filename => {
-            if (path.basename(filename) !== possibleMP4FileName) {
-                const filePath = path.join(inputDirectory, filename);
+            const filePath = path.join(inputDirectory, filename);
+            const { birthtimeMs } = fs.statSync(filePath);
+            if (birthtimeMs < sessionConnectTime) {
                 deleteFile(filePath);
             } else {
-                mp4FileName = possibleMP4FileName;
-                LOGGER.info('Found matching MP4 file for stream (ID: {}): {}', sessionId, mp4FileName);
+                possibleMp4FileNames.push(filename)
+                LOGGER.info('Found possible MP4 file for stream: {}', filename);
             }
         });
 
-        if (!mp4FileName) {
-            LOGGER.error('No MP4 file could be found for stream with ID: {}', sessionId);
-            throw new Error(`No MP4 file could be found for stream with ID: ${sessionId}`);
+        if (possibleMp4FileNames.length !== 1) {
+            const msg = `Expected 1 file in ${inputDirectory} to have creation time >= session connect time of ${sessionConnectTime}, but found ${possibleMp4FileNames.length}`
+            LOGGER.error(msg);
+            throw new Error(msg);
         }
+        const mp4FileName = possibleMp4FileNames[0];
+        LOGGER.info('Found matching MP4 file for stream: {}', mp4FileName);
         return mp4FileName;
     }
 }
@@ -152,15 +158,22 @@ function deleteFile(filePath) {
 }
 
 function getVideoDurationString(inputURL) {
-    const args = ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', '-sexagesimal', inputURL];
-    const ffprobe = spawnSync(process.env.FFPROBE_PATH, args);
-    if (ffprobe.error) {
-        LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, ffprobe.error);
-        throw ffprobe.error;
-    }
-    const durationString = ffprobe.stdout.toString();
-    const indexOfMillis = durationString.indexOf('.')
-    return durationString.substring(0, indexOfMillis);
+    return new Promise((resolve, reject) => {
+        const args = ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', '-sexagesimal', inputURL];
+        const ffprobe = spawn(process.env.FFPROBE_PATH, args);
+        ffprobe.on('error', err => {
+            LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, err);
+            reject(err);
+        });
+        ffprobe.stderr.on('data', data => {
+            LOGGER.debug('The following data was piped from an FFPROBE child process to stderr: {}', data)
+        });
+        ffprobe.stdout.on('data', data => {
+            const durationString = data.toString();
+            const indexOfMillis = durationString.indexOf('.')
+            resolve(durationString.substring(0, indexOfMillis));
+        });
+    });
 }
 
 module.exports = nms;
