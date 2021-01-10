@@ -37,8 +37,8 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
                             const location = details.Location;
                             LOGGER.info('Successfully uploaded recorded stream to {}', location);
                             resolve({
-                                originalFilePaths: [inputURL, outputURL],
-                                s3Location: location
+                                originalFileURLs: [inputURL, outputURL],
+                                videoURL: location
                             });
                         })
                     );

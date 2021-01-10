@@ -76,7 +76,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
                 try {
                     const videoDuration = getVideoDurationString(inputURL);
 
-                    const {originalFilePaths, videoURL} = await uploadVideoToS3({inputURL, Bucket, Key});
+                    const {originalFileURLs, videoURL} = await uploadVideoToS3({inputURL, Bucket, Key});
                     const thumbnailURL = await generateStreamThumbnail({
                         inputURL,
                         Bucket,
@@ -84,7 +84,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
                     });
 
                     // delete original MP4 files
-                    originalFilePaths.forEach(filePath => deleteFile(filePath));
+                    originalFileURLs.forEach(filePath => deleteFile(filePath));
 
                     await RecordedStream.findOneAndUpdate(
                         {user, timestamp, videoURL: null},
