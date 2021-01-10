@@ -17,7 +17,7 @@ const nms = new NodeMediaServer(config.rtmpServer);
 nms.on('prePublish', (sessionId, streamPath) => {
     const streamKey = getStreamKeyFromStreamPath(streamPath);
     User.findOne({'streamInfo.streamKey': streamKey})
-        .select('_id streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category username displayName subscribers profilePicURL')
+        .select('_id streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags username displayName subscribers profilePicURL')
         // populate subscribers for usage in mainroomEventEmitter
         .populate({
             path: 'subscribers',
