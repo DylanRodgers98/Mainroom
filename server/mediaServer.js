@@ -7,6 +7,7 @@ const {generateStreamThumbnail} = require('../server/aws/s3ThumbnailGenerator');
 const {uploadVideoToS3} = require('../server/aws/s3VideoUploader');
 const path = require('path');
 const fs = require('fs');
+const {spawnSync} = require('child_process');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const isRecordingToMP4 = config.rtmpServer.trans.tasks.some(task => task.mp4);
@@ -44,7 +45,8 @@ function saveRecordedStreamDetails(user, sessionId) {
         timestamp: getSessionConnectTime(sessionId),
         title: user.streamInfo.title,
         genre: user.streamInfo.genre,
-        category: user.streamInfo.category
+        category: user.streamInfo.category,
+        tags: user.streamInfo.tags
     });
     recordedStream.save(err => {
         if (err) {
@@ -82,9 +84,11 @@ nms.on('donePublish', (sessionId, streamPath) => {
                     // delete original MP4 files
                     originalFilePaths.forEach(filePath => deleteFile(filePath));
 
+                    const videoDuration = getVideoDurationString(videoURL);
+
                     await RecordedStream.findOneAndUpdate(
                         {user, timestamp, videoURL: null},
-                        {videoURL, thumbnailURL}
+                        {videoURL, thumbnailURL, videoDuration}
                     );
                 } catch (err) {
                     LOGGER.error('An error occurred when uploading recorded stream at {} to S3 (bucket: {}, key: {}): {}', inputURL, Bucket, Key, err);
@@ -145,6 +149,18 @@ function deleteFile(filePath) {
             LOGGER.info('Successfully deleted file at {}', filePath);
         }
     });
+}
+
+function getVideoDurationString(inputURL) {
+    const args = ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', '-sexagesimal', inputURL];
+    const ffprobe = spawnSync(process.env.FFPROBE_PATH, args);
+    if (ffprobe.error) {
+        LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, ffprobe.error);
+        throw ffprobe.error;
+    }
+    const durationString = ffprobe.stdout;
+    const indexOfMillis = durationString.indexOf('.')
+    return durationString.substring(0, indexOfMillis);
 }
 
 module.exports = nms;

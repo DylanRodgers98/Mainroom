@@ -8,10 +8,11 @@ const RecordedStreamSchema = new Schema({
     title: String,
     genre: String,
     category: String,
+    tags: [String],
     videoURL: String,
     thumbnailURL: {type: String, default: config.defaultThumbnailURL},
-    viewCount: Number,
-    videoLength: Number
+    viewCount: {type: Number, default: 0},
+    videoDuration: String
 });
 
 RecordedStreamSchema.plugin(mongoosePaginate);
