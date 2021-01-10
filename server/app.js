@@ -92,7 +92,6 @@ app.get('*', (req, res) => {
 });
 
 // Set up stream chat rooms
-io.origins('*:*');
 io.on('connection', socket => {
     socket.on('chatMessage', ({streamUsername, viewerUsername, msg}) => {
         io.emit(`chatMessage_${streamUsername}`, {viewerUsername, msg});
