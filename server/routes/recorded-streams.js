@@ -19,7 +19,7 @@ router.get('/', (req, res, next) => {
                 sort: '-timestamp',
                 select: '_id timestamp title genre category thumbnailURL viewCount'
             };
-            RecordedStream.paginate({user, videoURL: {$ne: null}}, options, (err, result) => {
+            RecordedStream.paginate({user}, options, (err, result) => {
                 if (err) {
                     LOGGER.error('An error occurred when finding recorded streams for user with _id {}: {}', user._id, err);
                     next(err);

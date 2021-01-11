@@ -138,7 +138,7 @@ export default class LiveStreamsByCategory extends React.Component {
         ));
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
-            <div className='text-center my-4 mb-4'>
+            <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={async () => await this.getLiveStreams()}>
                     Load More
                 </Button>

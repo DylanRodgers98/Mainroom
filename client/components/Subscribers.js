@@ -75,7 +75,7 @@ export default class Subscribers extends React.Component {
                 : this.props.match.params.username + ' has'} no subscribers :(</p>;
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
-            <div className='text-center my-4 mb-4'>
+            <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={async () => await this.getSubscribers()}>
                     Load More
                 </Button>

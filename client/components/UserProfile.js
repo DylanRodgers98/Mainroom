@@ -184,7 +184,7 @@ export default class UserProfile extends React.Component {
             }
         });
         this.setState({
-            recordedStreams: res.data.recordedStreams,
+            recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
             nextPage: res.data.nextPage,
             showLoadMoreButton: !!res.data.nextPage
         });
@@ -331,7 +331,7 @@ export default class UserProfile extends React.Component {
         });
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
-            <div className='text-center my-4 mb-4'>
+            <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
                     Load More
                 </Button>
@@ -647,7 +647,7 @@ export default class UserProfile extends React.Component {
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
-                <Container fluid='lg' className='my-5'>
+                <Container fluid='lg' className='mt-5'>
                     <Row>
                         <Col md='4' lg='3'>
                             {this.renderProfilePic()}

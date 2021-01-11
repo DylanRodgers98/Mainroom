@@ -4,6 +4,7 @@ import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Container, Row, Col, Button} from 'reactstrap';
+import {ReactHeight} from "react-height/lib/ReactHeight";
 
 const STARTING_PAGE = 1;
 
@@ -19,6 +20,8 @@ const STARTING_STATE = {
     streamTimestamp: '',
     viewCount: 0,
     recordedStreams: [],
+    videoHeight: 0,
+    streamHeadingsHeight: 0,
     showLoadMoreButton: false,
     nextPage: STARTING_PAGE
 };
@@ -90,7 +93,7 @@ export default class RecordedStream extends React.Component {
             }
         });
         this.setState({
-            recordedStreams: res.data.recordedStreams,
+            recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
             nextPage: res.data.nextPage,
             showLoadMoreButton: !!res.data.nextPage
         });
@@ -109,6 +112,22 @@ export default class RecordedStream extends React.Component {
         document.title = config.headTitle;
     }
 
+    setVideoHeight(height) {
+        if (height !== this.state.videoHeight) {
+            this.setState({
+                videoHeight: height
+            });
+        }
+    }
+
+    setStreamHeadingsHeight(height) {
+        if (height !== this.state.streamHeadingsHeight) {
+            this.setState({
+                streamHeadingsHeight: height
+            });
+        }
+    }
+
     renderRecordedStreams() {
         const recordedStreams = this.state.recordedStreams.map((stream, index) => {
             const genreAndCategory = (
@@ -123,7 +142,7 @@ export default class RecordedStream extends React.Component {
                 </h6>
             );
             return stream._id === this.props.match.params.streamId ? undefined : (
-                <Row key={index} className='mt-2'>
+                <Row key={index} className='mt-2 pl-2'>
                     <Col className='stream' xs='6'>
                         <Link to={`/stream/${stream._id}`}>
                             <div className='stream-thumbnail'>
@@ -131,7 +150,7 @@ export default class RecordedStream extends React.Component {
                             </div>
                         </Link>
                     </Col>
-                    <Col xs='6' className='remove-padding-l'>
+                    <Col xs='6' className='remove-padding-lr'>
                         <div className='black-link'>
                             <Link to={`/stream/${stream._id}`}>
                                 {stream.title}
@@ -147,7 +166,7 @@ export default class RecordedStream extends React.Component {
         });
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
-            <div className='text-center my-4 mb-4'>
+            <div className='text-center my-2'>
                 <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
                     Load More
                 </Button>
@@ -155,15 +174,15 @@ export default class RecordedStream extends React.Component {
         );
 
         return (
-            <React.Fragment>
-                <Row className='mt-2'>
+            <div className='overflow-y-auto' style={{height: (this.state.videoHeight + this.state.streamHeadingsHeight) + 'px'}}>
+                <Row className='mt-2 pl-2'>
                     <Col>
                         <h5>More from {this.state.displayName || this.state.username}</h5>
                     </Col>
                 </Row>
                 {recordedStreams}
                 {loadMoreButton}
-            </React.Fragment>
+            </div>
         );
     }
 
@@ -172,45 +191,49 @@ export default class RecordedStream extends React.Component {
             <Container fluid className='remove-padding-lr'>
                 <Row className='remove-margin-r'>
                     <Col className='remove-padding-r' xs='12' sm='9'>
-                        <div data-vjs-player>
-                            <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
-                        </div>
-                        <div className='stream-headings'>
-                            <table className='ml-2'>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <Link to={`/user/${this.state.username}`}>
-                                                <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
-                                                     alt={`${this.state.username} profile picture`}/>
-                                            </Link>
-                                        </td>
-                                        <td valign='middle'>
-                                            <div className='ml-2'>
-                                                <h3 className='text-nowrap'>
-                                                    <Link to={`/user/${this.state.username}`}>
-                                                        {this.state.displayName || this.state.username}
-                                                    </Link>
-                                                        {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                                                    </h3>
-                                                <h6>
-                                                    <Link to={`/genre/${this.state.streamGenre}`}>
-                                                        {this.state.streamGenre}
-                                                    </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                                        {this.state.streamCategory}
-                                                    </Link>
-                                                </h6>
-                                                <h6>
-                                                    {this.state.viewCount} view{this.state.viewCount === 1 ? '' : 's'} · {this.state.streamTimestamp}
-                                                </h6>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <ReactHeight onHeightReady={height => this.setVideoHeight(height)}>
+                            <div data-vjs-player>
+                                <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
+                            </div>
+                        </ReactHeight>
+                        <ReactHeight onHeightReady={height => this.setStreamHeadingsHeight(height)}>
+                            <div className='stream-headings'>
+                                <table className='ml-2'>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <Link to={`/user/${this.state.username}`}>
+                                                    <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
+                                                         alt={`${this.state.username} profile picture`}/>
+                                                </Link>
+                                            </td>
+                                            <td valign='middle'>
+                                                <div className='ml-2'>
+                                                    <h3 className='text-nowrap'>
+                                                        <Link to={`/user/${this.state.username}`}>
+                                                            {this.state.displayName || this.state.username}
+                                                        </Link>
+                                                            {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                                        </h3>
+                                                    <h6>
+                                                        <Link to={`/genre/${this.state.streamGenre}`}>
+                                                            {this.state.streamGenre}
+                                                        </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                                            {this.state.streamCategory}
+                                                        </Link>
+                                                    </h6>
+                                                    <h6>
+                                                        {this.state.viewCount} view{this.state.viewCount === 1 ? '' : 's'} · {this.state.streamTimestamp}
+                                                    </h6>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </ReactHeight>
                     </Col>
-                    <Col xs='12' sm='3' className='mb-2'>
+                    <Col xs='12' sm='3' className='remove-padding-lr'>
                         {this.renderRecordedStreams()}
                     </Col>
                 </Row>
