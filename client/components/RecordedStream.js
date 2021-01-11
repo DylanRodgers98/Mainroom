@@ -3,7 +3,7 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Container, Row, Col} from 'reactstrap';
+import {Container, Row, Col, Button} from 'reactstrap';
 
 const STARTING_PAGE = 1;
 
@@ -16,7 +16,10 @@ const STARTING_STATE = {
     streamTitle: '',
     streamGenre: '',
     streamCategory: '',
+    streamTimestamp: '',
+    viewCount: 0,
     recordedStreams: [],
+    showLoadMoreButton: false,
     nextPage: STARTING_PAGE
 };
 
@@ -64,7 +67,9 @@ export default class RecordedStream extends React.Component {
             profilePicURL: recordedStream.user.profilePicURL,
             streamTitle: recordedStream.title,
             streamGenre: recordedStream.genre,
-            streamCategory: recordedStream.category
+            streamCategory: recordedStream.category,
+            streamTimestamp: recordedStream.timestamp,
+            viewCount: recordedStream.viewCount
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [
@@ -86,7 +91,8 @@ export default class RecordedStream extends React.Component {
         });
         this.setState({
             recordedStreams: res.data.recordedStreams,
-            nextPage: res.data.nextPage
+            nextPage: res.data.nextPage,
+            showLoadMoreButton: !!res.data.nextPage
         });
     }
 
@@ -106,13 +112,15 @@ export default class RecordedStream extends React.Component {
     renderRecordedStreams() {
         const recordedStreams = this.state.recordedStreams.map((stream, index) => {
             const genreAndCategory = (
-                <i>
-                    <Link to={`/genre/${stream.genre}`}>
-                        {stream.genre}
-                    </Link> <Link to={`/category/${stream.category}`}>
-                    {stream.category}
-                </Link>
-                </i>
+                <h6>
+                    <i>
+                        <Link to={`/genre/${stream.genre}`}>
+                            {stream.genre}
+                        </Link> <Link to={`/category/${stream.category}`}>
+                            {stream.category}
+                        </Link>
+                    </i>
+                </h6>
             );
             return stream._id === this.props.match.params.streamId ? undefined : (
                 <Row key={index} className='mt-2'>
@@ -130,10 +138,21 @@ export default class RecordedStream extends React.Component {
                             </Link>
                         </div>
                         {stream.genre || stream.category ? genreAndCategory : undefined}
+                        <h6>
+                            {stream.viewCount} view{stream.viewCount === 1 ? '' : 's'} · {stream.timestamp}
+                        </h6>
                     </Col>
                 </Row>
             );
         });
+
+        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+            <div className='text-center my-4 mb-4'>
+                <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
+                    Load More
+                </Button>
+            </div>
+        );
 
         return (
             <React.Fragment>
@@ -143,6 +162,7 @@ export default class RecordedStream extends React.Component {
                     </Col>
                 </Row>
                 {recordedStreams}
+                {loadMoreButton}
             </React.Fragment>
         );
     }
@@ -151,46 +171,47 @@ export default class RecordedStream extends React.Component {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <Container fluid className='remove-padding-lr'>
                 <Row className='remove-margin-r'>
-                    <Col className='remove-padding-r' xs='9'>
+                    <Col className='remove-padding-r' xs='12' sm='9'>
                         <div data-vjs-player>
                             <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
                         </div>
+                        <div className='stream-headings'>
+                            <table className='ml-2'>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <Link to={`/user/${this.state.username}`}>
+                                                <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
+                                                     alt={`${this.state.username} profile picture`}/>
+                                            </Link>
+                                        </td>
+                                        <td valign='middle'>
+                                            <div className='ml-2'>
+                                                <h3 className='text-nowrap'>
+                                                    <Link to={`/user/${this.state.username}`}>
+                                                        {this.state.displayName || this.state.username}
+                                                    </Link>
+                                                        {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                                    </h3>
+                                                <h6>
+                                                    <Link to={`/genre/${this.state.streamGenre}`}>
+                                                        {this.state.streamGenre}
+                                                    </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                                        {this.state.streamCategory}
+                                                    </Link>
+                                                </h6>
+                                                <h6>
+                                                    {this.state.viewCount} view{this.state.viewCount === 1 ? '' : 's'} · {this.state.streamTimestamp}
+                                                </h6>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </Col>
-                    <Col xs='3' className='mb-2'>
+                    <Col xs='12' sm='3' className='mb-2'>
                         {this.renderRecordedStreams()}
-                    </Col>
-                </Row>
-                <Row className='remove-margin-r'>
-                    <Col className='remove-padding-r stream-headings' xs='9'>
-                        <table className='ml-2 mt-2 mb-2'>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Link to={`/user/${this.state.username}`}>
-                                            <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
-                                                 alt={`${this.state.username} profile picture`}/>
-                                        </Link>
-                                    </td>
-                                    <td valign='middle'>
-                                        <div className='ml-2'>
-                                            <h3 className='text-nowrap'>
-                                                <Link to={`/user/${this.state.username}`}>
-                                                    {this.state.displayName || this.state.username}
-                                                </Link>
-                                                    {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                                                </h3>
-                                            <h6>
-                                                <Link to={`/genre/${this.state.streamGenre}`}>
-                                                    {this.state.streamGenre}
-                                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                                    {this.state.streamCategory}
-                                                </Link>
-                                            </h6>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </Col>
                 </Row>
             </Container>

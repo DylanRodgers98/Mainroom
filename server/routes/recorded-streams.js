@@ -16,7 +16,8 @@ router.get('/', (req, res, next) => {
             const options = {
                 page: req.query.page,
                 limit: req.query.limit,
-                sort: '-timestamp'
+                sort: '-timestamp',
+                select: '_id timestamp title genre category thumbnailURL viewCount'
             };
             RecordedStream.paginate({user, videoURL: {$ne: null}}, options, (err, result) => {
                 if (err) {
@@ -36,6 +37,7 @@ router.get('/', (req, res, next) => {
 router.get('/:streamId', (req, res, next) => {
     const streamId = sanitise(req.params.streamId);
     RecordedStream.findById(streamId)
+        .select('user timestamp title genre category videoURL viewCount')
         .populate({
             path: 'user',
             select: 'username displayName profilePicURL'
@@ -47,8 +49,15 @@ router.get('/:streamId', (req, res, next) => {
             } else if (!recordedStream) {
                 res.status(404).send(`Recorded stream (_id: ${escape(streamId)}) not found`);
             } else {
-                res.json({
-                    recordedStream
+                recordedStream.updateOne({$inc: {viewCount: 1}}, err => {
+                    if (err) {
+                        LOGGER.error('An error occurred when incrementing view count for recorded stream (_id: {}): {}', streamId, err);
+                        next(err);
+                    } else {
+                        res.json({
+                            recordedStream
+                        });
+                    }
                 });
             }
         });
