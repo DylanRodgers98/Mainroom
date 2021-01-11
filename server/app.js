@@ -16,7 +16,9 @@ const cookieParser = require('cookie-parser');
 const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
 const csrf = require('csurf');
-const rateLimit = require("express-rate-limit");
+const rateLimit = require('express-rate-limit');
+const {User} = require('./model/schemas');
+const sanitise = require('mongo-sanitize');
 const LOGGER = require('../logger')('./server/app.js');
 
 // connect to database
@@ -91,12 +93,47 @@ app.get('*', (req, res) => {
     res.render('index');
 });
 
-// Set up stream chat rooms
-io.on('connection', socket => {
-    socket.on('chatMessage', ({streamUsername, viewerUsername, msg}) => {
-        io.emit(`chatMessage_${streamUsername}`, {viewerUsername, msg});
-    });
+// Set up socket.io
+io.on('connection', (socket, next) => {
+    // if connection is from live stream page
+    if (socket.request._query.liveStreamUsername) {
+        const streamUsername = sanitise(socket.request._query.liveStreamUsername.toLowerCase());
+
+        // increment view count on connection
+        incrementViewCount(streamUsername, 1, next);
+
+        // decrement view count on connection
+        socket.on('disconnect', () => {
+            incrementViewCount(streamUsername, -1, next);
+        });
+
+        // emit livestream chat message to correct channel
+        socket.on(`onSendChatMessage`, ({viewerUsername, msg}) => {
+            io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUsername, msg});
+        });
+    }
 });
+
+// TODO: CREATE USER CONTROLLER FILE AND MOVE THIS FUNCTION TO THAT
+function incrementViewCount(username, increment, next) {
+    User.findOneAndUpdate({
+        username
+    }, {
+        $inc: {'streamInfo.viewCount': increment}
+    }, {
+        new: true
+    }, (err, user) => {
+        if (err) {
+            LOGGER.error(`An error occurred when updating user {}'s live stream view count: {}`, username, err);
+            next(err);
+        } else if (!user) {
+            LOGGER.error('User (username: {}) not found', username, err);
+            next(new Error(`User (username: ${username}) not found`));
+        } else {
+            io.emit(`liveStreamViewCount_${username}`, user.streamInfo.viewCount);
+        }
+    });
+}
 
 // Start server
 httpServer.listen(process.env.SERVER_HTTP_PORT, () => {

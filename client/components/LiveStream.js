@@ -95,8 +95,12 @@ export default class LiveStream extends React.Component {
     }
 
     connectToChat() {
-        this.socket = io.connect(`http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}`);
-        this.socket.on(`chatMessage_${this.props.match.params.username}`, ({viewerUsername, msg}) => {
+        this.socket = io.connect(`http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}`, {
+            query: {
+                liveStreamUsername: this.props.match.params.username
+            }
+        });
+        this.socket.on(`onReceiveChatMessage_${this.props.match.params.username}`, ({viewerUsername, msg}) => {
             this.setState({
                 chat: [...this.state.chat, {viewerUsername, msg}]
             });
@@ -125,10 +129,9 @@ export default class LiveStream extends React.Component {
 
     onMessageSubmit() {
         if (this.state.msg) {
-            const streamUsername = this.props.match.params.username;
             const viewerUsername = this.state.viewerUsername;
             const msg = this.state.msg;
-            this.socket.emit('chatMessage', {streamUsername, viewerUsername, msg});
+            this.socket.emit('onSendChatMessage', {viewerUsername, msg});
             this.setState({
                 msg: ''
             });

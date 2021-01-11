@@ -22,7 +22,7 @@ nms.on('prePublish', (sessionId, streamPath) => {
             path: 'subscribers',
             select: 'username displayName email emailSettings'
         })
-        .exec((err, user) => {
+        .exec(async (err, user) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
                 throw err;
@@ -30,6 +30,10 @@ nms.on('prePublish', (sessionId, streamPath) => {
                 nms.getSession(sessionId).reject();
                 LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', sessionId, streamKey);
             } else {
+                // reset view count
+                user.streamInfo.viewCount = 0;
+                await user.save();
+
                 mainroomEventEmitter.emit('onWentLive', user);
             }
         });
