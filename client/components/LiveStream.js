@@ -28,7 +28,8 @@ export default class LiveStream extends React.Component {
             msg: '',
             chat: [],
             chatHeight: 0,
-            chatInputHeight: 0
+            chatInputHeight: 0,
+            viewCount: 0
         }
     }
 
@@ -56,7 +57,7 @@ export default class LiveStream extends React.Component {
         if (stream.data.isLive) {
             this.populateStreamData(data);
             await this.getViewerUsername();
-            this.connectToChat();
+            this.connectToSocketIO();
         }
     }
 
@@ -94,20 +95,23 @@ export default class LiveStream extends React.Component {
         });
     }
 
-    connectToChat() {
+    connectToSocketIO() {
+        const streamUsername = this.props.match.params.username.toLowerCase();
         this.socket = io.connect(`http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}`, {
             query: {
-                liveStreamUsername: this.props.match.params.username
+                liveStreamUsername: streamUsername
             }
         });
-        this.socket.on(`onReceiveChatMessage_${this.props.match.params.username}`, ({viewerUsername, msg}) => {
+        this.socket.on(`onReceiveChatMessage_${streamUsername}`, ({viewerUsername, msg}) => {
             this.setState({
                 chat: [...this.state.chat, {viewerUsername, msg}]
             });
         });
+        this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
     }
 
     componentWillUnmount() {
+        this.socket.disconnect();
         if (this.player) {
             this.player.dispose()
         }
@@ -223,6 +227,9 @@ export default class LiveStream extends React.Component {
                                                         </Link> <Link to={`/category/${this.state.streamCategory}`}>
                                                             {this.state.streamCategory}
                                                         </Link>
+                                                    </h6>
+                                                    <h6>
+                                                        {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'}
                                                     </h6>
                                                 </div>
                                             </td>
