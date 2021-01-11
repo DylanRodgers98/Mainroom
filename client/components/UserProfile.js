@@ -39,6 +39,7 @@ const STARTING_STATE = {
     changeProfilePicOpen: false,
     uploadedProfilePic: undefined,
     recordedStreams: [],
+    showLoadMoreButton: false,
     nextPage: STARTING_PAGE
 };
 
@@ -184,7 +185,8 @@ export default class UserProfile extends React.Component {
         });
         this.setState({
             recordedStreams: res.data.recordedStreams,
-            nextPage: res.data.nextPage
+            nextPage: res.data.nextPage,
+            showLoadMoreButton: !!res.data.nextPage
         });
     }
 
@@ -296,13 +298,15 @@ export default class UserProfile extends React.Component {
     renderPastStreams() {
         const pastStreams = this.state.recordedStreams.map((stream, index) => {
             const genreAndCategory = (
-                <i>
-                    <Link to={`/genre/${stream.genre}`}>
-                        {stream.genre}
-                    </Link> <Link to={`/category/${stream.category}`}>
-                        {stream.category}
-                    </Link>
-                </i>
+                <h6>
+                    <i>
+                        <Link to={`/genre/${stream.genre}`}>
+                            {stream.genre}
+                        </Link> <Link to={`/category/${stream.category}`}>
+                            {stream.category}
+                        </Link>
+                    </i>
+                </h6>
             );
             return (
                 <Row key={index} className='margin-bottom-thick'>
@@ -320,11 +324,19 @@ export default class UserProfile extends React.Component {
                             </Link>
                         </h5>
                         {stream.genre || stream.category ? genreAndCategory : undefined}
-                        <p>{stream.timestamp}</p>
+                        <h6>{stream.viewCount} view{stream.viewCount === 1 ? '' : 's'} · {stream.timestamp}</h6>
                     </Col>
                 </Row>
             );
         });
+
+        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+            <div className='text-center my-4 mb-4'>
+                <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
+                    Load More
+                </Button>
+            </div>
+        );
 
         return (
             <React.Fragment>
@@ -340,6 +352,7 @@ export default class UserProfile extends React.Component {
                         </Col>
                     </Row>
                 )}
+                {loadMoreButton}
             </React.Fragment>
         );
     }
