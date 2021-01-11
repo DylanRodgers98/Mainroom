@@ -1,4 +1,7 @@
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
+@import '../node_modules/bootstrap/scss/_functions.scss';
+@import '../node_modules/bootstrap/scss/_variables.scss';
+@import '../node_modules/bootstrap/scss/mixins/_breakpoints.scss';
 @import '../node_modules/video.js/dist/video-js.css';
 @import '../node_modules/react-calendar-timeline/lib/Timeline.css';
 
@@ -193,4 +196,30 @@ i {
 
 .stream-headings {
     background-color: #f0f0f0;
+}
+
+@include media-breakpoint-up(md) {
+    .search-box {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0.25rem !important;
+    }
+
+    .search-button {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 0.25rem !important;
+    }
+}
+
+@include media-breakpoint-up(sm) {
+    .search-box {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .search-button {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
 }

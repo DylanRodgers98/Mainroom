@@ -180,7 +180,7 @@ export default class LiveStreams extends React.Component {
         );
 
         return (
-            <Container fluid className='mt-5'>
+            <Container fluid='lg' className='mt-5'>
                 <Row>
                     <Col>
                         <h4>Search: '{this.props.match.params.query}'</h4>

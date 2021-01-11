@@ -634,7 +634,7 @@ export default class UserProfile extends React.Component {
     render() {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <React.Fragment>
-                <Container fluid className='my-5'>
+                <Container fluid='lg' className='my-5'>
                     <Row>
                         <Col md='4' lg='3'>
                             {this.renderProfilePic()}

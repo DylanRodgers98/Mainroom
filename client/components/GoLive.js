@@ -182,7 +182,7 @@ export default class GoLive extends React.Component {
         ));
 
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
-            <Container fluid className='mt-5'>
+            <Container fluid='lg' className='mt-5'>
                 <h4>Stream Settings</h4>
                 <hr className='mt-4'/>
                 <i>Copy and paste the Server URL and Stream Key into your streaming software</i>

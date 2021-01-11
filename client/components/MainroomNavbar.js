@@ -205,6 +205,17 @@ export default class MainroomNavbar extends React.Component {
                 <Collapse isOpen={this.state.navbarOpen} navbar>
                 <Nav className='mr-auto' navbar>
                     <NavItem>
+                        <input id='searchBox' className='form-control search-box' placeholder='Search...'
+                               onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
+                               value={this.state.searchText}/>
+                    </NavItem>
+                    <NavItem>
+                        <Button id='searchButton' className='form-control search-button' onClick={this.clearSearchBox}
+                                tag={Link} to={searchButtonLink}>
+                            Search
+                        </Button>
+                    </NavItem>
+                    <NavItem className='ml-md-2'>
                         <Dropdown className='navbar-dropdown navbar-menu text-center' nav inNavbar
                             onMouseOver={this.onMouseEnterGenreDropdown} onMouseLeave={this.onMouseLeaveGenreDropdown}
                             isOpen={this.state.genreDropdownOpen}
@@ -221,17 +232,6 @@ export default class MainroomNavbar extends React.Component {
                             <DropdownToggle caret>Category</DropdownToggle>
                             <DropdownMenu>{categories}</DropdownMenu>
                         </Dropdown>
-                    </NavItem>
-                    <NavItem>
-                        <input id='searchBox' className='form-control' placeholder='Search...'
-                               onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
-                              value={this.state.searchText}/>
-                    </NavItem>
-                    <NavItem>
-                        <Button id='searchButton' className='form-control' onClick={this.clearSearchBox}
-                                tag={Link} to={searchButtonLink}>
-                            Search
-                        </Button>
                     </NavItem>
                     </Nav>
                     {this.renderLogInOrProfileDropdown()}
