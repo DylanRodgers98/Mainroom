@@ -18,7 +18,8 @@ const UserSchema = new Schema({
         genre: String,
         category: String,
         tags: [String],
-        viewCount: Number
+        viewCount: Number,
+        cumulativeViewCount: Number
     },
     subscribers: [{type: Schema.Types.ObjectId, ref: 'User'}],
     subscriptions: [{type: Schema.Types.ObjectId, ref: 'User'}],

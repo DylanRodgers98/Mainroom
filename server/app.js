@@ -116,13 +116,11 @@ io.on('connection', (socket, next) => {
 
 // TODO: CREATE USER CONTROLLER FILE AND MOVE THIS FUNCTION TO THAT
 function incrementViewCount(username, increment, next) {
-    User.findOneAndUpdate({
-        username
-    }, {
-        $inc: {'streamInfo.viewCount': increment}
-    }, {
-        new: true
-    }, (err, user) => {
+    const $inc = {'streamInfo.viewCount': increment}
+    if (increment > 0) {
+        $inc['streamInfo.cumulativeViewCount'] = increment;
+    }
+    User.findOneAndUpdate({username}, {$inc}, {new: true}, (err, user) => {
         if (err) {
             LOGGER.error(`An error occurred when updating user {}'s live stream view count: {}`, username, err);
             next(err);

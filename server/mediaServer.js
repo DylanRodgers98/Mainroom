@@ -30,8 +30,9 @@ nms.on('prePublish', (sessionId, streamPath) => {
                 nms.getSession(sessionId).reject();
                 LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', sessionId, streamKey);
             } else {
-                // reset view count
+                // reset view counts
                 user.streamInfo.viewCount = 0;
+                user.streamInfo.cumulativeViewCount = 0;
                 await user.save();
 
                 mainroomEventEmitter.emit('onWentLive', user);
@@ -45,7 +46,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
         const timestamp = getSessionConnectTime(sessionId);
 
         User.findOne({'streamInfo.streamKey': streamKey})
-            .select('_id streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags')
+            .select('_id streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
             .exec(async (err, user) => {
                 if (err) {
                     LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
@@ -82,6 +83,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
                             genre: user.streamInfo.genre,
                             category: user.streamInfo.category,
                             tags: user.streamInfo.tags,
+                            viewCount: user.streamInfo.cumulativeViewCount,
                             timestamp,
                             videoDuration,
                             videoURL,
