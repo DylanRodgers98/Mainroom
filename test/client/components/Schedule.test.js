@@ -41,7 +41,8 @@ jest.mock('axios', () => {
                                 username: mockUsername3,
                                 scheduledStreams: mockScheduledStreams
                             }
-                        ]
+                        ],
+                        nonSubscribedScheduledStreams: []
                     }
                 };
             }

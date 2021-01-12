@@ -70,6 +70,7 @@ export default class Schedule extends React.Component {
         for (const subscription of res.data.subscriptions) {
              await this.buildScheduleFromSubscription(subscription);
         }
+        await this.addNonSubscribedScheduledStreams(res.data.nonSubscribedScheduledStreams);
         this.setState({
             loaded: true
         });
@@ -115,6 +116,41 @@ export default class Schedule extends React.Component {
                     start_time: moment(scheduledStream.startTime),
                     end_time: moment(scheduledStream.endTime)
                 }]
+            });
+        });
+    }
+
+    async addNonSubscribedScheduledStreams(nonSubscribedScheduledStreams) {
+        const usernameStreamsMap = new Map();
+
+        nonSubscribedScheduledStreams.forEach(scheduledStream => {
+            const username = scheduledStream.user.username;
+            if (!usernameStreamsMap.has(username)) {
+                usernameStreamsMap.set(username, []);
+            }
+            usernameStreamsMap.get(username).push(scheduledStream);
+        });
+
+        usernameStreamsMap.forEach((scheduledStreams, username) => {
+            const groupId = this.state.scheduleGroups.length;
+
+            this.setState({
+                scheduleGroups: [...this.state.scheduleGroups, {
+                    id: groupId,
+                    title: username
+                }]
+            });
+
+            scheduledStreams.forEach(scheduledStream => {
+                this.setState({
+                    scheduleItems: [...this.state.scheduleItems, {
+                        id: this.state.scheduleItems.length,
+                        group: groupId,
+                        title: scheduledStream.title || this.state.loggedInUser,
+                        start_time: moment(scheduledStream.startTime),
+                        end_time: moment(scheduledStream.endTime)
+                    }]
+                });
             });
         });
     }

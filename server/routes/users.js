@@ -370,6 +370,18 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
             }
         })
         .populate({
+            path: 'nonSubscribedScheduledStreams',
+            populate: {
+                path: 'nonSubscribedScheduledStreams.user',
+                select: 'username'
+            },
+            select: 'title startTime endTime',
+            match: {
+                endTime: {$gte: req.query.scheduleStartTime},
+                startTime: {$lte: req.query.scheduleEndTime}
+            }
+        })
+        .populate({
             path: 'subscriptions',
             select: 'username scheduledStreams.title scheduledStreams.startTime scheduledStreams.endTime',
             match: {
@@ -387,6 +399,44 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
                 res.json(user);
             }
         });
+});
+
+router.patch('/:username/schedule/add-non-subscribed/:scheduledStreamId', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    const scheduledStreamId = sanitise(req.params.scheduledStreamId);
+    User.findOneAndUpdate({
+        username
+    }, {
+        $push: {nonSubscribedScheduledStreams: scheduledStreamId}
+    }, (err, user) => {
+        if (err) {
+            LOGGER.error(`An error occurred when adding non-subscribed scheduled stream (ID: {}) to user {}'s schedule: {}`, scheduledStreamId, username, err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
+        } else {
+            res.sendStatus(200);
+        }
+    });
+});
+
+router.patch('/:username/schedule/remove-non-subscribed/:scheduledStreamId', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    const scheduledStreamId = sanitise(req.params.scheduledStreamId);
+    User.findOneAndUpdate({
+        username
+    }, {
+        $pull: {nonSubscribedScheduledStreams: scheduledStreamId}
+    }, (err, user) => {
+        if (err) {
+            LOGGER.error(`An error occurred when removing non-subscribed scheduled stream (ID: {}) to user {}'s schedule: {}`, scheduledStreamId, username, err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
+        } else {
+            res.sendStatus(200);
+        }
+    });
 });
 
 router.get('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) => {
