@@ -286,7 +286,7 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
 router.get('/:username/stream-info', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username},
-        'displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags',
+        'displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount',
         (err, user) => {
             if (err) {
                 LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
@@ -301,7 +301,8 @@ router.get('/:username/stream-info', (req, res, next) => {
                     title: user.streamInfo.title,
                     genre: user.streamInfo.genre,
                     category: user.streamInfo.category,
-                    tags: user.streamInfo.tags
+                    tags: user.streamInfo.tags,
+                    viewCount: user.streamInfo.viewCount
                 });
             }
         });

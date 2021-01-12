@@ -37,7 +37,7 @@ router.get('/', async (req, res, next) => {
         }
 
         const options = {
-            select: 'username displayName streamInfo.streamKey',
+            select: 'username displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount',
             page: req.query.page,
             limit: req.query.limit
         };
@@ -60,6 +60,11 @@ router.get('/', async (req, res, next) => {
                     streams.push({
                         username: user.username,
                         displayName: user.displayName,
+                        profilePicURL: user.profilePicURL,
+                        title: user.streamInfo.title,
+                        genre: user.streamInfo.genre,
+                        category: user.streamInfo.category,
+                        viewCount: user.streamInfo.viewCount,
                         thumbnailURL
                     });
                 }

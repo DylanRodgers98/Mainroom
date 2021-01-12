@@ -26,6 +26,7 @@ const STARTING_STATE = {
     streamGenre: '',
     streamCategory: '',
     streamThumbnailUrl: '',
+    streamViewCount: 0,
     upcomingStreamsStartTime: moment().startOf('day'),
     upcomingStreamsEndTime: moment().startOf('day').add(3, 'day'),
     editProfileOpen: false,
@@ -170,6 +171,7 @@ export default class UserProfile extends React.Component {
                 streamTitle: stream.data.title,
                 streamGenre: stream.data.genre,
                 streamCategory: stream.data.category,
+                streamViewCount: stream.data.viewCount,
                 streamThumbnailUrl: thumbnail.data.thumbnailURL
             });
         }
@@ -231,6 +233,7 @@ export default class UserProfile extends React.Component {
                 <Row>
                     <Col className='stream' md='6'>
                         <span className='live-label'>LIVE</span>
+                        <span className='view-count'>{this.state.streamViewCount} viewer{this.state.streamViewCount === 1 ? '' : 's'}</span>
                         <Link to={`/user/${this.props.match.params.username}/live`}>
                             <div className='stream-thumbnail'>
                                 <img src={this.state.streamThumbnailUrl}
@@ -248,8 +251,8 @@ export default class UserProfile extends React.Component {
                             <Link to={`/genre/${this.state.streamGenre}`}>
                                 {this.state.streamGenre}
                             </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                            {this.state.streamCategory}
-                        </Link>
+                                {this.state.streamCategory}
+                            </Link>
                         </h5>
                     </Col>
                 </Row>

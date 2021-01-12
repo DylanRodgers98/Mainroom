@@ -130,16 +130,42 @@ export default class Home extends React.Component {
         const streamBoxes = liveStreams.map((liveStream, index) => (
             <Col className='stream margin-bottom-thick' key={index}>
                 <span className='live-label'>LIVE</span>
+                <span className='view-count'>{liveStream.viewCount} viewer{liveStream.viewCount === 1 ? '' : 's'}</span>
                 <Link to={`/user/${liveStream.username}/live`}>
                     <div className='stream-thumbnail'>
                         <img src={liveStream.thumbnailURL} alt={`${liveStream.username} Stream Thumbnail`}/>
                     </div>
                 </Link>
-                <span className='username'>
-                    <Link to={`/user/${liveStream.username}/live`}>
-                        {liveStream.displayName || liveStream.username}
-                    </Link>
-                </span>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <Link to={`/user/${liveStream.username}`}>
+                                    <img className='rounded-circle my-2' src={liveStream.profilePicURL}
+                                         width='50' height='50'
+                                         alt={`${liveStream.username} profile picture`}/>
+                                </Link>
+                            </td>
+                            <td valign='middle'>
+                                <div className='ml-2'>
+                                    <h5>
+                                        <Link to={`/user/${liveStream.username}`}>
+                                            {liveStream.displayName || liveStream.username}
+                                        </Link>
+                                        {liveStream.title ? ` - ${liveStream.title}` : ''}
+                                    </h5>
+                                    <h6>
+                                        <Link to={`/genre/${liveStream.genre}`}>
+                                            {liveStream.genre}
+                                        </Link> <Link to={`/category/${liveStream.category}`}>
+                                            {liveStream.category}
+                                        </Link>
+                                    </h6>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </Col>
         ));
 

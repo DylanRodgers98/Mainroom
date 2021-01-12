@@ -35,7 +35,7 @@ i {
 .stream {
     .live-label {
         position: absolute;
-        top: 10px;
+        top: 6px;
         left: 20px;
         background-color: red;
         color: white;
@@ -48,18 +48,13 @@ i {
         }
     }
 
-    .username {
+    .view-count {
         position: absolute;
-        bottom: 10px;
-        left: 20px;
+        top: 6px;
+        right: 20px;
         background-color: black;
-
-        a {
-            font-size: 18px;
-            color: white;
-            text-decoration: none;
-            padding: 2px 8px;
-        }
+        color: white;
+        padding: 1px 5px;
     }
 }
 
