@@ -146,7 +146,7 @@ export default class Schedule extends React.Component {
                     scheduleItems: [...this.state.scheduleItems, {
                         id: this.state.scheduleItems.length,
                         group: groupId,
-                        title: scheduledStream.title || this.state.loggedInUser,
+                        title: scheduledStream.title || username,
                         start_time: moment(scheduledStream.startTime),
                         end_time: moment(scheduledStream.endTime)
                     }]

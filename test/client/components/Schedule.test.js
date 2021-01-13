@@ -4,45 +4,37 @@ import {act} from "react-dom/test-utils"
 import Schedule from "../../../client/components/Schedule";
 import moment from "moment";
 
-const mockOwnUsername = 'ownUser';
-const mockUsername1 = 'user1';
-const mockUsername2 = 'user2';
-const mockUsername3 = 'user3';
-const mockScheduledStreams = [{
-    startTime: moment().add(12, 'hour'),
-    endTime: moment().add(13, 'hour')
-}];
+const MOCK_OWN_USERNAME = 'ownUser';
+const MOCK_USERNAME_1 = 'user1';
+const MOCK_USERNAME_2 = 'user2';
+const MOCK_USERNAME_3 = 'user3';
 
 jest.mock('axios', () => {
     return {
-        get: jest.fn(async (url, config) => {
+        get: jest.fn(async url => {
             if (url === '/logged-in-user') {
                 return {
                     data: {
-                        username: mockOwnUsername
+                        username: MOCK_OWN_USERNAME
                     }
                 };
             }
-            if (url === `/api/users/${mockOwnUsername}/schedule`) {
+            if (url === `/api/users/${MOCK_OWN_USERNAME}/schedule`) {
                 return {
                     data: {
-                        username: mockOwnUsername,
-                        scheduledStreams: mockScheduledStreams,
+                        username: MOCK_OWN_USERNAME,
+                        scheduledStreams: [mockBuildScheduledStream(MOCK_OWN_USERNAME)],
                         subscriptions: [
                             {
-                                username: mockUsername1,
-                                scheduledStreams: mockScheduledStreams
+                                username: MOCK_USERNAME_1,
+                                scheduledStreams: [mockBuildScheduledStream(MOCK_USERNAME_1)]
                             },
                             {
-                                username: mockUsername2,
-                                scheduledStreams: mockScheduledStreams
-                            },
-                            {
-                                username: mockUsername3,
-                                scheduledStreams: mockScheduledStreams
+                                username: MOCK_USERNAME_2,
+                                scheduledStreams: [mockBuildScheduledStream(MOCK_USERNAME_2)]
                             }
                         ],
-                        nonSubscribedScheduledStreams: []
+                        nonSubscribedScheduledStreams: [mockBuildScheduledStream(MOCK_USERNAME_3)]
                     }
                 };
             }
@@ -71,7 +63,15 @@ describe('Schedule', () => {
         const groupNames = Array.from(groups).map(group => group.textContent);
         const items = container.getElementsByClassName('rct-item');
         const itemValues = Array.from(items).map(item => item.textContent);
-        expect(groupNames).toEqual(['My Streams', mockUsername1, mockUsername2, mockUsername3]);
-        expect(itemValues).toEqual([mockOwnUsername, mockUsername1, mockUsername2, mockUsername3]);
+        expect(groupNames).toEqual(['My Streams', MOCK_USERNAME_1, MOCK_USERNAME_2, MOCK_USERNAME_3]);
+        expect(itemValues).toEqual([MOCK_OWN_USERNAME, MOCK_USERNAME_1, MOCK_USERNAME_2, MOCK_USERNAME_3]);
     });
 });
+
+function mockBuildScheduledStream(username) {
+    return {
+        user: { username },
+        startTime: moment().add(12, 'hour'),
+        endTime: moment().add(13, 'hour')
+    };
+}
