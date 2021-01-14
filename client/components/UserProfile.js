@@ -22,6 +22,7 @@ const STARTING_STATE = {
     links: [],
     numOfSubscribers: 0,
     scheduledStreams: [],
+    scheduledStreamsInLoggedInUserSchedule: [],
     streamKey: '',
     streamTitle: '',
     streamGenre: '',
@@ -128,7 +129,10 @@ export default class UserProfile extends React.Component {
             loggedInUser: res.data.username,
             loggedInUserId: res.data._id
         }, async () => {
-            await this.isLoggedInUserSubscribed()
+            await Promise.all([
+                this.isLoggedInUserSubscribed(),
+                this.getNonSubscribedScheduledStreams()
+            ]);
         });
     }
 
@@ -137,6 +141,22 @@ export default class UserProfile extends React.Component {
             const res = await axios.get(`/api/users/${this.state.loggedInUser}/subscribed-to/${this.props.match.params.username}`);
             this.setState({
                 isLoggedInUserSubscribed: res.data
+            });
+        }
+    }
+
+    async getNonSubscribedScheduledStreams() {
+        if (this.state.loggedInUser && this.state.loggedInUser !== this.props.match.params.username) {
+            const res = await axios.get(`/api/users/${this.state.loggedInUser}/schedule/non-subscribed`, {
+                params: {
+                    scheduledStreamUsername: this.props.match.params.username
+                }
+            });
+            this.setState({
+                scheduledStreamsInLoggedInUserSchedule: [
+                    ...this.state.scheduledStreamsInLoggedInUserSchedule,
+                    ...res.data.nonSubscribedScheduledStreams
+                ]
             });
         }
     }
@@ -266,6 +286,25 @@ export default class UserProfile extends React.Component {
         );
     }
 
+    async addToSchedule(streamId) {
+        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/schedule/add-non-subscribed/${streamId}`);
+        if (res.status === 200) {
+            this.setState({
+                scheduledStreamsInLoggedInUserSchedule: [...this.state.scheduledStreamsInLoggedInUserSchedule, streamId]
+            })
+        }
+    }
+
+    async removeFromSchedule(streamId) {
+        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/schedule/remove-non-subscribed/${streamId}`);
+        if (res.status === 200) {
+            const arrayWithStreamRemoved = this.state.scheduledStreamsInLoggedInUserSchedule.filter(id => id !== streamId);
+            this.setState({
+                scheduledStreamsInLoggedInUserSchedule: arrayWithStreamRemoved
+            })
+        }
+    }
+
     renderUpcomingStreams() {
         const scheduledStreams = this.state.scheduledStreams.map((stream, index) => {
             const genreAndCategory = (
@@ -281,8 +320,20 @@ export default class UserProfile extends React.Component {
             );
             const startTime = moment(stream.startTime).format('ddd, DD MMM, yyyy · HH:mm');
             const endTime = moment(stream.endTime).format('HH:mm');
+            const addToScheduleButton = this.state.loggedInUser === this.props.match.params.username ? undefined : (
+                this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
+                    <Button className='float-right btn-dark' size='sm' onClick={async () => await this.removeFromSchedule(stream._id)}>
+                        In Schedule
+                    </Button>
+                ) : (
+                    <Button className='float-right btn-dark' size='sm' onClick={async () => await this.addToSchedule(stream._id)}>
+                        Add to Schedule
+                    </Button>
+                )
+            );
             return (
                 <Col key={index} md='6'>
+                    {addToScheduleButton}
                     <h5>{stream.title}</h5>
                     {stream.genre || stream.category ? genreAndCategory : undefined}
                     <p>{startTime}-{endTime}</p>

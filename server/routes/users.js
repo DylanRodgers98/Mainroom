@@ -424,6 +424,36 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
     });
 });
 
+router.get('/:username/schedule/non-subscribed', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    const scheduledStreamUsername = sanitise(req.query.scheduledStreamUsername.toLowerCase());
+    User.findOne({username})
+        .select('nonSubscribedScheduledStreams')
+        .populate({
+            path: 'nonSubscribedScheduledStreams',
+            select: 'user',
+            populate: {
+                path: 'user',
+                select: 'username',
+                match: {
+                    username: scheduledStreamUsername
+                }
+            }
+        })
+        .exec((err, user) => {
+            if (err) {
+                LOGGER.error(`An error occurred when retrieving non-subscribed scheduled streams for user {}: {}`, username, err);
+                next(err);
+            } else if (!user) {
+                res.status(404).send(`User (username: ${escape(username)}) not found`);
+            } else {
+                res.json({
+                    nonSubscribedScheduledStreams: user.nonSubscribedScheduledStreams.map(s => s._id)
+                })
+            }
+        });
+});
+
 router.patch('/:username/schedule/add-non-subscribed/:scheduledStreamId', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     const scheduledStreamId = sanitise(req.params.scheduledStreamId);

@@ -34,36 +34,36 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
                         next(err);
                     } else {
                         mainroomEventEmitter.emit('onCreateScheduledStream', user, scheduledStream)
-                        res.sendStatus(200);
                     }
                 });
+            res.sendStatus(200);
         }
     });
 });
 
 router.get('/', (req, res, next) => {
     const username = sanitise(req.query.username.toLowerCase());
-    ScheduledStream.find({
-        $or: [
-            {startTime: {$gte: req.query.scheduleStartTime}},
-            {endTime: {$gt: req.query.scheduleStartTime}}
-        ]
-    })
-    .populate({
-        path: 'user',
-        select: 'username',
-        match: {
-            username
-        }
-    })
-    .select('title startTime endTime genre category')
-    .exec((err, scheduledStreams) => {
+    User.findOne({username}, '_id', (err, user) => {
         if (err) {
-            LOGGER.error('An error occurred when finding scheduled streams for user {}: {}', username, err);
+            LOGGER.error(`An error occurred when finding user {}: {}`, username, err);
             next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
-            res.json({
-                scheduledStreams
+            ScheduledStream.find({
+                user: user._id,
+                startTime: {$gt: req.query.scheduleStartTime}
+            })
+            .select('title startTime endTime genre category')
+            .exec((err, scheduledStreams) => {
+                if (err) {
+                    LOGGER.error('An error occurred when finding scheduled streams for user {}: {}', username, err);
+                    next(err);
+                } else {
+                    res.json({
+                        scheduledStreams
+                    });
+                }
             });
         }
     });
