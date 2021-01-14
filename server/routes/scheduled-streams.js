@@ -22,7 +22,7 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
             next(err);
         } else {
             User.findOne({username: req.user.username})
-                .select('scheduledStreams username displayName subscribers profilePicURL')
+                .select('username displayName subscribers profilePicURL')
                 .populate({
                     path: 'subscribers',
                     select: 'username displayName email emailSettings'
@@ -32,15 +32,8 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
                         LOGGER.error('An error occurred when finding User {}: {}', req.user.username, err);
                         next(err);
                     } else {
-                        user.updateOne({$push: {scheduledStreams: scheduledStream._id}}, err => {
-                            if (err) {
-                                LOGGER.error('An error occurred when adding ID of new ScheduledStream to User {}: {}', user.username, err);
-                                next(err);
-                            } else {
-                                mainroomEventEmitter.emit('onCreateScheduledStream', user, scheduledStream)
-                                res.sendStatus(200);
-                            }
-                        });
+                        mainroomEventEmitter.emit('onCreateScheduledStream', user, scheduledStream)
+                        res.sendStatus(200);
                     }
                 });
         }

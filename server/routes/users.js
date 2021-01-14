@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const config = require('../../mainroom.config');
-const {User} = require('../model/schemas');
+const {User, ScheduledStream} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
@@ -360,111 +360,77 @@ router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), (req, res, n
 
 router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, 'username scheduledStreams subscriptions')
-        .populate({
-            path: 'scheduledStreams',
-            select: 'title startTime endTime',
-            match: {
-                endTime: {$gte: req.query.scheduleStartTime},
-                startTime: {$lte: req.query.scheduleEndTime}
-            }
-        })
-        .populate({
-            path: 'nonSubscribedScheduledStreams',
-            select: 'user.username title startTime endTime',
-            match: {
-                endTime: {$gte: req.query.scheduleStartTime},
-                startTime: {$lte: req.query.scheduleEndTime}
-            }
-        })
-        .populate({
-            path: 'subscriptions',
-            select: 'username scheduledStreams.title scheduledStreams.startTime scheduledStreams.endTime',
-            match: {
-                'scheduledStreams.endTime': {$gte: req.query.scheduleStartTime},
-                'scheduledStreams.startTime': {$lte: req.query.scheduleEndTime}
-            }
-        })
-        .exec((err, user) => {
-            if (err) {
-                LOGGER.error(`An error occurred when getting user {}'s schedule: {}`, username, err);
-                next(err);
-            } else if (!user) {
-                res.status(404).send(`User (username: ${escape(username)}) not found`);
-            } else {
-                const scheduleGroups = [];
-                const scheduleItems = [];
+    User.findOne({username: username}, 'subscriptions nonSubscribedScheduledStreams', (err, user) => {
+        if (err) {
+            LOGGER.error(`An error occurred when getting finding user {}: {}`, username, err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
+        } else {
+            ScheduledStream.find({$or: [
+                {
+                    user: {$in: [user._id, ...user.subscriptions]},
+                    endTime: {$gte: req.query.scheduleStartTime},
+                    startTime: {$lte: req.query.scheduleEndTime}
+                },
+                {
+                    _id: {$in: user.nonSubscribedScheduledStreams}
+                }
+            ]})
+            .select('user title startTime endTime')
+            .populate({
+                path: 'user',
+                select: 'username'
+            })
+            .exec((err, scheduledStreams) => {
+                if (err) {
+                    LOGGER.error(`An error occurred when getting user {}'s schedule: {}`, username, err);
+                    next(err);
+                } else {
+                    const scheduleGroups = [{
+                        id: 0,
+                        title: 'My Streams'
+                    }];
+                    const scheduleItems = [];
 
-                // add own scheduled streams
-                scheduleGroups.push({
-                    id: 0,
-                    title: 'My Streams'
-                });
-                user.scheduledStreams.forEach(scheduledStream => {
-                    scheduleItems.push({
-                        id: scheduleItems.length,
-                        group: 0,
-                        title: scheduledStream.title || user.username,
-                        start_time: scheduledStream.startTime,
-                        end_time: scheduledStream.endTime
-                    });
-                });
+                    if (scheduledStreams && scheduledStreams.length) {
+                        const usernameToScheduleGroupIds = new Map();
+                        usernameToScheduleGroupIds.set(username, 0);
 
-                const usernameToScheduleGroupIds = new Map();
+                        scheduledStreams.forEach(scheduledStream => {
+                            const scheduledStreamUsername = scheduledStream.user.username;
 
-                // add subscriptions' scheduled streams
-                user.subscriptions.forEach(subscription => {
-                    const scheduleGroupId = scheduleGroups.length;
+                            let scheduleGroupId;
+                            if (usernameToScheduleGroupIds.has(scheduledStreamUsername)) {
+                                // if schedule group already exists for user, get its ID
+                                scheduleGroupId = usernameToScheduleGroupIds.get(scheduledStreamUsername);
+                            } else {
+                                // if schedule group does not exist for user, create one
+                                scheduleGroupId = scheduleGroups.length;
+                                scheduleGroups.push({
+                                    id: scheduleGroupId,
+                                    title: scheduledStreamUsername
+                                });
+                            }
 
-                    usernameToScheduleGroupIds.set(subscription.username, scheduleGroupId);
-
-                    scheduleGroups.push({
-                        id: scheduleGroupId,
-                        title: subscription.username
-                    });
-
-                    subscription.scheduledStreams.forEach(scheduledStream => {
-                        scheduleItems.push({
-                            id: scheduleItems.length,
-                            group: scheduleGroupId,
-                            title: scheduledStream.title || subscription.username,
-                            start_time: scheduledStream.startTime,
-                            end_time: scheduledStream.endTime
-                        });
-                    });
-                });
-
-                // add non-subscribed scheduled streams
-                user.nonSubscribedScheduledStreams.forEach(scheduledStream => {
-                    const username = scheduledStream.user.username;
-
-                    let scheduleGroupId;
-                    if (usernameToScheduleGroupIds.has(username)) {
-                        // if schedule group already exists for user, get its ID
-                        scheduleGroupId = usernameToScheduleGroupIds.get(username);
-                    } else {
-                        scheduleGroupId = scheduleGroups.length;
-                        scheduleGroups.push({
-                            id: scheduleGroupId,
-                            title: username
+                            scheduleItems.push({
+                                id: scheduleItems.length,
+                                group: scheduleGroupId,
+                                title: scheduledStream.title || scheduledStreamUsername,
+                                start_time: scheduledStream.startTime,
+                                end_time: scheduledStream.endTime
+                            });
                         });
                     }
 
-                    scheduleItems.push({
-                        id: scheduleItems.length,
-                        group: scheduleGroupId,
-                        title: scheduledStream.title || username,
-                        start_time: scheduledStream.startTime,
-                        end_time: scheduledStream.endTime
+                    res.json({
+                        scheduleGroups,
+                        scheduleItems
                     });
-                });
-
-                res.json({
-                    scheduleGroups,
-                    scheduleItems
-                });
-            }
-        });
+                }
+            });
+        }
+    });
 });
 
 router.patch('/:username/schedule/add-non-subscribed/:scheduledStreamId', loginChecker.ensureLoggedIn(), (req, res, next) => {
