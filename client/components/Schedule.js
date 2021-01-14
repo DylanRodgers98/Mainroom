@@ -66,92 +66,16 @@ export default class Schedule extends React.Component {
                 scheduleEndTime: this.state.endTime.toDate()
             }
         });
-        await this.buildOwnSchedule(res.data.scheduledStreams);
-        for (const subscription of res.data.subscriptions) {
-             await this.buildScheduleFromSubscription(subscription);
-        }
-        await this.addNonSubscribedScheduledStreams(res.data.nonSubscribedScheduledStreams);
+        // JSON serializes dates as strings, so parse start and end times using moment
+        const scheduleItems = res.data.scheduleItems.map(scheduleItem => {
+            scheduleItem.start_time = moment(scheduleItem.start_time);
+            scheduleItem.end_time = moment(scheduleItem.end_time);
+            return scheduleItem;
+        });
         this.setState({
+            scheduleGroups: [...this.state.scheduleGroups, ...res.data.scheduleGroups],
+            scheduleItems: [...this.state.scheduleItems, ...scheduleItems],
             loaded: true
-        });
-    }
-
-    async buildOwnSchedule(scheduledStreams) {
-        this.setState({
-            scheduleGroups: [...this.state.scheduleGroups, {
-                id: 0,
-                title: 'My Streams'
-            }]
-        });
-
-        scheduledStreams.forEach(scheduledStream => {
-            this.setState({
-                scheduleItems: [...this.state.scheduleItems, {
-                    id: this.state.scheduleItems.length,
-                    group: 0,
-                    title: scheduledStream.title || this.state.loggedInUser,
-                    start_time: moment(scheduledStream.startTime),
-                    end_time: moment(scheduledStream.endTime)
-                }]
-            });
-        });
-    }
-
-    async buildScheduleFromSubscription(subscription) {
-        const groupId = this.state.scheduleGroups.length;
-
-        this.setState({
-            scheduleGroups: [...this.state.scheduleGroups, {
-                id: groupId,
-                title: subscription.username
-            }]
-        });
-
-        subscription.scheduledStreams.forEach(scheduledStream => {
-            this.setState({
-                scheduleItems: [...this.state.scheduleItems, {
-                    id: this.state.scheduleItems.length,
-                    group: groupId,
-                    title: scheduledStream.title || subscription.username,
-                    start_time: moment(scheduledStream.startTime),
-                    end_time: moment(scheduledStream.endTime)
-                }]
-            });
-        });
-    }
-
-    async addNonSubscribedScheduledStreams(nonSubscribedScheduledStreams) {
-        const usernameStreamsMap = new Map();
-
-        nonSubscribedScheduledStreams.forEach(scheduledStream => {
-            const username = scheduledStream.user.username;
-            if (!usernameStreamsMap.has(username)) {
-                usernameStreamsMap.set(username, []);
-            }
-            usernameStreamsMap.get(username).push(scheduledStream);
-        });
-
-        usernameStreamsMap.forEach((scheduledStreams, username) => {
-            const groupId = this.state.scheduleGroups.length;
-
-            this.setState({
-                scheduleGroups: [...this.state.scheduleGroups, {
-                    id: groupId,
-                    title: username
-                }]
-            });
-
-            scheduledStreams.forEach(scheduledStream => {
-                this.setState({
-                    scheduleItems: [...this.state.scheduleItems, {
-                        id: this.state.scheduleItems.length,
-                        group: groupId,
-                        title: scheduledStream.title || username,
-                        start_time: moment(scheduledStream.startTime),
-                        end_time: moment(scheduledStream.endTime)
-                    }]
-                });
-            });
         });
     }
 

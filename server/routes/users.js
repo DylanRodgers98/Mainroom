@@ -371,11 +371,7 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
         })
         .populate({
             path: 'nonSubscribedScheduledStreams',
-            populate: {
-                path: 'nonSubscribedScheduledStreams.user',
-                select: 'username'
-            },
-            select: 'title startTime endTime',
+            select: 'user.username title startTime endTime',
             match: {
                 endTime: {$gte: req.query.scheduleStartTime},
                 startTime: {$lte: req.query.scheduleEndTime}
@@ -396,7 +392,77 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
             } else if (!user) {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
             } else {
-                res.json(user);
+                const scheduleGroups = [];
+                const scheduleItems = [];
+
+                // add own scheduled streams
+                scheduleGroups.push({
+                    id: 0,
+                    title: 'My Streams'
+                });
+                user.scheduledStreams.forEach(scheduledStream => {
+                    scheduleItems.push({
+                        id: scheduleItems.length,
+                        group: 0,
+                        title: scheduledStream.title || user.username,
+                        start_time: scheduledStream.startTime,
+                        end_time: scheduledStream.endTime
+                    });
+                });
+
+                const usernameToScheduleGroupIds = new Map();
+
+                // add subscriptions' scheduled streams
+                user.subscriptions.forEach(subscription => {
+                    const scheduleGroupId = scheduleGroups.length;
+
+                    usernameToScheduleGroupIds.set(subscription.username, scheduleGroupId);
+
+                    scheduleGroups.push({
+                        id: scheduleGroupId,
+                        title: subscription.username
+                    });
+
+                    subscription.scheduledStreams.forEach(scheduledStream => {
+                        scheduleItems.push({
+                            id: scheduleItems.length,
+                            group: scheduleGroupId,
+                            title: scheduledStream.title || subscription.username,
+                            start_time: scheduledStream.startTime,
+                            end_time: scheduledStream.endTime
+                        });
+                    });
+                });
+
+                // add non-subscribed scheduled streams
+                user.nonSubscribedScheduledStreams.forEach(scheduledStream => {
+                    const username = scheduledStream.user.username;
+
+                    let scheduleGroupId;
+                    if (usernameToScheduleGroupIds.has(username)) {
+                        // if schedule group already exists for user, get its ID
+                        scheduleGroupId = usernameToScheduleGroupIds.get(username);
+                    } else {
+                        scheduleGroupId = scheduleGroups.length;
+                        scheduleGroups.push({
+                            id: scheduleGroupId,
+                            title: username
+                        });
+                    }
+
+                    scheduleItems.push({
+                        id: scheduleItems.length,
+                        group: scheduleGroupId,
+                        title: scheduledStream.title || username,
+                        start_time: scheduledStream.startTime,
+                        end_time: scheduledStream.endTime
+                    });
+                });
+
+                res.json({
+                    scheduleGroups,
+                    scheduleItems
+                });
             }
         });
 });
