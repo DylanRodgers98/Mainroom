@@ -398,6 +398,7 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
                             } else {
                                 // if schedule group does not exist for user, create one
                                 scheduleGroupId = scheduleGroups.length;
+                                usernameToScheduleGroupIds.set(scheduledStreamUsername, scheduleGroupId);
                                 scheduleGroups.push({
                                     id: scheduleGroupId,
                                     title: scheduledStreamUsername
