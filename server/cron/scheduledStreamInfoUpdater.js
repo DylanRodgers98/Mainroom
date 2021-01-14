@@ -17,7 +17,7 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, () => {
             {startTime: {$gt: lastTimeTriggered}},
             {startTime: {$lte: thisTimeTriggered}}
         ]
-    }, (err, streams) => {
+    }, async (err, streams) => {
         if (err) {
             LOGGER.error('An error occurred when finding scheduled streams starting between {} and {}: {}', lastTimeTriggered, thisTimeTriggered, err);
             throw err;
@@ -26,21 +26,20 @@ const job = new CronJob(config.cron.scheduledStreamInfoUpdater, () => {
         } else {
             LOGGER.info('Updating {} user{} stream info from scheduled streams', streams.length, streams.length === 1 ? `'s` : `s'`);
             let updated = 0;
-            streams.forEach(stream => {
-                User.findByIdAndUpdate(stream.user._id, {
-                    'streamInfo.title': stream.title,
-                    'streamInfo.genre': stream.genre,
-                    'streamInfo.category': stream.category,
-                    'streamInfo.tags': stream.tags
-                }, err => {
-                    if (err) {
-                        LOGGER.error('An error occurred when updating stream info for user with _id {}: {}', stream.user._id, err);
-                        throw err;
-                    } else {
-                        updated++;
-                    }
-                });
-            });
+            for (const stream of streams) {
+                try {
+                    await User.findByIdAndUpdate(stream.user._id, {
+                        'streamInfo.title': stream.title,
+                        'streamInfo.genre': stream.genre,
+                        'streamInfo.category': stream.category,
+                        'streamInfo.tags': stream.tags
+                    });
+                    updated++;
+                } catch (err) {
+                    LOGGER.error('An error occurred when updating stream info for user with _id {}: {}', stream.user._id, err);
+                    throw err;
+                }
+            }
             LOGGER.info(`Successfully updated {}/{} user{} stream info from scheduled streams`, updated, streams.length, streams.length === 1 ? `'s` : `s'`);
         }
 

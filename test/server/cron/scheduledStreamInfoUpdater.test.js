@@ -11,7 +11,7 @@ const mockStream = {
     tags: ['test', 'stream']
 }
 
-const mockFindByIdAndUpdate = jest.fn((update, options, callback) => callback());
+const mockFindByIdAndUpdate = jest.fn();
 
 jest.mock('../../../server/model/schemas', () => {
     return {
