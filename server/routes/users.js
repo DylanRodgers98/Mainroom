@@ -16,15 +16,7 @@ const LOGGER = require('../../logger')('./server/routes/users.js');
 
 router.get('/:username', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, 'username displayName profilePicURL location bio links subscribers scheduledStreams')
-        .populate({
-            path: 'scheduledStreams',
-            select: 'title startTime endTime',
-            match: {
-                endTime: {$gte: req.query.scheduleStartTime},
-                startTime: {$lte: req.query.scheduleEndTime}
-            }
-        })
+    User.findOne({username: username}, 'username displayName profilePicURL location bio links subscribers')
         .exec((err, user) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user {}: {}', username, err);
@@ -39,8 +31,7 @@ router.get('/:username', (req, res, next) => {
                     location: user.location,
                     bio: user.bio,
                     links: user.links,
-                    numOfSubscribers: user.subscribers.length,
-                    scheduledStreams: user.scheduledStreams
+                    numOfSubscribers: user.subscribers.length
                 });
             }
         });

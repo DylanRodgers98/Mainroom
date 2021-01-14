@@ -27,8 +27,7 @@ const STARTING_STATE = {
     streamCategory: '',
     streamThumbnailUrl: '',
     streamViewCount: 0,
-    upcomingStreamsStartTime: moment().startOf('day'),
-    upcomingStreamsEndTime: moment().startOf('day').add(3, 'day'),
+    upcomingStreamsStartTime: moment(),
     editProfileOpen: false,
     unsavedChanges: false,
     editDisplayName: '',
@@ -79,14 +78,23 @@ export default class UserProfile extends React.Component {
 
     async loadUserProfile() {
         try {
-            const res = await axios.get(`/api/users/${this.props.match.params.username}`, {
-                params: {
-                    scheduleStartTime: this.state.upcomingStreamsStartTime.toDate(),
-                    scheduleEndTime: this.state.upcomingStreamsEndTime.toDate(),
-                }
-            });
-            await this.fillComponent(res.data);
+            const promiseResults = await Promise.all([
+                this.getUserData(),
+                this.getUpcomingStreams(),
+                this.getLiveStreamIfLive(),
+                this.getRecordedStreams(),
+                this.getLoggedInUser()
+            ]);
+            const user = promiseResults[0];
+            const scheduledStreams = promiseResults[1];
             this.setState({
+                profilePicURL: user.profilePicURL,
+                displayName: user.displayName,
+                location: user.location,
+                bio: user.bio,
+                links: user.links,
+                numOfSubscribers: user.numOfSubscribers,
+                scheduledStreams,
                 loaded: true
             });
         } catch (err) {
@@ -98,23 +106,19 @@ export default class UserProfile extends React.Component {
         }
     }
 
-    async fillComponent(user) {
-        this.populateProfile(user)
-        await this.getLiveStreamIfLive();
-        await this.getRecordedStreams();
-        await this.getLoggedInUser();
+    async getUserData() {
+        const res = await axios.get(`/api/users/${this.props.match.params.username}`);
+        return res.data;
     }
 
-    populateProfile(user) {
-        this.setState({
-            profilePicURL: user.profilePicURL,
-            displayName: user.displayName,
-            location: user.location,
-            bio: user.bio,
-            links: user.links,
-            numOfSubscribers: user.numOfSubscribers,
-            scheduledStreams: user.scheduledStreams
+    async getUpcomingStreams() {
+        const res = await axios.get('/api/scheduled-streams', {
+            params: {
+                username: this.props.match.params.username,
+                scheduleStartTime: this.state.upcomingStreamsStartTime.toDate()
+            }
         });
+        return res.data.scheduledStreams;
     }
 
     async getLoggedInUser() {
@@ -264,18 +268,23 @@ export default class UserProfile extends React.Component {
     renderUpcomingStreams() {
         const scheduledStreams = this.state.scheduledStreams.map((stream, index) => {
             const genreAndCategory = (
-                <i>
-                    - <Link to={`/genre/${stream.genre}`}>
-                        {stream.genre}
-                    </Link> <Link to={`/category/${stream.category}`}>
-                        {stream.category}
-                    </Link>
-                </i>
+                <h6>
+                    <i>
+                        <Link to={`/genre/${stream.genre}`}>
+                            {stream.genre}
+                        </Link> <Link to={`/category/${stream.category}`}>
+                            {stream.category}
+                        </Link>
+                    </i>
+                </h6>
             );
+            const startTime = moment(stream.startTime).format('ddd, DD MMM, yyyy · HH:mm');
+            const endTime = moment(stream.endTime).format('HH:mm');
             return (
                 <Col key={index} md='6'>
-                    <h5>{stream.title}{stream.genre || stream.category ? genreAndCategory : undefined}</h5>
-                    <p>Starts: {stream.startTime}<br/>Ends: {stream.endTime}</p>
+                    <h5>{stream.title}</h5>
+                    {stream.genre || stream.category ? genreAndCategory : undefined}
+                    <p>{startTime}-{endTime}</p>
                 </Col>
             );
         });

@@ -3,6 +3,7 @@ const router = express.Router();
 const {ScheduledStream, User} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const mainroomEventEmitter = require('../mainroomEventEmitter');
+const sanitise = require('mongo-sanitize');
 const LOGGER = require('../../logger')('./server/routes/scheduled-streams.js');
 
 router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
@@ -36,6 +37,34 @@ router.post('/', loginChecker.ensureLoggedIn(), (req, res, next) => {
                         res.sendStatus(200);
                     }
                 });
+        }
+    });
+});
+
+router.get('/', (req, res, next) => {
+    const username = sanitise(req.query.username.toLowerCase());
+    ScheduledStream.find({
+        $or: [
+            {startTime: {$gte: req.query.scheduleStartTime}},
+            {endTime: {$gt: req.query.scheduleStartTime}}
+        ]
+    })
+    .populate({
+        path: 'user',
+        select: 'username',
+        match: {
+            username
+        }
+    })
+    .select('title startTime endTime genre category')
+    .exec((err, scheduledStreams) => {
+        if (err) {
+            LOGGER.error('An error occurred when finding scheduled streams for user {}: {}', username, err);
+            next(err);
+        } else {
+            res.json({
+                scheduledStreams
+            });
         }
     });
 });
