@@ -6,6 +6,7 @@ import moment from 'moment';
 import config from '../../mainroom.config';
 import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
+import {timeSince} from '../utils/DateUtils';
 
 const STARTING_PAGE = 1;
 
@@ -336,7 +337,7 @@ export default class UserProfile extends React.Component {
                             </Link>
                         </h5>
                         {stream.genre || stream.category ? genreAndCategory : undefined}
-                        <h6>{stream.viewCount} view{stream.viewCount === 1 ? '' : 's'} · {stream.timestamp}</h6>
+                        <h6>{stream.viewCount} view{stream.viewCount === 1 ? '' : 's'} · {timeSince(stream.timestamp)}</h6>
                     </Col>
                 </Row>
             );
