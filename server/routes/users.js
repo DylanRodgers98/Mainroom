@@ -358,16 +358,14 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
-            ScheduledStream.find({$or: [
-                {
-                    user: {$in: [user._id, ...user.subscriptions]},
-                    endTime: {$gte: req.query.scheduleStartTime},
-                    startTime: {$lte: req.query.scheduleEndTime}
-                },
-                {
-                    _id: {$in: user.nonSubscribedScheduledStreams}
-                }
-            ]})
+            ScheduledStream.find({
+                $or: [
+                    {user: {$in: [user._id, ...user.subscriptions]}},
+                    {_id: {$in: user.nonSubscribedScheduledStreams}}
+                ],
+                startTime: {$lte: req.query.scheduleEndTime},
+                endTime: {$gte: req.query.scheduleStartTime}
+            })
             .select('user title startTime endTime')
             .populate({
                 path: 'user',
