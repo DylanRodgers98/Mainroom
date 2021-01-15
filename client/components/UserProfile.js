@@ -287,11 +287,15 @@ export default class UserProfile extends React.Component {
     }
 
     async addToSchedule(streamId) {
-        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/schedule/add-non-subscribed/${streamId}`);
-        if (res.status === 200) {
-            this.setState({
-                scheduledStreamsInLoggedInUserSchedule: [...this.state.scheduledStreamsInLoggedInUserSchedule, streamId]
-            })
+        if (this.state.loggedInUser) {
+            const res = await axios.patch(`/api/users/${this.state.loggedInUser}/schedule/add-non-subscribed/${streamId}`);
+            if (res.status === 200) {
+                this.setState({
+                    scheduledStreamsInLoggedInUserSchedule: [...this.state.scheduledStreamsInLoggedInUserSchedule, streamId]
+                });
+            }
+        } else {
+            window.location.href = `/login?redirectTo=${window.location.pathname}`;
         }
     }
 
@@ -301,7 +305,7 @@ export default class UserProfile extends React.Component {
             const arrayWithStreamRemoved = this.state.scheduledStreamsInLoggedInUserSchedule.filter(id => id !== streamId);
             this.setState({
                 scheduledStreamsInLoggedInUserSchedule: arrayWithStreamRemoved
-            })
+            });
         }
     }
 
