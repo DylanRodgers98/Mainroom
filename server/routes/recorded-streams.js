@@ -19,7 +19,7 @@ router.get('/', (req, res, next) => {
                 page: req.query.page,
                 limit: req.query.limit,
                 sort: '-timestamp',
-                select: '_id timestamp title genre category thumbnailURL viewCount'
+                select: '_id timestamp title genre category tags thumbnailURL viewCount'
             };
             RecordedStream.paginate({user}, options, (err, result) => {
                 if (err) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
+import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Modal, ModalBody, ModalFooter, ModalHeader, Row} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import moment from 'moment';
 import axios from 'axios';
@@ -12,13 +12,31 @@ export default class ManageRecordedStreams extends React.Component {
     constructor(props) {
         super(props);
 
-        this.dropdownToggle = this.dropdownToggle.bind(this);
+        this.editStreamToggle = this.editStreamToggle.bind(this);
+        this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
+        this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
+        this.setTitle = this.setTitle.bind(this);
+        this.setGenre = this.setGenre.bind(this);
+        this.setCategory = this.setCategory.bind(this);
+        this.setTags = this.setTags.bind(this);
+        this.saveRecordedStream = this.saveRecordedStream.bind(this);
 
         this.state = {
             loaded: false,
             loggedInUser: '',
             recordedStreams: [],
             dropdownState: [],
+            selectedStreamId: '',
+            selectedStreamTitle: '',
+            selectedStreamGenre: '',
+            selectedStreamCategory: '',
+            selectedStreamTags: [],
+            genres: [],
+            categories: [],
+            editStreamOpen: false,
+            genreDropdownOpen: false,
+            categoryDropdownOpen: false,
+            deleteStreamOpen: false,
             showLoadMoreButton: false,
             nextPage: STARTING_PAGE
         }
@@ -33,11 +51,8 @@ export default class ManageRecordedStreams extends React.Component {
         if (res.data.username) {
             this.setState({
                 loggedInUser: res.data.username
-            }, async () => {
-                await this.getRecordedStreams();
-                this.setState({
-                    loaded: true
-                });
+            }, () => {
+                this.getRecordedStreams();
             });
         } else {
             window.location.href = `/login?redirectTo=${window.location.pathname}`;
@@ -57,7 +72,8 @@ export default class ManageRecordedStreams extends React.Component {
             recordedStreams,
             dropdownState: new Array(recordedStreams.length).fill(false),
             nextPage: res.data.nextPage,
-            showLoadMoreButton: !!res.data.nextPage
+            showLoadMoreButton: !!res.data.nextPage,
+            loaded: true
         });
     }
 
@@ -69,12 +85,177 @@ export default class ManageRecordedStreams extends React.Component {
         });
     }
 
-    editRecordedStream(id) {
+    async editRecordedStream(stream) {
+        this.setState({
+            selectedStreamId: stream._id,
+            selectedStreamTitle: stream.title,
+            selectedStreamGenre: stream.genre,
+            selectedStreamCategory: stream.category,
+            selectedStreamTags: stream.tags
+        }, () => {
+            this.editStreamToggle();
+        });
+    }
 
+    editStreamToggle() {
+        this.setState(prevState => ({
+            editStreamOpen: !prevState.editStreamOpen
+        }), () => {
+            if (this.state.editStreamOpen && !(this.state.genres.length || this.state.categories.length)) {
+                this.getFilters();
+            }
+        });
+    }
+
+    async getFilters() {
+        const res = await axios.get('/api/filters');
+        this.setState({
+            genres: res.data.genres,
+            categories: res.data.categories
+        });
+    }
+
+    genreDropdownToggle() {
+        this.setState(prevState => ({
+            genreDropdownOpen: !prevState.genreDropdownOpen
+        }));
+    }
+
+    categoryDropdownToggle() {
+        this.setState(prevState => ({
+            categoryDropdownOpen: !prevState.categoryDropdownOpen
+        }));
+    }
+
+    setTitle(event) {
+        this.setState({
+            selectedStreamTitle: event.target.value
+        });
+    }
+
+    setGenre(event) {
+        this.setState({
+            selectedStreamGenre: event.currentTarget.textContent
+        });
+    }
+
+    setCategory(event) {
+        this.setState({
+            selectedStreamCategory: event.currentTarget.textContent,
+        });
+    }
+
+    setTags(event) {
+        const tags = event.target.value.replace(/\s/g, '').split(',');
+        this.setState({
+            selectedStreamTags: tags
+        });
+    }
+
+    async saveRecordedStream() {
+        await axios.patch(`/api/recorded-streams/${this.state.selectedStreamId}`, {
+            title: this.state.selectedStreamTitle,
+            genre: this.state.selectedStreamGenre,
+            category: this.state.selectedStreamCategory,
+            tags: this.state.selectedStreamTags
+        });
+        this.editStreamToggle();
+        this.setState({
+            loaded: false,
+            recordedStreams: [],
+            nextPage: STARTING_PAGE
+        }, () => {
+            this.getRecordedStreams();
+        });
     }
 
     deleteRecordedStream(id) {
 
+    }
+
+    renderEditRecordedStream() {
+        const genreDropdownText = this.state.selectedStreamGenre || 'Select a genre...';
+        const categoryDropdownText = this.state.selectedStreamCategory || 'Select a category...';
+
+        const genres = this.state.genres.map((genre, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
+            </div>
+        ));
+
+        const categories = this.state.categories.map((category, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
+            </div>
+        ));
+
+        return (
+            <Modal isOpen={this.state.editStreamOpen} toggle={this.editStreamToggle} size='lg' centered={true}>
+                <ModalHeader toggle={this.editStreamToggle}>Edit Recorded Stream</ModalHeader>
+                <ModalBody>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-2'>Title:</h5>
+                                </td>
+                                <td>
+                                    <input className='settings-title rounded-border' type='text'
+                                           value={this.state.selectedStreamTitle} onChange={this.setTitle}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-2'>Genre:</h5>
+                                </td>
+                                <td>
+                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
+                                              toggle={this.genreDropdownToggle} size='sm'>
+                                        <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
+                                        <DropdownMenu>{genres}</DropdownMenu>
+                                    </Dropdown>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-2'>Category:</h5>
+                                </td>
+                                <td>
+                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
+                                              toggle={this.categoryDropdownToggle} size='sm'>
+                                        <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
+                                        <DropdownMenu>{categories}</DropdownMenu>
+                                    </Dropdown>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-2'>Tags:</h5>
+                                </td>
+                                <td>
+                                    <table>
+                                        <tbody>
+                                        <tr>
+                                            <td>
+                                                <input className='mt-1 rounded-border' type='text'
+                                                       value={this.state.selectedStreamTags} onChange={this.setTags}/>
+                                            </td>
+                                            <td>
+                                                <i className='ml-1'>Comma-separated</i>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </ModalBody>
+                <ModalFooter>
+                    <Button className='btn-dark' onClick={this.saveRecordedStream}>Save</Button>
+                </ModalFooter>
+            </Modal>
+        );
     }
 
     renderPastStreams() {
@@ -95,7 +276,7 @@ export default class ManageRecordedStreams extends React.Component {
                           toggle={() => this.dropdownToggle(index)} size='sm'>
                     <DropdownToggle caret />
                     <DropdownMenu right>
-                        <DropdownItem onClick={() => this.editRecordedStream(stream._id)}>
+                        <DropdownItem onClick={() => this.editRecordedStream(stream)}>
                             Edit
                         </DropdownItem>
                         <DropdownItem onClick={() => this.deleteRecordedStream(stream._id)}>
@@ -163,6 +344,8 @@ export default class ManageRecordedStreams extends React.Component {
                     <hr className='mt-4'/>
                     {this.renderPastStreams()}
                 </Container>
+
+                {this.renderEditRecordedStream()}
             </React.Fragment>
         );
     }
