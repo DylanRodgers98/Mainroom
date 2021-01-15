@@ -1,5 +1,5 @@
 const {Schema} = require('mongoose');
-const bcrypt = require('bcrypt-nodejs');
+const bcrypt = require('bcryptjs');
 const mongoosePaginate = require('mongoose-paginate-v2');
 const config = require('../../mainroom.config');
 
@@ -33,7 +33,7 @@ const UserSchema = new Schema({
 });
 
 UserSchema.methods.generateHash = password => {
-    return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+    return bcrypt.hashSync(password);
 };
 
 UserSchema.methods.checkPassword = function (password) {

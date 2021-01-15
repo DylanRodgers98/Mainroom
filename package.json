@@ -16,9 +16,9 @@
     "start-server:prod": "./node_modules/.bin/supervisor -i . -s -RV ./server/app.js"
   },
   "dependencies": {
-    "aws-sdk": "^2.778.0",
+    "aws-sdk": "^2.828.0",
     "axios": "^0.21.1",
-    "bcrypt-nodejs": "0.0.3",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "bootstrap": "^4.5.3",
     "connect-ensure-login": "^0.1.1",
@@ -32,9 +32,9 @@
     "express": "^4.17.1",
     "express-rate-limit": "^5.2.3",
     "express-session": "^1.17.1",
-    "fluent-ffmpeg": "^2.1.2",
     "history": "^4.10.1",
     "interactjs": "^1.10.0",
+    "jquery": "^3.5.1",
     "lodash": "^4.17.20",
     "mime-types": "^2.1.27",
     "moment": "^2.29.1",
