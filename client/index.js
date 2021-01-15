@@ -14,6 +14,7 @@ import Subscribers from './components/Subscribers';
 import Subscriptions from './components/Subscriptions';
 import LiveStream from './components/LiveStream';
 import RecordedStream from './components/RecordedStream';
+import ManageRecordedStreams from './components/ManageRecordedStreams';
 import Schedule from './components/Schedule';
 import Settings from './components/Settings';
 import GoLive from './components/GoLive';
@@ -62,6 +63,10 @@ if (document.getElementById('root')) {
 
                     <Route exact path='/stream/:streamId' render={props => (
                         <RecordedStream {...props} />
+                    )}/>
+
+                    <Route exact path='/manage-recorded-streams' render={props => (
+                        <ManageRecordedStreams {...props} />
                     )}/>
 
                     <Route exact path='/schedule' render={props => (
