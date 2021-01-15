@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Col, Container, Row} from 'reactstrap';
+import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import moment from 'moment';
 import axios from 'axios';
@@ -12,10 +12,13 @@ export default class ManageRecordedStreams extends React.Component {
     constructor(props) {
         super(props);
 
+        this.dropdownToggle = this.dropdownToggle.bind(this);
+
         this.state = {
             loaded: false,
             loggedInUser: '',
             recordedStreams: [],
+            dropdownState: [],
             showLoadMoreButton: false,
             nextPage: STARTING_PAGE
         }
@@ -49,11 +52,29 @@ export default class ManageRecordedStreams extends React.Component {
                 limit: config.pagination.large
             }
         });
+        const recordedStreams = [...this.state.recordedStreams, ...(res.data.recordedStreams || [])];
         this.setState({
-            recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
+            recordedStreams,
+            dropdownState: new Array(recordedStreams.length).fill(false),
             nextPage: res.data.nextPage,
             showLoadMoreButton: !!res.data.nextPage
         });
+    }
+
+    dropdownToggle(index) {
+        const dropdownState = this.state.dropdownState;
+        dropdownState[index] = !dropdownState[index];
+        this.setState({
+            dropdownState
+        });
+    }
+
+    editRecordedStream(id) {
+
+    }
+
+    deleteRecordedStream(id) {
+
     }
 
     renderPastStreams() {
@@ -69,6 +90,20 @@ export default class ManageRecordedStreams extends React.Component {
                     </i>
                 </h6>
             );
+            const dropdown = (
+                <Dropdown className='float-right' isOpen={this.state.dropdownState[index]}
+                          toggle={() => this.dropdownToggle(index)} size='sm'>
+                    <DropdownToggle caret />
+                    <DropdownMenu right>
+                        <DropdownItem onClick={() => this.editRecordedStream(stream._id)}>
+                            Edit
+                        </DropdownItem>
+                        <DropdownItem onClick={() => this.deleteRecordedStream(stream._id)}>
+                            Delete
+                        </DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            );
             const timestamp = moment(stream.timestamp).format('ddd, DD MMM, yyyy · HH:mm');
             return (
                 <Row key={index} className='margin-bottom-thick'>
@@ -80,6 +115,7 @@ export default class ManageRecordedStreams extends React.Component {
                         </Link>
                     </Col>
                     <Col md='6' lg='8'>
+                        {dropdown}
                         <h5 className='black-link'>
                             <Link to={`/stream/${stream._id}`}>
                                 {stream.title}
