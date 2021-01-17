@@ -325,7 +325,9 @@ export default class ManageRecordedStreams extends React.Component {
             const dropdown = (
                 <Dropdown className='float-right options-dropdown' isOpen={this.state.dropdownState[index]}
                           toggle={() => this.dropdownToggle(index)} size='sm'>
-                    <DropdownToggle caret />
+                    <DropdownToggle caret>
+                        Options
+                    </DropdownToggle>
                     <DropdownMenu right>
                         <DropdownItem onClick={() => this.openEditRecordedStreamModal(index, stream)}>
                             Edit
