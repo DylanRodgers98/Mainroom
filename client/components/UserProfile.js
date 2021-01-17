@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import {Container, Row, Col, Button, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import {Container, Row, Col, Button, Modal, ModalHeader, ModalBody, ModalFooter, DropdownItem} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import moment from 'moment';
 import config from '../../mainroom.config';
@@ -345,10 +345,19 @@ export default class UserProfile extends React.Component {
             );
         });
 
+        const goToScheduleButton = this.state.loggedInUser !== this.props.match.params.username ? undefined : (
+            <div className='float-right'>
+                <Button className='btn-dark' tag={Link} to={'/schedule'} size='sm'>
+                    Go to Schedule
+                </Button>
+            </div>
+        );
+
         return (
             <React.Fragment>
                 <Row className='mb-2'>
                     <Col>
+                        {goToScheduleButton}
                         <h2>Upcoming Streams</h2>
                     </Col>
                 </Row>
@@ -398,6 +407,14 @@ export default class UserProfile extends React.Component {
             );
         });
 
+        const manageRecordedStreamsButton = this.state.loggedInUser !== this.props.match.params.username ? undefined : (
+            <div className='float-right'>
+                <Button className='btn-dark' tag={Link} to={'/manage-recorded-streams'} size='sm'>
+                    Manage Recorded Streams
+                </Button>
+            </div>
+        )
+
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
@@ -410,6 +427,7 @@ export default class UserProfile extends React.Component {
             <React.Fragment>
                 <Row className='mb-2'>
                     <Col>
+                        {manageRecordedStreamsButton}
                         <h2>Past Streams</h2>
                     </Col>
                 </Row>

@@ -144,8 +144,10 @@ export default class MainroomNavbar extends React.Component {
                                           to={`/user/${this.state.loggedInUser}/subscriptions`}>Subscriptions</DropdownItem>
                             <DropdownItem divider/>
                             <DropdownItem tag={Link} to={'/go-live'}>Go Live</DropdownItem>
-                            <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
+                            <DropdownItem tag={Link} to={'/manage-recorded-streams'}>Recorded Streams</DropdownItem>
                             <DropdownItem divider/>
+                            <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
+                            {/*<DropdownItem divider/>*/}
                             <DropdownItem href={'/logout'}>Log Out</DropdownItem>
                         </DropdownMenu>
                     </Dropdown>
