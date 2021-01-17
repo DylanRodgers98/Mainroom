@@ -13,19 +13,22 @@ export default class ManageRecordedStreams extends React.Component {
         super(props);
 
         this.editStreamToggle = this.editStreamToggle.bind(this);
+        this.deleteStreamToggle = this.deleteStreamToggle.bind(this);
         this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
         this.setTitle = this.setTitle.bind(this);
         this.setGenre = this.setGenre.bind(this);
         this.setCategory = this.setCategory.bind(this);
         this.setTags = this.setTags.bind(this);
-        this.saveRecordedStream = this.saveRecordedStream.bind(this);
+        this.editRecordedStream = this.editRecordedStream.bind(this);
+        this.deleteRecordedStream = this.deleteRecordedStream.bind(this);
 
         this.state = {
             loaded: false,
             loggedInUser: '',
             recordedStreams: [],
             dropdownState: [],
+            selectedStreamIndex: undefined,
             selectedStreamId: '',
             selectedStreamTitle: '',
             selectedStreamGenre: '',
@@ -34,9 +37,9 @@ export default class ManageRecordedStreams extends React.Component {
             genres: [],
             categories: [],
             editStreamOpen: false,
+            deleteStreamOpen: false,
             genreDropdownOpen: false,
             categoryDropdownOpen: false,
-            deleteStreamOpen: false,
             showLoadMoreButton: false,
             nextPage: STARTING_PAGE
         }
@@ -78,15 +81,16 @@ export default class ManageRecordedStreams extends React.Component {
     }
 
     dropdownToggle(index) {
-        const dropdownState = this.state.dropdownState;
+        const dropdownState = [...this.state.dropdownState];
         dropdownState[index] = !dropdownState[index];
         this.setState({
             dropdownState
         });
     }
 
-    async editRecordedStream(stream) {
+    async openEditRecordedStreamModal(index, stream) {
         this.setState({
+            selectedStreamIndex: index,
             selectedStreamId: stream._id,
             selectedStreamTitle: stream.title,
             selectedStreamGenre: stream.genre,
@@ -152,25 +156,56 @@ export default class ManageRecordedStreams extends React.Component {
         });
     }
 
-    async saveRecordedStream() {
-        await axios.patch(`/api/recorded-streams/${this.state.selectedStreamId}`, {
+    async editRecordedStream() {
+        const res = await axios.patch(`/api/recorded-streams/${this.state.selectedStreamId}`, {
             title: this.state.selectedStreamTitle,
             genre: this.state.selectedStreamGenre,
             category: this.state.selectedStreamCategory,
             tags: this.state.selectedStreamTags
         });
-        this.editStreamToggle();
+        if (res.status === 200) {
+            const recordedStreams = [...this.state.recordedStreams];
+            const recordedStream = recordedStreams[this.state.selectedStreamIndex];
+            recordedStream.title = res.data.title;
+            recordedStream.genre = res.data.genre;
+            recordedStream.category = res.data.category;
+            recordedStream.tags = res.data.tags;
+            recordedStreams[this.state.selectedStreamIndex] = recordedStream;
+            this.setState({
+                recordedStreams
+            }, () => {
+                this.editStreamToggle();
+            });
+        }
+    }
+
+    openDeleteRecordedStreamModal(index, stream) {
         this.setState({
-            loaded: false,
-            recordedStreams: [],
-            nextPage: STARTING_PAGE
+            selectedStreamIndex: index,
+            selectedStreamId: stream._id,
+            selectedStreamTitle: stream.title
         }, () => {
-            this.getRecordedStreams();
+            this.deleteStreamToggle();
         });
     }
 
-    deleteRecordedStream(id) {
+    deleteStreamToggle() {
+        this.setState(prevState => ({
+            deleteStreamOpen: !prevState.deleteStreamOpen
+        }));
+    }
 
+    async deleteRecordedStream() {
+        const res = await axios.delete(`/api/recorded-streams/${this.state.selectedStreamId}`);
+        if (res.status === 200) {
+            const recordedStreams = [...this.state.recordedStreams];
+            recordedStreams.splice(this.state.selectedStreamIndex, 1);
+            this.setState({
+                recordedStreams
+            }, () => {
+                this.deleteStreamToggle();
+            });
+        }
     }
 
     renderEditRecordedStream() {
@@ -252,7 +287,23 @@ export default class ManageRecordedStreams extends React.Component {
                     </table>
                 </ModalBody>
                 <ModalFooter>
-                    <Button className='btn-dark' onClick={this.saveRecordedStream}>Save</Button>
+                    <Button className='btn-dark' onClick={this.editRecordedStream}>Save</Button>
+                </ModalFooter>
+            </Modal>
+        );
+    }
+
+    renderDeleteRecordedStream() {
+        return (
+            <Modal isOpen={this.state.deleteStreamOpen} toggle={this.deleteStreamToggle} size='md' centered={true}>
+                <ModalHeader toggle={this.deleteStreamToggle}>
+                    Delete Recorded Stream
+                </ModalHeader>
+                <ModalBody>
+                    <p>Are you sure you want to delete '{this.state.selectedStreamTitle}'?</p>
+                </ModalBody>
+                <ModalFooter>
+                    <Button className='btn-dark' onClick={this.deleteRecordedStream}>Delete</Button>
                 </ModalFooter>
             </Modal>
         );
@@ -276,10 +327,10 @@ export default class ManageRecordedStreams extends React.Component {
                           toggle={() => this.dropdownToggle(index)} size='sm'>
                     <DropdownToggle caret />
                     <DropdownMenu right>
-                        <DropdownItem onClick={() => this.editRecordedStream(stream)}>
+                        <DropdownItem onClick={() => this.openEditRecordedStreamModal(index, stream)}>
                             Edit
                         </DropdownItem>
-                        <DropdownItem onClick={() => this.deleteRecordedStream(stream._id)}>
+                        <DropdownItem onClick={() => this.openDeleteRecordedStreamModal(index, stream)}>
                             Delete
                         </DropdownItem>
                     </DropdownMenu>
@@ -346,6 +397,7 @@ export default class ManageRecordedStreams extends React.Component {
                 </Container>
 
                 {this.renderEditRecordedStream()}
+                {this.renderDeleteRecordedStream()}
             </React.Fragment>
         );
     }
