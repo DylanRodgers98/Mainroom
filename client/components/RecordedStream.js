@@ -4,7 +4,9 @@ import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Container, Row, Col, Button} from 'reactstrap';
-import {ReactHeight} from "react-height/lib/ReactHeight";
+import {ReactHeight} from 'react-height/lib/ReactHeight';
+import {timeSince} from '../utils/DateUtils';
+import moment from 'moment';
 
 const STARTING_PAGE = 1;
 
@@ -71,7 +73,7 @@ export default class RecordedStream extends React.Component {
             streamTitle: recordedStream.title,
             streamGenre: recordedStream.genre,
             streamCategory: recordedStream.category,
-            streamTimestamp: recordedStream.timestamp,
+            streamTimestamp: moment(recordedStream.timestamp).format('ddd, DD MMM, yyyy · HH:mm'),
             viewCount: recordedStream.viewCount
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
@@ -158,7 +160,7 @@ export default class RecordedStream extends React.Component {
                         </div>
                         {stream.genre || stream.category ? genreAndCategory : undefined}
                         <h6>
-                            {stream.viewCount} view{stream.viewCount === 1 ? '' : 's'} · {stream.timestamp}
+                            {stream.viewCount} view{stream.viewCount === 1 ? '' : 's'} · {timeSince(stream.timestamp)}
                         </h6>
                     </Col>
                 </Row>
