@@ -323,7 +323,7 @@ export default class ManageRecordedStreams extends React.Component {
                 </h6>
             );
             const dropdown = (
-                <Dropdown className='float-right' isOpen={this.state.dropdownState[index]}
+                <Dropdown className='float-right options-dropdown' isOpen={this.state.dropdownState[index]}
                           toggle={() => this.dropdownToggle(index)} size='sm'>
                     <DropdownToggle caret />
                     <DropdownMenu right>
