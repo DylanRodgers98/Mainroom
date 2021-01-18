@@ -12,7 +12,39 @@ const multerS3 = require('multer-s3');
 const mime = require('mime-types');
 const mainroomEventEmitter = require('../mainroomEventEmitter');
 const passwordValidator = require('../auth/passwordValidator');
+const _ = require('lodash');
 const LOGGER = require('../../logger')('./server/routes/users.js');
+
+router.get('/', (req, res, next) => {
+    const sanitisedQuery = sanitise(req.query.searchQuery);
+    const escapedQuery = _.escapeRegExp(sanitisedQuery)
+    const searchQuery = new RegExp(`^${escapedQuery}$`, 'i');
+
+    const query = {
+        $or: [
+            {username: searchQuery},
+            {displayName: searchQuery}
+        ]
+    };
+
+    const options = {
+        page: req.query.page,
+        limit: req.query.limit,
+        select: 'username displayName profilePicURL',
+    };
+
+    User.paginate(query, options, (err, result) => {
+        if (err) {
+            LOGGER.error('An error occurred when finding users: {}', err);
+            next(err);
+        } else {
+            res.json({
+                users: result.docs,
+                nextPage: result.nextPage
+            });
+        }
+    });
+});
 
 router.get('/:username', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());

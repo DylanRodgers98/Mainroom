@@ -252,7 +252,7 @@ export default class UserProfile extends React.Component {
             <React.Fragment>
                 <Row className='mb-2'>
                     <Col>
-                        <h2>Live Now</h2>
+                        <h3>Live Now</h3>
                     </Col>
                 </Row>
                 <Row>
@@ -358,7 +358,7 @@ export default class UserProfile extends React.Component {
                 <Row className='mb-2'>
                     <Col>
                         {goToScheduleButton}
-                        <h2>Upcoming Streams</h2>
+                        <h3>Upcoming Streams</h3>
                     </Col>
                 </Row>
                 <Row>
@@ -428,7 +428,7 @@ export default class UserProfile extends React.Component {
                 <Row className='mb-2'>
                     <Col>
                         {manageRecordedStreamsButton}
-                        <h2>Past Streams</h2>
+                        <h3>Past Streams</h3>
                     </Col>
                 </Row>
                 {pastStreams.length ? pastStreams : (

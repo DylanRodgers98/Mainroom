@@ -26,6 +26,9 @@ export default class LiveStreams extends React.Component {
             recordedStreams: [],
             recordedStreamsNextPage: STARTING_PAGE,
             showLoadMorePastStreamsButton: false,
+            users: [],
+            usersNextPage: STARTING_PAGE,
+            showLoadMoreUsersButton: false,
             genres: [],
             genreDropdownOpen: false,
             genreFilter: '',
@@ -41,8 +44,8 @@ export default class LiveStreams extends React.Component {
 
     async fillComponent() {
         await Promise.all([
-            this.getLiveStreams(),
-            this.getRecordedStreams(),
+            this.getStreams(),
+            this.getUsers(),
             this.getFilters()
         ]);
         this.setState({
@@ -58,6 +61,8 @@ export default class LiveStreams extends React.Component {
                 livestreamsNextPage: STARTING_PAGE,
                 recordedStreams: [],
                 recordedStreamsNextPage: STARTING_PAGE,
+                users: [],
+                usersNextPage: STARTING_PAGE,
                 genreFilter: '',
                 categoryFilter: ''
             }, () => {
@@ -71,10 +76,20 @@ export default class LiveStreams extends React.Component {
                 livestreamsNextPage: STARTING_PAGE,
                 recordedStreams: [],
                 recordedStreamsNextPage: STARTING_PAGE,
-            }, () => {
-                this.fillComponent();
+            }, async () => {
+                await this.getStreams();
+                this.setState({
+                    loaded: true
+                });
             });
         }
+    }
+
+    async getStreams() {
+        await Promise.all([
+            this.getLiveStreams(),
+            this.getRecordedStreams()
+        ]);
     }
 
     async getLiveStreams() {
@@ -122,6 +137,23 @@ export default class LiveStreams extends React.Component {
             recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
             recordedStreamsNextPage: res.data.nextPage,
             showLoadMorePastStreamsButton: !!res.data.nextPage
+        });
+    }
+
+    async getUsers() {
+        const queryParams = {
+            params: {
+                searchQuery: this.props.match.params.query,
+                page: this.state.usersNextPage,
+                limit: config.pagination.small
+            }
+        };
+
+        const res = await axios.get('/api/users', queryParams);
+        this.setState({
+            users: [...this.state.users, ...(res.data.users || [])],
+            usersNextPage: res.data.nextPage,
+            showLoadMoreUsersButton: !!res.data.nextPage
         });
     }
 
@@ -195,8 +227,8 @@ export default class LiveStreams extends React.Component {
                                         <Link to={`/user/${liveStream.username}`}>
                                             {liveStream.displayName || liveStream.username}
                                         </Link>
-                                            {liveStream.title ? ` - ${liveStream.title}` : ''}
-                                        </h5>
+                                        {liveStream.title ? ` - ${liveStream.title}` : ''}
+                                    </h5>
                                     <h6>
                                         <Link to={`/genre/${liveStream.genre}`}>
                                             {liveStream.genre}
@@ -259,8 +291,8 @@ export default class LiveStreams extends React.Component {
                                         <Link to={`/user/${recordedStream.user.username}`}>
                                             {recordedStream.user.displayName || recordedStream.user.username}
                                         </Link>
-                                            {recordedStream.title ? ` - ${recordedStream.title}` : ''}
-                                        </h5>
+                                        {recordedStream.title ? ` - ${recordedStream.title}` : ''}
+                                    </h5>
                                     <h6>
                                         <Link to={`/genre/${recordedStream.genre}`}>
                                             {recordedStream.genre}
@@ -296,6 +328,39 @@ export default class LiveStreams extends React.Component {
         );
     }
 
+    renderUsers() {
+        const users = this.state.users.map((user, index) => (
+            <Col className='mb-4' key={index}>
+                <h5>
+                    <Link to={`/user/${user.username}`}>
+                        <img src={user.profilePicURL} width='75' height='75'
+                             alt={`${user.username} profile picture`} className='mr-3 rounded-circle'/>
+                        {user.username}
+                    </Link>
+                </h5>
+            </Col>
+        ));
+
+        const loadMoreUsersButton = !this.state.showLoadMoreUsersButton ? undefined : (
+            <div className='text-center mb-4'>
+                <Button className='btn-dark' onClick={async () => await this.getUsers()}>
+                    Load More Users
+                </Button>
+            </div>
+        );
+
+        return !users.length ? undefined : (
+            <React.Fragment>
+                <h4>Users</h4>
+                <hr className='my-4'/>
+                <Row xs='1' sm='1' md='2' lg='3' xl='3'>
+                    {users}
+                </Row>
+                {loadMoreUsersButton}
+            </React.Fragment>
+        );
+    }
+
     render() {
         const genreDropdownText = this.state.genreFilter || 'Genre';
         const categoryDropdownText = this.state.categoryFilter || 'Category';
@@ -316,7 +381,7 @@ export default class LiveStreams extends React.Component {
             <Container fluid='lg' className='mt-5'>
                 <Row>
                     <Col>
-                        <h3>Search: '{this.props.match.params.query}'</h3>
+                        <h4>Search: '{this.props.match.params.query}'</h4>
                     </Col>
                     <Col>
                         <table className='float-right'>
@@ -360,6 +425,7 @@ export default class LiveStreams extends React.Component {
                     <React.Fragment>
                         {this.renderLiveStreams()}
                         {this.renderPastStreams()}
+                        {this.renderUsers()}
                     </React.Fragment>
                 )}
             </Container>
