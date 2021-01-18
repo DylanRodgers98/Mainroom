@@ -10,6 +10,16 @@ const LOGGER = require('../../logger')('./server/routes/recorded-streams.js');
 router.get('/', async (req, res, next) => {
     const query = {};
 
+    const options = {
+        page: req.query.page,
+        limit: req.query.limit,
+        select: '_id user timestamp title genre category tags thumbnailURL viewCount',
+        populate: {
+            path: 'user',
+            select: 'username displayName profilePicURL'
+        }
+    };
+
     if (req.query.username) {
         const username = sanitise(req.query.username);
         try {
@@ -22,6 +32,7 @@ router.get('/', async (req, res, next) => {
             LOGGER.error('An error occurred when finding user {}: {}', username, err);
             next(err);
         }
+        options.sort = '-timestamp';
     } else {
         if (req.query.searchQuery) {
             const sanitisedQuery = sanitise(req.query.searchQuery);
@@ -53,18 +64,8 @@ router.get('/', async (req, res, next) => {
         if (req.query.category) {
             query.category = sanitise(req.query.category);
         }
+        options.sort = '-viewCount';
     }
-
-    const options = {
-        page: req.query.page,
-        limit: req.query.limit,
-        sort: '-timestamp',
-        select: '_id user timestamp title genre category tags thumbnailURL viewCount',
-        populate: {
-            path: 'user',
-            select: 'username displayName profilePicURL'
-        }
-    };
 
     RecordedStream.paginate(query, options, (err, result) => {
         if (err) {

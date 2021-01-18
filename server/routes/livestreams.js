@@ -37,9 +37,10 @@ router.get('/', async (req, res, next) => {
         }
 
         const options = {
-            select: 'username displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount',
             page: req.query.page,
-            limit: req.query.limit
+            limit: req.query.limit,
+            select: 'username displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount',
+            sort: '-streamInfo.viewCount'
         };
 
         User.paginate(query, options, async (err, result) => {
