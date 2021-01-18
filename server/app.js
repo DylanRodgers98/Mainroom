@@ -102,7 +102,7 @@ io.on('connection', (socket, next) => {
         // increment view count on connection
         incrementViewCount(streamUsername, 1, next);
 
-        // decrement view count on connection
+        // decrement view count on disconnection
         socket.on('disconnect', () => {
             incrementViewCount(streamUsername, -1, next);
         });
