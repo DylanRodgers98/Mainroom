@@ -4,7 +4,7 @@
   "description": "Live streaming web application for DJs, bands and artists",
   "license": "CC-BY-NC-SA-4.0",
   "author": "Dylan Rodgers <dylanirodgers@aol.com> (https://github.com/DylanRodgers98)",
-  "repository": "github:DylanRodgers98/MainRoom",
+  "repository": "github:DylanRodgers98/Mainroom",
   "private": true,
   "scripts": {
     "test": "jest --coverage --detectOpenHandles --forceExit --verbose",
@@ -13,7 +13,10 @@
     "webpack:dev": "./node_modules/.bin/webpack --watch",
     "webpack:prod": "./node_modules/.bin/webpack",
     "start-server:dev": "./node_modules/.bin/supervisor -w server -s -RV ./server/app.js",
-    "start-server:prod": "./node_modules/.bin/supervisor -i . -s -RV ./server/app.js"
+    "start-server:prod": "pm2 start pm2.config.js",
+    "stop:prod": "npm-run-all stop-pm2 delete-pm2",
+    "stop-pm2": "pm2 stop all",
+    "delete-pm2": "pm2 delete all"
   },
   "dependencies": {
     "aws-sdk": "^2.828.0",
