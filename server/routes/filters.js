@@ -1,23 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const filters = require('../json/filters.json');
+const {filters} = require('../../mainroom.config');
+
+const genres = filters.genres.sort();
+const categories = filters.categories.sort();
 
 router.get('/', (req, res) => {
     res.json({
-        genres: Array.from(filters.genres).sort(),
-        categories: Array.from(filters.categories).sort()
+        genres,
+        categories
     });
 });
 
 router.get('/genres', (req, res) => {
     res.json({
-        genres: Array.from(filters.genres).sort()
+        genres
     });
 });
 
 router.get('/categories', (req, res) => {
     res.json({
-        categories: Array.from(filters.categories).sort()
+        categories
     });
 });
 

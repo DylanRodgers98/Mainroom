@@ -25,7 +25,7 @@ module.exports = {
                     app: 'live',
                     hls: true,
                     hlsFlags: '[hls_time=2:hls_list_size=3:hls_flags=delete_segments]',
-                    mp4: false,
+                    mp4: process.env.NODE_ENV === 'production',
                     mp4Flags: '[movflags=frag_keyframe+empty_moov]'
                 }
             ]
@@ -93,5 +93,19 @@ module.exports = {
     rateLimiter: {
         windowMs: 60 * 1000, // 1 minute
         maxRequests: 100
+    },
+    filters: {
+        genres: [
+            "Drum & Bass",
+            "Techno",
+            "Bassline"
+        ],
+        categories: [
+            "DJ Set",
+            "Live Set",
+            "Production",
+            "Tutorial",
+            "Q&A"
+        ]
     }
 };
