@@ -21,20 +21,33 @@ export default class LiveStreams extends React.Component {
         this.state = {
             loaded: false,
             liveStreams: [],
-            nextPage: STARTING_PAGE,
+            livestreamsNextPage: STARTING_PAGE,
+            showLoadMoreLivestreamsButton: false,
+            recordedStreams: [],
+            recordedStreamsNextPage: STARTING_PAGE,
+            showLoadMorePastStreamsButton: false,
             genres: [],
             genreDropdownOpen: false,
             genreFilter: '',
             categories: [],
             categoryDropdownOpen: false,
-            categoryFilter: '',
-            showLoadMoreButton: false
+            categoryFilter: ''
         }
     }
 
     componentDidMount() {
-        this.getLiveStreams();
-        this.getFilters();
+        this.fillComponent();
+    }
+
+    async fillComponent() {
+        await Promise.all([
+            this.getLiveStreams(),
+            this.getRecordedStreams(),
+            this.getFilters()
+        ]);
+        this.setState({
+            loaded: true
+        });
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -42,20 +55,24 @@ export default class LiveStreams extends React.Component {
             this.setState({
                 loaded: false,
                 liveStreams: [],
-                nextPage: STARTING_PAGE,
+                livestreamsNextPage: STARTING_PAGE,
+                recordedStreams: [],
+                recordedStreamsNextPage: STARTING_PAGE,
                 genreFilter: '',
                 categoryFilter: ''
-            }, async () => {
-                await this.getLiveStreams();
+            }, () => {
+                this.fillComponent();
             });
         } else if (prevState.genreFilter !== this.state.genreFilter
             || prevState.categoryFilter !== this.state.categoryFilter) {
             this.setState({
                 loaded: false,
                 liveStreams: [],
-                nextPage: STARTING_PAGE
-            }, async () => {
-                await this.getLiveStreams();
+                livestreamsNextPage: STARTING_PAGE,
+                recordedStreams: [],
+                recordedStreamsNextPage: STARTING_PAGE,
+            }, () => {
+                this.fillComponent();
             });
         }
     }
@@ -64,7 +81,7 @@ export default class LiveStreams extends React.Component {
         const queryParams = {
             params: {
                 searchQuery: this.props.match.params.query,
-                page: this.state.nextPage,
+                page: this.state.livestreamsNextPage,
                 limit: config.pagination.large
             }
         };
@@ -79,9 +96,32 @@ export default class LiveStreams extends React.Component {
         const res = await axios.get('/api/livestreams', queryParams);
         this.setState({
             liveStreams: [...this.state.liveStreams, ...(res.data.streams || [])],
-            nextPage: res.data.nextPage,
-            showLoadMoreButton: !!res.data.nextPage,
-            loaded: true
+            livestreamsNextPage: res.data.nextPage,
+            showLoadMoreLivestreamsButton: !!res.data.nextPage
+        });
+    }
+
+    async getRecordedStreams() {
+        const queryParams = {
+            params: {
+                searchQuery: this.props.match.params.query,
+                page: this.state.recordedStreamsNextPage,
+                limit: config.pagination.small
+            }
+        };
+
+        if (this.state.genreFilter) {
+            queryParams.params.genre = this.state.genreFilter;
+        }
+        if (this.state.categoryFilter) {
+            queryParams.params.category = this.state.categoryFilter;
+        }
+
+        const res = await axios.get('/api/recorded-streams', queryParams);
+        this.setState({
+            recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
+            recordedStreamsNextPage: res.data.nextPage,
+            showLoadMorePastStreamsButton: !!res.data.nextPage
         });
     }
 
@@ -129,8 +169,8 @@ export default class LiveStreams extends React.Component {
         });
     }
 
-    render() {
-        const streams = this.state.liveStreams.map((liveStream, index) => (
+    renderLiveStreams() {
+        const liveStreams = this.state.liveStreams.map((liveStream, index) => (
             <Col className='stream margin-bottom-thick' key={index}>
                 <span className='live-label'>LIVE</span>
                 <span className='view-count'>{liveStream.viewCount} viewer{liveStream.viewCount === 1 ? '' : 's'}</span>
@@ -155,8 +195,8 @@ export default class LiveStreams extends React.Component {
                                         <Link to={`/user/${liveStream.username}`}>
                                             {liveStream.displayName || liveStream.username}
                                         </Link>
-                                        {liveStream.title ? ` - ${liveStream.title}` : ''}
-                                    </h5>
+                                            {liveStream.title ? ` - ${liveStream.title}` : ''}
+                                        </h5>
                                     <h6>
                                         <Link to={`/genre/${liveStream.genre}`}>
                                             {liveStream.genre}
@@ -172,16 +212,91 @@ export default class LiveStreams extends React.Component {
             </Col>
         ));
 
-        const streamBoxes = streams.length ? (
-            <Row xs='1' sm='1' md='2' lg='3' xl='3'>
-                {streams}
-            </Row>
+        const loadMoreLiveStreamsButton = !this.state.showLoadMoreLivestreamsButton ? undefined : (
+            <div className='text-center mb-4'>
+                <Button className='btn-dark' onClick={async () => await this.getLiveStreams()}>
+                    Load More Livestreams
+                </Button>
+            </div>
+        );
+
+        return liveStreams.length ? (
+            <React.Fragment>
+                <Row xs='1' sm='1' md='2' lg='3' xl='3'>
+                    {liveStreams}
+                </Row>
+                {loadMoreLiveStreamsButton}
+            </React.Fragment>
         ) : (
             <p className='my-4 text-center'>
                 No one matching your search is live right now :(
             </p>
         );
+    }
 
+    renderPastStreams() {
+        const pastStreams = this.state.recordedStreams.map((recordedStream, index) => (
+            <Col className='stream margin-bottom-thick' key={index}>
+                <span className='view-count'>{recordedStream.viewCount} view{recordedStream.viewCount === 1 ? '' : 's'}</span>
+                <Link to={`/stream/${recordedStream._id}`}>
+                    <div className='stream-thumbnail'>
+                        <img src={recordedStream.thumbnailURL} alt={`${recordedStream.title} Stream Thumbnail`}/>
+                    </div>
+                </Link>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <Link to={`/user/${recordedStream.user.username}`}>
+                                    <img className='rounded-circle my-2' src={recordedStream.user.profilePicURL}
+                                         width='50' height='50'
+                                         alt={`${recordedStream.user.username} profile picture`}/>
+                                </Link>
+                            </td>
+                            <td valign='middle'>
+                                <div className='ml-2'>
+                                    <h5>
+                                        <Link to={`/user/${recordedStream.user.username}`}>
+                                            {recordedStream.user.displayName || recordedStream.user.username}
+                                        </Link>
+                                            {recordedStream.title ? ` - ${recordedStream.title}` : ''}
+                                        </h5>
+                                    <h6>
+                                        <Link to={`/genre/${recordedStream.genre}`}>
+                                            {recordedStream.genre}
+                                        </Link> <Link to={`/category/${recordedStream.category}`}>
+                                            {recordedStream.category}
+                                        </Link>
+                                    </h6>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </Col>
+        ));
+
+        const loadMorePastStreamsButton = !this.state.showLoadMorePastStreamsButton ? undefined : (
+            <div className='text-center mb-4'>
+                <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
+                    Load More Past Streams
+                </Button>
+            </div>
+        );
+
+        return !pastStreams.length ? undefined : (
+            <React.Fragment>
+                <h4>Past Streams</h4>
+                <hr className='my-4'/>
+                <Row xs='1' sm='1' md='2' lg='3' xl='3'>
+                    {pastStreams}
+                </Row>
+                {loadMorePastStreamsButton}
+            </React.Fragment>
+        );
+    }
+
+    render() {
         const genreDropdownText = this.state.genreFilter || 'Genre';
         const categoryDropdownText = this.state.categoryFilter || 'Category';
 
@@ -197,19 +312,11 @@ export default class LiveStreams extends React.Component {
             </div>
         ));
 
-        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
-            <div className='text-center my-4'>
-                <Button className='btn-dark' onClick={async () => await this.getLiveStreams()}>
-                    Load More
-                </Button>
-            </div>
-        );
-
         return (
             <Container fluid='lg' className='mt-5'>
                 <Row>
                     <Col>
-                        <h4>Search: '{this.props.match.params.query}'</h4>
+                        <h3>Search: '{this.props.match.params.query}'</h3>
                     </Col>
                     <Col>
                         <table className='float-right'>
@@ -251,8 +358,8 @@ export default class LiveStreams extends React.Component {
                 <hr className='my-4'/>
                 {!this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
                     <React.Fragment>
-                        {streamBoxes}
-                        {loadMoreButton}
+                        {this.renderLiveStreams()}
+                        {this.renderPastStreams()}
                     </React.Fragment>
                 )}
             </Container>

@@ -59,7 +59,11 @@ router.get('/', async (req, res, next) => {
         page: req.query.page,
         limit: req.query.limit,
         sort: '-timestamp',
-        select: '_id timestamp title genre category tags thumbnailURL viewCount'
+        select: '_id user timestamp title genre category tags thumbnailURL viewCount',
+        populate: {
+            path: 'user',
+            select: 'username displayName profilePicURL'
+        }
     };
 
     RecordedStream.paginate(query, options, (err, result) => {
