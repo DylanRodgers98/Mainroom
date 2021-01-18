@@ -16,7 +16,9 @@
     "start-server:prod": "pm2 start pm2.config.js",
     "stop:prod": "npm-run-all stop-pm2 delete-pm2",
     "stop-pm2": "pm2 stop all",
-    "delete-pm2": "pm2 delete all"
+    "delete-pm2": "pm2 delete all",
+    "preversion": "npm test",
+    "postversion": "git push && git push --tags"
   },
   "dependencies": {
     "aws-sdk": "^2.828.0",
