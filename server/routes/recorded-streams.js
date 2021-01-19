@@ -5,6 +5,7 @@ const _ = require('lodash');
 const {User, RecordedStream} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const AWS = require('aws-sdk');
+const {extractBucketAndKey} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/routes/recorded-streams.js');
 
 router.get('/', async (req, res, next) => {
@@ -150,13 +151,13 @@ router.delete('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
             const thumbnail = extractBucketAndKey(stream.thumbnailURL);
 
             const deleteVideoPromise = S3.deleteObject({
-                Bucket: video.bucket,
-                Key: video.key
+                Bucket: video.Bucket,
+                Key: video.Key
             }).promise();
 
             const deleteThumbnailPromise = S3.deleteObject({
-                Bucket: thumbnail.bucket,
-                Key: thumbnail.key
+                Bucket: thumbnail.Bucket,
+                Key: thumbnail.Key
             }).promise()
 
             try {
@@ -178,12 +179,5 @@ router.delete('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
         }
     });
 });
-
-function extractBucketAndKey(urlString) {
-    const url = new URL(urlString);
-    const bucket = url.hostname.replace('.s3.amazonaws.com', '');
-    const key = url.pathname.substring(1); // remove leading slash
-    return {bucket, key};
-}
 
 module.exports = router;

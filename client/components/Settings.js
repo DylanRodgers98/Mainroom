@@ -18,6 +18,8 @@ export default class Settings extends React.Component {
         this.resetPasswordToggle = this.resetPasswordToggle.bind(this);
         this.resetPassword = this.resetPassword.bind(this);
         this.handleEmailSettingsChange = this.handleEmailSettingsChange.bind(this);
+        this.deleteAccountToggle = this.deleteAccountToggle.bind(this);
+        this.deleteAccount = this.deleteAccount.bind(this);
 
         this.state = {
             loggedInUserId: '',
@@ -36,7 +38,8 @@ export default class Settings extends React.Component {
             confirmNewPassword: '',
             currentPasswordInvalidReason: '',
             newPasswordInvalidReason: '',
-            confirmNewPasswordInvalidReason: ''
+            confirmNewPasswordInvalidReason: '',
+            deleteAccountOpen: false
         }
     }
 
@@ -180,6 +183,26 @@ export default class Settings extends React.Component {
         return this.state.currentPassword && this.state.newPassword && this.state.confirmNewPassword;
     }
 
+    handleEmailSettingsChange(event) {
+        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+        const name = event.target.name;
+        const newEmailSettings = this.state.emailSettings;
+        newEmailSettings[name] = value;
+        this.setState({
+            emailSettings: newEmailSettings
+        });
+    }
+
+    deleteAccountToggle() {
+        this.setState(prevState => ({
+            deleteAccountOpen: !prevState.deleteAccountOpen
+        }));
+    }
+
+    async deleteAccount() {
+        await axios.delete(`/api/users/${this.state.loggedInUserId}/delete`);
+    }
+
     renderResetPassword() {
         return (
             <Modal isOpen={this.state.resetPasswordOpen} toggle={this.resetPasswordToggle} centered={true}>
@@ -242,14 +265,22 @@ export default class Settings extends React.Component {
         );
     }
 
-    handleEmailSettingsChange(event) {
-        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-        const name = event.target.name;
-        const newEmailSettings = this.state.emailSettings;
-        newEmailSettings[name] = value;
-        this.setState({
-            emailSettings: newEmailSettings
-        });
+    renderDeleteAccount() {
+        return (
+            <Modal isOpen={this.state.deleteAccountOpen} toggle={this.deleteAccountToggle} size='md' centered={true}>
+                <ModalHeader toggle={this.deleteAccountToggle}>
+                    Permanently Delete Account
+                </ModalHeader>
+                <ModalBody>
+                    <p>Are you sure you want to permanently delete your account, and all data associated with it?</p>
+                </ModalBody>
+                <ModalFooter>
+                    <Button className='btn-danger' onClick={this.deleteAccount}>
+                        Delete Account
+                    </Button>
+                </ModalFooter>
+            </Modal>
+        );
     }
 
     render() {
@@ -262,7 +293,7 @@ export default class Settings extends React.Component {
                         <tbody>
                             <tr>
                                 <td>
-                                    <h5 className='mr-3'>Username:</h5>
+                                    <h5 className='mt-1 mr-3'>Username:</h5>
                                 </td>
                                 <td>
                                     <input className='rounded-border' type='text' value={this.state.username}
@@ -276,7 +307,7 @@ export default class Settings extends React.Component {
                             </tr>
                             <tr>
                                 <td>
-                                    <h5 className='mt-2 mr-3'>Email Address:</h5>
+                                    <h5 className='mt-1 mr-3'>Email Address:</h5>
                                 </td>
                                 <td>
                                     <input className='rounded-border' type='text' value={this.state.email}
@@ -290,7 +321,7 @@ export default class Settings extends React.Component {
                             </tr>
                             <tr>
                                 <td>
-                                    <h5 className='mt-2'>Reset Password:</h5>
+                                    <h5 className='mt-1'>Reset Password:</h5>
                                 </td>
                                 <td>
                                     <Button className='btn-dark' size='sm' onClick={this.resetPasswordToggle}>
@@ -349,6 +380,21 @@ export default class Settings extends React.Component {
                         </tbody>
                     </table>
                     <hr className='my-4'/>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <h5 className='mt-1 mr-2'>Delete Account:</h5>
+                                </td>
+                                <td>
+                                    <Button className='btn-danger' size='sm' onClick={this.deleteAccountToggle}>
+                                        Click to permanently delete account
+                                    </Button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr className='my-4'/>
                     <div className='float-right mb-4'>
                         <Button className='btn-dark' size='lg' disabled={!this.enableSaveButton()}
                                 onClick={this.saveSettings}>
@@ -358,6 +404,7 @@ export default class Settings extends React.Component {
                 </Container>
 
                 {this.renderResetPassword()}
+                {this.renderDeleteAccount()}
             </React.Fragment>
         );
     }

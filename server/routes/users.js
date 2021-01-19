@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const config = require('../../mainroom.config');
-const {User, ScheduledStream} = require('../model/schemas');
+const {User, ScheduledStream, RecordedStream} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
@@ -13,6 +13,7 @@ const mime = require('mime-types');
 const mainroomEventEmitter = require('../mainroomEventEmitter');
 const passwordValidator = require('../auth/passwordValidator');
 const _ = require('lodash');
+const {extractBucketAndKey, clearBucketAtPrefix} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 router.get('/', (req, res, next) => {
@@ -102,7 +103,7 @@ const s3 = new AWS.S3();
 
 const s3UploadProfilePic = multer({
     storage: multerS3({
-        s3: s3,
+        s3,
         bucket: config.storage.s3.staticContent.bucketName,
         key: (req, file, cb) => {
             const path = config.storage.s3.staticContent.keyPrefixes.profilePics;
@@ -646,5 +647,51 @@ router.post('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next)
         }
     });
 });
+
+router.delete('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const id = sanitise(req.params.id);
+    User.findById(id, 'profilePicURL', async (err, user) => {
+        if (err) {
+            LOGGER.error(`An error occurred when finding user with _id {}: {}`, id, err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${escape(id)}) not found`);
+        } else {
+            const {Bucket, Key} = extractBucketAndKey(user.profilePicURL);
+            const deleteProfilePicPromise = s3.deleteObject({Bucket, Key}).promise();
+
+            const deleteRecordedStreamsPromise = clearBucketAtPrefix({
+                Bucket: config.storage.s3.streams,
+                Prefix: `${config.storage.s3.streams.keyPrefixes.recorded}/${id}/`
+            });
+
+            const deleteScheduledStreamDocumentsPromise = ScheduledStream.deleteMany({user});
+            const deleteRecordedStreamDocumentsPromise = RecordedStream.deleteMany({user});
+
+            try {
+                await Promise.all([
+                    deleteProfilePicPromise,
+                    deleteRecordedStreamsPromise,
+                    deleteScheduledStreamDocumentsPromise,
+                    deleteRecordedStreamDocumentsPromise
+                ]);
+            } catch (err) {
+                LOGGER.error('An error occurred when deleting all data for user (_id: {}): {}', id, err);
+                next(err);
+            }
+
+            user.deleteOne(err => {
+                if (err) {
+                    LOGGER.error(`An error occurred when deleting user (_id: {}) from database: {}`, id, err);
+                    next(err);
+                } else {
+                    res.redirect('/logout');
+                }
+            });
+        }
+    });
+});
+
+
 
 module.exports = router;
