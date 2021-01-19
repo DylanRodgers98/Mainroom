@@ -31,6 +31,27 @@ mongoose.connect(databaseUri, {
     useFindAndModify: false,
     useUnifiedTopology: true,
     useCreateIndex: true
+}, err => {
+    if (err) {
+        LOGGER.error('An error occurred when connecting to database: {}', err);
+        throw err;
+    } else {
+        // Reset user's view count properties, as they may still be non-zero due to a non-graceful server shutdown
+        LOGGER.debug(`Resetting viewCount and cumulativeViewCount properties to 0 for users with non-zero values for these properties`);
+        User.updateMany({
+            'streamInfo.viewCount': {$gt: 0}
+        }, {
+            'streamInfo.viewCount': 0,
+            'streamInfo.cumulativeViewCount': 0
+        }, (err, res) => {
+            if (err) {
+                LOGGER.error(`An error occurred when resetting users' viewCount and cumulativeViewCount properties to 0: {}`, err);
+                throw err;
+            } else {
+                LOGGER.debug('Reset viewCount and cumulativeViewCount properties to 0 for {} users', res.nModified);
+            }
+        });
+    }
 });
 
 // set up views
@@ -139,3 +160,39 @@ httpServer.listen(process.env.SERVER_HTTP_PORT, () => {
 });
 nodeMediaServer.run();
 cronJobs.startAll();
+
+// On application shutdown, reset all users' view counts to 0, then disconnect from database
+process.on('SIGINT', async () => {
+    LOGGER.info('Gracefully shutting down application...');
+    try {
+        LOGGER.debug(`Resetting all users' viewCount and cumulativeViewCount properties to 0`);
+        await User.updateMany({
+            'streamInfo.viewCount': {$gt: 0}
+        }, {
+            'streamInfo.viewCount': 0,
+            'streamInfo.cumulativeViewCount': 0
+        });
+
+        LOGGER.debug('Disconnecting from database');
+        await mongoose.disconnect();
+
+        LOGGER.debug('Closing server');
+        await closeServer();
+    } catch (err) {
+        LOGGER.error('An error occurred during server shutdown: {}', err);
+        process.exit(1);
+    }
+});
+
+function closeServer() {
+    return new Promise((resolve, reject) => {
+        httpServer.close(err => {
+            if (err) {
+                LOGGER.error('An error occurred when closing server: {}', err);
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
