@@ -30,9 +30,8 @@ nms.on('prePublish', (sessionId, streamPath) => {
                 nms.getSession(sessionId).reject();
                 LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', sessionId, streamKey);
             } else {
-                // reset view counts
-                user.streamInfo.viewCount = 0;
-                user.streamInfo.cumulativeViewCount = 0;
+                // set cumulative view count to number of users currently viewing stream page
+                user.streamInfo.cumulativeViewCount = user.streamInfo.viewCount;
                 await user.save();
 
                 mainroomEventEmitter.emit('onWentLive', user);

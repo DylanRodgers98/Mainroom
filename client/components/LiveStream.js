@@ -43,6 +43,8 @@ export default class LiveStream extends React.Component {
             if (res.data) {
                 await this.populateStreamDataIfUserIsLive(res.data);
             }
+            await this.getViewerUsername();
+            this.connectToSocketIO();
         } catch (err) {
             if (err.response.status === 404) {
                 window.location.href = '/404';
@@ -56,8 +58,6 @@ export default class LiveStream extends React.Component {
         const stream = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${data.streamKey}`);
         if (stream.data.isLive) {
             this.populateStreamData(data);
-            await this.getViewerUsername();
-            this.connectToSocketIO();
         }
     }
 
