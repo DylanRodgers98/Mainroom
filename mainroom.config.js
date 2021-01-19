@@ -1,3 +1,9 @@
+const SECOND = 1000;
+const THIRTY_SECONDS = 30 * SECOND;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
 const logger = require('./logger');
 
 module.exports = {
@@ -48,13 +54,13 @@ module.exports = {
     },
     storage: {
         thumbnails: {
-            ttl: 30 * 1000 // 30 seconds
+            ttl: THIRTY_SECONDS
         },
         scheduledStream: {
-            ttl: 7 * 24 * 60 * 60 * 1000 // 7 days
+            ttl: 7 * DAY
         },
         passwordResetToken: {
-            ttl: 10 * 60 * 1000 // 10 minutes
+            ttl: 10 * MINUTE
         },
         s3: {
             staticContent: {
@@ -91,7 +97,7 @@ module.exports = {
         }
     },
     rateLimiter: {
-        windowMs: 60 * 1000, // 1 minute
+        windowMs: MINUTE,
         maxRequests: 100
     },
     filters: {
@@ -107,5 +113,6 @@ module.exports = {
             "Tutorial",
             "Q&A"
         ]
-    }
+    },
+    checkIfLiveInterval: THIRTY_SECONDS
 };

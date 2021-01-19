@@ -22,6 +22,7 @@ export default class LiveStream extends React.Component {
             viewerUsername: '',
             displayName: '',
             profilePicURL: '',
+            streamKey: '',
             streamTitle: '',
             streamGenre: '',
             streamCategory: '',
@@ -35,16 +36,26 @@ export default class LiveStream extends React.Component {
 
     componentDidMount() {
         this.fillComponent();
+        this.checkIfLiveInterval = setInterval(async () => await this.checkIfLive(), config.checkIfLiveInterval);
     }
 
     async fillComponent() {
+        await Promise.all([
+            this.getStreamInfo(),
+            this.getViewerUsername()
+        ]);
+        this.connectToSocketIO();
+    }
+
+    async getStreamInfo() {
         try {
             const res = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
             if (res.data) {
+                this.setState({
+                    streamKey: res.data.streamKey
+                });
                 await this.populateStreamDataIfUserIsLive(res.data);
             }
-            await this.getViewerUsername();
-            this.connectToSocketIO();
         } catch (err) {
             if (err.response.status === 404) {
                 window.location.href = '/404';
@@ -55,8 +66,8 @@ export default class LiveStream extends React.Component {
     }
 
     async populateStreamDataIfUserIsLive(data) {
-        const stream = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${data.streamKey}`);
-        if (stream.data.isLive) {
+        const isUserLive = await this.isUserLive(data.streamKey);
+        if (isUserLive) {
             this.populateStreamData(data);
         }
     }
@@ -110,11 +121,29 @@ export default class LiveStream extends React.Component {
         this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
     }
 
+    async checkIfLive() {
+        const isUserLive = await this.isUserLive(this.state.streamKey);
+        if (this.state.stream === true && !isUserLive) {
+            this.setState({
+                stream: false,
+                videoJsOptions: null
+            });
+        } else if (this.state.stream === false && isUserLive) {
+            await this.getStreamInfo();
+        }
+    }
+
+    async isUserLive(streamKey) {
+        const res = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
+        return res.data.isLive;
+    }
+
     componentWillUnmount() {
         this.socket.disconnect();
         if (this.player) {
             this.player.dispose()
         }
+        clearInterval(this.checkIfLiveInterval);
         document.title = config.headTitle;
     }
 
