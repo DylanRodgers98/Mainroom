@@ -4,8 +4,6 @@ const sanitise = require('mongo-sanitize');
 const _ = require('lodash');
 const {User, RecordedStream} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
-const AWS = require('aws-sdk');
-const {extractBucketAndKey} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/routes/recorded-streams.js');
 
 router.get('/', async (req, res, next) => {
@@ -136,46 +134,16 @@ router.patch('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
     });
 });
 
-const S3 = new AWS.S3();
-
 router.delete('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const id = sanitise(req.params.id);
-    RecordedStream.findById(id, 'videoURL thumbnailURL', async (err, stream) => {
+    RecordedStream.findByIdAndDelete(id, (err, stream) => {
         if (err) {
-            LOGGER.error(`An error occurred when finding recorded stream (_id: {}) in database: {}`, id, err);
+            LOGGER.error(`An error occurred when deleting recorded stream (_id: {}) from database: {}`, id, err);
             next(err);
         } else if (!stream) {
             res.status(404).send(`Stream (_id: ${escape(id)}) not found`);
         } else {
-            const video = extractBucketAndKey(stream.videoURL);
-            const thumbnail = extractBucketAndKey(stream.thumbnailURL);
-
-            const deleteVideoPromise = S3.deleteObject({
-                Bucket: video.Bucket,
-                Key: video.Key
-            }).promise();
-
-            const deleteThumbnailPromise = S3.deleteObject({
-                Bucket: thumbnail.Bucket,
-                Key: thumbnail.Key
-            }).promise()
-
-            try {
-                await Promise.all([deleteVideoPromise, deleteThumbnailPromise]);
-            } catch (err) {
-                LOGGER.error(`An error occurred when deleting recorded stream in S3 (video: [bucket: {}, key: {}], thumbnail: [bucket: {}, key: {}]): {}`,
-                    video.bucket, video.key, thumbnail.bucket, thumbnail.key, err);
-                next(err);
-            }
-
-            stream.deleteOne(err => {
-                if (err) {
-                    LOGGER.error(`An error occurred when deleting recorded stream (_id: {}) from database: {}`, id, err);
-                    next(err);
-                } else {
-                    res.sendStatus(200);
-                }
-            });
+            res.sendStatus(200);
         }
     });
 });

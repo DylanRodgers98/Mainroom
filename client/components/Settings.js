@@ -200,7 +200,10 @@ export default class Settings extends React.Component {
     }
 
     async deleteAccount() {
-        await axios.delete(`/api/users/${this.state.loggedInUserId}/delete`);
+        const res = await axios.delete(`/api/users/${this.state.loggedInUserId}`);
+        if (res.status === 200) {
+            window.location.href = '/logout';
+        }
     }
 
     renderResetPassword() {
