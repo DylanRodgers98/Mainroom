@@ -40,18 +40,20 @@ nms.on('prePublish', (sessionId, streamPath) => {
 });
 
 nms.on('donePublish', (sessionId, streamPath) => {
-    if (isRecordingToMP4) {
-        const streamKey = getStreamKeyFromStreamPath(streamPath);
-        const timestamp = getSessionConnectTime(sessionId);
+    const streamKey = getStreamKeyFromStreamPath(streamPath);
+    const timestamp = getSessionConnectTime(sessionId);
 
-        User.findOne({'streamInfo.streamKey': streamKey})
-            .select('_id streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
-            .exec(async (err, user) => {
-                if (err) {
-                    LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
-                } else if (!user) {
-                    LOGGER.info('Could not find user with stream key {}', streamKey);
-                } else {
+    User.findOne({'streamInfo.streamKey': streamKey})
+        .select('_id username streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
+        .exec(async (err, user) => {
+            if (err) {
+                LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
+            } else if (!user) {
+                LOGGER.info('Could not find user with stream key {}', streamKey);
+            } else {
+                mainroomEventEmitter.emit('onStreamEnded', user);
+
+                if (isRecordingToMP4) {
                     const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, 'live', streamKey);
                     const mp4FileName = findMP4FileName(inputDirectory, sessionId);
                     const inputURL = path.join(inputDirectory, mp4FileName);
@@ -94,8 +96,8 @@ nms.on('donePublish', (sessionId, streamPath) => {
                         throw err;
                     }
                 }
-        });
-    }
+            }
+    });
 });
 
 const getStreamKeyFromStreamPath = path => {

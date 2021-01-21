@@ -36,7 +36,6 @@ export default class LiveStream extends React.Component {
 
     componentDidMount() {
         this.fillComponent();
-        this.checkIfLiveInterval = setInterval(async () => await this.checkIfLive(), config.checkIfLiveInterval);
     }
 
     async fillComponent() {
@@ -49,12 +48,10 @@ export default class LiveStream extends React.Component {
 
     async getStreamInfo() {
         try {
-            const res = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
-            if (res.data) {
-                this.setState({
-                    streamKey: res.data.streamKey
-                });
-                await this.populateStreamDataIfUserIsLive(res.data);
+            const streamInfo = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
+            const stream = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamInfo.data.streamKey}`);
+            if (stream.data.isLive) {
+                this.populateStreamData(streamInfo.data);
             }
         } catch (err) {
             if (err.response.status === 404) {
@@ -62,13 +59,6 @@ export default class LiveStream extends React.Component {
             } else {
                 throw err;
             }
-        }
-    }
-
-    async populateStreamDataIfUserIsLive(data) {
-        const isUserLive = await this.isUserLive(data.streamKey);
-        if (isUserLive) {
-            this.populateStreamData(data);
         }
     }
 
@@ -118,24 +108,24 @@ export default class LiveStream extends React.Component {
                 chat: [...this.state.chat, {viewerUsername, msg}]
             });
         });
-        this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
-    }
-
-    async checkIfLive() {
-        const isUserLive = await this.isUserLive(this.state.streamKey);
-        if (this.state.stream === true && !isUserLive) {
+        this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => {
             this.setState({
-                stream: false,
-                videoJsOptions: null
+                viewCount
             });
-        } else if (this.state.stream === false && isUserLive) {
-            await this.getStreamInfo();
-        }
-    }
-
-    async isUserLive(streamKey) {
-        const res = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
-        return res.data.isLive;
+        });
+        this.socket.on(`onWentLive_${streamUsername}`, async () => {
+            if (this.state.stream === false) {
+                await this.getStreamInfo();
+            }
+        });
+        this.socket.on(`onStreamEnded_${streamUsername}`, () => {
+            if (this.state.stream === true) {
+                this.setState({
+                    stream: false,
+                    videoJsOptions: null
+                });
+            }
+        });
     }
 
     componentWillUnmount() {
@@ -143,7 +133,6 @@ export default class LiveStream extends React.Component {
         if (this.player) {
             this.player.dispose()
         }
-        clearInterval(this.checkIfLiveInterval);
         document.title = config.headTitle;
     }
 

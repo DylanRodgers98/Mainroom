@@ -19,6 +19,7 @@ const csrf = require('csurf');
 const rateLimit = require('express-rate-limit');
 const {User} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
+const mainroomEventEmitter = require('./mainroomEventEmitter');
 const LOGGER = require('../logger')('./server/app.js');
 
 // connect to database
@@ -131,6 +132,14 @@ io.on('connection', (socket, next) => {
         // emit livestream chat message to correct channel
         socket.on(`onSendChatMessage`, ({viewerUsername, msg}) => {
             io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUsername, msg});
+        });
+
+        mainroomEventEmitter.on(`onWentLive_${streamUsername}`, () => {
+            io.emit(`onWentLive_${streamUsername}`);
+        });
+
+        mainroomEventEmitter.on(`onStreamEnded_${streamUsername}`, () => {
+            io.emit(`onStreamEnded_${streamUsername}`);
         });
     }
 });

@@ -19,4 +19,14 @@ mainroomEventEmitter.on('error', err => {
     LOGGER.error('An error event was emitted: {}', err);
 });
 
+mainroomEventEmitter.on('onWentLive', user => {
+    // notify socket.io
+    mainroomEventEmitter.emit(`onWentLive_${user.username}`);
+});
+
+mainroomEventEmitter.on('onStreamEnded', user => {
+    // notify socket.io
+    mainroomEventEmitter.emit(`onStreamEnded_${user.username}`);
+});
+
 module.exports = mainroomEventEmitter;
