@@ -32,8 +32,13 @@ const UserSchema = new Schema({
         subscriptionWentLive: Boolean,
         subscriptionCreatedScheduledStream: Boolean,
         subscriptionScheduledStreamStartingIn: Number
-    }
+    },
+    chatColour: {type: String, default: getRandomColour}
 });
+
+function getRandomColour() {
+    return '#000000'.replace(/0/g, () => (~~(Math.random() * 16)).toString(16));
+}
 
 UserSchema.methods.generateHash = password => {
     return bcrypt.hashSync(password);

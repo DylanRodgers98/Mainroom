@@ -101,7 +101,10 @@ app.use('/api/recorded-streams', require('./routes/recorded-streams'));
 app.get('/logged-in-user', (req, res) => {
     res.json(!req.user ? {} : {
         _id: req.user._id,
-        username: req.user.username
+        username: req.user.username,
+        displayName: req.user.displayName,
+        profilePicURL: req.user.profilePicURL,
+        chatColour: req.user.chatColour
     });
 });
 
@@ -130,8 +133,8 @@ io.on('connection', (socket, next) => {
         });
 
         // emit livestream chat message to correct channel
-        socket.on(`onSendChatMessage`, ({viewerUsername, msg}) => {
-            io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUsername, msg});
+        socket.on(`onSendChatMessage`, ({viewerUser, msg}) => {
+            io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUser, msg});
         });
 
         mainroomEventEmitter.on(`onWentLive_${streamUsername}`, () => {
