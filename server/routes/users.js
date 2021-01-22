@@ -48,7 +48,7 @@ router.get('/', (req, res, next) => {
 
 router.get('/:username', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, 'username displayName profilePicURL location bio links subscribers')
+    User.findOne({username: username}, 'username displayName profilePicURL location bio chatColour links subscribers')
         .exec((err, user) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user {}: {}', username, err);
@@ -62,6 +62,7 @@ router.get('/:username', (req, res, next) => {
                     displayName: user.displayName,
                     location: user.location,
                     bio: user.bio,
+                    chatColour: user.chatColour,
                     links: user.links,
                     numOfSubscribers: user.subscribers.length
                 });
@@ -80,6 +81,9 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
     }
     if (req.body.bio) {
         updateQuery.bio = sanitise(req.body.bio);
+    }
+    if (req.body.chatColour) {
+        updateQuery.chatColour = sanitise(req.body.chatColour);
     }
     if (req.body.links && Array.isArray(req.body.links)) {
         updateQuery.links = sanitise(req.body.links);

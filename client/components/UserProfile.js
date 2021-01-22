@@ -19,6 +19,7 @@ const STARTING_STATE = {
     displayName: '',
     location: '',
     bio: '',
+    chatColour: '',
     links: [],
     numOfSubscribers: 0,
     scheduledStreams: [],
@@ -55,6 +56,7 @@ export default class UserProfile extends React.Component {
         this.setDisplayName = this.setDisplayName.bind(this);
         this.setLocation = this.setLocation.bind(this);
         this.setBio = this.setBio.bind(this);
+        this.setChatColour = this.setChatColour.bind(this);
         this.addLink = this.addLink.bind(this);
         this.setLinkTitle = this.setLinkTitle.bind(this);
         this.setLinkUrl = this.setLinkUrl.bind(this);
@@ -94,6 +96,7 @@ export default class UserProfile extends React.Component {
                 displayName: user.displayName,
                 location: user.location,
                 bio: user.bio,
+                chatColour: user.chatColour,
                 links: user.links,
                 numOfSubscribers: user.numOfSubscribers,
                 scheduledStreams,
@@ -474,6 +477,14 @@ export default class UserProfile extends React.Component {
         });
     }
 
+    setChatColour() {
+        const chatColour = document.getElementById('chatColour');
+        this.setState({
+            chatColour: chatColour.value,
+            unsavedChanges: true
+        });
+    }
+
     setLinkTitle(event, index) {
         const links = this.state.editLinks;
         links[index].title = event.target.value;
@@ -499,6 +510,7 @@ export default class UserProfile extends React.Component {
                 displayName: this.state.editDisplayName,
                 location: this.state.editLocation,
                 bio: this.state.editBio,
+                chatColour: this.state.chatColour,
                 links: this.state.editLinks
             });
             if (res.status === 200) {
@@ -624,9 +636,18 @@ export default class UserProfile extends React.Component {
                                               onChange={this.setBio}/>
                                 </td>
                             </tr>
+                            <tr>
+                                <td valign='top'>
+                                    <h5>Chat Colour:</h5>
+                                </td>
+                                <td>
+                                    <input id='chatColour' type='color' value={this.state.chatColour}
+                                           onChange={this.setChatColour}/>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
-                    <h5 className='mt-1'>Links:</h5>
+                    <h5 className='mt-2'>Links:</h5>
                     <hr/>
                     <table>
                         <tbody>
