@@ -7,6 +7,8 @@ import {Button, Container, Row, Col} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 
+const SCROLL_MARGIN_HEIGHT = 30;
+
 export default class LiveStream extends React.Component {
 
     constructor(props) {
@@ -15,11 +17,12 @@ export default class LiveStream extends React.Component {
         this.onMessageTextChange = this.onMessageTextChange.bind(this);
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.onMessageSubmit = this.onMessageSubmit.bind(this);
+        this.addMessageToChat = this.addMessageToChat.bind(this);
 
         this.state = {
             stream: false,
             videoJsOptions: null,
-            viewerUsername: '',
+            viewerUser: null,
             displayName: '',
             profilePicURL: '',
             streamKey: '',
@@ -41,7 +44,7 @@ export default class LiveStream extends React.Component {
     async fillComponent() {
         await Promise.all([
             this.getStreamInfo(),
-            this.getViewerUsername()
+            this.getViewerUser()
         ]);
         this.connectToSocketIO();
     }
@@ -89,10 +92,10 @@ export default class LiveStream extends React.Component {
         });
     }
 
-    async getViewerUsername() {
+    async getViewerUser() {
         const res = await axios.get('/logged-in-user');
         this.setState({
-            viewerUsername: res.data.username
+            viewerUser: res.data
         });
     }
 
@@ -103,16 +106,8 @@ export default class LiveStream extends React.Component {
                 liveStreamUsername: streamUsername
             }
         });
-        this.socket.on(`onReceiveChatMessage_${streamUsername}`, ({viewerUsername, msg}) => {
-            this.setState({
-                chat: [...this.state.chat, {viewerUsername, msg}]
-            });
-        });
-        this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => {
-            this.setState({
-                viewCount
-            });
-        });
+        this.socket.on(`onReceiveChatMessage_${streamUsername}`, this.addMessageToChat);
+        this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
         this.socket.on(`onWentLive_${streamUsername}`, async () => {
             if (this.state.stream === false) {
                 await this.getStreamInfo();
@@ -122,9 +117,29 @@ export default class LiveStream extends React.Component {
             if (this.state.stream === true) {
                 this.setState({
                     stream: false,
-                    videoJsOptions: null
+                    videoJsOptions: null,
+                    chat: []
                 });
             }
+        });
+    }
+
+    addMessageToChat({viewerUser, msg}) {
+        const displayName = viewerUser.username === this.state.viewerUser.username ? <b>You: </b>
+            : (viewerUser.displayName || viewerUser.username) + ': ';
+
+        const chatMessage = (
+            <div className='ml-1' key={this.state.chat.length}>
+                <span>
+                    <img src={viewerUser.profilePicURL} width='25' height='25'
+                         alt={`${viewerUser.username} profile picture`} className='rounded-circle'/>
+                </span>
+                <span className='ml-1' style={{color: viewerUser.chatColour}}>{displayName}</span>
+                <span>{msg}</span>
+            </div>
+        );
+        this.setState({
+            chat: [...this.state.chat, chatMessage]
         });
     }
 
@@ -151,29 +166,19 @@ export default class LiveStream extends React.Component {
 
     onMessageSubmit() {
         if (this.state.msg) {
-            const viewerUsername = this.state.viewerUsername;
+            const viewerUser = this.state.viewerUser;
             const msg = this.state.msg;
-            this.socket.emit('onSendChatMessage', {viewerUsername, msg});
+            this.socket.emit('onSendChatMessage', {viewerUser, msg});
             this.setState({
                 msg: ''
             });
         }
     }
 
-    renderChat() {
-        return this.state.chat.map(({viewerUsername, msg}, index) => (
-            <div className='ml-1' key={index}>
-                <span style={{color: 'green'}}>{viewerUsername}: </span>
-                <span>{msg}</span>
-            </div>
-        ));
-    }
-
     componentDidUpdate() {
         const messages = document.getElementById('messages');
         if (messages) {
-            const downArrowHeight = 25;
-            const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + downArrowHeight;
+            const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + SCROLL_MARGIN_HEIGHT;
             if (isScrolledToBottom) {
                 messages.scrollTop = messages.scrollHeight - messages.clientHeight;
             }
@@ -197,7 +202,7 @@ export default class LiveStream extends React.Component {
     }
 
     renderChatInput() {
-        return !this.state.viewerUsername ? (
+        return !this.state.viewerUser.username ? (
             <div className='text-center mt-3'>
                 To participate in the chat, please <a href={`/login?redirectTo=${window.location.pathname}`}>log in</a>
             </div>
@@ -259,7 +264,7 @@ export default class LiveStream extends React.Component {
                     </Col>
                     <Col xs='12' sm='3'>
                         <div id='messages' className='chat-messages' style={{height: this.state.chatHeight + 'px'}}>
-                            {this.renderChat()}
+                            {this.state.chat}
                         </div>
                         {this.renderChatInput()}
                     </Col>

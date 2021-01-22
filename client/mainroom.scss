@@ -164,6 +164,13 @@ i {
 .chat-messages {
     overflow-wrap: break-word;
     overflow-y: auto;
+    -ms-overflow-style: none;  /* Hide scrollbar in IE and Edge */
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.chat-messages::-webkit-scrollbar {
+    display: none;
 }
 
 .chat-input {
