@@ -82,24 +82,14 @@ export default class UserProfile extends React.Component {
 
     async loadUserProfile() {
         try {
-            const promiseResults = await Promise.all([
+            await Promise.all([
                 this.getUserData(),
                 this.getUpcomingStreams(),
                 this.getLiveStreamIfLive(),
                 this.getRecordedStreams(),
                 this.getLoggedInUser()
             ]);
-            const user = promiseResults[0];
-            const scheduledStreams = promiseResults[1];
             this.setState({
-                profilePicURL: user.profilePicURL,
-                displayName: user.displayName,
-                location: user.location,
-                bio: user.bio,
-                chatColour: user.chatColour,
-                links: user.links,
-                numOfSubscribers: user.numOfSubscribers,
-                scheduledStreams,
                 loaded: true
             });
         } catch (err) {
@@ -113,7 +103,15 @@ export default class UserProfile extends React.Component {
 
     async getUserData() {
         const res = await axios.get(`/api/users/${this.props.match.params.username}`);
-        return res.data;
+        this.setState({
+            profilePicURL: res.data.profilePicURL,
+            displayName: res.data.displayName,
+            location: res.data.location,
+            bio: res.data.bio,
+            chatColour: res.data.chatColour,
+            links: res.data.links,
+            numOfSubscribers: res.data.numOfSubscribers,
+        });
     }
 
     async getUpcomingStreams() {
@@ -123,7 +121,9 @@ export default class UserProfile extends React.Component {
                 scheduleStartTime: this.state.upcomingStreamsStartTime.toDate()
             }
         });
-        return res.data.scheduledStreams;
+        this.setState({
+            scheduledStreams: res.data.scheduledStreams
+        });
     }
 
     async getLoggedInUser() {
@@ -134,7 +134,7 @@ export default class UserProfile extends React.Component {
         }, async () => {
             await Promise.all([
                 this.isLoggedInUserSubscribed(),
-                this.getNonSubscribedScheduledStreams()
+                this.getScheduledStreamsInLoggedInUserSchedule()
             ]);
         });
     }
@@ -148,7 +148,7 @@ export default class UserProfile extends React.Component {
         }
     }
 
-    async getNonSubscribedScheduledStreams() {
+    async getScheduledStreamsInLoggedInUserSchedule() {
         if (this.state.loggedInUser && this.state.loggedInUser !== this.props.match.params.username) {
             const res = await axios.get(`/api/users/${this.state.loggedInUser}/schedule/non-subscribed`, {
                 params: {

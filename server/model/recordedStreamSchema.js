@@ -20,14 +20,17 @@ const RecordedStreamSchema = new Schema({
 RecordedStreamSchema.pre('findOneAndDelete', async function() {
     const recordedStream = await this.model.findOne(this.getQuery());
     if (recordedStream) {
-        LOGGER.debug('Executing pre-findOneAndDelete middleware for RecordedStream (_id: {})', recordedStream._id);
         await deleteVideoAndThumbnail(recordedStream);
         LOGGER.debug('Deleting RecordedStream (_id: {})', recordedStream._id);
     }
 });
 
+RecordedStreamSchema.post('findOneAndDelete', async function() {
+    LOGGER.debug('Successfully deleted RecordedStream (_id: {})', this.getQuery()._id);
+});
+
 async function deleteVideoAndThumbnail(recordedStream) {
-    LOGGER.debug('Deleting video (URL: {}) and thumbnail (URL: {}) for recorded stream (_id: {})',
+    LOGGER.debug('Deleting video (URL: {}) and thumbnail (URL: {}) in S3 for RecordedStream (_id: {})',
         recordedStream.videoURL, recordedStream.thumbnailURL, recordedStream._id);
 
     const promises = []
@@ -42,6 +45,8 @@ async function deleteVideoAndThumbnail(recordedStream) {
     }
 
     await Promise.all(promises);
+
+    LOGGER.debug('Successfully deleted video and thumbnail in S3 for RecordedStream (_id: {})', recordedStream._id);
 }
 
 RecordedStreamSchema.plugin(mongoosePaginate);
