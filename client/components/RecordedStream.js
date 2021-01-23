@@ -192,7 +192,7 @@ export default class RecordedStream extends React.Component {
         return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
             <Container fluid className='remove-padding-lr'>
                 <Row className='remove-margin-r'>
-                    <Col className='remove-padding-r' xs='12' sm='9'>
+                    <Col className='remove-padding-r' xs='12' md='9'>
                         <ReactHeight onHeightReady={height => this.setVideoHeight(height)}>
                             <div data-vjs-player>
                                 <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
@@ -205,18 +205,19 @@ export default class RecordedStream extends React.Component {
                                         <tr>
                                             <td>
                                                 <Link to={`/user/${this.state.username}`}>
-                                                    <img className='rounded-circle' src={this.state.profilePicURL} width='75' height='75'
+                                                    <img className='rounded-circle' src={this.state.profilePicURL}
+                                                         width='75' height='75'
                                                          alt={`${this.state.username} profile picture`}/>
                                                 </Link>
                                             </td>
                                             <td valign='middle'>
                                                 <div className='ml-2'>
-                                                    <h3 className='text-nowrap'>
+                                                    <h3>
                                                         <Link to={`/user/${this.state.username}`}>
                                                             {this.state.displayName || this.state.username}
                                                         </Link>
-                                                            {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                                                        </h3>
+                                                        {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                                    </h3>
                                                     <h6>
                                                         <Link to={`/genre/${this.state.streamGenre}`}>
                                                             {this.state.streamGenre}
@@ -235,7 +236,7 @@ export default class RecordedStream extends React.Component {
                             </div>
                         </ReactHeight>
                     </Col>
-                    <Col xs='12' sm='3' className='remove-padding-lr'>
+                    <Col xs='12' md='3' className='stream-sidebar'>
                         {this.renderRecordedStreams()}
                     </Col>
                 </Row>

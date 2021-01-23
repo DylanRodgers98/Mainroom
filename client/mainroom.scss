@@ -212,6 +212,11 @@ i {
         border-bottom-left-radius: 0;
         border-top-right-radius: 0.25rem !important;
     }
+
+    .stream-sidebar {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
 }
 
 @include media-breakpoint-up(sm) {
@@ -223,6 +228,10 @@ i {
     .search-button {
         border-top-left-radius: 0;
         border-top-right-radius: 0;
+    }
+
+    .stream-sidebar {
+        padding-right: 0 !important;
     }
 }
 

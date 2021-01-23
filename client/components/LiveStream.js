@@ -218,7 +218,7 @@ export default class LiveStream extends React.Component {
         return this.state.stream ? (
             <Container fluid className='remove-padding-lr'>
                 <Row className='remove-margin-r no-gutters'>
-                    <Col xs='12' sm='9'>
+                    <Col xs='12' md='9'>
                         <ReactHeight onHeightReady={height => this.setChatHeight(height)}>
                             <div data-vjs-player>
                                 <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
@@ -262,7 +262,7 @@ export default class LiveStream extends React.Component {
                             </div>
                         </ReactHeight>
                     </Col>
-                    <Col xs='12' sm='3'>
+                    <Col xs='12' md='3'>
                         <div id='messages' className='chat-messages' style={{height: this.state.chatHeight + 'px'}}>
                             {this.state.chat}
                         </div>
