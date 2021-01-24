@@ -3,6 +3,7 @@ import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Col, Button} from 'reactstrap';
+import {shortenNumber} from '../utils/numberUtils';
 
 const STARTING_PAGE = 1;
 
@@ -205,7 +206,9 @@ export default class LiveStreams extends React.Component {
         const liveStreams = this.state.liveStreams.map((liveStream, index) => (
             <Col className='stream margin-bottom-thick' key={index}>
                 <span className='live-label'>LIVE</span>
-                <span className='view-count'>{liveStream.viewCount} viewer{liveStream.viewCount === 1 ? '' : 's'}</span>
+                <span className='view-count'>
+                    {shortenNumber(liveStream.viewCount)} viewer{liveStream.viewCount === 1 ? '' : 's'}
+                </span>
                 <Link to={`/user/${liveStream.username}/live`}>
                     <img className='thumbnail' src={liveStream.thumbnailURL}
                          alt={`${liveStream.username} Stream Thumbnail`}/>
@@ -270,7 +273,10 @@ export default class LiveStreams extends React.Component {
     renderPastStreams() {
         const pastStreams = this.state.recordedStreams.map((recordedStream, index) => (
             <Col className='stream margin-bottom-thick' key={index}>
-                <span className='view-count'>{recordedStream.viewCount} view{recordedStream.viewCount === 1 ? '' : 's'}</span>
+                <span className='video-duration'>{recordedStream.videoDuration}</span>
+                <span className='view-count'>
+                    {shortenNumber(recordedStream.viewCount)} view{recordedStream.viewCount === 1 ? '' : 's'}
+                </span>
                 <Link to={`/stream/${recordedStream._id}`}>
                     <img className='thumbnail' src={recordedStream.thumbnailURL}
                          alt={`${recordedStream.title} Stream Thumbnail`}/>

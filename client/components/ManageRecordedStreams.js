@@ -4,6 +4,7 @@ import {Link} from 'react-router-dom';
 import moment from 'moment';
 import axios from 'axios';
 import config from '../../mainroom.config';
+import {shortenNumber} from '../utils/numberUtils';
 
 const STARTING_PAGE = 1;
 
@@ -342,6 +343,10 @@ export default class ManageRecordedStreams extends React.Component {
             return (
                 <Row key={index} className='margin-bottom-thick'>
                     <Col className='stream' md='6' lg='4'>
+                        <span className='video-duration'>{stream.videoDuration}</span>
+                        <span className='view-count'>
+                            {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'}
+                        </span>
                         <Link to={`/stream/${stream._id}`}>
                             <img className='w-100' src={stream.thumbnailURL}
                                  alt={`${stream.title} Stream Thumbnail`}/>
@@ -356,7 +361,6 @@ export default class ManageRecordedStreams extends React.Component {
                         </h5>
                         {stream.genre || stream.category ? genreAndCategory : undefined}
                         <h6>{timestamp}</h6>
-                        <h6>{stream.viewCount} view{stream.viewCount === 1 ? '' : 's'}</h6>
                     </Col>
                 </Row>
             );

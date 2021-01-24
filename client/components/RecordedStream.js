@@ -5,8 +5,9 @@ import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Container, Row, Col, Button} from 'reactstrap';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
-import {timeSince} from '../utils/DateUtils';
+import {timeSince} from '../utils/dateUtils';
 import moment from 'moment';
+import {shortenNumber} from '../utils/numberUtils';
 
 const STARTING_PAGE = 1;
 
@@ -146,6 +147,9 @@ export default class RecordedStream extends React.Component {
             return stream._id === this.props.match.params.streamId ? undefined : (
                 <Row key={index} className='mt-2 pl-2'>
                     <Col className='stream' xs='6'>
+                        <span className='view-count'>
+                            {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'}
+                        </span>
                         <Link to={`/stream/${stream._id}`}>
                             <img className='w-100' src={stream.thumbnailURL}
                                  alt={`${stream.title} Stream Thumbnail`}/>
@@ -158,9 +162,7 @@ export default class RecordedStream extends React.Component {
                             </Link>
                         </div>
                         {stream.genre || stream.category ? genreAndCategory : undefined}
-                        <h6>
-                            {stream.viewCount} view{stream.viewCount === 1 ? '' : 's'} · {timeSince(stream.timestamp)}
-                        </h6>
+                        <h6>{timeSince(stream.timestamp)}</h6>
                     </Col>
                 </Row>
             );

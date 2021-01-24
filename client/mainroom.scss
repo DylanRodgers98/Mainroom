@@ -39,6 +39,7 @@ i {
         left: 20px;
         background-color: red;
         color: white;
+        font-size: 14px;
         padding: 1px 5px;
         border-radius: 3px;
     }
@@ -49,6 +50,18 @@ i {
         right: 20px;
         background-color: rgba(0, 0, 0, 0.5);
         color: white;
+        font-size: 14px;
+        padding: 1px 5px;
+        border-radius: 3px;
+    }
+
+    .video-duration {
+        position: absolute;
+        top: 6px;
+        left: 20px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-size: 14px;
         padding: 1px 5px;
         border-radius: 3px;
     }

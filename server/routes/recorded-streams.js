@@ -12,7 +12,7 @@ router.get('/', async (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: '_id user timestamp title genre category tags thumbnailURL viewCount',
+        select: '_id user timestamp title genre category tags thumbnailURL viewCount videoDuration',
         populate: {
             path: 'user',
             select: 'username displayName profilePicURL'
