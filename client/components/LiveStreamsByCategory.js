@@ -106,36 +106,37 @@ export default class LiveStreamsByCategory extends React.Component {
                 <span className='live-label'>LIVE</span>
                 <span className='view-count'>{liveStream.viewCount} viewer{liveStream.viewCount === 1 ? '' : 's'}</span>
                 <Link to={`/user/${liveStream.username}/live`}>
-                    <div className='stream-thumbnail'>
-                        <img src={liveStream.thumbnailURL} alt={`${liveStream.username} Stream Thumbnail`}/>
-                    </div>
+                    <img className='thumbnail' src={liveStream.thumbnailURL}
+                         alt={`${liveStream.username} Stream Thumbnail`}/>
                 </Link>
-                <table>
+                <table className='stream-details'>
                     <tbody>
                         <tr>
                             <td>
                                 <Link to={`/user/${liveStream.username}`}>
-                                    <img className='rounded-circle my-2' src={liveStream.profilePicURL}
+                                    <img className='rounded-circle m-2' src={liveStream.profilePicURL}
                                          width='50' height='50'
                                          alt={`${liveStream.username} profile picture`}/>
                                 </Link>
                             </td>
-                            <td valign='middle'>
-                                <div className='ml-2'>
-                                    <h5>
-                                        <Link to={`/user/${liveStream.username}`}>
-                                            {liveStream.displayName || liveStream.username}
+                            <td valign='middle' className='w-100'>
+                                <h5>
+                                    <Link to={`/user/${liveStream.username}`}>
+                                        {liveStream.displayName || liveStream.username}
+                                    </Link>
+                                    <span className='black-link'>
+                                        <Link to={`/user/${liveStream.username}/live`}>
+                                            {liveStream.title ? ` - ${liveStream.title}` : ''}
                                         </Link>
-                                        {liveStream.title ? ` - ${liveStream.title}` : ''}
-                                    </h5>
-                                    <h6>
-                                        <Link to={`/genre/${liveStream.genre}`}>
-                                            {liveStream.genre}
-                                        </Link> <Link to={`/category/${liveStream.category}`}>
-                                            {liveStream.category}
-                                        </Link>
-                                    </h6>
-                                </div>
+                                    </span>
+                                </h5>
+                                <h6>
+                                    <Link to={`/genre/${liveStream.genre}`}>
+                                        {liveStream.genre}
+                                    </Link> <Link to={`/category/${liveStream.category}`}>
+                                        {liveStream.category}
+                                    </Link>
+                                </h6>
                             </td>
                         </tr>
                     </tbody>

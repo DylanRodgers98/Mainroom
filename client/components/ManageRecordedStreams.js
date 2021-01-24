@@ -235,7 +235,7 @@ export default class ManageRecordedStreams extends React.Component {
                                     <h5 className='mt-2'>Title:</h5>
                                 </td>
                                 <td>
-                                    <input className='settings-title rounded-border' type='text'
+                                    <input className='w-100 rounded-border' type='text'
                                            value={this.state.selectedStreamTitle} onChange={this.setTitle}/>
                                 </td>
                             </tr>
@@ -343,9 +343,8 @@ export default class ManageRecordedStreams extends React.Component {
                 <Row key={index} className='margin-bottom-thick'>
                     <Col className='stream' md='6' lg='4'>
                         <Link to={`/stream/${stream._id}`}>
-                            <div className='stream-thumbnail'>
-                                <img src={stream.thumbnailURL} alt={`${stream.title} Stream Thumbnail`}/>
-                            </div>
+                            <img className='w-100' src={stream.thumbnailURL}
+                                 alt={`${stream.title} Stream Thumbnail`}/>
                         </Link>
                     </Col>
                     <Col md='6' lg='8'>

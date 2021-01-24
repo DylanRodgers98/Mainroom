@@ -244,7 +244,7 @@ export default class Schedule extends React.Component {
                                     <h5 className='mt-2'>Title:</h5>
                                 </td>
                                 <td>
-                                    <input className='settings-title rounded-border' type='text'
+                                    <input className='w-100 rounded-border' type='text'
                                            value={this.state.scheduleStreamTitle} onChange={this.setTitle}/>
                                 </td>
                             </tr>

@@ -227,16 +227,16 @@ export default class UserProfile extends React.Component {
     renderSubscribeOrEditProfileButton() {
         return this.state.loggedInUser ? (
             this.state.loggedInUser === this.props.match.params.username ? (
-                <Button className='btn-dark subscribe-button' onClick={this.editProfileToggle}>
+                <Button className='btn-dark w-100' onClick={this.editProfileToggle}>
                     Edit Profile
                 </Button>
             ) : (
-                <Button className='btn-dark subscribe-button' onClick={this.onClickSubscribeButton}>
+                <Button className='btn-dark w-100' onClick={this.onClickSubscribeButton}>
                     {this.state.isLoggedInUserSubscribed ? 'Subscribed' : 'Subscribe'}
                 </Button>
             )
         ) : (
-            <Button className='btn-dark subscribe-button' href={`/login?redirectTo=${window.location.pathname}`}>
+            <Button className='btn-dark w-100' href={`/login?redirectTo=${window.location.pathname}`}>
                 Subscribe
             </Button>
         );
@@ -263,10 +263,8 @@ export default class UserProfile extends React.Component {
                         <span className='live-label'>LIVE</span>
                         <span className='view-count'>{this.state.streamViewCount} viewer{this.state.streamViewCount === 1 ? '' : 's'}</span>
                         <Link to={`/user/${this.props.match.params.username}/live`}>
-                            <div className='stream-thumbnail'>
-                                <img src={this.state.streamThumbnailUrl}
-                                     alt={`${this.props.match.params.username} Stream Thumbnail`}/>
-                            </div>
+                            <img className='w-100' src={this.state.streamThumbnailUrl}
+                                 alt={`${this.props.match.params.username} Stream Thumbnail`}/>
                         </Link>
                     </Col>
                     <Col md='6'>
@@ -392,9 +390,8 @@ export default class UserProfile extends React.Component {
                 <Row key={index} className='margin-bottom-thick'>
                     <Col className='stream' md='6' lg='4'>
                         <Link to={`/stream/${stream._id}`}>
-                            <div className='stream-thumbnail'>
-                                <img src={stream.thumbnailURL} alt={`${stream.title} Stream Thumbnail`}/>
-                            </div>
+                            <img className='w-100' src={stream.thumbnailURL}
+                                 alt={`${stream.title} Stream Thumbnail`}/>
                         </Link>
                     </Col>
                     <Col md='6' lg='8'>

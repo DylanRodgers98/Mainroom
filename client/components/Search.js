@@ -207,36 +207,37 @@ export default class LiveStreams extends React.Component {
                 <span className='live-label'>LIVE</span>
                 <span className='view-count'>{liveStream.viewCount} viewer{liveStream.viewCount === 1 ? '' : 's'}</span>
                 <Link to={`/user/${liveStream.username}/live`}>
-                    <div className='stream-thumbnail'>
-                        <img src={liveStream.thumbnailURL} alt={`${liveStream.username} Stream Thumbnail`}/>
-                    </div>
+                    <img className='thumbnail' src={liveStream.thumbnailURL}
+                         alt={`${liveStream.username} Stream Thumbnail`}/>
                 </Link>
-                <table>
+                <table className='stream-details'>
                     <tbody>
                         <tr>
                             <td>
                                 <Link to={`/user/${liveStream.username}`}>
-                                    <img className='rounded-circle my-2' src={liveStream.profilePicURL}
+                                    <img className='rounded-circle m-2' src={liveStream.profilePicURL}
                                          width='50' height='50'
                                          alt={`${liveStream.username} profile picture`}/>
                                 </Link>
                             </td>
-                            <td valign='middle'>
-                                <div className='ml-2'>
-                                    <h5>
-                                        <Link to={`/user/${liveStream.username}`}>
-                                            {liveStream.displayName || liveStream.username}
+                            <td valign='middle' className='w-100'>
+                                <h5>
+                                    <Link to={`/user/${liveStream.username}`}>
+                                        {liveStream.displayName || liveStream.username}
+                                    </Link>
+                                    <span className='black-link'>
+                                        <Link to={`/user/${liveStream.username}/live`}>
+                                            {liveStream.title ? ` - ${liveStream.title}` : ''}
                                         </Link>
-                                        {liveStream.title ? ` - ${liveStream.title}` : ''}
-                                    </h5>
-                                    <h6>
-                                        <Link to={`/genre/${liveStream.genre}`}>
-                                            {liveStream.genre}
-                                        </Link> <Link to={`/category/${liveStream.category}`}>
-                                            {liveStream.category}
-                                        </Link>
-                                    </h6>
-                                </div>
+                                    </span>
+                                </h5>
+                                <h6>
+                                    <Link to={`/genre/${liveStream.genre}`}>
+                                        {liveStream.genre}
+                                    </Link> <Link to={`/category/${liveStream.category}`}>
+                                        {liveStream.category}
+                                    </Link>
+                                </h6>
                             </td>
                         </tr>
                     </tbody>
@@ -271,36 +272,37 @@ export default class LiveStreams extends React.Component {
             <Col className='stream margin-bottom-thick' key={index}>
                 <span className='view-count'>{recordedStream.viewCount} view{recordedStream.viewCount === 1 ? '' : 's'}</span>
                 <Link to={`/stream/${recordedStream._id}`}>
-                    <div className='stream-thumbnail'>
-                        <img src={recordedStream.thumbnailURL} alt={`${recordedStream.title} Stream Thumbnail`}/>
-                    </div>
+                    <img className='thumbnail' src={recordedStream.thumbnailURL}
+                         alt={`${recordedStream.title} Stream Thumbnail`}/>
                 </Link>
-                <table>
+                <table className='stream-details'>
                     <tbody>
                         <tr>
                             <td>
                                 <Link to={`/user/${recordedStream.user.username}`}>
-                                    <img className='rounded-circle my-2' src={recordedStream.user.profilePicURL}
+                                    <img className='rounded-circle m-2' src={recordedStream.user.profilePicURL}
                                          width='50' height='50'
                                          alt={`${recordedStream.user.username} profile picture`}/>
                                 </Link>
                             </td>
                             <td valign='middle'>
-                                <div className='ml-2'>
-                                    <h5>
-                                        <Link to={`/user/${recordedStream.user.username}`}>
-                                            {recordedStream.user.displayName || recordedStream.user.username}
+                                <h5>
+                                    <Link to={`/user/${recordedStream.user.username}`}>
+                                        {recordedStream.user.displayName || recordedStream.user.username}
+                                    </Link>
+                                    <span className='black-link'>
+                                        <Link to={`/stream/${recordedStream._id}`}>
+                                            {recordedStream.title ? ` - ${recordedStream.title}` : ''}
                                         </Link>
-                                        {recordedStream.title ? ` - ${recordedStream.title}` : ''}
-                                    </h5>
-                                    <h6>
-                                        <Link to={`/genre/${recordedStream.genre}`}>
-                                            {recordedStream.genre}
-                                        </Link> <Link to={`/category/${recordedStream.category}`}>
-                                            {recordedStream.category}
-                                        </Link>
-                                    </h6>
-                                </div>
+                                    </span>
+                                </h5>
+                                <h6>
+                                    <Link to={`/genre/${recordedStream.genre}`}>
+                                        {recordedStream.genre}
+                                    </Link> <Link to={`/category/${recordedStream.category}`}>
+                                        {recordedStream.category}
+                                    </Link>
+                                </h6>
                             </td>
                         </tr>
                     </tbody>

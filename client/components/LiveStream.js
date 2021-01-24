@@ -225,41 +225,37 @@ export default class LiveStream extends React.Component {
                             </div>
                         </ReactHeight>
                         <ReactHeight onHeightReady={height => this.setChatInputHeight(height)}>
-                            <div className='stream-headings'>
-                                <table className='ml-2'>
-                                    <tbody>
-                                        <tr>
-                                            <td>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <Link to={`/user/${this.props.match.params.username}`}>
+                                                <img className='rounded-circle m-2' src={this.state.profilePicURL}
+                                                     width='75' height='75'
+                                                     alt={`${this.props.match.params.username} profile picture`}/>
+                                            </Link>
+                                        </td>
+                                        <td valign='middle'>
+                                            <h3>
                                                 <Link to={`/user/${this.props.match.params.username}`}>
-                                                    <img className='rounded-circle my-2' src={this.state.profilePicURL}
-                                                         width='75' height='75'
-                                                         alt={`${this.props.match.params.username} profile picture`}/>
+                                                    {this.state.displayName || this.props.match.params.username}
                                                 </Link>
-                                            </td>
-                                            <td valign='middle'>
-                                                <div className='ml-2'>
-                                                    <h3>
-                                                        <Link to={`/user/${this.props.match.params.username}`}>
-                                                            {this.state.displayName || this.props.match.params.username}
-                                                        </Link>
-                                                        {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                                                    </h3>
-                                                    <h6>
-                                                        <Link to={`/genre/${this.state.streamGenre}`}>
-                                                            {this.state.streamGenre}
-                                                        </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                                            {this.state.streamCategory}
-                                                        </Link>
-                                                    </h6>
-                                                    <h6>
-                                                        {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'}
-                                                    </h6>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                                {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                            </h3>
+                                            <h6>
+                                                <Link to={`/genre/${this.state.streamGenre}`}>
+                                                    {this.state.streamGenre}
+                                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                                    {this.state.streamCategory}
+                                                </Link>
+                                            </h6>
+                                            <h6>
+                                                {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'}
+                                            </h6>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </ReactHeight>
                     </Col>
                     <Col xs='12' md='3'>

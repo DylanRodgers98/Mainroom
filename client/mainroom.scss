@@ -5,6 +5,10 @@
 @import '../node_modules/video.js/dist/video-js.css';
 @import '../node_modules/react-calendar-timeline/lib/Timeline.css';
 
+body {
+    background-color: #f7f7f8;
+}
+
 .rounded-border {
     border-width: 1.5px;
     border-radius: 3px;
@@ -18,10 +22,6 @@
 .btn-dark:hover:not(.disabled) {
     background-color: darkred !important;
     border-color: darkred !important;
-}
-
-.settings-title {
-    width: 100%;
 }
 
 i {
@@ -40,21 +40,29 @@ i {
         background-color: red;
         color: white;
         padding: 1px 5px;
-    }
-
-    .stream-thumbnail {
-        img {
-            width: 100%;
-        }
+        border-radius: 3px;
     }
 
     .view-count {
         position: absolute;
         top: 6px;
         right: 20px;
-        background-color: black;
+        background-color: rgba(0, 0, 0, 0.5);
         color: white;
         padding: 1px 5px;
+        border-radius: 3px;
+    }
+
+    .thumbnail {
+        width: 100%;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+    }
+
+    .stream-details {
+        background-color: white;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
     }
 }
 
@@ -88,22 +96,6 @@ i {
         background-color: darkred !important;
         border-color: darkred !important;
     }
-}
-
-.go-live-button {
-    width: 100%;
-    background-color: #343a40 !important;
-    border-color: #343a40 !important;
-}
-
-.go-live-button:hover {
-    width: 100%;
-    background-color: #5a6268 !important;
-    border-color: #545b62 !important;
-}
-
-.subscribe-button {
-    width: 100%;
 }
 
 .black-link {
@@ -157,13 +149,10 @@ i {
     padding-right: 0 !important;
 }
 
-.full-height {
-    height: 100%;
-}
-
 .chat-messages {
     overflow-wrap: break-word;
     overflow-y: auto;
+    background-color: white;
     -ms-overflow-style: none;  /* Hide scrollbar in IE and Edge */
     scrollbar-width: none; /* Hide scrollbar in Firefox */
 }
@@ -176,6 +165,7 @@ i {
 .chat-input {
     position: absolute;
     width: 100%;
+    background-color: white;
 
     textarea {
         width: calc(100% - 90px);
@@ -196,10 +186,6 @@ i {
     }
 }
 
-.stream-headings {
-    background-color: #f0f0f0;
-}
-
 @include media-breakpoint-up(md) {
     .search-box {
         border-top-right-radius: 0;
@@ -216,6 +202,7 @@ i {
     .stream-sidebar {
         padding-left: 0 !important;
         padding-right: 0 !important;
+        background-color: white;
     }
 }
 
@@ -232,6 +219,7 @@ i {
 
     .stream-sidebar {
         padding-right: 0 !important;
+        background-color: white;
     }
 }
 

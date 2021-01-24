@@ -147,9 +147,8 @@ export default class RecordedStream extends React.Component {
                 <Row key={index} className='mt-2 pl-2'>
                     <Col className='stream' xs='6'>
                         <Link to={`/stream/${stream._id}`}>
-                            <div className='stream-thumbnail'>
-                                <img src={stream.thumbnailURL} alt={`${stream.title} Stream Thumbnail`}/>
-                            </div>
+                            <img className='w-100' src={stream.thumbnailURL}
+                                 alt={`${stream.title} Stream Thumbnail`}/>
                         </Link>
                     </Col>
                     <Col xs='6' className='remove-padding-lr'>
@@ -199,41 +198,37 @@ export default class RecordedStream extends React.Component {
                             </div>
                         </ReactHeight>
                         <ReactHeight onHeightReady={height => this.setStreamHeadingsHeight(height)}>
-                            <div className='stream-headings'>
-                                <table className='ml-2'>
-                                    <tbody>
-                                        <tr>
-                                            <td>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <Link to={`/user/${this.state.username}`}>
+                                                <img className='rounded-circle m-2' src={this.state.profilePicURL}
+                                                     width='75' height='75'
+                                                     alt={`${this.state.username} profile picture`}/>
+                                            </Link>
+                                        </td>
+                                        <td valign='middle'>
+                                            <h3>
                                                 <Link to={`/user/${this.state.username}`}>
-                                                    <img className='rounded-circle' src={this.state.profilePicURL}
-                                                         width='75' height='75'
-                                                         alt={`${this.state.username} profile picture`}/>
+                                                    {this.state.displayName || this.state.username}
                                                 </Link>
-                                            </td>
-                                            <td valign='middle'>
-                                                <div className='ml-2'>
-                                                    <h3>
-                                                        <Link to={`/user/${this.state.username}`}>
-                                                            {this.state.displayName || this.state.username}
-                                                        </Link>
-                                                        {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                                                    </h3>
-                                                    <h6>
-                                                        <Link to={`/genre/${this.state.streamGenre}`}>
-                                                            {this.state.streamGenre}
-                                                        </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                                            {this.state.streamCategory}
-                                                        </Link>
-                                                    </h6>
-                                                    <h6>
-                                                        {this.state.viewCount} view{this.state.viewCount === 1 ? '' : 's'} · {this.state.streamTimestamp}
-                                                    </h6>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                                {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                            </h3>
+                                            <h6>
+                                                <Link to={`/genre/${this.state.streamGenre}`}>
+                                                    {this.state.streamGenre}
+                                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
+                                                    {this.state.streamCategory}
+                                                </Link>
+                                            </h6>
+                                            <h6>
+                                                {this.state.viewCount} view{this.state.viewCount === 1 ? '' : 's'} · {this.state.streamTimestamp}
+                                            </h6>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </ReactHeight>
                     </Col>
                     <Col xs='12' md='3' className='stream-sidebar'>
