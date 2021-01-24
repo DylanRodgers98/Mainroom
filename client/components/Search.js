@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Container, Row, Col, Button} from 'reactstrap';
+import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 
 const STARTING_PAGE = 1;

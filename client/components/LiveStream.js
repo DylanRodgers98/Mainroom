@@ -3,7 +3,7 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Container, Row, Col} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 

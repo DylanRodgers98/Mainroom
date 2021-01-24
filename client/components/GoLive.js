@@ -2,7 +2,6 @@ import React from 'react';
 import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
-import config from '../../mainroom.config';
 
 const RTMP_SERVER_URL = `rtmp://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_RTMP_PORT}/live`;
 

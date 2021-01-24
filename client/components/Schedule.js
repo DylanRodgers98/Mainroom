@@ -2,7 +2,20 @@ import React from 'react';
 import axios from 'axios';
 import Timeline from 'react-calendar-timeline'
 import moment from 'moment'
-import {Col, Container, Row, Button, DropdownToggle, Dropdown, DropdownMenu, DropdownItem, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import {
+    Button,
+    Col,
+    Container,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownToggle,
+    Modal,
+    ModalBody,
+    ModalFooter,
+    ModalHeader,
+    Row
+} from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 
 export default class Schedule extends React.Component {

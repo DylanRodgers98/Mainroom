@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import Container from 'reactstrap/es/Container';
-import {Button, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from 'reactstrap';
 import _ from 'lodash';
 
 export default class Settings extends React.Component {

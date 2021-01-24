@@ -16,7 +16,11 @@ async function getThumbnail(streamKey) {
             : `https://${Bucket}.s3.amazonaws.com/${Key}`;
     } catch (err) {
         if (err.code === 'NotFound') {
-            return await generateStreamThumbnail({inputURL, Bucket, Key});
+            try {
+                return await generateStreamThumbnail({inputURL, Bucket, Key});
+            } catch (err) {
+                throw err;
+            }
         }
         throw err;
     }

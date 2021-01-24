@@ -80,7 +80,7 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-router.get('/:streamKey/thumbnail', async (req, res, next) => {
+router.get('/:streamKey/thumbnail', async (req, res) => {
     const streamKey = sanitise(req.params.streamKey);
     try {
         const thumbnailURL = await getThumbnail(streamKey);

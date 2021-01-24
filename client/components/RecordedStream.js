@@ -3,7 +3,7 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Container, Row, Col, Button} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {timeSince} from '../utils/dateUtils';
 import moment from 'moment';

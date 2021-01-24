@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
-import {Container, Row, Col, Button} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 
 const STARTING_PAGE = 1;
