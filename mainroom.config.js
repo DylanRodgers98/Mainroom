@@ -114,5 +114,5 @@ module.exports = {
             "Q&A"
         ]
     },
-    loadLivestreamTimeout: 10 * SECOND
+    loadLivestreamTimeout: 15 * SECOND
 };
