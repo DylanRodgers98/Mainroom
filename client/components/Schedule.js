@@ -190,7 +190,7 @@ export default class Schedule extends React.Component {
     }
 
     async addToSchedule() {
-        await axios.post('/api/scheduled-streams', {
+        const res = await axios.post('/api/scheduled-streams', {
             startTime: this.state.scheduleStreamStartTime,
             endTime: this.state.scheduleStreamEndTime,
             title: this.state.scheduleStreamTitle,
@@ -198,14 +198,22 @@ export default class Schedule extends React.Component {
             category: this.state.scheduleStreamCategory,
             tags: this.state.scheduleStreamTags
         });
-        this.scheduleStreamToggle();
-        this.setState({
-            scheduleGroups: [],
-            scheduleItems: [],
-            loaded: false
-        }, () => {
-            this.getSchedule();
-        });
+        if (res.status === 200) {
+            this.scheduleStreamToggle();
+            this.setState({
+                scheduleGroups: [],
+                scheduleItems: [],
+                scheduleStreamStartTime: moment(),
+                scheduleStreamEndTime: moment().add(1, 'hour'),
+                scheduleStreamTitle: '',
+                scheduleStreamGenre: '',
+                scheduleStreamCategory: '',
+                scheduleStreamTags: [],
+                loaded: false
+            }, () => {
+                this.getSchedule();
+            });
+        }
     }
 
     renderScheduleStream() {

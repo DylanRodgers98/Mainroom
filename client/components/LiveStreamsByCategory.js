@@ -4,6 +4,7 @@ import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
+import {displayGenreAndCategory} from "../utils/displayUtils";
 
 const STARTING_PAGE = 1;
 
@@ -109,10 +110,10 @@ export default class LiveStreamsByCategory extends React.Component {
                     {shortenNumber(liveStream.viewCount)} viewer{liveStream.viewCount === 1 ? '' : 's'}
                 </span>
                 <Link to={`/user/${liveStream.username}/live`}>
-                    <img className='thumbnail' src={liveStream.thumbnailURL}
+                    <img className='w-100' src={liveStream.thumbnailURL}
                          alt={`${liveStream.username} Stream Thumbnail`}/>
                 </Link>
-                <table className='stream-details'>
+                <table>
                     <tbody>
                         <tr>
                             <td>
@@ -134,11 +135,10 @@ export default class LiveStreamsByCategory extends React.Component {
                                     </span>
                                 </h5>
                                 <h6>
-                                    <Link to={`/genre/${liveStream.genre}`}>
-                                        {liveStream.genre}
-                                    </Link> <Link to={`/category/${liveStream.category}`}>
-                                        {liveStream.category}
-                                    </Link>
+                                    {displayGenreAndCategory({
+                                        genre: liveStream.genre,
+                                        category: liveStream.category
+                                    })}
                                 </h6>
                             </td>
                         </tr>

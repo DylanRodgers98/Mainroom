@@ -14,10 +14,11 @@ import {
     Row
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
-import moment from 'moment';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
+import {formatDate} from '../utils/dateUtils';
+import {displayGenreAndCategory} from "../utils/displayUtils";
 
 const STARTING_PAGE = 1;
 
@@ -325,17 +326,6 @@ export default class ManageRecordedStreams extends React.Component {
 
     renderPastStreams() {
         const pastStreams = this.state.recordedStreams.map((stream, index) => {
-            const genreAndCategory = (
-                <h6>
-                    <i>
-                        <Link to={`/genre/${stream.genre}`}>
-                            {stream.genre}
-                        </Link> <Link to={`/category/${stream.category}`}>
-                            {stream.category}
-                        </Link>
-                    </i>
-                </h6>
-            );
             const dropdown = (
                 <Dropdown className='float-right options-dropdown' isOpen={this.state.dropdownState[index]}
                           toggle={() => this.dropdownToggle(index)} size='sm'>
@@ -352,7 +342,6 @@ export default class ManageRecordedStreams extends React.Component {
                     </DropdownMenu>
                 </Dropdown>
             );
-            const timestamp = moment(stream.timestamp).format('ddd, DD MMM, yyyy · HH:mm');
             return (
                 <Row key={index} className='margin-bottom-thick'>
                     <Col className='stream' md='6' lg='4'>
@@ -372,8 +361,13 @@ export default class ManageRecordedStreams extends React.Component {
                                 {stream.title}
                             </Link>
                         </h5>
-                        {stream.genre || stream.category ? genreAndCategory : undefined}
-                        <h6>{timestamp}</h6>
+                        <h6>
+                            {displayGenreAndCategory({
+                                genre: stream.genre,
+                                category: stream.category
+                            })}
+                        </h6>
+                        <h6>{formatDate(stream.timestamp)}</h6>
                     </Col>
                 </Row>
             );

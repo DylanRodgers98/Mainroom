@@ -6,7 +6,7 @@
 @import '../node_modules/react-calendar-timeline/lib/Timeline.css';
 
 body {
-    background-color: #f7f7f8;
+    background-color: #F9F9F9;
 }
 
 .rounded-border {
@@ -64,18 +64,6 @@ i {
         font-size: 14px;
         padding: 1px 5px;
         border-radius: 3px;
-    }
-
-    .thumbnail {
-        width: 100%;
-        border-top-left-radius: 5px;
-        border-top-right-radius: 5px;
-    }
-
-    .stream-details {
-        background-color: white;
-        border-bottom-left-radius: 5px;
-        border-bottom-right-radius: 5px;
     }
 }
 

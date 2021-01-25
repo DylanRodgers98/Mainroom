@@ -6,6 +6,7 @@ import {Link} from 'react-router-dom';
 import {Button, Col, Container, Row} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
+import {displayGenreAndCategory} from "../utils/displayUtils";
 
 const SCROLL_MARGIN_HEIGHT = 30;
 
@@ -243,11 +244,10 @@ export default class LiveStream extends React.Component {
                                                 {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
                                             </h3>
                                             <h6>
-                                                <Link to={`/genre/${this.state.streamGenre}`}>
-                                                    {this.state.streamGenre}
-                                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                                    {this.state.streamCategory}
-                                                </Link>
+                                                {displayGenreAndCategory({
+                                                    genre: this.state.streamGenre,
+                                                    category: this.state.streamCategory
+                                                })}
                                             </h6>
                                             <h6>
                                                 {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'}

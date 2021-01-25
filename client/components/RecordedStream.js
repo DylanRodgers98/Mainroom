@@ -8,6 +8,7 @@ import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {timeSince} from '../utils/dateUtils';
 import moment from 'moment';
 import {shortenNumber} from '../utils/numberUtils';
+import {displayGenreAndCategory} from "../utils/displayUtils";
 
 const STARTING_PAGE = 1;
 
@@ -133,22 +134,11 @@ export default class RecordedStream extends React.Component {
 
     renderRecordedStreams() {
         const recordedStreams = this.state.recordedStreams.map((stream, index) => {
-            const genreAndCategory = (
-                <h6>
-                    <i>
-                        <Link to={`/genre/${stream.genre}`}>
-                            {stream.genre}
-                        </Link> <Link to={`/category/${stream.category}`}>
-                            {stream.category}
-                        </Link>
-                    </i>
-                </h6>
-            );
             return stream._id === this.props.match.params.streamId ? undefined : (
                 <Row key={index} className='mt-2 pl-2'>
                     <Col className='stream' xs='6'>
-                        <span className='view-count'>
-                            {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'}
+                        <span className='video-duration'>
+                            {stream.videoDuration || '00:00:00'}
                         </span>
                         <Link to={`/stream/${stream._id}`}>
                             <img className='w-100' src={stream.thumbnailURL}
@@ -161,8 +151,15 @@ export default class RecordedStream extends React.Component {
                                 {stream.title}
                             </Link>
                         </div>
-                        {stream.genre || stream.category ? genreAndCategory : undefined}
-                        <h6>{timeSince(stream.timestamp)}</h6>
+                        <h6>
+                            {displayGenreAndCategory({
+                                genre: stream.genre,
+                                category: stream.category
+                            })}
+                        </h6>
+                        <h6>
+                            {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'} · {timeSince(stream.timestamp)}
+                        </h6>
                     </Col>
                 </Row>
             );
@@ -218,11 +215,10 @@ export default class RecordedStream extends React.Component {
                                                 {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
                                             </h3>
                                             <h6>
-                                                <Link to={`/genre/${this.state.streamGenre}`}>
-                                                    {this.state.streamGenre}
-                                                </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                                    {this.state.streamCategory}
-                                                </Link>
+                                                {displayGenreAndCategory({
+                                                    genre: this.state.streamGenre,
+                                                    category: this.state.streamCategory
+                                                })}
                                             </h6>
                                             <h6>
                                                 {this.state.viewCount} view{this.state.viewCount === 1 ? '' : 's'} · {this.state.streamTimestamp}

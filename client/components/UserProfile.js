@@ -6,8 +6,9 @@ import moment from 'moment';
 import config from '../../mainroom.config';
 import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
-import {timeSince} from '../utils/dateUtils';
+import {formatDate, formatTime, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
+import {displayGenreAndCategory} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -277,11 +278,10 @@ export default class UserProfile extends React.Component {
                             </Link>
                         </h3>
                         <h5>
-                            <Link to={`/genre/${this.state.streamGenre}`}>
-                                {this.state.streamGenre}
-                            </Link> <Link to={`/category/${this.state.streamCategory}`}>
-                                {this.state.streamCategory}
-                            </Link>
+                            {displayGenreAndCategory({
+                                genre: this.state.streamGenre,
+                                category: this.state.streamCategory
+                            })}
                         </h5>
                     </Col>
                 </Row>
@@ -315,19 +315,6 @@ export default class UserProfile extends React.Component {
 
     renderUpcomingStreams() {
         const scheduledStreams = this.state.scheduledStreams.map((stream, index) => {
-            const genreAndCategory = (
-                <h6>
-                    <i>
-                        <Link to={`/genre/${stream.genre}`}>
-                            {stream.genre}
-                        </Link> <Link to={`/category/${stream.category}`}>
-                            {stream.category}
-                        </Link>
-                    </i>
-                </h6>
-            );
-            const startTime = moment(stream.startTime).format('ddd, DD MMM, yyyy · HH:mm');
-            const endTime = moment(stream.endTime).format('HH:mm');
             const addToScheduleButton = this.state.loggedInUser === this.props.match.params.username ? undefined : (
                 this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
                     <Button className='float-right btn-dark' size='sm' onClick={async () => await this.removeFromSchedule(stream._id)}>
@@ -340,11 +327,16 @@ export default class UserProfile extends React.Component {
                 )
             );
             return (
-                <Col key={index} md='6'>
+                <Col className='margin-bottom-thick' key={index} md='6'>
                     {addToScheduleButton}
                     <h5>{stream.title}</h5>
-                    {stream.genre || stream.category ? genreAndCategory : undefined}
-                    <p>{startTime}-{endTime}</p>
+                    <h6>
+                        {displayGenreAndCategory({
+                            genre: stream.genre,
+                            category: stream.category
+                        })}
+                    </h6>
+                    {formatDate(stream.startTime)}-{formatTime(stream.endTime)}
                 </Col>
             );
         });
@@ -377,42 +369,34 @@ export default class UserProfile extends React.Component {
     }
 
     renderPastStreams() {
-        const pastStreams = this.state.recordedStreams.map((stream, index) => {
-            const genreAndCategory = (
-                <h6>
-                    <i>
-                        <Link to={`/genre/${stream.genre}`}>
-                            {stream.genre}
-                        </Link> <Link to={`/category/${stream.category}`}>
-                            {stream.category}
-                        </Link>
-                    </i>
-                </h6>
-            );
-            return (
-                <Row key={index} className='margin-bottom-thick'>
-                    <Col className='stream' md='6' lg='4'>
-                        <span className='video-duration'>{stream.videoDuration}</span>
-                        <span className='view-count'>
-                            {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'}
-                        </span>
+        const pastStreams = this.state.recordedStreams.map((stream, index) => (
+            <Row key={index} className='margin-bottom-thick'>
+                <Col className='stream' md='6' lg='4'>
+                    <span className='video-duration'>{stream.videoDuration}</span>
+                    <span className='view-count'>
+                        {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'}
+                    </span>
+                    <Link to={`/stream/${stream._id}`}>
+                        <img className='w-100' src={stream.thumbnailURL}
+                             alt={`${stream.title} Stream Thumbnail`}/>
+                    </Link>
+                </Col>
+                <Col md='6' lg='8'>
+                    <h5 className='black-link'>
                         <Link to={`/stream/${stream._id}`}>
-                            <img className='w-100' src={stream.thumbnailURL}
-                                 alt={`${stream.title} Stream Thumbnail`}/>
+                            {stream.title}
                         </Link>
-                    </Col>
-                    <Col md='6' lg='8'>
-                        <h5 className='black-link'>
-                            <Link to={`/stream/${stream._id}`}>
-                                {stream.title}
-                            </Link>
-                        </h5>
-                        {stream.genre || stream.category ? genreAndCategory : undefined}
-                        <h6>{timeSince(stream.timestamp)}</h6>
-                    </Col>
-                </Row>
-            );
-        });
+                    </h5>
+                    <h6>
+                        {displayGenreAndCategory({
+                            genre: stream.genre,
+                            category: stream.category
+                        })}
+                    </h6>
+                    <h6>{timeSince(stream.timestamp)}</h6>
+                </Col>
+            </Row>
+        ));
 
         const manageRecordedStreamsButton = this.state.loggedInUser !== this.props.match.params.username ? undefined : (
             <div className='float-right'>

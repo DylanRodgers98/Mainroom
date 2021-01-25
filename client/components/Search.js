@@ -4,6 +4,8 @@ import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
+import {timeSince} from "../utils/dateUtils";
+import {displayGenreAndCategory} from "../utils/displayUtils";
 
 const STARTING_PAGE = 1;
 
@@ -210,10 +212,10 @@ export default class LiveStreams extends React.Component {
                     {shortenNumber(liveStream.viewCount)} viewer{liveStream.viewCount === 1 ? '' : 's'}
                 </span>
                 <Link to={`/user/${liveStream.username}/live`}>
-                    <img className='thumbnail' src={liveStream.thumbnailURL}
+                    <img className='w-100' src={liveStream.thumbnailURL}
                          alt={`${liveStream.username} Stream Thumbnail`}/>
                 </Link>
-                <table className='stream-details'>
+                <table>
                     <tbody>
                         <tr>
                             <td>
@@ -235,11 +237,10 @@ export default class LiveStreams extends React.Component {
                                     </span>
                                 </h5>
                                 <h6>
-                                    <Link to={`/genre/${liveStream.genre}`}>
-                                        {liveStream.genre}
-                                    </Link> <Link to={`/category/${liveStream.category}`}>
-                                        {liveStream.category}
-                                    </Link>
+                                    {displayGenreAndCategory({
+                                        genre: liveStream.genre,
+                                        category: liveStream.category
+                                    })}
                                 </h6>
                             </td>
                         </tr>
@@ -278,13 +279,13 @@ export default class LiveStreams extends React.Component {
                     {shortenNumber(recordedStream.viewCount)} view{recordedStream.viewCount === 1 ? '' : 's'}
                 </span>
                 <Link to={`/stream/${recordedStream._id}`}>
-                    <img className='thumbnail' src={recordedStream.thumbnailURL}
+                    <img className='w-100' src={recordedStream.thumbnailURL}
                          alt={`${recordedStream.title} Stream Thumbnail`}/>
                 </Link>
-                <table className='stream-details'>
+                <table>
                     <tbody>
                         <tr>
-                            <td>
+                            <td valign='top'>
                                 <Link to={`/user/${recordedStream.user.username}`}>
                                     <img className='rounded-circle m-2' src={recordedStream.user.profilePicURL}
                                          width='50' height='50'
@@ -303,12 +304,12 @@ export default class LiveStreams extends React.Component {
                                     </span>
                                 </h5>
                                 <h6>
-                                    <Link to={`/genre/${recordedStream.genre}`}>
-                                        {recordedStream.genre}
-                                    </Link> <Link to={`/category/${recordedStream.category}`}>
-                                        {recordedStream.category}
-                                    </Link>
+                                    {displayGenreAndCategory({
+                                        genre: recordedStream.genre,
+                                        category: recordedStream.category
+                                    })}
                                 </h6>
+                                <h6>{timeSince(recordedStream.timestamp)}</h6>
                             </td>
                         </tr>
                     </tbody>
@@ -342,8 +343,8 @@ export default class LiveStreams extends React.Component {
                 <h5>
                     <Link to={`/user/${user.username}`}>
                         <img src={user.profilePicURL} width='75' height='75'
-                             alt={`${user.username} profile picture`} className='mr-3 rounded-circle'/>
-                        {user.username}
+                             alt={`${user.username} profile picture`} className='m-2 rounded-circle'/>
+                        {user.displayName || user.username}
                     </Link>
                 </h5>
             </Col>

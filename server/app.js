@@ -38,7 +38,7 @@ mongoose.connect(databaseUri, {
         throw err;
     } else {
         // Reset user's view count properties, as they may still be non-zero due to a non-graceful server shutdown
-        LOGGER.debug(`Resetting viewCount and cumulativeViewCount properties to 0 for users with non-zero values for these properties`);
+        LOGGER.debug(`Resetting viewCount and cumulativeViewCount properties for users with non-zero values for these properties`);
         User.updateMany({
             'streamInfo.viewCount': {$gt: 0}
         }, {
@@ -177,15 +177,6 @@ cronJobs.startAll();
 process.on('SIGINT', async () => {
     LOGGER.info('Gracefully shutting down application...');
     try {
-        LOGGER.debug(`Resetting all users' viewCount and cumulativeViewCount properties to 0`);
-        const res = await User.updateMany({
-            'streamInfo.viewCount': {$gt: 0}
-        }, {
-            'streamInfo.viewCount': 0,
-            'streamInfo.cumulativeViewCount': 0
-        });
-        LOGGER.debug('Reset viewCount and cumulativeViewCount properties for {} users', res.nModified);
-
         LOGGER.debug('Disconnecting from database');
         await mongoose.disconnect();
         LOGGER.debug('Disconnected from database');
