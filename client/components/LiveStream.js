@@ -19,6 +19,8 @@ export default class LiveStream extends React.Component {
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.onMessageSubmit = this.onMessageSubmit.bind(this);
         this.addMessageToChat = this.addMessageToChat.bind(this);
+        this.startStreamFromSocket = this.startStreamFromSocket.bind(this);
+        this.endStreamFromSocket = this.endStreamFromSocket.bind(this);
 
         this.state = {
             stream: false,
@@ -109,12 +111,13 @@ export default class LiveStream extends React.Component {
         });
         this.socket.on(`onReceiveChatMessage_${streamUsername}`, this.addMessageToChat);
         this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
-        this.socket.on(`onWentLive_${streamUsername}`, () => this.startStreamFromSocket());
-        this.socket.on(`onStreamEnded_${streamUsername}`, () => this.endStreamFromSocket());
+        this.socket.on(`onWentLive_${streamUsername}`, this.startStreamFromSocket);
+        this.socket.on(`onStreamEnded_${streamUsername}`, this.endStreamFromSocket);
     }
 
     addMessageToChat({viewerUser, msg}) {
-        const displayName = viewerUser.username === this.state.viewerUser.username ? <b>You:</b>
+        const displayName = viewerUser.username === this.state.viewerUser.username
+            ? <b>You:</b>
             : (viewerUser.displayName || viewerUser.username) + ':';
 
         const chatMessage = (
@@ -149,6 +152,7 @@ export default class LiveStream extends React.Component {
         if (this.state.stream === true) {
             if (this.player) {
                 this.player.dispose();
+                this.player = null;
             }
             this.setState({
                 stream: false,
@@ -160,9 +164,13 @@ export default class LiveStream extends React.Component {
 
     componentWillUnmount() {
         this.socket.disconnect();
+        this.socket = null;
+
         if (this.player) {
             this.player.dispose();
+            this.player = null;
         }
+
         document.title = config.headTitle;
     }
 
