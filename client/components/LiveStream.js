@@ -6,7 +6,7 @@ import {Link} from 'react-router-dom';
 import {Button, Col, Container, Row} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
-import {displayGenreAndCategory} from "../utils/displayUtils";
+import {displayGenreAndCategory} from '../utils/displayUtils';
 
 const SCROLL_MARGIN_HEIGHT = 30;
 
@@ -109,33 +109,24 @@ export default class LiveStream extends React.Component {
         });
         this.socket.on(`onReceiveChatMessage_${streamUsername}`, this.addMessageToChat);
         this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
-        this.socket.on(`onWentLive_${streamUsername}`, async () => {
-            if (this.state.stream === false) {
-                await this.getStreamInfo();
-            }
-        });
-        this.socket.on(`onStreamEnded_${streamUsername}`, () => {
-            if (this.state.stream === true) {
-                this.setState({
-                    stream: false,
-                    videoJsOptions: null,
-                    chat: []
-                });
-            }
-        });
+        this.socket.on(`onWentLive_${streamUsername}`, () => this.startStreamFromSocket());
+        this.socket.on(`onStreamEnded_${streamUsername}`, () => this.endStreamFromSocket());
     }
 
     addMessageToChat({viewerUser, msg}) {
-        const displayName = viewerUser.username === this.state.viewerUser.username ? <b>You: </b>
-            : (viewerUser.displayName || viewerUser.username) + ': ';
+        const displayName = viewerUser.username === this.state.viewerUser.username ? <b>You:</b>
+            : (viewerUser.displayName || viewerUser.username) + ':';
 
         const chatMessage = (
             <div className='ml-1' key={this.state.chat.length}>
-                <span>
-                    <img src={viewerUser.profilePicURL} width='25' height='25'
-                         alt={`${viewerUser.username} profile picture`} className='rounded-circle'/>
+                <span className='black-link' title={`Go to ${viewerUser.displayName || viewerUser.username}'s profile`}>
+                    <Link to={`/user/${viewerUser.username}`}>
+                        <img src={viewerUser.profilePicURL} width='25' height='25'
+                             alt={`${viewerUser.username} profile picture`} className='rounded-circle'/>
+                        <span className='ml-1' style={{color: viewerUser.chatColour}}>{displayName}</span>
+                    </Link>
                 </span>
-                <span className='ml-1' style={{color: viewerUser.chatColour}}>{displayName}</span>
+                &nbsp;
                 <span>{msg}</span>
             </div>
         );
@@ -144,10 +135,33 @@ export default class LiveStream extends React.Component {
         });
     }
 
+    startStreamFromSocket() {
+        // stream is not available as soon as user goes live because .m3u8 playlist file needs to populate,
+        // so wait a timeout (which needs to be longer than the time of each video segment) before loading
+        setTimeout(async () => {
+            if (this.state.stream === false) {
+                await this.getStreamInfo();
+            }
+        }, config.loadLivestreamTimeout);
+    }
+
+    endStreamFromSocket() {
+        if (this.state.stream === true) {
+            if (this.player) {
+                this.player.dispose();
+            }
+            this.setState({
+                stream: false,
+                videoJsOptions: null,
+                chat: []
+            });
+        }
+    }
+
     componentWillUnmount() {
         this.socket.disconnect();
         if (this.player) {
-            this.player.dispose()
+            this.player.dispose();
         }
         document.title = config.headTitle;
     }

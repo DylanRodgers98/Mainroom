@@ -114,5 +114,5 @@ module.exports = {
             "Q&A"
         ]
     },
-    checkIfLiveInterval: THIRTY_SECONDS
+    loadLivestreamTimeout: 10 * SECOND
 };
