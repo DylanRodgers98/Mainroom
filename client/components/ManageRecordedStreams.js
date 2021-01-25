@@ -18,7 +18,7 @@ import axios from 'axios';
 import config from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDate} from '../utils/dateUtils';
-import {displayGenreAndCategory} from "../utils/displayUtils";
+import {displayGenreAndCategory} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 

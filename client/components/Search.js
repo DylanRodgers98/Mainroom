@@ -4,8 +4,8 @@ import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
-import {timeSince} from "../utils/dateUtils";
-import {displayGenreAndCategory} from "../utils/displayUtils";
+import {timeSince} from '../utils/dateUtils';
+import {displayGenreAndCategory} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 

@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
 import {Button, Col, Container, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayGenreAndCategory} from "../utils/displayUtils";
+import {displayGenreAndCategory} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 

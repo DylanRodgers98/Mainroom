@@ -8,7 +8,7 @@ import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {timeSince} from '../utils/dateUtils';
 import moment from 'moment';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayGenreAndCategory} from "../utils/displayUtils";
+import {displayGenreAndCategory} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
