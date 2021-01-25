@@ -48,9 +48,8 @@ mongoose.connect(databaseUri, {
             if (err) {
                 LOGGER.error(`An error occurred when resetting users' viewCount and cumulativeViewCount properties to 0: {}`, err);
                 throw err;
-            } else {
-                LOGGER.debug('Reset viewCount and cumulativeViewCount properties for {} users', res.nModified);
             }
+            LOGGER.debug('Reset viewCount and cumulativeViewCount properties for {} users', res.nModified);
         });
     }
 });
@@ -173,7 +172,7 @@ httpServer.listen(process.env.SERVER_HTTP_PORT, () => {
 nodeMediaServer.run();
 cronJobs.startAll();
 
-// On application shutdown, reset all users' view counts to 0, then disconnect from database
+// On application shutdown, then disconnect from database and close servers
 process.on('SIGINT', async () => {
     LOGGER.info('Gracefully shutting down application...');
     try {
@@ -182,6 +181,7 @@ process.on('SIGINT', async () => {
         LOGGER.debug('Disconnected from database');
 
         LOGGER.debug('Closing server');
+        nodeMediaServer.stop();
         await closeServer();
         LOGGER.debug('Server closed');
 
@@ -197,7 +197,7 @@ function closeServer() {
     return new Promise((resolve, reject) => {
         httpServer.close(err => {
             if (err) {
-                LOGGER.error('An error occurred when closing server: {}', err);
+                LOGGER.error('An error occurred when closing HTTP server: {}', err);
                 reject(err);
             } else {
                 resolve();
