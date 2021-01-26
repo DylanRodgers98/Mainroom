@@ -43,7 +43,7 @@ export default class MainroomNavbar extends React.Component {
             searchText: '',
             searchSubmitted: false,
             profileDropdownOpen: false,
-            loggedInUser: '',
+            loggedInUsername: '',
             profilePicURL: '',
             navbarOpen: false
         };
@@ -60,19 +60,12 @@ export default class MainroomNavbar extends React.Component {
         const res = await axios.get('/logged-in-user');
         if (res.data.username) {
             this.setState({
-                loggedInUser: res.data.username,
-                loggedInUserId: res.data._id
-            }, () => {
-                this.getProfilePicURL();
+                loggedInUsername: res.data.username,
+                loggedInUserId: res.data._id,
+                loggedInDisplayName: res.data.displayName,
+                profilePicURL: res.data.profilePicURL
             });
         }
-    }
-
-    async getProfilePicURL() {
-        const res = await axios.get(`/api/users/${this.state.loggedInUserId}/profile-pic`);
-        this.setState({
-            profilePicURL: res.data.profilePicURL
-        });
     }
 
     async getFilters() {
@@ -185,25 +178,34 @@ export default class MainroomNavbar extends React.Component {
         });
     }
 
+    isSmallBreakpoint() {
+        const mdBreakpointValue = window.getComputedStyle(document.documentElement)
+            .getPropertyValue('--breakpoint-md')
+            .replace('px', '');
+        return window.screen.width < mdBreakpointValue;
+    }
+
     renderLogInOrProfileDropdown() {
-        return this.state.loggedInUser ? (
+        return this.state.loggedInUsername ? (
             <Nav navbar>
                 <NavItem>
-                    <Dropdown className='navbar-menu navbar-dropdown text-center' nav inNavbar
+                    <Dropdown className='navbar-menu navbar-dropdown-no-hover text-center' nav inNavbar
                               isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
-                        <DropdownToggle caret>
+                        <DropdownToggle caret={this.isSmallBreakpoint()}>
                             <img className='rounded-circle' src={this.state.profilePicURL} width='25' height='25'
                                  alt='Menu'/>
+                            {!this.isSmallBreakpoint() ? undefined
+                                : <span className='ml-1'>{this.state.loggedInDisplayName || this.state.loggedInUsername}</span>}
                         </DropdownToggle>
                         <DropdownMenu right>
-                            <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`} onClick={this.closeNavbar}>
+                            <DropdownItem tag={Link} to={`/user/${this.state.loggedInUsername}`} onClick={this.closeNavbar}>
                                 Profile
                             </DropdownItem>
                             <DropdownItem tag={Link} to={'/schedule'} onClick={this.closeNavbar}>
                                 Schedule
                             </DropdownItem>
                             <DropdownItem tag={Link} onClick={this.closeNavbar}
-                                          to={`/user/${this.state.loggedInUser}/subscriptions`}>
+                                          to={`/user/${this.state.loggedInUsername}/subscriptions`}>
                                 Subscriptions
                             </DropdownItem>
                             <DropdownItem divider/>
