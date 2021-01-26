@@ -205,6 +205,14 @@ i {
         padding-right: 0 !important;
         background-color: white;
     }
+
+    .w-50-md {
+        width: 50% !important;
+    }
+
+    .w-25-md {
+        width: 25% !important;
+    }
 }
 
 @include media-breakpoint-up(sm) {
@@ -221,6 +229,16 @@ i {
     .stream-sidebar {
         padding-right: 0 !important;
         background-color: white;
+    }
+}
+
+@include media-breakpoint-up(xs) {
+    .w-100-xs {
+        width: 100%;
+    }
+
+    .w-50-xs {
+        width: 50%;
     }
 }
 
