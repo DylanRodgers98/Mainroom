@@ -216,6 +216,13 @@ export default class Schedule extends React.Component {
         }
     }
 
+    isNoMobileMode() {
+        const mdBreakpointValue = window.getComputedStyle(document.documentElement)
+            .getPropertyValue('--breakpoint-md')
+            .replace('px', '');
+        return window.screen.width >= mdBreakpointValue;
+    }
+
     renderScheduleStream() {
         const genreDropdownText = this.state.scheduleStreamGenre || 'Select a genre...';
         const categoryDropdownText = this.state.scheduleStreamCategory || 'Select a category...';
@@ -248,7 +255,8 @@ export default class Schedule extends React.Component {
                                     <DateTimeRangeContainer start={this.state.scheduleStreamStartTime}
                                                             end={this.state.scheduleStreamEndTime}
                                                             ranges={this.getDatePickerRange()}
-                                                            local={this.getDatePickerFormat()} noMobileMode={true}
+                                                            local={this.getDatePickerFormat()}
+                                                            noMobileMode={this.isNoMobileMode()}
                                                             applyCallback={this.scheduleStreamApplyDate} autoApply
                                                             style={{standaloneLayout: {display: 'flex', maxWidth: 'fit-content'}}}>
                                         <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
@@ -342,7 +350,8 @@ export default class Schedule extends React.Component {
                     <div className='float-right mb-1'>
                         <DateTimeRangeContainer ranges={this.getDatePickerRange()} local={this.getDatePickerFormat()}
                                                 start={this.state.startTime} end={this.state.endTime}
-                                                applyCallback={this.applyDate} leftMode={true} noMobileMode={true}>
+                                                applyCallback={this.applyDate} leftMode={true}
+                                                noMobileMode={this.isNoMobileMode()}>
                             <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
                                 <DropdownToggle caret>Select Time Period</DropdownToggle>
                             </Dropdown>
