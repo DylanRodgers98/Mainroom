@@ -294,7 +294,7 @@ export default class Settings extends React.Component {
                     <hr className='my-4'/>
                     <Row>
                         <Col xs='12'>
-                            <h5>Username:</h5>
+                            <h5>Username</h5>
                         </Col>
                         <Col xs='12'>
                             <input className='rounded-border w-25-md w-100-xs' type='text' value={this.state.username}
@@ -304,7 +304,7 @@ export default class Settings extends React.Component {
                             </div>
                         </Col>
                         <Col className='mt-2' xs='12'>
-                            <h5>Email Address:</h5>
+                            <h5>Email Address</h5>
                         </Col>
                         <Col xs='12'>
                             <input className='rounded-border w-25-md w-100-xs' type='text' value={this.state.email}
@@ -314,7 +314,7 @@ export default class Settings extends React.Component {
                             </div>
                         </Col>
                         <Col className='mt-2' xs='12'>
-                            <h5>Reset Password:</h5>
+                            <h5>Reset Password</h5>
                         </Col>
                         <Col xs='12'>
                             <Button className='btn-dark' size='sm' onClick={this.resetPasswordToggle}>
@@ -329,25 +329,25 @@ export default class Settings extends React.Component {
                         </Col>
                         <Col className='mt-2' xs='12'>
                             <form>
-                                <label>
-                                    Send an email when someone subscribes to me:
-                                    <input name='newSubscriber' className='ml-1' type='checkbox'
-                                           checked={this.state.emailSettings.newSubscriber}
-                                           onChange={this.handleEmailSettingsChange}/>
+                                <input name='newSubscriber' type='checkbox'
+                                       checked={this.state.emailSettings.newSubscriber}
+                                       onChange={this.handleEmailSettingsChange}/>
+                                <label className='ml-1' >
+                                    Send an email when someone subscribes to me
                                 </label>
                                 <br />
-                                <label>
-                                    Send an email when someone I am subscribed to goes live:
-                                    <input name='subscriptionWentLive' className='ml-1' type='checkbox'
-                                           checked={this.state.emailSettings.subscriptionWentLive}
-                                           onChange={this.handleEmailSettingsChange}/>
+                                <input name='subscriptionWentLive' type='checkbox'
+                                       checked={this.state.emailSettings.subscriptionWentLive}
+                                       onChange={this.handleEmailSettingsChange}/>
+                                <label className='ml-1' >
+                                    Send an email when someone I am subscribed to goes live
                                 </label>
                                 <br />
-                                <label>
-                                    Send an email when someone I am subscribed to schedules a livestream:
-                                    <input name='subscriptionCreatedScheduledStream' className='ml-1' type='checkbox'
-                                           checked={this.state.emailSettings.subscriptionCreatedScheduledStream}
-                                           onChange={this.handleEmailSettingsChange}/>
+                                <input name='subscriptionCreatedScheduledStream' type='checkbox'
+                                       checked={this.state.emailSettings.subscriptionCreatedScheduledStream}
+                                       onChange={this.handleEmailSettingsChange}/>
+                                <label className='ml-1' >
+                                    Send an email when someone I am subscribed to schedules a livestream
                                 </label>
                                 <br />
                                 <label>Send an email when someone I am subscribed to has a stream scheduled to start:

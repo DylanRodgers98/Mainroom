@@ -191,7 +191,7 @@ export default class GoLive extends React.Component {
                 <i>Copy and paste the Server URL and Stream Key into your streaming software</i>
                 <Row className='mt-3'>
                     <Col xs='12'>
-                        <h5>Server URL:</h5>
+                        <h5>Server URL</h5>
                     </Col>
                     <Col xs='12'>
                         <input id='serverUrlInput' className='rounded-border w-50-xs w-25-md' type='text'
@@ -202,7 +202,7 @@ export default class GoLive extends React.Component {
                         </Button>
                     </Col>
                     <Col className='mt-2' xs='12'>
-                        <h5>Stream Key:</h5>
+                        <h5>Stream Key</h5>
                     </Col>
                     <Col xs='12'>
                         <input id='streamKeyInput' className='rounded-border w-25' type='text'
@@ -217,14 +217,14 @@ export default class GoLive extends React.Component {
                         </Button>
                     </Col>
                     <Col className='mt-2' xs='12'>
-                        <h5>Title:</h5>
+                        <h5>Title</h5>
                     </Col>
                     <Col xs='12'>
                         <input className='w-100-xs w-50-md rounded-border' type='text' value={this.state.streamTitle}
                                onChange={this.setTitle}/>
                     </Col>
                     <Col className='mt-2' xs='12'>
-                        <h5>Genre:</h5>
+                        <h5>Genre</h5>
                     </Col>
                     <Col xs='12'>
                         <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
@@ -242,7 +242,7 @@ export default class GoLive extends React.Component {
                         </Dropdown>
                     </Col>
                     <Col className='mt-2' xs='12'>
-                        <h5>Category:</h5>
+                        <h5>Category</h5>
                     </Col>
                     <Col xs='12'>
                         <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
@@ -260,7 +260,7 @@ export default class GoLive extends React.Component {
                         </Dropdown>
                     </Col>
                     <Col className='mt-2' xs='12'>
-                        <h5>Tags:</h5>
+                        <h5>Tags</h5>
                     </Col>
                     <Col xs='12'>
                         <input className='rounded-border w-100-xs w-25-md' type='text'

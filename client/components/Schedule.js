@@ -247,7 +247,7 @@ export default class Schedule extends React.Component {
                     <Container fluid className='remove-padding-lr'>
                         <Row>
                             <Col xs='12'>
-                                <h5>Date & Time:</h5>
+                                <h5>Date & Time</h5>
                             </Col>
                             <Col xs='12'>
                                 <DateTimeRangeContainer start={this.state.scheduleStreamStartTime}
@@ -266,14 +266,14 @@ export default class Schedule extends React.Component {
                                 </DateTimeRangeContainer>
                             </Col>
                             <Col className='mt-2' xs='12'>
-                                <h5>Title:</h5>
+                                <h5>Title</h5>
                             </Col>
                             <Col xs='12'>
                                 <input className='w-100 rounded-border' type='text'
                                        value={this.state.scheduleStreamTitle} onChange={this.setTitle}/>
                             </Col>
                             <Col className='mt-2' xs='12'>
-                                <h5>Genre:</h5>
+                                <h5>Genre</h5>
                             </Col>
                             <Col xs='12'>
                                 <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
@@ -285,7 +285,7 @@ export default class Schedule extends React.Component {
                                 </Dropdown>
                             </Col>
                             <Col className='mt-2' xs='12'>
-                                <h5>Category:</h5>
+                                <h5>Category</h5>
                             </Col>
                             <Col xs='12'>
                                 <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
@@ -297,7 +297,7 @@ export default class Schedule extends React.Component {
                                 </Dropdown>
                             </Col>
                             <Col className='mt-2' xs='12'>
-                                <h5>Tags:</h5>
+                                <h5>Tags</h5>
                             </Col>
                             <Col xs='12'>
                                 <input className='rounded-border w-100-xs w-50-md' type='text'
