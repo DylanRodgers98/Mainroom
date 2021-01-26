@@ -565,11 +565,11 @@ export default class UserProfile extends React.Component {
                     <input className='rounded-border w-100' type='text' value={link.title}
                            onChange={e => this.setLinkTitle(e, index)}/>
                 </Col>
-                <Col className='remove-padding-lr' xs='6' lg='5'>
+                <Col className='remove-padding-lr' xs='5' lg='5'>
                     <input className='rounded-border w-100 mx-1' type='text' value={link.url}
                            onChange={e => this.setLinkUrl(e, index)}/>
                 </Col>
-                <Col className='remove-padding-lr-lg remove-padding-l-xs' xs='2' lg='1'>
+                <Col className='remove-padding-lr-lg remove-padding-l-xs' xs='3' lg='1'>
                     <Button className='btn-dark mx-2' size='sm' onClick={() => this.removeLink(index)}>
                         Remove
                     </Button>
