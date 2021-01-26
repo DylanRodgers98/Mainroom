@@ -190,7 +190,8 @@ export default class MainroomNavbar extends React.Component {
             <Nav navbar>
                 <NavItem>
                     <Dropdown className='navbar-menu navbar-dropdown-no-hover text-center' nav inNavbar
-                              isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}>
+                              isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}
+                              title='Click for menu'>
                         <DropdownToggle caret={this.isSmallBreakpoint()}>
                             <img className='rounded-circle' src={this.state.profilePicURL} width='25' height='25'
                                  alt='Menu'/>
