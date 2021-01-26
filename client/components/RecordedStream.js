@@ -138,7 +138,7 @@ export default class RecordedStream extends React.Component {
                 <Row key={index} className='mt-2 pl-2'>
                     <Col className='stream' xs='6'>
                         <span className='video-duration'>
-                            {stream.videoDuration || '00:00:00'}
+                            {stream.videoDuration}
                         </span>
                         <Link to={`/stream/${stream._id}`}>
                             <img className='w-100' src={stream.thumbnailURL}
