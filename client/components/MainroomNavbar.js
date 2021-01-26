@@ -50,8 +50,10 @@ export default class MainroomNavbar extends React.Component {
     }
 
     componentDidMount() {
-        this.getLoggedInUser();
-        this.getFilters();
+        Promise.all([
+            this.getLoggedInUser(),
+            this.getFilters()
+        ]);
     }
 
     async getLoggedInUser() {
@@ -75,9 +77,32 @@ export default class MainroomNavbar extends React.Component {
 
     async getFilters() {
         const res = await axios.get('/api/filters');
+
+        const genres = res.data.genres.map((genre, index) => {
+            const link = encodeURIComponent(genre.trim());
+            return (
+                <div key={index}>
+                    <DropdownItem tag={Link} to={`/genre/${link}`} onClick={this.closeNavbar}>
+                        {genre}
+                    </DropdownItem>
+                </div>
+            );
+        });
+
+        const categories = res.data.categories.map((category, index) => {
+            const link = encodeURIComponent(category.trim());
+            return (
+                <div key={index}>
+                    <DropdownItem tag={Link} to={`/category/${link}`} onClick={this.closeNavbar}>
+                        {category}
+                    </DropdownItem>
+                </div>
+            );
+        })
+
         this.setState({
-            genres: res.data.genres,
-            categories: res.data.categories
+            genres,
+            categories
         });
     }
 
@@ -212,29 +237,7 @@ export default class MainroomNavbar extends React.Component {
     }
 
     render() {
-        const genres = this.state.genres.map((genre, index) => {
-            const link = encodeURIComponent(genre.trim());
-            return (
-                <div key={index}>
-                    <DropdownItem tag={Link} to={`/genre/${link}`} onClick={this.closeNavbar}>
-                        {genre}
-                    </DropdownItem>
-                </div>
-            );
-        })
-
-        const categories = this.state.categories.map((category, index) => {
-            const link = encodeURIComponent(category.trim());
-            return (
-                <div key={index}>
-                    <DropdownItem tag={Link} to={`/category/${link}`} onClick={this.closeNavbar}>
-                        {category}
-                    </DropdownItem>
-                </div>
-            );
-        })
-
-        const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText}` : '';
+        const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText.trim()}` : '';
 
         return (
             <Navbar color='dark' dark expand='md'>
@@ -259,7 +262,7 @@ export default class MainroomNavbar extends React.Component {
                             isOpen={this.state.genreDropdownOpen}
                             toggle={this.genreDropdownToggle}>
                             <DropdownToggle caret>Genre</DropdownToggle>
-                            <DropdownMenu>{genres}</DropdownMenu>
+                            <DropdownMenu>{this.state.genres}</DropdownMenu>
                         </Dropdown>
                     </NavItem>
                     <NavItem>
@@ -268,7 +271,7 @@ export default class MainroomNavbar extends React.Component {
                                   onMouseLeave={this.onMouseLeaveCategoryDropdown}
                                   isOpen={this.state.categoryDropdownOpen} toggle={this.categoryDropdownToggle}>
                             <DropdownToggle caret>Category</DropdownToggle>
-                            <DropdownMenu>{categories}</DropdownMenu>
+                            <DropdownMenu>{this.state.categories}</DropdownMenu>
                         </Dropdown>
                     </NavItem>
                     </Nav>
