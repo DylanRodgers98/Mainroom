@@ -30,15 +30,17 @@ RecordedStreamSchema.post('findOneAndDelete', async function() {
 });
 
 async function deleteVideoAndThumbnail(recordedStream) {
+    const videoURL = decodeURIComponent(recordedStream.videoURL);
+    const thumbnailURL = decodeURIComponent(recordedStream.thumbnailURL);
+
     LOGGER.debug('Deleting video (URL: {}) and thumbnail (URL: {}) in S3 for RecordedStream (_id: {})',
-        recordedStream.videoURL, recordedStream.thumbnailURL, recordedStream._id);
+        videoURL, thumbnailURL, recordedStream._id);
 
     const promises = []
 
-    const deleteVideoPromise = s3Utils.deleteByURL(recordedStream.videoURL);
+    const deleteVideoPromise = s3Utils.deleteByURL(videoURL);
     promises.push(deleteVideoPromise);
 
-    const thumbnailURL = recordedStream.thumbnailURL;
     if (thumbnailURL !== config.defaultThumbnailURL) {
         const deleteThumbnailPromise = s3Utils.deleteByURL(thumbnailURL)
         promises.push(deleteThumbnailPromise);
