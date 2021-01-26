@@ -699,7 +699,7 @@ export default class UserProfile extends React.Component {
 
     renderChangeProfilePic() {
         return (
-            <Modal show={this.state.changeProfilePicOpen} toggle={this.changeProfilePicToggle} centered={true}>
+            <Modal isOpen={this.state.changeProfilePicOpen} toggle={this.changeProfilePicToggle} centered={true}>
                 <ModalHeader toggle={this.changeProfilePicToggle}>Change Profile Picture</ModalHeader>
                 <ModalBody>
                     <ImageUploader buttonText='Choose Image' label='Maximum file size: 2MB'
