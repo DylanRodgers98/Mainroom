@@ -106,6 +106,8 @@ const s3UploadProfilePic = multer({
     storage: multerS3({
         s3: new AWS.S3(),
         bucket: config.storage.s3.staticContent.bucketName,
+        cacheControl: 'max-age=0, must-revalidate',
+        contentType: multerS3.AUTO_CONTENT_TYPE,
         key: (req, file, cb) => {
             const path = config.storage.s3.staticContent.keyPrefixes.profilePics;
             const userId = sanitise(req.params.userId);

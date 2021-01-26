@@ -193,8 +193,8 @@ export default class MainroomNavbar extends React.Component {
                               isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}
                               title='Click for menu'>
                         <DropdownToggle caret={this.isSmallBreakpoint()}>
-                            <img className='rounded-circle' src={this.state.profilePicURL} width='25' height='25'
-                                 alt='Menu'/>
+                            <img className='rounded-circle' src={this.state.profilePicURL + '#' + Date.now()}
+                                 width='25' height='25' alt='Menu'/>
                             {!this.isSmallBreakpoint() ? undefined
                                 : <span className='ml-1'>{this.state.loggedInDisplayName || this.state.loggedInUsername}</span>}
                         </DropdownToggle>
