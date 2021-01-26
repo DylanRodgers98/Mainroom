@@ -133,8 +133,8 @@ export default class UserProfile extends React.Component {
         this.setState({
             loggedInUser: res.data.username,
             loggedInUserId: res.data._id
-        }, async () => {
-            await Promise.all([
+        }, () => {
+            Promise.all([
                 this.isLoggedInUserSubscribed(),
                 this.getScheduledStreamsInLoggedInUserSchedule()
             ]);

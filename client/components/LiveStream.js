@@ -41,15 +41,11 @@ export default class LiveStream extends React.Component {
     }
 
     componentDidMount() {
-        this.fillComponent();
-    }
-
-    async fillComponent() {
-        await Promise.all([
+        Promise.all([
             this.getStreamInfo(),
-            this.getViewerUser()
+            this.getViewerUser(),
+            this.connectToSocketIO()
         ]);
-        this.connectToSocketIO();
     }
 
     async getStreamInfo() {
@@ -102,7 +98,7 @@ export default class LiveStream extends React.Component {
         });
     }
 
-    connectToSocketIO() {
+    async connectToSocketIO() {
         const streamUsername = this.props.match.params.username.toLowerCase();
         this.socket = io.connect(`http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}`, {
             query: {
