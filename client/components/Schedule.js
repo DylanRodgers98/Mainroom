@@ -29,7 +29,9 @@ export default class Schedule extends React.Component {
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
         this.setTitle = this.setTitle.bind(this);
         this.setGenre = this.setGenre.bind(this);
+        this.clearGenre = this.clearGenre.bind(this);
         this.setCategory = this.setCategory.bind(this);
+        this.clearCategory = this.clearCategory.bind(this);
         this.setTags = this.setTags.bind(this);
         this.scheduleStreamApplyDate = this.scheduleStreamApplyDate.bind(this);
         this.addToSchedule = this.addToSchedule.bind(this);
@@ -182,9 +184,21 @@ export default class Schedule extends React.Component {
         });
     }
 
+    clearGenre() {
+        this.setState({
+            scheduleStreamGenre: ''
+        });
+    }
+
     setCategory(event) {
         this.setState({
             scheduleStreamCategory: event.currentTarget.textContent,
+        });
+    }
+
+    clearCategory() {
+        this.setState({
+            scheduleStreamCategory: ''
         });
     }
 
@@ -281,7 +295,14 @@ export default class Schedule extends React.Component {
                                     <DropdownToggle caret>
                                         {this.state.scheduleStreamGenre || 'Select a genre...'}
                                     </DropdownToggle>
-                                    <DropdownMenu>{this.state.genres}</DropdownMenu>
+                                    <DropdownMenu>
+                                        <DropdownItem onClick={this.clearGenre}
+                                                      disabled={!this.state.scheduleStreamGenre}>
+                                            Clear Genre
+                                        </DropdownItem>
+                                        <DropdownItem divider/>
+                                        {this.state.genres}
+                                    </DropdownMenu>
                                 </Dropdown>
                             </Col>
                             <Col className='mt-2' xs='12'>
@@ -293,7 +314,14 @@ export default class Schedule extends React.Component {
                                     <DropdownToggle caret>
                                         {this.state.scheduleStreamCategory || 'Select a category...'}
                                     </DropdownToggle>
-                                    <DropdownMenu>{this.state.categories}</DropdownMenu>
+                                    <DropdownMenu>
+                                        <DropdownItem onClick={this.clearCategory}
+                                                      disabled={!this.state.scheduleStreamCategory}>
+                                            Clear Category
+                                        </DropdownItem>
+                                        <DropdownItem divider/>
+                                        {this.state.categories}
+                                    </DropdownMenu>
                                 </Dropdown>
                             </Col>
                             <Col className='mt-2' xs='12'>
