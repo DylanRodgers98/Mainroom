@@ -33,6 +33,7 @@ export default class MainroomNavbar extends React.Component {
         this.clearSearchBox = this.clearSearchBox.bind(this);
         this.profileDropdownToggle = this.profileDropdownToggle.bind(this);
         this.navbarToggle = this.navbarToggle.bind(this);
+        this.closeNavbar = this.closeNavbar.bind(this);
 
         this.state = {
             genreDropdownOpen: false,
@@ -132,12 +133,31 @@ export default class MainroomNavbar extends React.Component {
 
     clearSearchBox() {
         this.setState({
-            searchText: ''
+            searchText: '',
+            navbarOpen: false
         });
     }
 
     getRedirectablePath(pathname) {
         return pathname + (window.location.pathname === '/' ? '' : `?redirectTo=${window.location.pathname}`);
+    }
+
+    profileDropdownToggle() {
+        this.setState(prevState => ({
+            profileDropdownOpen: !prevState.profileDropdownOpen
+        }));
+    }
+
+    navbarToggle() {
+        this.setState(prevState => ({
+            navbarOpen: !prevState.navbarOpen
+        }));
+    }
+
+    closeNavbar() {
+        this.setState({
+            navbarOpen: false
+        });
     }
 
     renderLogInOrProfileDropdown() {
@@ -151,16 +171,27 @@ export default class MainroomNavbar extends React.Component {
                                  alt='Menu'/>
                         </DropdownToggle>
                         <DropdownMenu right>
-                            <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`}>Profile</DropdownItem>
-                            <DropdownItem tag={Link} to={'/schedule'}>Schedule</DropdownItem>
-                            <DropdownItem tag={Link}
-                                          to={`/user/${this.state.loggedInUser}/subscriptions`}>Subscriptions</DropdownItem>
+                            <DropdownItem tag={Link} to={`/user/${this.state.loggedInUser}`} onClick={this.closeNavbar}>
+                                Profile
+                            </DropdownItem>
+                            <DropdownItem tag={Link} to={'/schedule'} onClick={this.closeNavbar}>
+                                Schedule
+                            </DropdownItem>
+                            <DropdownItem tag={Link} onClick={this.closeNavbar}
+                                          to={`/user/${this.state.loggedInUser}/subscriptions`}>
+                                Subscriptions
+                            </DropdownItem>
                             <DropdownItem divider/>
-                            <DropdownItem tag={Link} to={'/go-live'}>Go Live</DropdownItem>
-                            <DropdownItem tag={Link} to={'/manage-recorded-streams'}>Recorded Streams</DropdownItem>
+                            <DropdownItem tag={Link} to={'/go-live'} onClick={this.closeNavbar}>
+                                Go Live
+                            </DropdownItem>
+                            <DropdownItem tag={Link} to={'/manage-recorded-streams'} onClick={this.closeNavbar}>
+                                Recorded Streams
+                            </DropdownItem>
                             <DropdownItem divider/>
-                            <DropdownItem tag={Link} to={'/settings'}>Settings</DropdownItem>
-                            {/*<DropdownItem divider/>*/}
+                            <DropdownItem tag={Link} to={'/settings'} onClick={this.closeNavbar}>
+                                Settings
+                            </DropdownItem>
                             <DropdownItem href={'/logout'}>Log Out</DropdownItem>
                         </DropdownMenu>
                     </Dropdown>
@@ -180,24 +211,14 @@ export default class MainroomNavbar extends React.Component {
         );
     }
 
-    profileDropdownToggle() {
-        this.setState(prevState => ({
-            profileDropdownOpen: !prevState.profileDropdownOpen
-        }));
-    }
-
-    navbarToggle() {
-        this.setState(prevState => ({
-            navbarOpen: !prevState.navbarOpen
-        }));
-    }
-
     render() {
         const genres = this.state.genres.map((genre, index) => {
             const link = encodeURIComponent(genre.trim());
             return (
                 <div key={index}>
-                    <DropdownItem tag={Link} to={`/genre/${link}`}>{genre}</DropdownItem>
+                    <DropdownItem tag={Link} to={`/genre/${link}`} onClick={this.closeNavbar}>
+                        {genre}
+                    </DropdownItem>
                 </div>
             );
         })
@@ -206,7 +227,9 @@ export default class MainroomNavbar extends React.Component {
             const link = encodeURIComponent(category.trim());
             return (
                 <div key={index}>
-                    <DropdownItem tag={Link} to={`/category/${link}`}>{category}</DropdownItem>
+                    <DropdownItem tag={Link} to={`/category/${link}`} onClick={this.closeNavbar}>
+                        {category}
+                    </DropdownItem>
                 </div>
             );
         })
