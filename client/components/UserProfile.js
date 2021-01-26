@@ -553,33 +553,32 @@ export default class UserProfile extends React.Component {
 
     renderEditLinks() {
         const headers = !this.state.editLinks.length ? undefined : (
-            <tr>
-                <td>Title:</td>
-                <td>URL:</td>
-            </tr>
+            <Row>
+                <Col className='remove-padding-r' xs='4' lg='3'>Title:</Col>
+                <Col className='remove-padding-l ml-1' xs='6' lg='5'>URL:</Col>
+            </Row>
         );
 
         const links = this.state.editLinks.map((link, index) => (
-            <tr key={index}>
-                <td>
-                    <input className='mt-1 rounded-border' type='text' value={link.title}
+            <Row className='mt-1' key={index}>
+                <Col className='remove-padding-r' xs='4' lg='3'>
+                    <input className='rounded-border w-100' type='text' value={link.title}
                            onChange={e => this.setLinkTitle(e, index)}/>
-                </td>
-                <td>
-                    <input className='mt-1 rounded-border' type='text' value={link.url}
-                           onChange={e => this.setLinkUrl(e, index)} size={30}/>
-                </td>
-                <td>
-                    <Button className='btn-dark mt-1 ml-1' size='sm' onClick={() => this.removeLink(index)}>
-                        Remove Link
+                </Col>
+                <Col className='remove-padding-lr' xs='6' lg='5'>
+                    <input className='rounded-border w-100 mx-1' type='text' value={link.url}
+                           onChange={e => this.setLinkUrl(e, index)}/>
+                </Col>
+                <Col className='remove-padding-lr-lg remove-padding-l-xs' xs='2' lg='1'>
+                    <Button className='btn-dark mx-2' size='sm' onClick={() => this.removeLink(index)}>
+                        Remove
                     </Button>
-                </td>
-                <td>
-                    <div className='ml-1'>
-                        {this.state.indexesOfInvalidLinks.includes(index) ? 'Link must have a URL' : ''}
-                    </div>
-                </td>
-            </tr>
+                </Col>
+                <Col xs='12' lg='3'>
+                    {!this.state.indexesOfInvalidLinks.includes(index) ? undefined
+                        : <span style={{color: 'red'}}>Link must have a URL</span>}
+                </Col>
+            </Row>
         ));
 
         return (
@@ -595,60 +594,50 @@ export default class UserProfile extends React.Component {
             <Modal isOpen={this.state.editProfileOpen} toggle={this.editProfileToggle} size='lg' centered={true}>
                 <ModalHeader toggle={this.editProfileToggle}>Edit Profile</ModalHeader>
                 <ModalBody>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <h5 className='mr-3'>Display Name:</h5>
-                                </td>
-                                <td>
-                                    <input className='rounded-border' type='text' value={this.state.editDisplayName}
-                                           onChange={this.setDisplayName}/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <h5 className='mt-1 mr-3'>Location:</h5>
-                                </td>
-                                <td>
-                                    <input className='mt-1 rounded-border' type='text' value={this.state.editLocation}
-                                           onChange={this.setLocation}/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td valign='top'>
-                                    <h5 className='mt-1'>Bio:</h5>
-                                </td>
-                                <td>
-                                    <textarea className='mt-1 rounded-border' value={this.state.editBio}
-                                              onChange={this.setBio}/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td valign='top'>
-                                    <h5>Chat Colour:</h5>
-                                </td>
-                                <td>
-                                    <input id='chatColour' type='color' value={this.state.chatColour}
-                                           onChange={this.setChatColour}/>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <h5 className='mt-2'>Links:</h5>
+                    <Container fluid className='remove-padding-lr'>
+                        <Row>
+                            <Col xs='12'>
+                                <h5>Display Name</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='rounded-border w-50' type='text' value={this.state.editDisplayName}
+                                       onChange={this.setDisplayName}/>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Location</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='rounded-border w-50' type='text' value={this.state.editLocation}
+                                       onChange={this.setLocation}/>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Bio</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <textarea className='rounded-border w-100' value={this.state.editBio}
+                                          onChange={this.setBio}/>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Chat Colour</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <input id='chatColour' type='color' value={this.state.chatColour}
+                                       onChange={this.setChatColour}/>
+                            </Col>
+                        </Row>
+                    </Container>
+                    <h5 className='mt-4'>Links</h5>
                     <hr/>
-                    <table>
-                        <tbody>
-                            {this.renderEditLinks()}
-                            <tr>
-                                <td>
-                                    <Button className='btn-dark mt-2' size='sm' onClick={this.addLink}>
-                                        Add Link
-                                    </Button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <Container fluid className='remove-padding-lr'>
+                        {this.renderEditLinks()}
+                        <Row className='mt-2'>
+                            <Col xs='12'>
+                                <Button className='btn-dark' size='sm' onClick={this.addLink}>
+                                    Add Link
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Container>
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' disabled={!this.state.unsavedChanges} onClick={this.saveProfile}>
