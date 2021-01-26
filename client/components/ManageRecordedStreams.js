@@ -33,7 +33,9 @@ export default class ManageRecordedStreams extends React.Component {
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
         this.setTitle = this.setTitle.bind(this);
         this.setGenre = this.setGenre.bind(this);
+        this.clearGenre = this.clearGenre.bind(this);
         this.setCategory = this.setCategory.bind(this);
+        this.clearCategory = this.clearCategory.bind(this);
         this.setTags = this.setTags.bind(this);
         this.editRecordedStream = this.editRecordedStream.bind(this);
         this.deleteRecordedStream = this.deleteRecordedStream.bind(this);
@@ -52,6 +54,7 @@ export default class ManageRecordedStreams extends React.Component {
             genres: [],
             categories: [],
             editStreamOpen: false,
+            unsavedChanges: false,
             deleteStreamOpen: false,
             genreDropdownOpen: false,
             categoryDropdownOpen: false,
@@ -128,9 +131,22 @@ export default class ManageRecordedStreams extends React.Component {
 
     async getFilters() {
         const res = await axios.get('/api/filters');
+
+        const genres = res.data.genres.map((genre, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
+            </div>
+        ));
+
+        const categories = res.data.categories.map((category, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
+            </div>
+        ));
+
         this.setState({
-            genres: res.data.genres,
-            categories: res.data.categories
+            genres,
+            categories
         });
     }
 
@@ -148,26 +164,44 @@ export default class ManageRecordedStreams extends React.Component {
 
     setTitle(event) {
         this.setState({
-            selectedStreamTitle: event.target.value
+            selectedStreamTitle: event.target.value,
+            unsavedChanges: true
         });
     }
 
     setGenre(event) {
         this.setState({
-            selectedStreamGenre: event.currentTarget.textContent
+            selectedStreamGenre: event.currentTarget.textContent,
+            unsavedChanges: true
+        });
+    }
+
+    clearGenre() {
+        this.setState({
+            selectedStreamGenre: '',
+            unsavedChanges: true
         });
     }
 
     setCategory(event) {
         this.setState({
             selectedStreamCategory: event.currentTarget.textContent,
+            unsavedChanges: true
+        });
+    }
+
+    clearCategory() {
+        this.setState({
+            selectedStreamCategory: '',
+            unsavedChanges: true
         });
     }
 
     setTags(event) {
         const tags = event.target.value.replace(/\s/g, '').split(',');
         this.setState({
-            selectedStreamTags: tags
+            selectedStreamTags: tags,
+            unsavedChanges: true
         });
     }
 
@@ -224,85 +258,75 @@ export default class ManageRecordedStreams extends React.Component {
     }
 
     renderEditRecordedStream() {
-        const genreDropdownText = this.state.selectedStreamGenre || 'Select a genre...';
-        const categoryDropdownText = this.state.selectedStreamCategory || 'Select a category...';
-
-        const genres = this.state.genres.map((genre, index) => (
-            <div key={index}>
-                <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
-            </div>
-        ));
-
-        const categories = this.state.categories.map((category, index) => (
-            <div key={index}>
-                <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
-            </div>
-        ));
-
         return (
-            <Modal isOpen={this.state.editStreamOpen} toggle={this.editStreamToggle} size='lg' centered={true}>
-                <ModalHeader toggle={this.editStreamToggle}>Edit Recorded Stream</ModalHeader>
+            <Modal isOpen={this.state.editStreamOpen} toggle={this.editStreamToggle} centered={true}>
+                <ModalHeader toggle={this.editStreamToggle}>
+                    Edit Recorded Stream
+                </ModalHeader>
                 <ModalBody>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <h5 className='mt-2'>Title:</h5>
-                                </td>
-                                <td>
-                                    <input className='w-100 rounded-border' type='text'
-                                           value={this.state.selectedStreamTitle} onChange={this.setTitle}/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <h5 className='mt-2'>Genre:</h5>
-                                </td>
-                                <td>
-                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
-                                              toggle={this.genreDropdownToggle} size='sm'>
-                                        <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
-                                        <DropdownMenu>{genres}</DropdownMenu>
-                                    </Dropdown>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <h5 className='mt-2'>Category:</h5>
-                                </td>
-                                <td>
-                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
-                                              toggle={this.categoryDropdownToggle} size='sm'>
-                                        <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
-                                        <DropdownMenu>{categories}</DropdownMenu>
-                                    </Dropdown>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <h5 className='mt-2'>Tags:</h5>
-                                </td>
-                                <td>
-                                    <table>
-                                        <tbody>
-                                        <tr>
-                                            <td>
-                                                <input className='mt-1 rounded-border' type='text'
-                                                       value={this.state.selectedStreamTags} onChange={this.setTags}/>
-                                            </td>
-                                            <td>
-                                                <i className='ml-1'>Comma-separated</i>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <Container fluid className='remove-padding-lr'>
+                        <Row>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Title</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='w-100 rounded-border' type='text'
+                                       value={this.state.selectedStreamTitle} onChange={this.setTitle}/>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Genre</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
+                                          toggle={this.genreDropdownToggle} size='sm'>
+                                    <DropdownToggle caret>
+                                        {this.state.selectedStreamGenre || 'Select a genre...'}
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        <DropdownItem onClick={this.clearGenre}
+                                                      disabled={!this.state.selectedStreamGenre}>
+                                            Clear Genre
+                                        </DropdownItem>
+                                        <DropdownItem divider/>
+                                        {this.state.genres}
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Category</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
+                                          toggle={this.categoryDropdownToggle} size='sm'>
+                                    <DropdownToggle caret>
+                                        {this.state.selectedStreamCategory || 'Select a category...'}
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        <DropdownItem onClick={this.clearCategory}
+                                                      disabled={!this.state.selectedStreamCategory}>
+                                            Clear Category
+                                        </DropdownItem>
+                                        <DropdownItem divider/>
+                                        {this.state.categories}
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Tags</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='rounded-border w-100-xs w-50-md' type='text'
+                                       value={this.state.selectedStreamTags} onChange={this.setTags}/>
+                                <i className='ml-1'>Comma-separated, no spaces</i>
+                            </Col>
+                        </Row>
+                    </Container>
                 </ModalBody>
                 <ModalFooter>
-                    <Button className='btn-dark' onClick={this.editRecordedStream}>Save</Button>
+                    <Button className='btn-dark' onClick={this.editRecordedStream}
+                            disabled={!this.state.unsavedChanges}>
+                        Save Changes
+                    </Button>
                 </ModalFooter>
             </Modal>
         );
