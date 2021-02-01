@@ -2,8 +2,9 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const User = require('../model/schemas').User;
 const shortid = require('shortid');
-const passwordValidator = require('./passwordValidator');
+const {validatePassword, getInvalidPasswordMessage} = require('./passwordValidator');
 const mongoose = require('mongoose');
+const sanitise = require('mongo-sanitize');
 const LOGGER = require('../../logger')('./server/passport.js');
 
 const strategyOptions = {
@@ -31,14 +32,8 @@ passport.deserializeUser((id, done) => {
 });
 
 passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, password, done) => {
-    if (!passwordValidator.validate(password)) {
-        const message = passwordValidator.getInvalidPasswordMessage();
-        return done(null, false, message.forEach(line => req.flash('password', line)));
-    }
-    if (password !== req.body.confirmPassword) {
-        return done(null, false, req.flash('confirmPassword', 'Passwords do not match'));
-    }
-    User.findOne({$or: [{email: email}, {username: req.body.username}]}, (err, user) => {
+    const username = sanitise(req.body.username);
+    User.findOne({$or: [{email}, {username}]}, (err, user) => {
         if (err) {
             LOGGER.error('An error occurred during user registration: {}', err);
             return done(err);
@@ -47,25 +42,33 @@ passport.use('localRegister', new LocalStrategy(strategyOptions, (req, email, pa
             if (user.email === email) {
                 req.flash('email', 'Email is already taken');
             }
-            if (user.username === req.body.username) {
+            if (user.username === username) {
                 req.flash('username', 'Username is already taken');
             }
-            done(null, false);
-        } else {
-            const user = new User();
-            user._id = new mongoose.Types.ObjectId();
-            user.username = req.body.username;
-            user.email = email;
-            user.password = user.generateHash(password);
-            user.streamInfo.streamKey = shortid.generate();
-            user.save(err => {
-                if (err) {
-                    LOGGER.error('An error occurred when saving new User: {}, Error: {}', JSON.stringify(user), err);
-                    return done(err)
-                }
-            });
-            done(null, user);
+            return done(null, false);
         }
+        if (!validatePassword(password)) {
+            getInvalidPasswordMessage().forEach(line => req.flash('password', line))
+            return done(null, false);
+        }
+        if (password !== req.body.confirmPassword) {
+            req.flash('confirmPassword', 'Passwords do not match');
+            return done(null, false);
+        }
+
+        const newUser = new User();
+        newUser._id = new mongoose.Types.ObjectId();
+        newUser.username = username;
+        newUser.email = email;
+        newUser.password = newUser.generateHash(password);
+        newUser.streamInfo.streamKey = shortid.generate();
+        newUser.save(err => {
+            if (err) {
+                LOGGER.error('An error occurred when saving new User: {}, Error: {}', JSON.stringify(newUser), err);
+                return done(err)
+            }
+        });
+        done(null, newUser);
     });
 }));
 

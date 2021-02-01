@@ -4,9 +4,8 @@ const {User, PasswordResetToken} = require('../model/schemas');
 const sanitise = require('mongo-sanitize');
 const {randomBytes, createHash} = require('crypto');
 const sesEmailSender = require('../aws/sesEmailSender');
-const passwordValidator = require('../auth/passwordValidator');
+const {validatePassword, getInvalidPasswordMessage} = require('../auth/passwordValidator');
 const loginChecker = require('connect-ensure-login');
-const {getInvalidPasswordMessage} = require('../auth/passwordValidator');
 const LOGGER = require('../../logger')('./server/routes/forgot-password.js');
 
 router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
@@ -97,7 +96,7 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
         } else if (!user) {
             LOGGER.error(`Could not find user (_id: {}) when resetting password: {}`, userId, err);
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
-        }  else if (!passwordValidator.validate(req.body.password)) {
+        }  else if (!validatePassword(req.body.password)) {
             getInvalidPasswordMessage().forEach(line => req.flash('password', line));
             res.redirect('/forgot-password/reset');
         } else if (req.body.password !== req.body.confirmPassword) {

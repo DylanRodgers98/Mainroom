@@ -11,7 +11,7 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const mime = require('mime-types');
 const mainroomEventEmitter = require('../mainroomEventEmitter');
-const passwordValidator = require('../auth/passwordValidator');
+const {validatePassword, getInvalidPasswordMessage} = require('../auth/passwordValidator');
 const _ = require('lodash');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
@@ -628,9 +628,9 @@ router.post('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next)
                 res.json({
                     newPasswordInvalidReason: 'New password cannot be the same as current password'
                 });
-            } else if (!passwordValidator.validate(req.body.newPassword)) {
+            } else if (!validatePassword(req.body.newPassword)) {
                 res.json({
-                    newPasswordInvalidReason: passwordValidator.getInvalidPasswordMessage()
+                    newPasswordInvalidReason: getInvalidPasswordMessage()
                 });
             } else if (req.body.newPassword !== req.body.confirmNewPassword) {
                 res.json({
