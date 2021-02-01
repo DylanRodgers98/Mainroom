@@ -1,4 +1,7 @@
-require('dotenv').config();
+// load env vars from .env file if in development mode
+if (process.env.NODE_ENV === 'development') {
+    require('dotenv').config();
+}
 
 const express = require('express');
 const app = express();
