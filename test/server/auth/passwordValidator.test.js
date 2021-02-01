@@ -43,42 +43,42 @@ afterAll(() => {
 describe('passwordValidator', () => {
     describe('validate', () => {
         it('should return true when password is valid', () => {
-            const isValid = passwordValidator.validate(validPassword);
+            const isValid = passwordValidator.validatePassword(validPassword);
             expect(isValid).toBeTruthy();
         });
 
         it('should return false when password is too short', () => {
-            const isValid = passwordValidator.validate(passwordTooShort);
+            const isValid = passwordValidator.validatePassword(passwordTooShort);
             expect(isValid).toBeFalsy();
         });
 
         it('should return false when password is too long', () => {
-            const isValid = passwordValidator.validate(passwordTooLong);
+            const isValid = passwordValidator.validatePassword(passwordTooLong);
             expect(isValid).toBeFalsy();
         });
 
         it('should return false when password has no lowercase characters', () => {
-            const isValid = passwordValidator.validate(passwordHasNoLowercase);
+            const isValid = passwordValidator.validatePassword(passwordHasNoLowercase);
             expect(isValid).toBeFalsy();
         });
 
         it('should return false when password has no uppercase characters', () => {
-            const isValid = passwordValidator.validate(passwordHasNoUppercase);
+            const isValid = passwordValidator.validatePassword(passwordHasNoUppercase);
             expect(isValid).toBeFalsy();
         });
 
         it('should return false when password has no numeric characters', () => {
-            const isValid = passwordValidator.validate(passwordHasNoNumeric);
+            const isValid = passwordValidator.validatePassword(passwordHasNoNumeric);
             expect(isValid).toBeFalsy();
         });
 
         it('should return false when password has no special characters', () => {
-            const isValid = passwordValidator.validate(passwordHasNoSpecialChars);
+            const isValid = passwordValidator.validatePassword(passwordHasNoSpecialChars);
             expect(isValid).toBeFalsy();
         });
 
         it('should return false when password has invalid special characters', () => {
-            const isValid = passwordValidator.validate(passwordHasInvalidSpecialChars);
+            const isValid = passwordValidator.validatePassword(passwordHasInvalidSpecialChars);
             expect(isValid).toBeFalsy();
         });
     });
