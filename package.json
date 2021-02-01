@@ -13,7 +13,7 @@
     "webpack:dev": "webpack --watch",
     "webpack:prod": "webpack",
     "start-server:dev": "supervisor -w server -s -RV ./server/app.js",
-    "start-server:prod": "pm2 start pm2.config.js",
+    "start-server:prod": "pm2-runtime pm2.config.js",
     "stop:prod": "npm-run-all stop-pm2 delete-pm2",
     "stop-pm2": "pm2 stop all",
     "delete-pm2": "pm2 delete all",

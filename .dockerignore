@@ -4,13 +4,12 @@
 # ignore Webpack files
 public
 
-# ignore Node files
+# ignore node files
 node_modules
 npm-debug.log
 
-# ignore media but keep folder
-server/media/*
-!server/media/.gitkeep
+# ignore media
+server/media/
 
 # ignore test coverage
 coverage/
