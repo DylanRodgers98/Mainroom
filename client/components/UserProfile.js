@@ -191,18 +191,17 @@ export default class UserProfile extends React.Component {
     }
 
     async getLiveStreamIfLive() {
-        const stream = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
-        const streamKey = stream.data.streamKey;
-        const res = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
-        if (res.data.isLive) {
-            const thumbnail = await axios.get(`/api/livestreams/${streamKey}/thumbnail`);
+        const streamInfoRes = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
+        if (streamInfoRes.data.isLive) {
+            const streamKey = streamInfoRes.data.streamKey;
+            const thumbnailRes = await axios.get(`/api/livestreams/${streamKey}/thumbnail`);
             this.setState({
-                streamKey: streamKey,
-                streamTitle: stream.data.title,
-                streamGenre: stream.data.genre,
-                streamCategory: stream.data.category,
-                streamViewCount: stream.data.viewCount,
-                streamThumbnailUrl: thumbnail.data.thumbnailURL
+                streamKey,
+                streamTitle: streamInfoRes.data.title,
+                streamGenre: streamInfoRes.data.genre,
+                streamCategory: streamInfoRes.data.category,
+                streamViewCount: streamInfoRes.data.viewCount,
+                streamThumbnailUrl: thumbnailRes.data.thumbnailURL
             });
         }
     }

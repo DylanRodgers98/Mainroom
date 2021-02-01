@@ -13,6 +13,7 @@ const mime = require('mime-types');
 const mainroomEventEmitter = require('../mainroomEventEmitter');
 const {validatePassword, getInvalidPasswordMessage} = require('../auth/passwordValidator');
 const _ = require('lodash');
+const axios = require('axios');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 router.get('/', (req, res, next) => {
@@ -314,23 +315,28 @@ router.get('/:username/stream-info', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username},
         'displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount',
-        (err, user) => {
+        async (err, user) => {
             if (err) {
                 LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
                 next(err);
             } else if (!user) {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
             } else {
+                const streamKey = user.streamInfo.streamKey;
+                const rtmpServerRes = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
                 res.json({
+                    isLive: rtmpServerRes.data.isLive,
                     displayName: user.displayName,
                     profilePicURL: user.profilePicURL || config.defaultProfilePicURL,
-                    serverURL: `rtmp://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`,
-                    streamKey: user.streamInfo.streamKey,
+                    streamKey,
                     title: user.streamInfo.title,
                     genre: user.streamInfo.genre,
                     category: user.streamInfo.category,
                     tags: user.streamInfo.tags,
-                    viewCount: user.streamInfo.viewCount
+                    viewCount: user.streamInfo.viewCount,
+                    rtmpServerURL: `rtmp://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`,
+                    liveStreamURL: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
+                    socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}?liveStreamUsername=${username}`,
                 });
             }
         });

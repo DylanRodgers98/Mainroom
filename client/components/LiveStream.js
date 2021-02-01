@@ -32,6 +32,7 @@ export default class LiveStream extends React.Component {
             streamTitle: '',
             streamGenre: '',
             streamCategory: '',
+            socketIOURL: '',
             msg: '',
             chat: [],
             chatHeight: 0,
@@ -43,18 +44,25 @@ export default class LiveStream extends React.Component {
     componentDidMount() {
         Promise.all([
             this.getStreamInfo(),
-            this.getViewerUser(),
-            this.connectToSocketIO()
+            this.getViewerUser()
         ]);
     }
 
     async getStreamInfo() {
         try {
-            const streamInfo = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
-            const stream = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamInfo.data.streamKey}`);
-            if (stream.data.isLive) {
-                this.populateStreamData(streamInfo.data);
-            }
+            const res = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
+            this.setState({
+                socketIOURL: res.data.socketIOURL
+            }, () => {
+                const promises = [];
+                if (!this.socket) {
+                    promises.push(this.connectToSocketIO());
+                }
+                if (res.data.isLive) {
+                    promises.push(this.populateStreamData(res.data));
+                }
+                Promise.all(promises);
+            });
         } catch (err) {
             if (err.response.status === 404) {
                 window.location.href = '/404';
@@ -64,14 +72,14 @@ export default class LiveStream extends React.Component {
         }
     }
 
-    populateStreamData(data) {
+    async populateStreamData(data) {
         this.setState({
             stream: true,
             videoJsOptions: {
                 autoplay: true,
                 controls: true,
                 sources: [{
-                    src: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/live/${data.streamKey}/index.m3u8`,
+                    src: data.liveStreamURL,
                     type: 'application/x-mpegURL'
                 }],
                 fluid: true
@@ -100,11 +108,7 @@ export default class LiveStream extends React.Component {
 
     async connectToSocketIO() {
         const streamUsername = this.props.match.params.username.toLowerCase();
-        this.socket = io.connect(`http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}`, {
-            query: {
-                liveStreamUsername: streamUsername
-            }
-        });
+        this.socket = io.connect(this.state.socketIOURL);
         this.socket.on(`onReceiveChatMessage_${streamUsername}`, this.addMessageToChat);
         this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
         this.socket.on(`onWentLive_${streamUsername}`, this.startStreamFromSocket);
@@ -137,9 +141,9 @@ export default class LiveStream extends React.Component {
     startStreamFromSocket() {
         // stream is not available as soon as user goes live because .m3u8 playlist file needs to populate,
         // so wait a timeout (which needs to be longer than the time of each video segment) before loading
-        setTimeout(async () => {
+        setTimeout(() => {
             if (this.state.stream === false) {
-                await this.getStreamInfo();
+                this.getStreamInfo();
             }
         }, config.loadLivestreamTimeout);
     }

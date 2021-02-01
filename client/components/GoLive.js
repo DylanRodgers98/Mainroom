@@ -27,7 +27,7 @@ export default class GoLive extends React.Component {
             genreDropdownOpen: false,
             categoryDropdownOpen: false,
             unsavedChanges: false,
-            serverURL: '',
+            rtmpServerURL: '',
             streamKey: '',
             streamTitle: '',
             streamGenre: '',
@@ -66,7 +66,7 @@ export default class GoLive extends React.Component {
     async getStreamInfo() {
         const res = await axios.get(`/api/users/${this.state.loggedInUser}/stream-info`);
         this.setState({
-            serverURL: res.data.serverURL,
+            rtmpServerURL: res.data.rtmpServerURL,
             streamKey: res.data.streamKey,
             streamTitle: res.data.title,
             streamGenre: res.data.genre,
@@ -195,7 +195,7 @@ export default class GoLive extends React.Component {
                     </Col>
                     <Col xs='12'>
                         <input id='serverUrlInput' className='rounded-border w-50-xs w-25-md' type='text'
-                               value={this.state.serverURL} readOnly={true}/>
+                               value={this.state.rtmpServerURL} readOnly={true}/>
                         <Button className='btn-dark ml-1' size='sm'
                                 onClick={() => this.copyFrom('serverUrlInput')}>
                             Copy
