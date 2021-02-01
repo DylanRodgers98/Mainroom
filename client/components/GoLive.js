@@ -3,8 +3,6 @@ import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
 
-const RTMP_SERVER_URL = `rtmp://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_RTMP_PORT}/live`;
-
 export default class GoLive extends React.Component {
 
     constructor(props) {
@@ -29,6 +27,7 @@ export default class GoLive extends React.Component {
             genreDropdownOpen: false,
             categoryDropdownOpen: false,
             unsavedChanges: false,
+            serverURL: '',
             streamKey: '',
             streamTitle: '',
             streamGenre: '',
@@ -56,7 +55,7 @@ export default class GoLive extends React.Component {
 
     async fillComponent() {
         await Promise.all([
-            this.getUserSettings(),
+            this.getStreamInfo(),
             this.getFilters()
         ]);
         this.setState({
@@ -64,9 +63,10 @@ export default class GoLive extends React.Component {
         });
     }
 
-    async getUserSettings() {
+    async getStreamInfo() {
         const res = await axios.get(`/api/users/${this.state.loggedInUser}/stream-info`);
         this.setState({
+            serverURL: res.data.serverURL,
             streamKey: res.data.streamKey,
             streamTitle: res.data.title,
             streamGenre: res.data.genre,
@@ -195,7 +195,7 @@ export default class GoLive extends React.Component {
                     </Col>
                     <Col xs='12'>
                         <input id='serverUrlInput' className='rounded-border w-50-xs w-25-md' type='text'
-                               value={RTMP_SERVER_URL} readOnly={true}/>
+                               value={this.state.serverURL} readOnly={true}/>
                         <Button className='btn-dark ml-1' size='sm'
                                 onClick={() => this.copyFrom('serverUrlInput')}>
                             Copy

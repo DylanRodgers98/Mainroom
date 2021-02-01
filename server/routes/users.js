@@ -324,6 +324,7 @@ router.get('/:username/stream-info', (req, res, next) => {
                 res.json({
                     displayName: user.displayName,
                     profilePicURL: user.profilePicURL || config.defaultProfilePicURL,
+                    serverURL: `rtmp://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`,
                     streamKey: user.streamInfo.streamKey,
                     title: user.streamInfo.title,
                     genre: user.streamInfo.genre,
