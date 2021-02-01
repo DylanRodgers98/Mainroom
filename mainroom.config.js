@@ -30,7 +30,7 @@ module.exports = {
             ffmpeg: process.env.FFMPEG_PATH,
             tasks: [
                 {
-                    app: 'live',
+                    app: process.env.RTMP_SERVER_APP_NAME,
                     hls: true,
                     hlsFlags: '[hls_time=2:hls_list_size=3:hls_flags=delete_segments]',
                     mp4: process.env.NODE_ENV === 'production',

@@ -9,38 +9,46 @@ const fs = require('fs');
 const {spawn} = require('child_process');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
-const isRecordingToMP4 = config.rtmpServer.trans.tasks.some(task => task.mp4);
+const EXPECTED_APP_NAME = `/${process.env.RTMP_SERVER_APP_NAME}`;
+const IS_RECORDING_TO_MP4 = config.rtmpServer.trans.tasks.some(task => task.mp4);
 
 const nms = new NodeMediaServer(config.rtmpServer);
 
 nms.on('prePublish', (sessionId, streamPath) => {
-    const streamKey = getStreamKeyFromStreamPath(streamPath);
-    User.findOne({'streamInfo.streamKey': streamKey})
-        .select('username displayName subscribers profilePicURL')
-        // populate subscribers for usage in mainroomEventEmitter
-        .populate({
-            path: 'subscribers',
-            select: 'username displayName email emailSettings'
-        })
-        .exec(async (err, user) => {
-            if (err) {
-                LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
-                throw err;
-            } else if (!user) {
-                nms.getSession(sessionId).reject();
-                LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}', sessionId, streamKey);
-            } else {
-                // set cumulative view count to number of users currently viewing stream page
-                user.streamInfo.cumulativeViewCount = user.streamInfo.viewCount;
-                await user.save();
+    const {app, streamKey} = extractAppAndStreamKey(streamPath);
+    if (app !== EXPECTED_APP_NAME) {
+        nms.getSession(sessionId).reject();
+        LOGGER.info(`A stream session (ID: {}) was rejected because it was targeting the wrong app ('{}' instead of '{}')`,
+            sessionId, app, EXPECTED_APP_NAME);
+    } else {
+        User.findOne({'streamInfo.streamKey': streamKey})
+            .select('username displayName subscribers profilePicURL')
+            // populate subscribers for usage in mainroomEventEmitter
+            .populate({
+                path: 'subscribers',
+                select: 'username displayName email emailSettings'
+            })
+            .exec(async (err, user) => {
+                if (err) {
+                    LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
+                    throw err;
+                } else if (!user) {
+                    nms.getSession(sessionId).reject();
+                    LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}',
+                        sessionId, streamKey);
+                } else {
+                    // set cumulative view count to number of users currently viewing stream page
+                    user.streamInfo.cumulativeViewCount = user.streamInfo.viewCount;
+                    await user.save();
 
-                mainroomEventEmitter.emit('onWentLive', user);
-            }
-        });
+                    mainroomEventEmitter.emit('onWentLive', user);
+                }
+            });
+    }
 });
 
 nms.on('donePublish', (sessionId, streamPath) => {
-    const streamKey = getStreamKeyFromStreamPath(streamPath);
+    const {streamKey} = extractAppAndStreamKey(streamPath);
     const timestamp = getSessionConnectTime(sessionId);
 
     User.findOne({'streamInfo.streamKey': streamKey})
@@ -53,7 +61,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
             } else {
                 mainroomEventEmitter.emit('onStreamEnded', user);
 
-                if (isRecordingToMP4) {
+                if (IS_RECORDING_TO_MP4) {
                     const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, 'live', streamKey);
                     const mp4FileName = findMP4FileName(inputDirectory, sessionId);
                     const inputURL = path.join(inputDirectory, mp4FileName);
@@ -100,9 +108,13 @@ nms.on('donePublish', (sessionId, streamPath) => {
     });
 });
 
-const getStreamKeyFromStreamPath = path => {
+const extractAppAndStreamKey = path => {
     const parts = path.split('/');
-    return parts[parts.length - 1];
+    const removedElements = parts.splice(parts.length - 1, 1);
+    return {
+        app: parts.join('/'),
+        streamKey: removedElements[0]
+    };
 };
 
 function getSessionConnectTime(sessionId) {
