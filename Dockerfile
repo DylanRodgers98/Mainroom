@@ -1,12 +1,5 @@
 FROM node:14
 
-# Create app directory
-WORKDIR /usr/src/app
-
-# Install app dependencies
-COPY package*.json ./
-RUN npm install
-
 # Install ffmpeg
 # See: https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
 RUN cd ~/ffmpeg_sources && \
@@ -71,11 +64,21 @@ RUN mkdir -p ~/ffmpeg_sources ~/bin && cd ~/ffmpeg_sources && \
     hash -r
 RUN mv ~/bin/ffmpeg /usr/local/bin && mv ~/bin/ffprobe /usr/local/bin && mv ~/bin/ffplay /usr/local/bin
 
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+COPY package*.json ./
+RUN npm install
+RUN npm run webpack:prod
+RUN npm prune --production
+
 # Bundle app source
 COPY . .
 
-# Expose app on port 8080
+# Expose HTTP server on port 8080, and RTMP server on port 1935
 EXPOSE 8080
+EXPOSE 1935
 
 # Start command
 CMD [ "npm", "run", "start:prod" ]

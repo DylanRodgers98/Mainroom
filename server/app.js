@@ -1,5 +1,5 @@
 // load env vars from .env file if in development mode
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 

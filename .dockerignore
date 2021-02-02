@@ -1,9 +1,6 @@
 # ignore Jetbrains files
 .idea
 
-# ignore Webpack files
-public
-
 # ignore node files
 node_modules
 npm-debug.log
