@@ -1,15 +1,25 @@
 FROM node:14
 
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+COPY package*.json ./
+RUN npm install
+COPY . .
+
 # Install ffmpeg
 # See: https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
-RUN cd ~/ffmpeg_sources && \
+RUN mkdir -p ~/ffmpeg_sources ~/bin && \
+    cd ~/ffmpeg_sources && \
     git -C fdk-aac pull 2> /dev/null || git clone --depth 1 https://github.com/mstorsjo/fdk-aac && \
     cd fdk-aac && \
     autoreconf -fiv && \
     ./configure --prefix="$HOME/ffmpeg_build" --disable-shared && \
     make && \
     make install
-RUN apt-get update -qq && apt-get -y install \
+RUN apt-get update -y && \
+    apt-get -y install \
       autoconf \
       automake \
       build-essential \
@@ -37,7 +47,7 @@ RUN apt-get update -qq && apt-get -y install \
       libmp3lame-dev \
       libopus-dev \
       libx264-dev
-RUN mkdir -p ~/ffmpeg_sources ~/bin && cd ~/ffmpeg_sources && \
+RUN cd ~/ffmpeg_sources && \
     wget -O ffmpeg-4.3.1.tar.bz2 https://ffmpeg.org/releases/ffmpeg-4.3.1.tar.bz2 && \
     tar xjvf ffmpeg-4.3.1.tar.bz2 && \
     cd ffmpeg-4.3.1 && \
@@ -62,19 +72,9 @@ RUN mkdir -p ~/ffmpeg_sources ~/bin && cd ~/ffmpeg_sources && \
     PATH="$HOME/bin:$PATH" make -j8 && \
     make install -j8 && \
     hash -r
-RUN mv ~/bin/ffmpeg /usr/local/bin && mv ~/bin/ffprobe /usr/local/bin && mv ~/bin/ffplay /usr/local/bin
-
-# Create app directory
-WORKDIR /usr/src/app
-
-# Install app dependencies
-COPY package*.json ./
-RUN npm install
-RUN npm run webpack:prod
-RUN npm prune --production
-
-# Bundle app source
-COPY . .
+RUN mv ~/bin/ffmpeg /usr/local/bin && \
+    mv ~/bin/ffprobe /usr/local/bin && \
+    mv ~/bin/ffplay /usr/local/bin
 
 # Expose HTTP server on port 8080, and RTMP server on port 1935
 EXPOSE 8080

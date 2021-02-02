@@ -173,7 +173,12 @@ httpServer.listen(process.env.SERVER_HTTP_PORT, () => {
     LOGGER.info('{} HTTP server listening on port: {}', config.siteTitle, process.env.SERVER_HTTP_PORT);
 });
 nodeMediaServer.run();
-cronJobs.startAll();
+
+// start cron jobs only in primary pm2 app (which should only contain 1 instance)
+// or on non-production environment
+if (process.env.PM2_APP_NAME === 'primary' || process.env.NODE_ENV !== 'production') {
+    cronJobs.startAll();
+}
 
 // On application shutdown, then disconnect from database and close servers
 process.on('SIGINT', async () => {
