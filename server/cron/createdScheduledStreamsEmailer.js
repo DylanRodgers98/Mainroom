@@ -31,14 +31,18 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                 })
                 .exec();
 
-            const userIds = scheduledStreams.map(stream => stream.user._id);
-            const users = await User.find({subscriptions: {$in: userIds}})
-                .select('username displayName email subscriptions')
-                .exec()
+            if (!scheduledStreams.length) {
+                LOGGER.info('No streams found starting between {} and {}, so sending no emails', lastTimeTriggered, thisTimeTriggered);
+            } else {
+                const userIds = scheduledStreams.map(stream => stream.user._id);
+                const users = await User.find({subscriptions: {$in: userIds}})
+                    .select('username displayName email subscriptions')
+                    .exec()
 
-            for (const user of users) {
-                const subscribedStreams = scheduledStreams.filter(stream => user.subscriptions.includes(stream.user._id));
-                mainroomEventEmitter.emit('onCreateScheduledStream', user, subscribedStreams);
+                for (const user of users) {
+                    const subscribedStreams = scheduledStreams.filter(stream => user.subscriptions.includes(stream.user._id));
+                    mainroomEventEmitter.emit('onCreateScheduledStream', user, subscribedStreams);
+                }
             }
         } catch (err) {
             LOGGER.error('An error occurred when finding users to email about newly created scheduled streams from subscriptions: {}', err);
