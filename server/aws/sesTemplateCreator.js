@@ -40,7 +40,7 @@ async function createSubscriptionWentLiveTemplate() {
 
 async function createSubscriptionCreatedScheduledStreamTemplate() {
     await createEmailTemplate({
-        TemplateName: config.email.ses.templateNames.subscriptionCreatedScheduledStream,
+        TemplateName: config.email.ses.templateNames.subscriptionsCreatedScheduledStreams,
         TemplateContent: {
             Subject: '{{user.displayName}} just scheduled a livestream on Mainroom',
             Text: `Hey {{subscriber.displayName}},\r\n{{user.displayName}} just scheduled {{#if stream.title}}{{stream.title}}{{else}}a stream{{/if}} on Mainroom from {{stream.startTime}} until {{stream.endTime}}`,

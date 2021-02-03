@@ -65,42 +65,6 @@ module.exports.notifySubscribersUserWentLive = user => {
     }
 }
 
-module.exports.notifySubscribersUserCreatedScheduledStream = (user, stream) => {
-    const emailType = 'subscriptionCreatedScheduledStream';
-    const destinations = getSubscriberDestinations(user.subscribers, emailType);
-
-    if (destinations.length) {
-        splitDestinations(destinations).forEach(async (Destinations, i) => {
-            const params = {
-                Destinations,
-                Source: process.env.NO_REPLY_EMAIL,
-                Template: config.email.ses.templateNames[emailType],
-                DefaultTemplateData: JSON.stringify({
-                    user: {
-                        displayName: user.displayName || user.username,
-                        username: user.username,
-                        profilePicURL: user.profilePicURL
-                    },
-                    stream: {
-                        title: stream.title,
-                        startTime: stream.startTime,
-                        endTime: stream.endTime
-                    },
-                })
-            };
-            try {
-                await SES.sendBulkTemplatedEmail(params).promise();
-            } catch (err) {
-                if (err) {
-                    LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`, i + 1, emailType, err);
-                } else {
-                    LOGGER.debug(`Successfully sent bulk '{}' email {} using SES`, i + 1, emailType);
-                }
-            }
-        });
-    }
-}
-
 function getSubscriberDestinations(subscribers, emailType) {
     const destinations = [];
     subscribers.forEach(subscriber => {
@@ -126,6 +90,46 @@ function splitDestinations(destinations) {
         splits.push(destinations.slice(i, i + BULK_EMAIL_MAX_DESTINATIONS));
     }
     return splits;
+}
+
+module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, streams) => {
+    const params = {
+        Destination: {
+            ToAddresses: [user.email]
+        },
+        Source: process.env.NO_REPLY_EMAIL,
+        Template: config.email.ses.templateNames.subscriptionsCreatedScheduledStreams,
+        TemplateData: JSON.stringify({
+            user: {
+                displayName: user.displayName || user.username
+            },
+            streams: streams.map(stream => {
+                return {
+                    user: {
+                        displayName: stream.user.displayName || stream.user.username,
+                        username: stream.user.username,
+                        profilePicURL: stream.user.profilePicURL
+                    },
+                    stream: {
+                        title: stream.title,
+                        startTime: stream.startTime,
+                        endTime: stream.endTime,
+                        genre: stream.genre,
+                        category: stream.category
+                    },
+                }
+            })
+        })
+    };
+    try {
+        await SES.sendTemplatedEmail(params).promise();
+    } catch (err) {
+        if (err) {
+            LOGGER.error(`An error occurred when sending 'subscriptionsCreatedScheduledStreams' email to {} using SES: {}`, user.email, err);
+        } else {
+            LOGGER.debug(`Successfully sent 'subscriptionsCreatedScheduledStreams' email to {} using SES`, user.email);
+        }
+    }
 }
 
 module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, streams) => {

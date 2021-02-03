@@ -94,7 +94,7 @@ module.exports = {
             templateNames: {
                 newSubscriber: 'newSubscriber',
                 subscriptionWentLive: 'subscriptionWentLive',
-                subscriptionCreatedScheduledStream: 'subscriptionCreatedScheduledStream',
+                subscriptionsCreatedScheduledStreams: 'subscriptionsCreatedScheduledStreams',
                 subscriptionScheduledStreamStartingIn: 'subscriptionScheduledStreamStartingIn',
                 resetPassword: 'resetPassword'
             }
