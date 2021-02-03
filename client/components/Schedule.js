@@ -39,6 +39,7 @@ export default class Schedule extends React.Component {
         this.state = {
             loaded: false,
             loggedInUser: '',
+            loggedInUserId: '',
             scheduleGroups: [],
             scheduleItems: [],
             startTime: moment(),
@@ -65,7 +66,8 @@ export default class Schedule extends React.Component {
         const res = await axios.get('/logged-in-user');
         if (res.data.username) {
             this.setState({
-                loggedInUser: res.data.username
+                loggedInUser: res.data.username,
+                loggedInUserId: res.data._id
             }, () => {
                 this.getSchedule();
             });
@@ -218,6 +220,7 @@ export default class Schedule extends React.Component {
 
     async addToSchedule() {
         const res = await axios.post('/api/scheduled-streams', {
+            userId: this.state.loggedInUserId,
             startTime: this.state.scheduleStreamStartTime,
             endTime: this.state.scheduleStreamEndTime,
             title: this.state.scheduleStreamTitle,

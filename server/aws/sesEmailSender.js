@@ -149,7 +149,9 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
                     stream: {
                         title: stream.title,
                         startTime: stream.startTime,
-                        endTime: stream.endTime
+                        endTime: stream.endTime,
+                        genre: stream.genre,
+                        category: stream.category
                     },
                 }
             })
