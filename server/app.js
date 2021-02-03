@@ -37,11 +37,11 @@ mongoose.connect(databaseUri, {
     useCreateIndex: true
 }, err => {
     if (err) {
-        LOGGER.error('An error occurred when connecting to database: {}', err);
+        LOGGER.error(`An error occurred when connecting to MongoDB database '{}': {}`, process.env.DB_DATABASE, err);
         throw err;
     } else {
+        LOGGER.info('Connected to MongoDB database: {}', process.env.DB_DATABASE);
         // Reset user's view count properties, as they may still be non-zero due to a non-graceful server shutdown
-        LOGGER.debug(`Resetting viewCount and cumulativeViewCount properties for users with non-zero values for these properties`);
         User.updateMany({
             'streamInfo.viewCount': {$gt: 0}
         }, {
@@ -52,7 +52,9 @@ mongoose.connect(databaseUri, {
                 LOGGER.error(`An error occurred when resetting users' viewCount and cumulativeViewCount properties to 0: {}`, err);
                 throw err;
             }
-            LOGGER.debug('Reset viewCount and cumulativeViewCount properties for {} users', res.nModified);
+            if (res.nModified > 0) {
+                LOGGER.info('Reset viewCount and cumulativeViewCount properties for {} users', res.nModified);
+            }
         });
     }
 });
@@ -80,9 +82,6 @@ app.use(Session({
 // set up Passport for authentication
 app.use(passport.initialize());
 app.use(passport.session());
-
-// if in prod, app will be behind Nginx reverse proxy, so tell express to trust proxy
-app.set('trust proxy', process.env.NODE_ENV === 'production');
 
 // apply rate limiter to all requests
 app.use(rateLimit({
@@ -186,17 +185,17 @@ process.on('SIGINT', async () => {
     try {
         LOGGER.debug('Disconnecting from database');
         await mongoose.disconnect();
-        LOGGER.debug('Disconnected from database');
+        LOGGER.info('Disconnected from database');
 
-        LOGGER.debug('Closing server');
+        LOGGER.debug('Closing servers');
         nodeMediaServer.stop();
         await closeServer();
-        LOGGER.debug('Server closed');
+        LOGGER.info('Servers closed');
 
-        LOGGER.info('Application shut down successfully. Exiting process with exit code 0.');
+        LOGGER.info('Application shut down successfully. Exiting process with exit code 0');
         process.exit(0);
     } catch (err) {
-        LOGGER.error('An error occurred during server shutdown. Exiting process with exit code 1. Error: {}', err);
+        LOGGER.error('An error occurred during application shutdown. Exiting process with exit code 1. Error: {}', err);
         process.exit(1);
     }
 });
