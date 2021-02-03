@@ -17,7 +17,15 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, async () => 
         let users;
         try {
             users = await User.find({emailSettings: {subscriptionScheduledStreamStartingIn: {$gte: 0}}})
-                .select('username displayName email emailSettings.subscriptionScheduledStreamStartingIn subscriptions')
+                .select('username displayName email emailSettings.subscriptionScheduledStreamStartingIn subscriptions nonSubscribedScheduledStreams')
+                .populate({
+                    path: 'nonSubscribedScheduledStreams',
+                    select: 'user title startTime endTime genre category',
+                    populate: {
+                        path: 'user',
+                        select: 'username displayName profilePicURL'
+                    }
+                })
                 .exec();
         } catch (err) {
             LOGGER.error('An error occurred when finding users to email about streams starting soon: {}', err);
@@ -26,28 +34,33 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, async () => 
 
         const errors = [];
         for (const user of users) {
+            // cron job should be configured to trigger every minute, so startTime needs to cover
+            // streams that are scheduled for non-zero seconds (e.g. triggered at 1pm = 13:00:00-13:00:59)
+            const start = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn, 'minutes').valueOf();
+            const end = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn + 1, 'minutes').valueOf();
+
+            const filter = {
+                user: {$in: user.subscriptions},
+                $and: [
+                    {startTime: {$gte: start}},
+                    {startTime: {$lt: end}}
+                ]
+            };
+
             try {
-                // cron job should be configured to trigger every minute, so startTime needs to cover
-                // streams that are scheduled for non-zero seconds (e.g. triggered at 1pm = 13:00:00-13:00:59)
-                const start = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn, 'minutes').valueOf();
-                const end = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn + 1, 'minutes').valueOf();
-
-                const filter = {
-                    user: {$in: user.subscriptions},
-                    $and: [
-                        {startTime: {$gte: start}},
-                        {startTime: {$lt: end}}
-                    ]
-                };
-
-                const streams = await ScheduledStream.find(filter)
-                    .select('user title startTime endTime')
+                const scheduledStreams = await ScheduledStream.find(filter)
+                    .select('user title startTime endTime genre category')
                     .populate({
                         path: 'user',
                         select: 'username displayName profilePicURL'
                     })
                     .exec();
 
+                const nonSubscribedScheduledStreams = user.nonSubscribedScheduledStreams.filter(stream => {
+                    return stream.startTime >= start && stream.startTime < end;
+                });
+
+                const streams = [...scheduledStreams, ...nonSubscribedScheduledStreams];
                 if (streams.length) {
                     const userData = {
                         email: user.email,

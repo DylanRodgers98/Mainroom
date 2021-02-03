@@ -1,25 +1,48 @@
 const {CronTime} = require('cron');
 const config = require('../../../mainroom.config');
 const {sleep} = require('../../testUtils');
+const moment = require('moment');
 
-const mockUser = {
-    username: 'foo',
-    displayName: 'bar',
-    email: 'foo@bar.com',
-    emailSettings: {
-        subscriptionScheduledStreamStartingIn: 60
-    }
-};
+const STARTING_IN = 60;
+const USERNAME = 'foo';
+const DISPLAY_NAME = 'bar';
+const EMAIL = 'foo@bar.com';
 
-const mockStreams = [{
+const mockStream = {
     user: {_id: 0},
     startTime: new Date(2020, 8, 17, 16),
     endTime: new Date(2020, 8, 17, 17),
     title: 'Test Stream',
     genre: 'Drum & Bass',
-    category: 'DJ Set',
-    tags: ['test', 'stream']
-}];
+    category: 'DJ Set'
+};
+
+const mockNonSubscribedStream = {
+    user: {_id: 1},
+    startTime: moment().add(STARTING_IN, 'minutes').add(30, 'seconds'), // offset by some time later than cron job trigger
+    endTime: moment().add(STARTING_IN, 'minutes').add(1, 'hour'),
+    title: 'Another Test Stream',
+    genre: 'Techno',
+    category: 'Production'
+}
+
+const mockUser = {
+    username: USERNAME,
+    displayName: DISPLAY_NAME,
+    email: EMAIL,
+    emailSettings: {
+        subscriptionScheduledStreamStartingIn: STARTING_IN
+    },
+    nonSubscribedScheduledStreams: [mockNonSubscribedStream]
+};
+
+const expectedUserData = {
+    email: EMAIL,
+    displayName: DISPLAY_NAME,
+    username: USERNAME
+};
+
+const expectedStreams = [mockStream, mockNonSubscribedStream];
 
 jest.mock('../../../server/model/schemas', () => {
     return {
@@ -28,7 +51,11 @@ jest.mock('../../../server/model/schemas', () => {
                 return {
                     select: () => {
                         return {
-                            exec: () => [mockUser]
+                            populate: () => {
+                                return {
+                                    exec: () => [mockUser]
+                                }
+                            }
                         }
                     }
                 }
@@ -41,7 +68,7 @@ jest.mock('../../../server/model/schemas', () => {
                         return {
                             populate: () => {
                                 return {
-                                    exec: () => mockStreams
+                                    exec: () => [mockStream]
                                 }
                             }
                         }
@@ -84,11 +111,6 @@ describe('upcomingScheduledStreamEmailer', () => {
 
         // then
         job.stop();
-        const userData = {
-            email: mockUser.email,
-            displayName: mockUser.displayName,
-            username: mockUser.username
-        };
-        expect(mockEmit).toHaveBeenCalledWith('onScheduledStreamStartingSoon', userData, mockStreams);
+        expect(mockEmit).toHaveBeenCalledWith('onScheduledStreamStartingSoon', expectedUserData, expectedStreams);
     });
 });
