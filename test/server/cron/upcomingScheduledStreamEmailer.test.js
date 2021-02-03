@@ -24,7 +24,15 @@ const mockStreams = [{
 jest.mock('../../../server/model/schemas', () => {
     return {
         User: {
-            find: (query, projection, callback) => callback(null, [mockUser])
+            find: () => {
+                return {
+                    select: () => {
+                        return {
+                            exec: () => [mockUser]
+                        }
+                    }
+                }
+            }
         },
         ScheduledStream: {
             find: () => {
@@ -33,7 +41,7 @@ jest.mock('../../../server/model/schemas', () => {
                         return {
                             populate: () => {
                                 return {
-                                    exec: callback => callback(null, mockStreams)
+                                    exec: () => mockStreams
                                 }
                             }
                         }
