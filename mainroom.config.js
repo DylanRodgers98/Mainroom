@@ -5,6 +5,7 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 const CRON_EVERY_MINUTE = '* * * * *';
+const CRON_EVERY_HOUR = '0 * * * *';
 
 const logger = require('./logger');
 
@@ -52,7 +53,8 @@ module.exports = {
     },
     cron: {
         scheduledStreamInfoUpdater: CRON_EVERY_MINUTE,
-        upcomingScheduledStreamEmailer: CRON_EVERY_MINUTE
+        upcomingScheduledStreamEmailer: CRON_EVERY_MINUTE,
+        createdScheduledStreamsEmailer: CRON_EVERY_HOUR
     },
     storage: {
         thumbnails: {

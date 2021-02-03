@@ -9,6 +9,8 @@ const ScheduledStreamSchema = new Schema({
     genre: String,
     category: String,
     tags: [String]
+}, {
+    timestamps: true
 });
 
 module.exports = ScheduledStreamSchema;
