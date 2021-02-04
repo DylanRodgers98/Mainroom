@@ -38,20 +38,25 @@ const mockUser1 = {
     username: 'foo',
     displayName: 'bar',
     email: 'foo@bar.com',
-    subscriptions: [USER_ID_MOCK_STREAM_1, USER_ID_MOCK_STREAM_2]
-}
+    subscriptions: [
+        {user: {_id: USER_ID_MOCK_STREAM_1}},
+        {user: {_id: USER_ID_MOCK_STREAM_2}}
+    ]
+};
 
-const mockUser1ExpectedStreams = [mockStream1, mockStream2]
+const mockUser1ExpectedStreams = [mockStream1, mockStream2];
 
 const mockUser2 = {
     _id: 4,
     username: 'test',
     displayName: 'Test User',
     email: 'test@email.com',
-    subscriptions: [USER_ID_MOCK_STREAM_3]
-}
+    subscriptions: [{
+        user: {_id: USER_ID_MOCK_STREAM_3}
+    }]
+};
 
-const mockUser2ExpectedStreams = [mockStream3]
+const mockUser2ExpectedStreams = [mockStream3];
 
 jest.mock('../../../server/model/schemas', () => {
     return {
@@ -63,11 +68,11 @@ jest.mock('../../../server/model/schemas', () => {
                             populate: () => {
                                 return {
                                     exec: () => [mockStream1, mockStream2, mockStream3]
-                                }
+                                };
                             }
-                        }
+                        };
                     }
-                }
+                };
             }
         },
         User: {
@@ -76,9 +81,9 @@ jest.mock('../../../server/model/schemas', () => {
                     select: () => {
                         return {
                             exec: () => [mockUser1, mockUser2]
-                        }
+                        };
                     }
-                }
+                };
             }
         }
     };

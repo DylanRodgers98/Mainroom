@@ -3,13 +3,14 @@ const config = require('../../../mainroom.config');
 const {sleep} = require('../../testUtils');
 const moment = require('moment');
 
+const SUBSCRIPTION_ID = 0;
 const STARTING_IN = 60;
 const USERNAME = 'foo';
 const DISPLAY_NAME = 'bar';
 const EMAIL = 'foo@bar.com';
 
-const mockStream = {
-    user: {_id: 0},
+const mockSubscribedStream = {
+    user: {_id: SUBSCRIPTION_ID},
     startTime: new Date(2020, 8, 17, 16),
     endTime: new Date(2020, 8, 17, 17),
     title: 'Test Stream',
@@ -24,7 +25,7 @@ const mockNonSubscribedStream = {
     title: 'Another Test Stream',
     genre: 'Techno',
     category: 'Production'
-}
+};
 
 const mockUser = {
     username: USERNAME,
@@ -33,6 +34,9 @@ const mockUser = {
     emailSettings: {
         subscriptionScheduledStreamStartingIn: STARTING_IN
     },
+    subscriptions: [{
+        user: {_id: SUBSCRIPTION_ID}
+    }],
     nonSubscribedScheduledStreams: [mockNonSubscribedStream]
 };
 
@@ -42,7 +46,7 @@ const expectedUserData = {
     username: USERNAME
 };
 
-const expectedStreams = [mockStream, mockNonSubscribedStream];
+const expectedStreams = [mockSubscribedStream, mockNonSubscribedStream];
 
 jest.mock('../../../server/model/schemas', () => {
     return {
@@ -54,11 +58,11 @@ jest.mock('../../../server/model/schemas', () => {
                             populate: () => {
                                 return {
                                     exec: () => [mockUser]
-                                }
+                                };
                             }
-                        }
+                        };
                     }
-                }
+                };
             }
         },
         ScheduledStream: {
@@ -68,12 +72,12 @@ jest.mock('../../../server/model/schemas', () => {
                         return {
                             populate: () => {
                                 return {
-                                    exec: () => [mockStream]
-                                }
+                                    exec: () => [mockSubscribedStream]
+                                };
                             }
-                        }
+                        };
                     }
-                }
+                };
             }
         }
     };

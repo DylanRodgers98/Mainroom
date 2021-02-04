@@ -9,7 +9,7 @@ const mockStream = {
     genre: 'Drum & Bass',
     category: 'DJ Set',
     tags: ['test', 'stream']
-}
+};
 
 const mockFindByIdAndUpdate = jest.fn();
 
@@ -21,7 +21,7 @@ jest.mock('../../../server/model/schemas', () => {
         User: {
             findByIdAndUpdate: mockFindByIdAndUpdate
         }
-    }
+    };
 });
 
 const {job} = require('../../../server/cron/scheduledStreamInfoUpdater');
