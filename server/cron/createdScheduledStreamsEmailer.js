@@ -14,7 +14,7 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
     const thisTimeTriggered = job.lastDate().valueOf();
 
     if (!config.email.enabled) {
-        LOGGER.info('Email is not enabled, so will not send emails about newly created scheduled streams');
+        LOGGER.info('Email is not enabled, so will not send emails about subscription-created scheduled streams');
     } else {
         try {
             const filter = {
@@ -32,7 +32,7 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                 .exec();
 
             if (!scheduledStreams.length) {
-                LOGGER.info('No streams found starting between {} and {}, so sending no emails', lastTimeTriggered, thisTimeTriggered);
+                LOGGER.info('No ScheduledStreams found created between {} and {}, so sending no emails', lastTimeTriggered, thisTimeTriggered);
             } else {
                 const userIds = scheduledStreams.map(stream => stream.user._id);
                 const users = await User.find({subscriptions: {$in: userIds}})
@@ -41,7 +41,7 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
 
                 for (const user of users) {
                     const subscribedStreams = scheduledStreams.filter(stream => user.subscriptions.includes(stream.user._id));
-                    mainroomEventEmitter.emit('onCreateScheduledStream', user, subscribedStreams);
+                    mainroomEventEmitter.emit('onSubscribersCreatedScheduledStreams', user, subscribedStreams);
                 }
             }
         } catch (err) {
