@@ -2,6 +2,7 @@ const {CronJob} = require('cron');
 const config = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
 const mainroomEventEmitter = require('../mainroomEventEmitter');
+const _ = require('lodash');
 const LOGGER = require('../../logger')('./server/cron/createdScheduledStreamsEmailer.js');
 
 const jobName = 'Subscription-created Scheduled Streams Emailer'
@@ -44,7 +45,7 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                     users.length, users.length === 1 ? '' : 's');
 
                 for (const user of users) {
-                    const isSubscribedPredicate = stream => user.subscriptions.some(sub => sub.user._id === stream.user._id);
+                    const isSubscribedPredicate = stream => user.subscriptions.some(sub => _.isEqual(sub.user._id, stream.user._id));
                     const subscribedStreams = scheduledStreams.filter(isSubscribedPredicate);
                     mainroomEventEmitter.emit('onSubscribersCreatedScheduledStreams', user, subscribedStreams);
                 }

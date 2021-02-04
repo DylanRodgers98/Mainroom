@@ -227,7 +227,7 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
                 } else if (!user) {
                     res.status(404).send(`User (username: ${escape(username)}) not found`);
                 } else {
-                    const isSubscribed = otherUser.subscribers.some(sub => sub.user._id === user._id);
+                    const isSubscribed = otherUser.subscribers.some(sub => _.isEqual(sub.user._id, user._id));
                     res.send(isSubscribed);
                 }
             });
@@ -252,7 +252,7 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
                 } else if (!userToSubscribeTo) {
                     res.status(404).send(`User (username: ${escape(usernameToSubscribeTo)}) not found`);
                 } else {
-                    const isAlreadySubscribed = userToSubscribeTo.subscribers.some(sub => sub.user._id === user._id);
+                    const isAlreadySubscribed = userToSubscribeTo.subscribers.some(sub => _.isEqual(sub.user._id, user._id));
                     if (!isAlreadySubscribed) {
                         userToSubscribeTo.updateOne({$push: {subscribers: {user: user._id}}}, err => {
                             if (err) {
