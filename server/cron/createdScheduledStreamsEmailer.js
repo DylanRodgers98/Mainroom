@@ -32,12 +32,16 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                 .exec();
 
             if (!scheduledStreams.length) {
-                LOGGER.info('No ScheduledStreams found created between {} and {}, so sending no emails', lastTimeTriggered, thisTimeTriggered);
+                LOGGER.info('No ScheduledStreams found created between {} and {}, so sending no emails',
+                    lastTimeTriggered, thisTimeTriggered);
             } else {
                 const userIds = scheduledStreams.map(stream => stream.user._id);
                 const users = await User.find({subscriptions: {$in: userIds}})
                     .select('username displayName email subscriptions')
                     .exec()
+
+                LOGGER.info('Emitting requests to send emails to {} user{} about new subscriber-created scheduled streams',
+                    users.length, users.length === 1 ? '' : 's');
 
                 for (const user of users) {
                     const subscribedStreams = scheduledStreams.filter(stream => user.subscriptions.includes(stream.user._id));
