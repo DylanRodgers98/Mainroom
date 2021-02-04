@@ -9,7 +9,7 @@ const mainroomEventEmitter = new MainroomEventEmitter();
 
 if (config.email.enabled) {
     mainroomEventEmitter
-        .on('onNewSubscriber', sesEmailSender.notifyUserOfNewSubscriber)
+        .on('onNewSubscribers', sesEmailSender.notifyUserOfNewSubscribers)
         .on('onWentLive', sesEmailSender.notifySubscribersUserWentLive)
         .on('onSubscribersCreatedScheduledStreams', sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams)
         .on('onScheduledStreamStartingSoon', sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon);

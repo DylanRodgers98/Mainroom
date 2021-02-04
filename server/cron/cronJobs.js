@@ -3,7 +3,8 @@ const LOGGER = require('../../logger')('./server/cron/cronJobs.js');
 const cronJobs = [
     require('./scheduledStreamInfoUpdater'),
     require('./upcomingScheduledStreamEmailer'),
-    require('./createdScheduledStreamsEmailer')
+    require('./createdScheduledStreamsEmailer'),
+    require('./newSubscribersEmailer')
 ];
 
 module.exports.startAll = () => {

@@ -34,7 +34,7 @@ const UserSchema = new Schema({
     }],
     nonSubscribedScheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}],
     emailSettings: {
-        newSubscriber: Boolean,
+        newSubscribers: Boolean,
         subscriptionWentLive: Boolean,
         subscriptionCreatedScheduledStream: Boolean,
         subscriptionScheduledStreamStartingIn: Number

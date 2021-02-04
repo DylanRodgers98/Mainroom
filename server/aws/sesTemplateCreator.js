@@ -18,7 +18,7 @@ module.exports.createEmailTemplates = async () => {
 
 async function createNewSubscriberTemplateTemplate() {
     await createEmailTemplate({
-        TemplateName: config.email.ses.templateNames.newSubscriber,
+        TemplateName: config.email.ses.templateNames.newSubscribers,
         TemplateContent: {
             Subject: '{{subscriber.displayName}} subscribed to you on Mainroom',
             Text: `Hey {{user.displayName}},\r\n{{subscriber.displayName}} just subscribed to you on Mainroom!\r\nCheck out their profile: https://${process.env.SERVER_HOST}/user/{{subscriber.username}}`,

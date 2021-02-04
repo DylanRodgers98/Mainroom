@@ -50,7 +50,7 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                 }
             }
         } catch (err) {
-            LOGGER.error('An error occurred when finding users to email about newly created scheduled streams from subscriptions: {}', err);
+            LOGGER.error('An error occurred when emitting requests to email users about newly created scheduled streams from subscriptions: {}', err);
             throw err;
         }
     }

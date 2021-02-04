@@ -54,7 +54,8 @@ module.exports = {
     cron: {
         scheduledStreamInfoUpdater: CRON_EVERY_MINUTE,
         upcomingScheduledStreamEmailer: CRON_EVERY_MINUTE,
-        createdScheduledStreamsEmailer: CRON_EVERY_HOUR
+        createdScheduledStreamsEmailer: CRON_EVERY_HOUR,
+        newSubscribersEmailer: CRON_EVERY_HOUR
     },
     storage: {
         thumbnails: {
@@ -92,7 +93,7 @@ module.exports = {
         enabled: false,
         ses: {
             templateNames: {
-                newSubscriber: 'newSubscriber',
+                newSubscribers: 'newSubscribers',
                 subscriptionWentLive: 'subscriptionWentLive',
                 subscriptionsCreatedScheduledStreams: 'subscriptionsCreatedScheduledStreams',
                 subscriptionScheduledStreamStartingIn: 'subscriptionScheduledStreamStartingIn',

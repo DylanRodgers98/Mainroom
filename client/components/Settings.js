@@ -330,8 +330,8 @@ export default class Settings extends React.Component {
                         <Col className='mt-2' xs='12'>
                             <form>
                                 <label>
-                                    <input name='newSubscriber' type='checkbox' className='mr-1'
-                                           checked={this.state.emailSettings.newSubscriber}
+                                    <input name='newSubscribers' type='checkbox' className='mr-1'
+                                           checked={this.state.emailSettings.newSubscribers}
                                            onChange={this.handleEmailSettingsChange}/>
                                     Send an email when someone subscribes to me
                                 </label>

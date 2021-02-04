@@ -5,22 +5,24 @@ const LOGGER = require('../../logger')('./server/aws/sesEmailSender.js');
 const SES = new AWS.SES();
 const BULK_EMAIL_MAX_DESTINATIONS = 50;
 
-module.exports.notifyUserOfNewSubscriber = async (user, subscriber) => {
+module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
     const params = {
         Destination: {
             ToAddresses: [user.email]
         },
         Source: process.env.NO_REPLY_EMAIL,
-        Template: config.email.ses.templateNames.newSubscriber,
+        Template: config.email.ses.templateNames.newSubscribers,
         TemplateData: JSON.stringify({
             user: {
                 displayName: user.displayName || user.username
             },
-            subscriber: {
-                displayName: subscriber.displayName || subscriber.username,
-                username: subscriber.username,
-                profilePicURL: subscriber.profilePicURL
-            }
+            newSubscribers: subscribers.map(subscriber => {
+                return {
+                    displayName: subscriber.displayName || subscriber.username,
+                    username: subscriber.username,
+                    profilePicURL: subscriber.profilePicURL
+                };
+            })
         })
     };
     try {
