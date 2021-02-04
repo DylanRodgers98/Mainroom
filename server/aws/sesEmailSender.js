@@ -35,8 +35,9 @@ module.exports.notifyUserOfNewSubscriber = async (user, subscriber) => {
 }
 
 module.exports.notifySubscribersUserWentLive = user => {
+    const subscribers = user.subscribers.map(sub => sub.user._id);
     const emailType = 'subscriptionWentLive';
-    const destinations = getSubscriberDestinations(user.subscribers, emailType);
+    const destinations = getSubscriberDestinations(subscribers, emailType);
 
     if (destinations.length) {
         splitDestinations(destinations).forEach(async (Destinations, i) => {

@@ -39,8 +39,9 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, async () => 
             const start = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn, 'minutes').valueOf();
             const end = moment().add(user.emailSettings.subscriptionScheduledStreamStartingIn + 1, 'minutes').valueOf();
 
+            const subscriptionsIds = user.subscriptions.map(sub => sub.user._id);
             const filter = {
-                user: {$in: user.subscriptions},
+                user: {$in: subscriptionsIds},
                 $and: [
                     {startTime: {$gte: start}},
                     {startTime: {$lt: end}}

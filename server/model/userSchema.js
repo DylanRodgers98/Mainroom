@@ -24,8 +24,14 @@ const UserSchema = new Schema({
         viewCount: Number,
         cumulativeViewCount: Number
     },
-    subscribers: [{type: Schema.Types.ObjectId, ref: 'User'}],
-    subscriptions: [{type: Schema.Types.ObjectId, ref: 'User'}],
+    subscribers: [{
+        user: {type: Schema.Types.ObjectId, ref: 'User'},
+        subscribedAt: {type: Date, default: new Date()}
+    }],
+    subscriptions: [{
+        user: {type: Schema.Types.ObjectId, ref: 'User'},
+        subscribedAt: {type: Date, default: new Date()}
+    }],
     nonSubscribedScheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}],
     emailSettings: {
         newSubscriber: Boolean,
@@ -107,8 +113,11 @@ async function deleteRecordedStreams(user) {
 async function removeFromSubscriptions(user, model) {
     LOGGER.debug('Removing User (_id: {}) from subscribers/subscriptions lists', user._id);
 
-    const pullFromSubscribers = model.updateMany({_id: {$in: user.subscriptions}}, {$pull: {subscribers: user._id}});
-    const pullFromSubscriptions = model.updateMany({_id: {$in: user.subscribers}}, {$pull: {subscriptions: user._id}});
+    const subscribersIds = user.subscribers.map(sub => sub.user._id);
+    const subscriptionsIds = user.subscriptions.map(sub => sub.user._id);
+
+    const pullFromSubscribers = model.updateMany({_id: {$in: subscribersIds}}, {$pull: {subscribers: {user: user._id}}});
+    const pullFromSubscriptions = model.updateMany({_id: {$in: subscriptionsIds}}, {$pull: {subscriptions: {user: user._id}}});
 
     const promiseResults = await Promise.all([
         pullFromSubscribers,

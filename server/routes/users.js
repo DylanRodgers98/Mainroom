@@ -172,14 +172,14 @@ const getSubscribersOrSubscriptions = key => (req, res, next) => {
             LOGGER.error('An error occurred when counting number of {} for user {}: {}', key, username, err);
             next(err);
         } else {
-            // populate subscribers, paginated
+            // populate subscribers/subscriptions, paginated
             const limit = req.query.limit
             const page = req.query.page;
             const pages = Math.ceil(result.count / limit);
             const skip = (page - 1) * limit;
             User.findOne({username}, key)
                 .populate({
-                    path: key,
+                    path: `${key}.user`,
                     select: 'username profilePicURL',
                     skip,
                     limit
@@ -194,8 +194,8 @@ const getSubscribersOrSubscriptions = key => (req, res, next) => {
                         res.json({
                             [key]: (user[key] || []).map(sub => {
                                 return {
-                                    username: sub.username,
-                                    profilePicURL: sub.profilePicURL || config.defaultProfilePicURL
+                                    username: sub.user.username,
+                                    profilePicURL: sub.user.profilePicURL || config.defaultProfilePicURL
                                 };
                             }),
                             nextPage: page < pages ? page + 1 : null
@@ -227,7 +227,8 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
                 } else if (!user) {
                     res.status(404).send(`User (username: ${escape(username)}) not found`);
                 } else {
-                    res.send(otherUser.subscribers.includes(user._id));
+                    const isSubscribed = otherUser.subscribers.some(sub => sub.user._id === user._id);
+                    res.send(isSubscribed);
                 }
             });
         }
@@ -244,29 +245,33 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
             res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
             const usernameToSubscribeTo = sanitise(req.params.userToSubscribeTo.toLowerCase())
-            User.findOne({username: usernameToSubscribeTo}, (err, userToSubscribeTo) => {
+            User.findOne({username: usernameToSubscribeTo}, 'subscribers',(err, userToSubscribeTo) => {
                 if (err) {
                     LOGGER.error('An error occurred when finding user {}: {}', usernameToSubscribeTo, err);
                     next(err);
                 } else if (!userToSubscribeTo) {
                     res.status(404).send(`User (username: ${escape(usernameToSubscribeTo)}) not found`);
                 } else {
-                    userToSubscribeTo.updateOne({$addToSet: {subscribers: user._id}}, err => {
-                        if (err) {
-                            LOGGER.error(`An error occurred when adding user {} to user {}'s subscribers: {}`, username, usernameToSubscribeTo, err);
-                            next(err);
-                        } else {
-                            user.updateOne({$addToSet: {subscriptions: userToSubscribeTo._id}}, err => {
-                                if (err) {
-                                    LOGGER.error(`An error occurred when adding user {} to user {}'s subscriptions: {}`, usernameToSubscribeTo, username, err);
-                                    next(err);
-                                } else {
-                                    mainroomEventEmitter.emit('onNewSubscriber', userToSubscribeTo, user)
-                                    res.sendStatus(200);
-                                }
-                            });
-                        }
-                    });
+                    const isAlreadySubscribed = userToSubscribeTo.subscribers.some(sub => sub.user._id === user._id);
+                    if (!isAlreadySubscribed) {
+                        userToSubscribeTo.updateOne({$push: {subscribers: {user: user._id}}}, err => {
+                            if (err) {
+                                LOGGER.error(`An error occurred when adding user {} to user {}'s subscribers: {}`,
+                                    username, usernameToSubscribeTo, err);
+                                next(err);
+                            } else {
+                                user.updateOne({$push: {subscriptions: {user: userToSubscribeTo._id}}}, err => {
+                                    if (err) {
+                                        LOGGER.error(`An error occurred when adding user {} to user {}'s subscriptions: {}`,
+                                            usernameToSubscribeTo, username, err);
+                                        next(err);
+                                    } else {
+                                        res.sendStatus(200);
+                                    }
+                                });
+                            }
+                        });
+                    }
                 }
             });
         }
@@ -290,12 +295,12 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
                 } else if (!userToUnsubscribeFrom) {
                     res.status(404).send(`User (username: ${escape(usernameToUnsubscribeFrom)}) not found`);
                 } else {
-                    userToUnsubscribeFrom.updateOne({$pull: {subscribers: user._id}}, err => {
+                    userToUnsubscribeFrom.updateOne({$pull: {subscribers: {user: user._id}}}, err => {
                         if (err) {
                             LOGGER.error(`An error occurred when removing user {} to user {}'s subscribers: {}`, username, userToUnsubscribeFrom, err);
                             next(err);
                         } else {
-                            user.updateOne({$pull: {subscriptions: userToUnsubscribeFrom._id}}, err => {
+                            user.updateOne({$pull: {subscriptions: {user: userToUnsubscribeFrom._id}}}, err => {
                                 if (err) {
                                     LOGGER.error(`An error occurred when removing user {} to user {}'s subscriptions: {}`, userToUnsubscribeFrom, username, err);
                                     next(err);
@@ -401,9 +406,10 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
+            const subscriptionsIds = user.subscriptions.map(sub => sub.user._id);
             ScheduledStream.find({
                 $or: [
-                    {user: {$in: [user._id, ...user.subscriptions]}},
+                    {user: {$in: [user._id, ...subscriptionsIds]}},
                     {_id: {$in: user.nonSubscribedScheduledStreams}}
                 ],
                 startTime: {$lte: req.query.scheduleEndTime},

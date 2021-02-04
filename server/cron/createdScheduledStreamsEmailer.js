@@ -36,7 +36,7 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                     lastTimeTriggered, thisTimeTriggered);
             } else {
                 const userIds = scheduledStreams.map(stream => stream.user._id);
-                const users = await User.find({subscriptions: {$in: userIds}})
+                const users = await User.find({subscriptions: {user: {$in: userIds}}})
                     .select('username displayName email subscriptions')
                     .exec()
 
@@ -44,7 +44,8 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                     users.length, users.length === 1 ? '' : 's');
 
                 for (const user of users) {
-                    const subscribedStreams = scheduledStreams.filter(stream => user.subscriptions.includes(stream.user._id));
+                    const isSubscribedPredicate = stream => user.subscriptions.some(sub => sub.user._id === stream.user._id);
+                    const subscribedStreams = scheduledStreams.filter(isSubscribedPredicate);
                     mainroomEventEmitter.emit('onSubscribersCreatedScheduledStreams', user, subscribedStreams);
                 }
             }

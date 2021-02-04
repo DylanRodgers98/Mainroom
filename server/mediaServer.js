@@ -25,7 +25,7 @@ nms.on('prePublish', (sessionId, streamPath) => {
             .select('username displayName subscribers profilePicURL')
             // populate subscribers for usage in mainroomEventEmitter
             .populate({
-                path: 'subscribers',
+                path: 'subscribers.user',
                 select: 'username displayName email emailSettings'
             })
             .exec(async (err, user) => {
