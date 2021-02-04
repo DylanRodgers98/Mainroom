@@ -1,20 +1,49 @@
 const config = require('../../mainroom.config');
 
-const user = 'hello';
-const subscriber = 'world';
-const stream = 'foo';
-const streams = 'bar';
+const user = {
+    _id: 0,
+    username: 'user',
+    displayName: 'foo',
+    email: 'foo@bar.com'
+}
+
+const subscriber = {
+    _id: 1,
+    username: 'subscriber',
+    displayName: 'bar',
+    email: 'bar@foo.com'
+}
+
+const stream1 = {
+    user: {_id: 2},
+    startTime: new Date(2021, 2, 4, 16),
+    endTime: new Date(2021, 2, 4, 17),
+    title: 'Test Stream',
+    genre: 'Drum & Bass',
+    category: 'DJ Set'
+};
+
+const stream2 = {
+    user: {_id: 3},
+    startTime: new Date(2021, 2, 4, 18),
+    endTime: new Date(2021, 2, 4, 19),
+    title: 'Another Test Stream',
+    genre: 'Techno',
+    category: 'Production'
+};
+
+const streams = [stream1, stream2];
 
 const mockNotifyUserOfNewSubscriber = jest.fn();
 const mockNotifySubscribersUserWentLive = jest.fn();
-const mockNotifySubscribersUserCreatedScheduledStream = jest.fn();
+const mockNotifyUserSubscriptionsCreatedScheduledStreams = jest.fn();
 const mockNotifyUserOfSubscriptionsStreamsStartingSoon = jest.fn();
 
 jest.mock('../../server/aws/sesEmailSender', () => {
     return {
         notifyUserOfNewSubscriber: mockNotifyUserOfNewSubscriber,
         notifySubscribersUserWentLive: mockNotifySubscribersUserWentLive,
-        notifySubscribersUserCreatedScheduledStream: mockNotifySubscribersUserCreatedScheduledStream,
+        notifyUserSubscriptionsCreatedScheduledStreams: mockNotifyUserSubscriptionsCreatedScheduledStreams,
         notifyUserOfSubscriptionsStreamsStartingSoon: mockNotifyUserOfSubscriptionsStreamsStartingSoon
     };
 });
@@ -46,9 +75,9 @@ describe('MainroomEventEmitter', () => {
         expect(mockNotifySubscribersUserWentLive).toHaveBeenCalledWith(user);
     });
 
-    it('should call sesEmailSender.notifySubscribersUserCreatedScheduledStream() on emission onCreateScheduledStream event', () => {
-        mainroomEventEmitter.emit('onCreateScheduledStream', user, stream);
-        expect(mockNotifySubscribersUserCreatedScheduledStream).toHaveBeenCalledWith(user, stream);
+    it('should call sesEmailSender.notifySubscribersUserCreatedScheduledStream() on emission onSubscribersCreatedScheduledStreams event', () => {
+        mainroomEventEmitter.emit('onSubscribersCreatedScheduledStreams', user, streams);
+        expect(mockNotifyUserSubscriptionsCreatedScheduledStreams).toHaveBeenCalledWith(user, streams);
     });
 
     it('should call sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon() on emission onScheduledStreamStartingSoon event', () => {
