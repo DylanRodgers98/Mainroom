@@ -88,7 +88,8 @@ router.get('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
 });
 
 router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
-    const userId = sanitise(req.body.passwordResetToken.user)
+    const sanitisedQuery = sanitise(req.body);
+    const userId = sanitisedQuery.passwordResetToken.user;
     User.findById(userId).exec((err, user) => {
         if (err) {
             LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, err);
@@ -96,23 +97,23 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
         } else if (!user) {
             LOGGER.error(`Could not find user (_id: {}) when resetting password: {}`, userId, err);
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
-        }  else if (!validatePassword(req.body.password)) {
+        }  else if (!validatePassword(sanitisedQuery.password)) {
             getInvalidPasswordMessage().forEach(line => req.flash('password', line));
             res.redirect('/forgot-password/reset');
-        } else if (req.body.password !== req.body.confirmPassword) {
+        } else if (sanitisedQuery.password !== sanitisedQuery.confirmPassword) {
             req.flash('confirmPassword', 'Passwords do not match')
             res.redirect('/forgot-password/reset');
         } else {
-            user.password = user.generateHash(req.body.password);
+            user.password = user.generateHash(sanitisedQuery.password);
             user.save(err => {
                 if (err) {
                     LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, err);
                     next(err);
                 } else {
-                    PasswordResetToken.findByIdAndDelete(req.body.passwordResetToken._id, err => {
+                    PasswordResetToken.findByIdAndDelete(sanitisedQuery.passwordResetToken._id, err => {
                         LOGGER.error('An error occurred when trying to delete PasswordResetToken (_id: {}) from database. ' +
                             'These types of objects have an expiry, so MongoDB should delete this automatically. Error: {}',
-                            req.body.passwordResetToken._id, err);
+                            sanitisedQuery.passwordResetToken._id, err);
                     });
                     res.redirect('/login');
                 }
