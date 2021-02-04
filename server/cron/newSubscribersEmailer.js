@@ -28,13 +28,16 @@ const job = new CronJob(config.cron.newSubscribersEmailer, async () => {
             const users = await User.find(filter)
                 .select('username displayName email subscribers')
                 .populate({
-                    path: 'subscribers.user',
-                    select: 'username displayName profilePicURL',
+                    path: 'subscribers',
                     match: {
                         $and: [
                             {subscribedAt: {$gt: lastTimeTriggered}},
                             {subscribedAt: {$lte: thisTimeTriggered}}
                         ]
+                    },
+                    populate: {
+                        path: 'user',
+                        select: 'username displayName profilePicURL',
                     }
                 })
                 .exec();

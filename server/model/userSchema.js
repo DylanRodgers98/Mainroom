@@ -26,11 +26,11 @@ const UserSchema = new Schema({
     },
     subscribers: [{
         user: {type: Schema.Types.ObjectId, ref: 'User'},
-        subscribedAt: {type: Date, default: new Date()}
+        subscribedAt: {type: Date, default: () => new Date()}
     }],
     subscriptions: [{
         user: {type: Schema.Types.ObjectId, ref: 'User'},
-        subscribedAt: {type: Date, default: new Date()}
+        subscribedAt: {type: Date, default: () => new Date()}
     }],
     nonSubscribedScheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}],
     emailSettings: {
