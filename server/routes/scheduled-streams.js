@@ -48,6 +48,7 @@ router.get('/', async (req, res, next) => {
     try {
         const scheduledStreams = await ScheduledStream.find(filter)
             .select('title startTime endTime genre category')
+            .sort('startTime')
             .exec();
         res.json({scheduledStreams});
     } catch (err) {
