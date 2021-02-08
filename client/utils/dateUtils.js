@@ -53,6 +53,6 @@ const isSameDay = (firstTimestamp, secondTimestamp) => {
 
 export const formatDateRange = ({start, end}) => {
     const startFormatted = formatDate(start);
-    const endFormatted = isSameDay(start, end) ? formatTime(end) : formatDate(end);
-    return `${startFormatted} - ${endFormatted}`;
+    const endFormatted = isSameDay(start, end) ? `-${formatTime(end)}` : ` - ${formatDate(end)}`;
+    return `${startFormatted}${endFormatted}`;
 }
