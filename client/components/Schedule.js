@@ -17,6 +17,7 @@ import {
     Row
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
+import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
 
 export default class Schedule extends React.Component {
 
@@ -79,14 +80,14 @@ export default class Schedule extends React.Component {
     async getSchedule() {
         const res = await axios.get(`/api/users/${this.state.loggedInUser}/schedule`, {
             params: {
-                scheduleStartTime: this.state.startTime.toDate(),
-                scheduleEndTime: this.state.endTime.toDate()
+                scheduleStartTime: convertLocalToUTC(this.state.startTime).toDate(),
+                scheduleEndTime: convertLocalToUTC(this.state.endTime).toDate()
             }
         });
         // JSON serializes dates as strings, so parse start and end times using moment
         const scheduleItems = res.data.scheduleItems.map(scheduleItem => {
-            scheduleItem.start_time = moment(scheduleItem.start_time);
-            scheduleItem.end_time = moment(scheduleItem.end_time);
+            scheduleItem.start_time = convertUTCToLocal(scheduleItem.start_time);
+            scheduleItem.end_time = convertUTCToLocal(scheduleItem.end_time);
             return scheduleItem;
         });
         this.setState({
@@ -114,7 +115,7 @@ export default class Schedule extends React.Component {
 
     getDatePickerFormat() {
         return {
-            'format': 'DD MMM yyyy, HH:mm',
+            'format': LONG_DATE_FORMAT,
             'sundayFirst': false
         };
     }
@@ -221,8 +222,8 @@ export default class Schedule extends React.Component {
     async addToSchedule() {
         const res = await axios.post('/api/scheduled-streams', {
             userId: this.state.loggedInUserId,
-            startTime: this.state.scheduleStreamStartTime,
-            endTime: this.state.scheduleStreamEndTime,
+            startTime: convertLocalToUTC(this.state.scheduleStreamStartTime),
+            endTime: convertLocalToUTC(this.state.scheduleStreamEndTime),
             title: this.state.scheduleStreamTitle,
             genre: this.state.scheduleStreamGenre,
             category: this.state.scheduleStreamCategory,
@@ -254,7 +255,6 @@ export default class Schedule extends React.Component {
     }
 
     renderScheduleStream() {
-        const dateFormat = this.getDatePickerFormat().format;
         return (
             <Modal isOpen={this.state.scheduleStreamOpen} toggle={this.scheduleStreamToggle} centered={true}>
                 <ModalHeader toggle={this.scheduleStreamToggle}>
@@ -276,8 +276,10 @@ export default class Schedule extends React.Component {
                                                         style={{standaloneLayout: {display: 'flex', maxWidth: 'fit-content'}}}>
                                     <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
                                         <DropdownToggle caret>
-                                            {this.state.scheduleStreamStartTime.format(dateFormat) + ' - '
-                                            + this.state.scheduleStreamEndTime.format(dateFormat)}
+                                            {formatDateRange({
+                                                start: this.state.scheduleStreamStartTime,
+                                                end: this.state.scheduleStreamEndTime
+                                            })}
                                         </DropdownToggle>
                                     </Dropdown>
                                 </DateTimeRangeContainer>

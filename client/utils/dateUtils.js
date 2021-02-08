@@ -6,8 +6,14 @@ const DAY_IN_SECONDS = 86400;
 const HOUR_IN_SECONDS = 3600;
 const MINUTE_IN_SECONDS = 60;
 
+const TIME_FORMAT = 'HH:mm';
+export const LONG_DATE_FORMAT = `ddd, DD MMM, yyyy · ${TIME_FORMAT}`;
+
+export const convertUTCToLocal = date => moment.utc(date).local();
+export const convertLocalToUTC = date => moment(date).utc();
+
 export const timeSince = date => {
-    const diffInSeconds = Math.floor((new Date().getTime() / 1000) - (new Date(date).getTime()) / 1000);
+    const diffInSeconds = Math.floor((moment().valueOf() / 1000) - (convertUTCToLocal(date).valueOf()) / 1000);
 
     let interval = diffInSeconds / YEAR_IN_SECONDS;
     if (interval >= 1) {
@@ -37,6 +43,16 @@ export const timeSince = date => {
     return Math.floor(diffInSeconds) + ' seconds ago';
 };
 
-export const formatDate = timestamp => moment(timestamp).format('ddd, DD MMM, yyyy · HH:mm');
+export const formatDate = timestamp => convertUTCToLocal(timestamp).format(LONG_DATE_FORMAT);
 
-export const formatTime = timestamp => moment(timestamp).format('HH:mm');
+const formatTime = timestamp => convertUTCToLocal(timestamp).format(TIME_FORMAT);
+
+const isSameDay = (firstTimestamp, secondTimestamp) => {
+    return moment(firstTimestamp).isSame(moment(secondTimestamp), 'day');
+};
+
+export const formatDateRange = ({start, end}) => {
+    const startFormatted = formatDate(start);
+    const endFormatted = isSameDay(start, end) ? formatTime(end) : formatDate(end);
+    return `${startFormatted} - ${endFormatted}`;
+}

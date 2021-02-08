@@ -6,7 +6,7 @@ import moment from 'moment';
 import config from '../../mainroom.config';
 import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
-import {formatDate, formatTime, timeSince} from '../utils/dateUtils';
+import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
 import {displayGenreAndCategory} from '../utils/displayUtils';
 
@@ -335,7 +335,10 @@ export default class UserProfile extends React.Component {
                             category: stream.category
                         })}
                     </h6>
-                    {formatDate(stream.startTime)}-{formatTime(stream.endTime)}
+                    {formatDateRange({
+                        start: stream.startTime,
+                        end: stream.endTime
+                    })}
                 </Col>
             );
         });
