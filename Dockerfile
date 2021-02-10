@@ -8,9 +8,11 @@ RUN apk add ffmpeg
 WORKDIR /usr/src/app
 
 # Install app dependencies
-COPY package*.json ./
-RUN npm install
 COPY . .
+RUN npm install && \
+    npm run webpack:prod && \
+    npm prune --production && \
+    rm -r client
 
 # Expose HTTP server on port 8080, and RTMP server on port 1935
 EXPOSE 8080

@@ -9,10 +9,20 @@ node_modules
 npm-debug.log
 
 # ignore media
-server/media/
+server/media
 
-# ignore test coverage
-coverage/
+# ignore test files
+test
+coverage
+jest.config.js
+jest.init.js
 
 # ignore environment variables
 .env
+
+# ignore Github Actions workflows
+.github
+
+# ignore Git files
+.git
+.gitignore

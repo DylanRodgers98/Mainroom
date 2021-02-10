@@ -9,14 +9,11 @@
   "scripts": {
     "test": "jest --coverage --detectOpenHandles --forceExit --verbose",
     "start:dev": "cross-env NODE_ENV=development npm-run-all --parallel webpack:dev start-server:dev",
-    "start:prod": "cross-env NODE_ENV=production npm-run-all webpack:prod start-server:prod",
+    "start:prod": "cross-env NODE_ENV=production npm run start-server:prod",
     "webpack:dev": "webpack --watch",
-    "webpack:prod": "webpack",
+    "webpack:prod": "cross-env NODE_ENV=production webpack",
     "start-server:dev": "supervisor -w server -s -RV ./server/app.js",
     "start-server:prod": "pm2-runtime pm2.config.js",
-    "stop:prod": "npm-run-all stop-pm2 delete-pm2",
-    "stop-pm2": "pm2 stop all",
-    "delete-pm2": "pm2 delete all",
     "preversion": "npm test",
     "postversion": "git push && git push --tags"
   },
