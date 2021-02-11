@@ -6,11 +6,10 @@ const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
 const shortid = require('shortid');
-const AWS = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
+const S3V2ToV3Bridge = require('../aws/s3-v2-to-v3-bridge');
 const mime = require('mime-types');
-const mainroomEventEmitter = require('../mainroomEventEmitter');
 const {validatePassword, getInvalidPasswordMessage} = require('../auth/passwordValidator');
 const _ = require('lodash');
 const axios = require('axios');
@@ -105,7 +104,7 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
 
 const s3UploadProfilePic = multer({
     storage: multerS3({
-        s3: new AWS.S3(),
+        s3: new S3V2ToV3Bridge(),
         bucket: config.storage.s3.staticContent.bucketName,
         cacheControl: 'max-age=0, must-revalidate',
         contentType: multerS3.AUTO_CONTENT_TYPE,
