@@ -40,6 +40,13 @@ class UploadV2ToV3Bridge {
         this.upload = new Upload(options);
     }
 
+    on(event, listener) {
+        if (event !== 'httpUploadProgress') {
+            throw new Error(`Event type is not 'httpUploadProcess', which is the only event type that can be listened to on Upload`);
+        }
+        this.upload.on('httpUploadProgress', listener);
+    }
+
     async send(cb) {
         try {
             const result = await this.upload.done();
