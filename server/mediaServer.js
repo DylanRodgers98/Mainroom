@@ -175,7 +175,7 @@ function getVideoDurationString(inputURL) {
             reject(err);
         });
         ffprobe.stderr.on('data', data => {
-            LOGGER.debug('The following data was piped from an FFPROBE child process to stderr: {}', data)
+            LOGGER.debug('stderr: {}', data)
         });
         ffprobe.stdout.on('data', data => {
             const durationString = data.toString();

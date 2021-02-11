@@ -225,7 +225,7 @@ export default class LiveStream extends React.Component {
     }
 
     renderChatInput() {
-        return !this.state.viewerUser.username ? (
+        return !(this.state.viewerUser && this.state.viewerUser.username) ? (
             <div className='text-center mt-3'>
                 To participate in the chat, please <a href={`/login?redirectTo=${window.location.pathname}`}>log in</a>
             </div>

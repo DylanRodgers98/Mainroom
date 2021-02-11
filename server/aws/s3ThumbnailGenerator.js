@@ -16,7 +16,7 @@ async function getThumbnail(streamKey) {
             ? await generateStreamThumbnail({inputURL, Bucket, Key})
             : `https://${Bucket}.s3.amazonaws.com/${Key}`;
     } catch (err) {
-        if (err.code === 'NotFound') {
+        if (err.name === 'NotFound') {
             try {
                 return await generateStreamThumbnail({inputURL, Bucket, Key});
             } catch (err) {
@@ -32,7 +32,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         const args = ['-i', inputURL, '-ss', '00:00:01', '-vframes', '1', '-vf', 'scale=-2:720', '-c:v', 'png', '-f', 'image2pipe', '-'];
         const ffmpeg = spawn(process.env.FFMPEG_PATH, args);
         ffmpeg.stderr.on('data', data => {
-            LOGGER.debug('The following data was piped from an FFMPEG child process to stderr: {}', data)
+            LOGGER.debug('stderr: {}', data)
         });
         ffmpeg.on('error', err => {
             LOGGER.error('An error occurred when generating stream thumbnail (stream URL: {}): {}', inputURL, err);
@@ -48,7 +48,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         });
 
         upload.on('httpUploadProgress', progress => {
-            LOGGER.debug('Uploaded {} bytes of recorded stream to S3 (bucket: {}, key: {})',
+            LOGGER.debug('Uploaded {} bytes of thumbnail to S3 (bucket: {}, key: {})',
                 progress.loaded, Bucket, Key);
         });
 

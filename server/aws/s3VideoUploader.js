@@ -12,7 +12,7 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
         const args = ['-i', inputURL, '-c:a', 'copy', '-c:v', 'copy', '-movflags', 'faststart', outputURL];
         const ffmpeg = spawn(process.env.FFMPEG_PATH, args);
         ffmpeg.stderr.on('data', data => {
-            LOGGER.debug('The following data was piped from an FFMPEG child process to stderr: {}', data)
+            LOGGER.debug('stderr: {}', data)
         });
         ffmpeg.on('error', err => {
             LOGGER.error('An error occurred when adding moov atom to recorded stream {}: {}', inputURL, err);
@@ -34,10 +34,9 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
                     params: {Bucket, Key, Body}
                 });
 
-                const { size } = fs.statSync(outputURL);
                 upload.on('httpUploadProgress', progress => {
-                    LOGGER.debug('Uploaded {}/{} bytes of recorded stream to S3 (bucket: {}, key: {})',
-                        progress.loaded, size, Bucket, Key);
+                    LOGGER.debug('Uploaded {} bytes of recorded stream to S3 (bucket: {}, key: {})',
+                        progress.loaded, Bucket, Key);
                 });
 
                 try {
