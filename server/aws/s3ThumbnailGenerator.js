@@ -1,16 +1,17 @@
 const config = require('../../mainroom.config');
 const {spawn} = require('child_process');
-const AWS = require('aws-sdk');
-const S3 = new AWS.S3();
-const s3UploadStream = require('s3-upload-stream')(S3);
+const { S3 } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 const LOGGER = require('../../logger')('./server/aws/s3ThumbnailGenerator.js');
+
+const S3_CLIENT = new S3({});
 
 async function getThumbnail(streamKey) {
     const inputURL = `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/live/${streamKey}/index.m3u8`;
     const Bucket = config.storage.s3.staticContent.bucketName;
     const Key = `${config.storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
     try {
-        const output = await S3.headObject({Bucket, Key}).promise();
+        const output = await S3_CLIENT.headObject({Bucket, Key});
         return Date.now() > output.LastModified.getTime() + config.storage.thumbnails.ttl
             ? await generateStreamThumbnail({inputURL, Bucket, Key})
             : `https://${Bucket}.s3.amazonaws.com/${Key}`;
@@ -27,7 +28,7 @@ async function getThumbnail(streamKey) {
 }
 
 function generateStreamThumbnail({inputURL, Bucket, Key}) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const args = ['-i', inputURL, '-ss', '00:00:01', '-vframes', '1', '-vf', 'scale=-2:720', '-c:v', 'png', '-f', 'image2pipe', '-'];
         const ffmpeg = spawn(process.env.FFMPEG_PATH, args);
         ffmpeg.stderr.on('data', data => {
@@ -40,20 +41,26 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         ffmpeg.on('close', () => {
             LOGGER.debug('Finished generating stream thumbnail (stream URL: {})', inputURL);
         })
-        ffmpeg.stdout.pipe(s3UploadStream.upload({Bucket, Key})
-            .on('part', details => {
-                LOGGER.debug('Uploaded {} bytes of stream thumbnail to S3 (bucket: {}, key: {})', details.uploadedSize, Bucket, Key);
-            })
-            .on('error', err => {
-                LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
-                reject(err);
-            })
-            .on('uploaded', details => {
-                const location = details.Location;
-                LOGGER.debug('Successfully uploaded thumbnail to {}', location);
-                resolve(location);
-            })
-        );
+
+        const upload = new Upload({
+            client: S3_CLIENT,
+            params: {Bucket, Key, Body: ffmpeg.stdout}
+        });
+
+        upload.on('httpUploadProgress', progress => {
+            LOGGER.debug('Uploaded {} bytes of recorded stream to S3 (bucket: {}, key: {})',
+                progress.loaded, Bucket, Key);
+        });
+
+        try {
+            const result = await upload.done();
+            LOGGER.info('Successfully uploaded thumbnail to {}', result.Location);
+            resolve(result.Location);
+        } catch (err) {
+            LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}',
+                Bucket, Key, err);
+            reject(err);
+        }
     });
 }
 
