@@ -1,8 +1,8 @@
 const config = require('../../mainroom.config');
-const AWS = require('aws-sdk');
+const { SES } = require('@aws-sdk/client-ses');
 const LOGGER = require('../../logger')('./server/aws/sesEmailSender.js');
 
-const SES = new AWS.SES();
+const SES_CLIENT = new SES({});
 const BULK_EMAIL_MAX_DESTINATIONS = 50;
 
 module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
@@ -26,7 +26,7 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
         })
     };
     try {
-        await SES.sendTemplatedEmail(params).promise();
+        await SES_CLIENT.sendTemplatedEmail(params);
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'newSubscriber' email to {} using SES: {}`, user.email, err);
@@ -56,7 +56,7 @@ module.exports.notifySubscribersUserWentLive = user => {
                 })
             };
             try {
-                await SES.sendBulkTemplatedEmail(params).promise();
+                await SES_CLIENT.sendBulkTemplatedEmail(params);
             } catch (err) {
                 if (err) {
                     LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`, i + 1, emailType, err);
@@ -125,7 +125,7 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
         })
     };
     try {
-        await SES.sendTemplatedEmail(params).promise();
+        await SES_CLIENT.sendTemplatedEmail(params);
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'subscriptionsCreatedScheduledStreams' email to {} using SES: {}`, user.email, err);
@@ -165,7 +165,7 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
         })
     };
     try {
-        await SES.sendTemplatedEmail(params).promise();
+        await SES_CLIENT.sendTemplatedEmail(params);
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'subscriptionScheduledStreamStartingIn' email to {} using SES: {}`, user.email, err);
@@ -190,7 +190,7 @@ module.exports.sendResetPasswordEmail = async (user, token) => {
         })
     };
     try {
-        await SES.sendTemplatedEmail(params).promise();
+        await SES_CLIENT.sendTemplatedEmail(params);
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'resetPassword' email to {} using SES: {}`, user.email, err);

@@ -1,8 +1,8 @@
 const config = require('../../mainroom.config');
-const AWS = require('aws-sdk');
+const { SES } = require('@aws-sdk/client-ses');
 const LOGGER = require('../../logger')('./server/aws/sesTemplateCreator.js');
 
-const SES = new AWS.SES();
+const SES_CLIENT = new SES({});
 
 // TODO: REPLACE THIS WITH CLOUDFORMATION TEMPLATE
 
@@ -63,7 +63,7 @@ async function createSubscriptionScheduledStreamStartingInTemplate() {
 async function createEmailTemplate(template) {
     try {
         LOGGER.info(`Creating '{}' email template`, template.TemplateName);
-        await SES.createTemplate(template).promise();
+        await SES_CLIENT.createTemplate(template);
         LOGGER.info(`'{}' email template created`, template.TemplateName);
     } catch (err) {
         if (err.code === 'AlreadyExists') {
