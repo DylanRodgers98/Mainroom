@@ -14,6 +14,8 @@ RUN npm install && \
     npm prune --production && \
     rm -r client
 
+ENV NODE_ENV=production
+
 # Expose HTTP server on port 8080, and RTMP server on port 1935
 EXPOSE 8080
 EXPOSE 1935
