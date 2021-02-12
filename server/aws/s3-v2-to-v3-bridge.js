@@ -1,5 +1,6 @@
 const { S3 } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
+const LOGGER = require('../../logger')('./server/aws/s3-v2-to-v3-bridge.js');
 
 /**
  * This class is designed to be used as a bridge for APIs that require an S3
@@ -42,7 +43,9 @@ class UploadV2ToV3Bridge {
 
     on(event, listener) {
         if (event !== 'httpUploadProgress') {
-            throw new Error(`Event type is not 'httpUploadProcess', which is the only event type that can be listened to on Upload`);
+            LOGGER.info(`Something tried to register an event listener for event type '{}' on an instance of UploadV2ToV3Bridge. ` +
+                `The only event type permitted to have a registered event listener is 'httpUploadProcess'`, event);
+            return;
         }
         this.upload.on('httpUploadProgress', listener);
     }

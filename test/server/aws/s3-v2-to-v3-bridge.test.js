@@ -4,8 +4,11 @@ const mockParams = { Bucket: 'test-bucket', Key: 'helloWorld.txt' };
 const mockCallback = () => {};
 const mockResult = 'I PASSED!';
 const mockError = new Error('I failed :(');
+const mockEventListener = () => {};
 
 let mockShouldUploadError;
+
+const mockUploadOn = jest.fn();
 
 jest.mock('@aws-sdk/lib-storage', () => {
     return {
@@ -16,7 +19,8 @@ jest.mock('@aws-sdk/lib-storage', () => {
                         throw mockError;
                     }
                     return mockResult;
-                }
+                },
+                on: mockUploadOn
             };
         })
     };
@@ -34,11 +38,12 @@ jest.mock('@aws-sdk/client-s3', () => {
     };
 });
 
+beforeEach(() => mockShouldUploadError = false);
+
 describe('s3-v2-to-v3-bridge', () => {
     describe('upload', () => {
         it('should use the Upload class from @aws-sdk/lib-storage to carry out an upload', async () => {
             // given
-            mockShouldUploadError = false;
             const bridge = new S3V2ToV3Bridge();
             // when
             const upload = bridge.upload(mockParams);
@@ -61,6 +66,26 @@ describe('s3-v2-to-v3-bridge', () => {
                 expect(result).toEqual(null);
             });
         });
+
+        it('should register a listener for httpUploadProgress events on the instance returned by upload', () => {
+            // given
+            const bridge = new S3V2ToV3Bridge();
+            const upload = bridge.upload(mockParams);
+            // when
+            upload.on('httpUploadProgress', mockEventListener);
+            // then
+            expect(mockUploadOn).toBeCalledWith('httpUploadProgress', mockEventListener);
+        });
+
+        it('should not register listeners for events other than httpUploadProgress on the instance returned by upload', () => {
+            // given
+            const bridge = new S3V2ToV3Bridge();
+            const upload = bridge.upload(mockParams);
+            // when
+            upload.on('someOtherEvent', mockEventListener);
+            // then
+            expect(mockUploadOn).not.toBeCalledWith('someOtherEvent', mockEventListener);
+        })
     });
 
     describe('deleteObject', () => {
