@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Col, Container, Row} from 'reactstrap';
+import {Button, Col, Container, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
 
@@ -82,7 +82,11 @@ export default class Subscribers extends React.Component {
             </div>
         );
 
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+        return !this.state.loaded ? (
+            <div className='position-relative h-100'>
+                <Spinner color='dark' className='loading-spinner' />
+            </div>
+        ) : (
             <Container fluid='lg' className='my-5'>
                 <Row>
                     <Col>

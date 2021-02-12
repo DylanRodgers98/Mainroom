@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row} from 'reactstrap';
+import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import moment from 'moment';
 import config from '../../mainroom.config';
@@ -731,7 +731,11 @@ export default class UserProfile extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+        return !this.state.loaded ? (
+            <div className='position-relative h-100'>
+                <Spinner color='dark' className='loading-spinner' />
+            </div>
+        ) : (
             <React.Fragment>
                 <Container fluid='lg' className='mt-5'>
                     <Row>

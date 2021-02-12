@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col} from 'reactstrap';
+import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
 
 export default class GoLive extends React.Component {
@@ -184,7 +184,11 @@ export default class GoLive extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+        return !this.state.loaded ? (
+            <div className='position-relative h-100'>
+                <Spinner color='dark' className='loading-spinner' />
+            </div>
+        ) : (
             <Container fluid='lg' className='mt-5'>
                 <h4>Stream Settings</h4>
                 <hr className='mt-4'/>

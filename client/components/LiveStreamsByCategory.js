@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
 import config from '../../mainroom.config';
-import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
+import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 import {displayGenreAndCategory} from '../utils/displayUtils';
 
@@ -196,7 +196,11 @@ export default class LiveStreamsByCategory extends React.Component {
                     </Col>
                 </Row>
                 <hr className='my-4'/>
-                {!this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+                {!this.state.loaded ? (
+                    <div className='position-relative h-100'>
+                        <Spinner color='dark' className='loading-spinner' />
+                    </div>
+                ) : (
                     <React.Fragment>
                         {streamBoxes}
                         {loadMoreButton}

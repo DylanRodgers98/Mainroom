@@ -11,7 +11,7 @@ import {
     ModalBody,
     ModalFooter,
     ModalHeader,
-    Row
+    Row, Spinner
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
@@ -420,7 +420,11 @@ export default class ManageRecordedStreams extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+        return !this.state.loaded ? (
+            <div className='position-relative h-100'>
+                <Spinner color='dark' className='loading-spinner' />
+            </div>
+        ) : (
             <React.Fragment>
                 <Container fluid='lg' className='mt-5'>
                     <Row>

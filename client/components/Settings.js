@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import Container from 'reactstrap/es/Container';
-import {Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row} from 'reactstrap';
+import {Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import _ from 'lodash';
 
 export default class Settings extends React.Component {
@@ -287,7 +287,11 @@ export default class Settings extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+        return !this.state.loaded ? (
+            <div className='position-relative h-100'>
+                <Spinner color='dark' className='loading-spinner' />
+            </div>
+        ) : (
             <React.Fragment>
                 <Container fluid='lg' className='mt-5'>
                     <h4>Account Settings</h4>

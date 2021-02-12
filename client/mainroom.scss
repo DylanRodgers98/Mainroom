@@ -5,8 +5,16 @@
 @import '../node_modules/video.js/dist/video-js.css';
 @import '../node_modules/react-calendar-timeline/lib/Timeline.css';
 
-body {
+html, body, #root {
     background-color: #F9F9F9;
+    height: 100%;
+}
+
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: auto;
 }
 
 .rounded-border {

@@ -3,7 +3,7 @@ import videojs from 'video.js';
 import axios from 'axios';
 import config from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Col, Container, Row} from 'reactstrap';
+import {Button, Col, Container, Row, Spinner} from 'reactstrap';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {timeSince} from '../utils/dateUtils';
 import moment from 'moment';
@@ -187,7 +187,11 @@ export default class RecordedStream extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+        return !this.state.loaded ? (
+            <div className='position-relative h-100'>
+                <Spinner color='dark' className='loading-spinner' />
+            </div>
+        ) : (
             <Container fluid className='remove-padding-lr'>
                 <Row className='remove-margin-r'>
                     <Col className='remove-padding-r' xs='12' md='9'>

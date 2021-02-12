@@ -14,7 +14,7 @@ import {
     ModalBody,
     ModalFooter,
     ModalHeader,
-    Row
+    Row, Spinner
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
@@ -350,8 +350,11 @@ export default class Schedule extends React.Component {
     }
 
     render() {
-        // TODO: create proper loading screen, to be used across components
-        return !this.state.loaded ? <h1 className='text-center mt-5'>Loading...</h1> : (
+        return !this.state.loaded ? (
+            <div className='position-relative h-100'>
+                <Spinner color='dark' className='loading-spinner' />
+            </div>
+        ) : (
             <React.Fragment>
                 <Container fluid className='my-5'>
                     <Row>
