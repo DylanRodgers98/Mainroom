@@ -119,5 +119,6 @@ module.exports = {
             "Q&A"
         ]
     },
-    loadLivestreamTimeout: 15 * SECOND
+    loadLivestreamTimeout: 15 * SECOND,
+    bugReportURL: 'https://gitreports.com/issue/DylanRodgers98/Mainroom'
 };

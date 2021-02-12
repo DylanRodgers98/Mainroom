@@ -3,6 +3,7 @@ import 'regenerator-runtime/runtime';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
+import {ErrorBoundary} from 'react-error-boundary';
 import config from '../mainroom.config';
 import MainroomNavbar from './components/MainroomNavbar';
 import Home from './components/Home';
@@ -23,67 +24,83 @@ import './mainroom.scss';
 
 document.title = config.headTitle;
 
+function errorFallback({error, resetErrorBoundary}) {
+    return (
+        <div className='text-center mt-5'>
+            <h2>Oops! An error occurred :(</h2>
+            <h5>{error.name}: {error.message}</h5>
+            Please <a href='javascript:;' onClick={resetErrorBoundary}>
+                try again
+            </a> or <a href={config.bugReportURL} target='_blank' rel='noopener noreferrer'>
+                report a bug
+            </a>.
+        </div>
+    );
+}
+
 if (document.getElementById('root')) {
     ReactDOM.render(
         <BrowserRouter>
             <React.Fragment>
                 <MainroomNavbar/>
-                <Switch>
-                    <Route exact path='/' render={props => (
-                        <Home {...props} />
-                    )}/>
+                <ErrorBoundary FallbackComponent={errorFallback}>
+                    <Switch>
+                        <Route exact path='/' render={props => (
+                            <Home {...props} />
+                        )}/>
 
-                    <Route exact path='/genre/:genre' render={props => (
-                        <LiveStreamsByGenre {...props} />
-                    )}/>
+                        <Route exact path='/genre/:genre' render={props => (
+                            <LiveStreamsByGenre {...props} />
+                        )}/>
 
-                    <Route exact path='/category/:category' render={props => (
-                        <LiveStreamsByCategory {...props} />
-                    )}/>
+                        <Route exact path='/category/:category' render={props => (
+                            <LiveStreamsByCategory {...props} />
+                        )}/>
 
-                    <Route exact path='/search/:query' render={props => (
-                        <Search {...props} />
-                    )}/>
+                        <Route exact path='/search/:query' render={props => (
+                            <Search {...props} />
+                        )}/>
 
-                    <Route exact path='/user/:username' render={props => (
-                        <UserProfile {...props} />
-                    )}/>
+                        <Route exact path='/user/:username' render={props => (
+                            <UserProfile {...props} />
+                        )}/>
 
-                    <Route exact path='/user/:username/subscribers' render={props => (
-                        <Subscribers {...props} />
-                    )}/>
+                        <Route exact path='/user/:username/subscribers' render={props => (
+                            <Subscribers {...props} />
+                        )}/>
 
-                    <Route exact path='/user/:username/subscriptions' render={props => (
-                        <Subscriptions {...props} />
-                    )}/>
+                        <Route exact path='/user/:username/subscriptions' render={props => (
+                            <Subscriptions {...props} />
+                        )}/>
 
-                    <Route exact path='/user/:username/live' render={props => (
-                        <LiveStream {...props} />
-                    )}/>
+                        <Route exact path='/user/:username/live' render={props => (
+                            <LiveStream {...props} />
+                        )}/>
 
-                    <Route exact path='/stream/:streamId' render={props => (
-                        <RecordedStream {...props} />
-                    )}/>
+                        <Route exact path='/stream/:streamId' render={props => (
+                            <RecordedStream {...props} />
+                        )}/>
 
-                    <Route exact path='/manage-recorded-streams' render={props => (
-                        <ManageRecordedStreams {...props} />
-                    )}/>
+                        <Route exact path='/manage-recorded-streams' render={props => (
+                            <ManageRecordedStreams {...props} />
+                        )}/>
 
-                    <Route exact path='/schedule' render={props => (
-                        <Schedule {...props} />
-                    )}/>
+                        <Route exact path='/schedule' render={props => (
+                            <Schedule {...props} />
+                        )}/>
 
-                    <Route exact path='/settings' render={props => (
-                        <Settings {...props} />
-                    )}/>
+                        <Route exact path='/settings' render={props => (
+                            <Settings {...props} />
+                        )}/>
 
-                    <Route exact path='/go-live' render={props => (
-                        <GoLive {...props} />
-                    )}/>
+                        <Route exact path='/go-live' render={props => (
+                            <GoLive {...props} />
+                        )}/>
 
-                    {/* matches none -> 404 */}
-                    <Route component={FourOhFour}/>
-                </Switch>
+                        {/* matches none -> 404 */}
+                        <Route component={FourOhFour}/>
+                    </Switch>
+                </ErrorBoundary>
             </React.Fragment>
         </BrowserRouter>,
         document.getElementById('root')
