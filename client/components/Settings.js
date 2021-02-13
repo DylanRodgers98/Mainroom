@@ -39,7 +39,10 @@ export default class Settings extends React.Component {
             currentPasswordInvalidReason: '',
             newPasswordInvalidReason: '',
             confirmNewPasswordInvalidReason: '',
-            deleteAccountOpen: false
+            deleteAccountOpen: false,
+            showSaveSettingsSpinner: false,
+            showResetPasswordSpinner: false,
+            showDeleteAccountSpinner: false
         }
     }
 
@@ -101,28 +104,31 @@ export default class Settings extends React.Component {
         return !_.isEqual(this.state.emailSettings, this.state.startingEmailSettings);
     }
 
-    async saveSettings() {
-        const data = {
-            username: this.state.username,
-            updateUsername: this.isUsernameChanged(),
-            email: this.state.email,
-            updateEmail: this.isEmailChanged()
-        };
-        if (this.isEmailSettingsChanged()) {
-            data.emailSettings = this.state.emailSettings;
-        }
-        const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/settings`, data);
-        this.setState({
-            usernameInvalidReason: res.data.usernameInvalidReason || '',
-            emailInvalidReason: res.data.emailInvalidReason || ''
-        });
-        if (!(res.data.usernameInvalidReason || res.data.emailInvalidReason)) {
+    saveSettings() {
+        this.setState({showSaveSettingsSpinner: true}, async () => {
+            const data = {
+                username: this.state.username,
+                updateUsername: this.isUsernameChanged(),
+                email: this.state.email,
+                updateEmail: this.isEmailChanged()
+            };
+            if (this.isEmailSettingsChanged()) {
+                data.emailSettings = this.state.emailSettings;
+            }
+            const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/settings`, data);
             this.setState({
-                startingUsername: this.state.username,
-                startingEmail: this.state.email,
-                startingEmailSettings: this.state.emailSettings
+                usernameInvalidReason: res.data.usernameInvalidReason || '',
+                emailInvalidReason: res.data.emailInvalidReason || '',
+                showSaveSettingsSpinner: false
             });
-        }
+            if (!(res.data.usernameInvalidReason || res.data.emailInvalidReason)) {
+                this.setState({
+                    startingUsername: this.state.username,
+                    startingEmail: this.state.email,
+                    startingEmailSettings: this.state.emailSettings
+                });
+            }
+        });
     }
 
     setCurrentPassword(event) {
@@ -152,22 +158,25 @@ export default class Settings extends React.Component {
         }));
     }
 
-    async resetPassword() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUserId}/password`, {
-            currentPassword: this.state.currentPassword,
-            newPassword: this.state.newPassword,
-            confirmNewPassword: this.state.confirmNewPassword
+    resetPassword() {
+        this.setState({showResetPasswordSpinner: true}, async () => {
+            const res = await axios.post(`/api/users/${this.state.loggedInUserId}/password`, {
+                currentPassword: this.state.currentPassword,
+                newPassword: this.state.newPassword,
+                confirmNewPassword: this.state.confirmNewPassword
+            });
+            this.setState({
+                currentPasswordInvalidReason: res.data.currentPasswordInvalidReason || '',
+                newPasswordInvalidReason: res.data.newPasswordInvalidReason || '',
+                confirmNewPasswordInvalidReason: res.data.confirmNewPasswordInvalidReason || '',
+                showResetPasswordSpinner: false
+            });
+            if (!(this.state.currentPasswordInvalidReason
+                || this.state.newPasswordInvalidReason
+                || this.state.confirmNewPasswordInvalidReason)) {
+                this.resetPasswordToggle();
+            }
         });
-        this.setState({
-            currentPasswordInvalidReason: res.data.currentPasswordInvalidReason || '',
-            newPasswordInvalidReason: res.data.newPasswordInvalidReason || '',
-            confirmNewPasswordInvalidReason: res.data.confirmNewPasswordInvalidReason || ''
-        });
-        if (!(this.state.currentPasswordInvalidReason
-            || this.state.newPasswordInvalidReason
-            || this.state.confirmNewPasswordInvalidReason)) {
-            this.resetPasswordToggle();
-        }
     }
 
     getNewPasswordInvalidReason() {
@@ -199,69 +208,76 @@ export default class Settings extends React.Component {
         }));
     }
 
-    async deleteAccount() {
-        const res = await axios.delete(`/api/users/${this.state.loggedInUserId}`);
-        if (res.status === 200) {
-            window.location.href = '/logout';
-        }
+    deleteAccount() {
+        this.setState({showDeleteAccountSpinner: true}, async () => {
+            const res = await axios.delete(`/api/users/${this.state.loggedInUserId}`);
+            if (res.status === 200) {
+                window.location.href = '/logout';
+            }
+        });
     }
 
     renderResetPassword() {
+        const newPasswordInvalidReason = this.getNewPasswordInvalidReason();
+
         return (
-            <Modal isOpen={this.state.resetPasswordOpen} toggle={this.resetPasswordToggle} centered={true}>
+            <Modal isOpen={this.state.resetPasswordOpen} toggle={this.resetPasswordToggle} centered={true} size='sm'>
                 <ModalHeader toggle={this.resetPasswordToggle}>Reset Password</ModalHeader>
                 <ModalBody>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <h6 className='mr-3'>Current Password:</h6>
-                                </td>
-                                <td>
-                                    <input className='rounded-border' type='password' value={this.state.currentPassword}
-                                           onChange={this.setCurrentPassword}/>
-                                </td>
-                                <td>
-                                    <div className='ml-1'>
+                    <Container fluid className='remove-padding-lr'>
+                        <Row>
+                            <Col xs='12'>
+                                <h6>Current Password:</h6>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='w-100 rounded-border' type='password' value={this.state.currentPassword}
+                                       onChange={this.setCurrentPassword}/>
+                            </Col>
+                            {!this.state.currentPasswordInvalidReason ? undefined : (
+                                <Col xs='12'>
+                                    <small className='text-danger'>
                                         {this.state.currentPasswordInvalidReason}
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td valign='top'>
-                                    <h6 className='mt-1 mr-3'>New Password:</h6>
-                                </td>
-                                <td valign='top'>
-                                    <input className='mt-1 rounded-border' type='password' value={this.state.newPassword}
-                                           onChange={this.setNewPassword}/>
-                                </td>
-                                <td>
-                                    <div className='ml-1'>
-                                        {this.getNewPasswordInvalidReason()}
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <h6 className='mt-1 mr-3'>Confirm New Password:</h6>
-                                </td>
-                                <td>
-                                    <input className='mt-1 rounded-border' type='password'
-                                           value={this.state.confirmNewPassword} onChange={this.setConfirmNewPassword}/>
-                                </td>
-                                <td>
-                                    <div className='ml-1'>
+                                    </small>
+                                </Col>
+                            )}
+                            <Col className='mt-2' xs='12'>
+                                <h6>New Password:</h6>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='w-100 rounded-border' type='password' value={this.state.newPassword}
+                                       onChange={this.setNewPassword}/>
+                            </Col>
+                            {!newPasswordInvalidReason ? undefined : (
+                                <Col xs='12'>
+                                    <small className='text-danger'>
+                                        {newPasswordInvalidReason}
+                                    </small>
+                                </Col>
+                            )}
+                            <Col className='mt-2' xs='12'>
+                                <h6>Confirm New Password:</h6>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='w-100 rounded-border' type='password'
+                                       value={this.state.confirmNewPassword} onChange={this.setConfirmNewPassword}/>
+                            </Col>
+                            {!this.state.confirmNewPasswordInvalidReason ? undefined : (
+                                <Col xs='12'>
+                                    <small className='text-danger'>
                                         {this.state.confirmNewPasswordInvalidReason}
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </small>
+                                </Col>
+                            )}
+                        </Row>
+                    </Container>
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.resetPassword}
                             disabled={!this.enableResetPasswordButton()}>
-                        Reset Password
+                        {this.state.showResetPasswordSpinner ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showResetPasswordSpinner ? 'sr-only' : undefined}>
+                            Reset Password
+                        </span>
                     </Button>
                 </ModalFooter>
             </Modal>
@@ -279,7 +295,10 @@ export default class Settings extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-danger' onClick={this.deleteAccount}>
-                        Delete Account
+                        {this.state.showDeleteAccountSpinner ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showDeleteAccountSpinner ? 'sr-only' : undefined}>
+                            Delete Account
+                        </span>
                     </Button>
                 </ModalFooter>
             </Modal>
@@ -385,7 +404,10 @@ export default class Settings extends React.Component {
                     <div className='float-right mb-4'>
                         <Button className='btn-dark' size='lg' disabled={!this.enableSaveButton()}
                                 onClick={this.saveSettings}>
-                            Save Settings
+                            {this.state.showSaveSettingsSpinner ? <Spinner /> : undefined}
+                            <span className={this.state.showSaveSettingsSpinner ? 'sr-only' : undefined}>
+                                Save Settings
+                            </span>
                         </Button>
                     </div>
                 </Container>

@@ -45,6 +45,8 @@ const STARTING_STATE = {
     uploadedProfilePic: undefined,
     recordedStreams: [],
     showLoadMoreButton: false,
+    showChangeProfilePicSpinner: false,
+    showEditProfileSpinner: false,
     nextPage: STARTING_PAGE
 };
 
@@ -493,23 +495,27 @@ export default class UserProfile extends React.Component {
         });
     }
 
-    async saveProfile() {
-        if (await this.areLinksValid()) {
-            this.normaliseLinkUrls();
-            const res = await axios.patch(`/api/users/${this.state.loggedInUser}`, {
-                displayName: this.state.editDisplayName,
-                location: this.state.editLocation,
-                bio: this.state.editBio,
-                chatColour: this.state.chatColour,
-                links: this.state.editLinks
-            });
-            if (res.status === 200) {
-                this.reloadProfile();
+    saveProfile() {
+        this.setState({showEditProfileSpinner: true}, async () => {
+            if (await this.validateLinks()) {
+                this.normaliseLinkUrls();
+                const res = await axios.patch(`/api/users/${this.state.loggedInUser}`, {
+                    displayName: this.state.editDisplayName,
+                    location: this.state.editLocation,
+                    bio: this.state.editBio,
+                    chatColour: this.state.chatColour,
+                    links: this.state.editLinks
+                });
+                if (res.status === 200) {
+                    this.reloadProfile();
+                }
+            } else {
+                this.setState({showEditProfileSpinner: false});
             }
-        }
+        });
     }
 
-    async areLinksValid() {
+    async validateLinks() {
         let isValid = true;
         this.setState({
             indexesOfInvalidLinks: this.state.editLinks.map((link, index) => {
@@ -578,7 +584,7 @@ export default class UserProfile extends React.Component {
                 </Col>
                 <Col xs='12' lg='3'>
                     {!this.state.indexesOfInvalidLinks.includes(index) ? undefined
-                        : <span style={{color: 'red'}}>Link must have a URL</span>}
+                        : <small className='text-danger'>Link must have a URL</small>}
                 </Col>
             </Row>
         ));
@@ -643,7 +649,10 @@ export default class UserProfile extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' disabled={!this.state.unsavedChanges} onClick={this.saveProfile}>
-                        Save Changes
+                        {this.state.showEditProfileSpinner ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showEditProfileSpinner ? 'sr-only' : undefined}>
+                            Save Changes
+                        </span>
                     </Button>
                 </ModalFooter>
             </Modal>
@@ -674,18 +683,20 @@ export default class UserProfile extends React.Component {
         });
     }
 
-    async saveNewProfilePic() {
-        const data = new FormData();
-        data.append('profilePic', this.state.uploadedProfilePic);
+    saveNewProfilePic() {
+        this.setState({showChangeProfilePicSpinner: true}, async () => {
+            const data = new FormData();
+            data.append('profilePic', this.state.uploadedProfilePic);
 
-        const res = await axios.put(`/api/users/${this.state.loggedInUserId}/profile-pic`, data, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
+            const res = await axios.put(`/api/users/${this.state.loggedInUserId}/profile-pic`, data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            if (res.status === 200) {
+                location.reload();
             }
         });
-        if (res.status === 200) {
-            location.reload();
-        }
     }
 
     renderChangeProfilePic() {
@@ -700,7 +711,10 @@ export default class UserProfile extends React.Component {
                 <ModalFooter>
                     <Button className='btn-dark' disabled={!this.state.uploadedProfilePic}
                             onClick={this.saveNewProfilePic}>
-                        Upload
+                        {this.state.showChangeProfilePicSpinner ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showChangeProfilePicSpinner ? 'sr-only' : undefined}>
+                            Upload
+                        </span>
                     </Button>
                 </ModalFooter>
             </Modal>

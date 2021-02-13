@@ -55,7 +55,8 @@ export default class Schedule extends React.Component {
             scheduleStreamTitle: '',
             scheduleStreamGenre: '',
             scheduleStreamCategory: '',
-            scheduleStreamTags: []
+            scheduleStreamTags: [],
+            showSpinner: false
         }
     }
 
@@ -219,32 +220,35 @@ export default class Schedule extends React.Component {
         });
     }
 
-    async addToSchedule() {
-        const res = await axios.post('/api/scheduled-streams', {
-            userId: this.state.loggedInUserId,
-            startTime: convertLocalToUTC(this.state.scheduleStreamStartTime),
-            endTime: convertLocalToUTC(this.state.scheduleStreamEndTime),
-            title: this.state.scheduleStreamTitle,
-            genre: this.state.scheduleStreamGenre,
-            category: this.state.scheduleStreamCategory,
-            tags: this.state.scheduleStreamTags
-        });
-        if (res.status === 200) {
-            this.scheduleStreamToggle();
-            this.setState({
-                scheduleGroups: [],
-                scheduleItems: [],
-                scheduleStreamStartTime: moment(),
-                scheduleStreamEndTime: moment().add(1, 'hour'),
-                scheduleStreamTitle: '',
-                scheduleStreamGenre: '',
-                scheduleStreamCategory: '',
-                scheduleStreamTags: [],
-                loaded: false
-            }, () => {
-                this.getSchedule();
+    addToSchedule() {
+        this.setState({showSpinner: true}, async () => {
+            const res = await axios.post('/api/scheduled-streams', {
+                userId: this.state.loggedInUserId,
+                startTime: convertLocalToUTC(this.state.scheduleStreamStartTime),
+                endTime: convertLocalToUTC(this.state.scheduleStreamEndTime),
+                title: this.state.scheduleStreamTitle,
+                genre: this.state.scheduleStreamGenre,
+                category: this.state.scheduleStreamCategory,
+                tags: this.state.scheduleStreamTags
             });
-        }
+            if (res.status === 200) {
+                this.scheduleStreamToggle();
+                this.setState({
+                    scheduleGroups: [],
+                    scheduleItems: [],
+                    scheduleStreamStartTime: moment(),
+                    scheduleStreamEndTime: moment().add(1, 'hour'),
+                    scheduleStreamTitle: '',
+                    scheduleStreamGenre: '',
+                    scheduleStreamCategory: '',
+                    scheduleStreamTags: [],
+                    loaded: false,
+                    showSpinner: false
+                }, () => {
+                    this.getSchedule();
+                });
+            }
+        });
     }
 
     isNoMobileMode() {
@@ -342,7 +346,10 @@ export default class Schedule extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.addToSchedule}>
-                        Add to Schedule
+                        {this.state.showSpinner ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showSpinner ? 'sr-only' : undefined}>
+                            Add to Schedule
+                        </span>
                     </Button>
                 </ModalFooter>
             </Modal>

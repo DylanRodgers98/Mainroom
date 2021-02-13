@@ -59,6 +59,8 @@ export default class ManageRecordedStreams extends React.Component {
             genreDropdownOpen: false,
             categoryDropdownOpen: false,
             showLoadMoreButton: false,
+            showSaveChangesSpinner: false,
+            showDeleteSpinner: false,
             nextPage: STARTING_PAGE
         }
     }
@@ -205,27 +207,30 @@ export default class ManageRecordedStreams extends React.Component {
         });
     }
 
-    async editRecordedStream() {
-        const res = await axios.patch(`/api/recorded-streams/${this.state.selectedStreamId}`, {
-            title: this.state.selectedStreamTitle,
-            genre: this.state.selectedStreamGenre,
-            category: this.state.selectedStreamCategory,
-            tags: this.state.selectedStreamTags
-        });
-        if (res.status === 200) {
-            const recordedStreams = [...this.state.recordedStreams];
-            const recordedStream = recordedStreams[this.state.selectedStreamIndex];
-            recordedStream.title = res.data.title;
-            recordedStream.genre = res.data.genre;
-            recordedStream.category = res.data.category;
-            recordedStream.tags = res.data.tags;
-            recordedStreams[this.state.selectedStreamIndex] = recordedStream;
-            this.setState({
-                recordedStreams
-            }, () => {
-                this.editStreamToggle();
+    editRecordedStream() {
+        this.setState({showSaveChangesSpinner: true}, async () => {
+            const res = await axios.patch(`/api/recorded-streams/${this.state.selectedStreamId}`, {
+                title: this.state.selectedStreamTitle,
+                genre: this.state.selectedStreamGenre,
+                category: this.state.selectedStreamCategory,
+                tags: this.state.selectedStreamTags
             });
-        }
+            if (res.status === 200) {
+                const recordedStreams = [...this.state.recordedStreams];
+                const recordedStream = recordedStreams[this.state.selectedStreamIndex];
+                recordedStream.title = res.data.title;
+                recordedStream.genre = res.data.genre;
+                recordedStream.category = res.data.category;
+                recordedStream.tags = res.data.tags;
+                recordedStreams[this.state.selectedStreamIndex] = recordedStream;
+                this.setState({
+                    recordedStreams,
+                    showSaveChangesSpinner: false
+                }, () => {
+                    this.editStreamToggle();
+                });
+            }
+        });
     }
 
     openDeleteRecordedStreamModal(index, stream) {
@@ -244,17 +249,20 @@ export default class ManageRecordedStreams extends React.Component {
         }));
     }
 
-    async deleteRecordedStream() {
-        const res = await axios.delete(`/api/recorded-streams/${this.state.selectedStreamId}`);
-        if (res.status === 200) {
-            const recordedStreams = [...this.state.recordedStreams];
-            recordedStreams.splice(this.state.selectedStreamIndex, 1);
-            this.setState({
-                recordedStreams
-            }, () => {
-                this.deleteStreamToggle();
-            });
-        }
+    deleteRecordedStream() {
+        this.setState({showDeleteSpinner: true}, async () => {
+            const res = await axios.delete(`/api/recorded-streams/${this.state.selectedStreamId}`);
+            if (res.status === 200) {
+                const recordedStreams = [...this.state.recordedStreams];
+                recordedStreams.splice(this.state.selectedStreamIndex, 1);
+                this.setState({
+                    recordedStreams,
+                    showDeleteSpinner: false
+                }, () => {
+                    this.deleteStreamToggle();
+                });
+            }
+        });
     }
 
     renderEditRecordedStream() {
@@ -325,7 +333,10 @@ export default class ManageRecordedStreams extends React.Component {
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.editRecordedStream}
                             disabled={!this.state.unsavedChanges}>
-                        Save Changes
+                        {this.state.showSaveChangesSpinner ? <Spinner /> : undefined}
+                        <span className={this.state.showSaveChangesSpinner ? 'sr-only' : undefined}>
+                            Save Changes
+                        </span>
                     </Button>
                 </ModalFooter>
             </Modal>
@@ -342,7 +353,12 @@ export default class ManageRecordedStreams extends React.Component {
                     <p>Are you sure you want to delete '{this.state.selectedStreamTitle}'?</p>
                 </ModalBody>
                 <ModalFooter>
-                    <Button className='btn-dark' onClick={this.deleteRecordedStream}>Delete</Button>
+                    <Button className='btn-dark' onClick={this.deleteRecordedStream}>
+                        {this.state.showDeleteSpinner ? <Spinner /> : undefined}
+                        <span className={this.state.showDeleteSpinner ? 'sr-only' : undefined}>
+                            Delete
+                        </span>
+                    </Button>
                 </ModalFooter>
             </Modal>
         );

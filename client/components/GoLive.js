@@ -32,7 +32,8 @@ export default class GoLive extends React.Component {
             streamTitle: '',
             streamGenre: '',
             streamCategory: '',
-            streamTags: []
+            streamTags: [],
+            showSpinner: false
         };
     }
 
@@ -165,22 +166,25 @@ export default class GoLive extends React.Component {
         });
     }
 
-    async saveSettings() {
-        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/stream-info`, {
-            title: this.state.streamTitle,
-            genre: this.state.streamGenre,
-            category: this.state.streamCategory,
-            tags: this.state.streamTags
-        });
-        if (res.status === 200) {
-            this.setState({
-                streamTitle: res.data.title,
-                streamGenre: res.data.genre,
-                streamCategory: res.data.category,
-                streamTags: res.data.tags,
-                unsavedChanges: false
+    saveSettings() {
+        this.setState({showSpinner: true}, async () => {
+            const res = await axios.patch(`/api/users/${this.state.loggedInUser}/stream-info`, {
+                title: this.state.streamTitle,
+                genre: this.state.streamGenre,
+                category: this.state.streamCategory,
+                tags: this.state.streamTags
             });
-        }
+            if (res.status === 200) {
+                this.setState({
+                    streamTitle: res.data.title,
+                    streamGenre: res.data.genre,
+                    streamCategory: res.data.category,
+                    streamTags: res.data.tags,
+                    unsavedChanges: false,
+                    showSpinner: false
+                });
+            }
+        });
     }
 
     render() {
@@ -276,7 +280,10 @@ export default class GoLive extends React.Component {
                 <div className='float-right mb-4'>
                     <Button className='btn-dark' size='lg' disabled={!this.state.unsavedChanges}
                             onClick={this.saveSettings}>
-                        Save Settings
+                        {this.state.showSpinner ? <Spinner /> : undefined}
+                        <span className={this.state.showSpinner ? 'sr-only' : undefined}>
+                            Save Settings
+                        </span>
                     </Button>
                 </div>
             </Container>

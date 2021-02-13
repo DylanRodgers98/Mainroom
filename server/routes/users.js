@@ -563,7 +563,7 @@ router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next
 
     let isUpdatingUsernameOrEmail = false;
 
-    const username = sanitise(req.body.username.toLowercase());
+    const username = sanitise(req.body.username.toLowerCase());
     const email = sanitise(req.body.email);
 
     if (req.body.updateUsername) {
