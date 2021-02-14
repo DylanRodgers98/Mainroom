@@ -120,5 +120,6 @@ module.exports = {
         ]
     },
     loadLivestreamTimeout: 15 * SECOND,
+    alertTimeout: 3 * SECOND,
     bugReportURL: 'https://gitreports.com/issue/DylanRodgers98/Mainroom'
 };

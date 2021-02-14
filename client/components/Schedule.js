@@ -20,6 +20,7 @@ import {
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
+import {alertTimeout} from '../../mainroom.config';
 
 export default class Schedule extends React.Component {
 
@@ -256,7 +257,7 @@ export default class Schedule extends React.Component {
                     loaded: false,
                     showSpinner: false
                 }, () => {
-                    setTimeout(() => this.setState({alertText: ''}), 3000);
+                    setTimeout(() => this.setState({alertText: ''}), alertTimeout);
                     this.getSchedule();
                 });
             }

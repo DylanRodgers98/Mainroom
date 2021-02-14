@@ -1,7 +1,8 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner} from 'reactstrap';
+import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner, Alert} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
+import {alertTimeout} from '../../mainroom.config';
 
 export default class GoLive extends React.Component {
 
@@ -33,7 +34,8 @@ export default class GoLive extends React.Component {
             streamGenre: '',
             streamCategory: '',
             streamTags: [],
-            showSpinner: false
+            showSpinner: false,
+            alertText: ''
         };
     }
 
@@ -181,7 +183,10 @@ export default class GoLive extends React.Component {
                     streamCategory: res.data.category,
                     streamTags: res.data.tags,
                     unsavedChanges: false,
-                    showSpinner: false
+                    showSpinner: false,
+                    alertText: 'Successfully updated stream settings'
+                }, () => {
+                    setTimeout(() => this.setState({alertText: ''}), alertTimeout);
                 });
             }
         });
@@ -193,10 +198,22 @@ export default class GoLive extends React.Component {
                 <Spinner color='dark' className='loading-spinner' />
             </div>
         ) : (
-            <Container fluid='lg' className='mt-5'>
-                <h4>Stream Settings</h4>
+            <Container fluid='lg'>
+                <Alert color='success' className='mt-2' isOpen={this.state.alertText}>
+                    {this.state.alertText}
+                </Alert>
+
+                <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
+                    <Col xs='12'>
+                        <h4>Stream Settings</h4>
+                    </Col>
+                </Row>
                 <hr className='mt-4'/>
-                <i>Copy and paste the Server URL and Stream Key into your streaming software</i>
+                <Row>
+                    <Col xs='12'>
+                        <i>Copy and paste the Server URL and Stream Key into your streaming software</i>
+                    </Col>
+                </Row>
                 <Row className='mt-3'>
                     <Col xs='12'>
                         <h5>Server URL</h5>
