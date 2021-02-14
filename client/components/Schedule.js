@@ -3,6 +3,7 @@ import axios from 'axios';
 import Timeline from 'react-calendar-timeline'
 import moment from 'moment'
 import {
+    Alert,
     Button,
     Col,
     Container,
@@ -14,7 +15,8 @@ import {
     ModalBody,
     ModalFooter,
     ModalHeader,
-    Row, Spinner
+    Row,
+    Spinner
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
@@ -56,7 +58,8 @@ export default class Schedule extends React.Component {
             scheduleStreamGenre: '',
             scheduleStreamCategory: '',
             scheduleStreamTags: [],
-            showSpinner: false
+            showSpinner: false,
+            alertText: ''
         }
     }
 
@@ -232,8 +235,16 @@ export default class Schedule extends React.Component {
                 tags: this.state.scheduleStreamTags
             });
             if (res.status === 200) {
+                const dateRange = formatDateRange({
+                    start: this.state.scheduleStreamStartTime,
+                    end: this.state.scheduleStreamEndTime
+                });
+                const alertText = `Successfully scheduled ${this.state.scheduleStreamTitle ? 
+                    `'${this.state.scheduleStreamTitle}'` : 'stream'} for ${dateRange}`;
+
                 this.scheduleStreamToggle();
                 this.setState({
+                    alertText,
                     scheduleGroups: [],
                     scheduleItems: [],
                     scheduleStreamStartTime: moment(),
@@ -245,6 +256,7 @@ export default class Schedule extends React.Component {
                     loaded: false,
                     showSpinner: false
                 }, () => {
+                    setTimeout(() => this.setState({alertText: ''}), 3000);
                     this.getSchedule();
                 });
             }
@@ -363,6 +375,10 @@ export default class Schedule extends React.Component {
             </div>
         ) : (
             <React.Fragment>
+                <Alert color='success' className='mt-2 mx-2' isOpen={this.state.alertText}>
+                    {this.state.alertText}
+                </Alert>
+
                 <Container fluid className='my-5'>
                     <Row>
                         <Col>

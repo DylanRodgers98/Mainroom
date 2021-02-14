@@ -165,7 +165,7 @@ export default class LiveStreams extends React.Component {
         this.setState({
             genres: res.data.genres,
             categories: res.data.categories
-        })
+        });
     }
 
     genreDropdownToggle() {
