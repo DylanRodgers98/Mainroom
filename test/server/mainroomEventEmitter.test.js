@@ -84,8 +84,8 @@ describe('MainroomEventEmitter', () => {
         expect(mockNotifySubscribersUserWentLive).toHaveBeenCalledWith(user);
     });
 
-    it('should call sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams() on emission onSubscribersCreatedScheduledStreams event', () => {
-        mainroomEventEmitter.emit('onSubscribersCreatedScheduledStreams', user, streams);
+    it('should call sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams() on emission onSubscriptionsCreatedScheduledStreams event', () => {
+        mainroomEventEmitter.emit('onSubscriptionsCreatedScheduledStreams', user, streams);
         expect(mockNotifyUserSubscriptionsCreatedScheduledStreams).toHaveBeenCalledWith(user, streams);
     });
 

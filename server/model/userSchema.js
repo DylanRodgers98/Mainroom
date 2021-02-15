@@ -36,7 +36,7 @@ const UserSchema = new Schema({
     emailSettings: {
         newSubscribers: Boolean,
         subscriptionWentLive: Boolean,
-        subscriptionCreatedScheduledStream: Boolean,
+        subscriptionsCreatedScheduledStreams: Boolean,
         subscriptionScheduledStreamStartingIn: Number
     },
     chatColour: {type: String, default: getRandomColour}

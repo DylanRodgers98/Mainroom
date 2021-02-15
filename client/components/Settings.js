@@ -1,8 +1,9 @@
 import React from 'react';
 import axios from 'axios';
 import Container from 'reactstrap/es/Container';
-import {Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
+import {Alert, Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import _ from 'lodash';
+import {alertTimeout} from '../../mainroom.config';
 
 export default class Settings extends React.Component {
 
@@ -42,7 +43,9 @@ export default class Settings extends React.Component {
             deleteAccountOpen: false,
             showSaveSettingsSpinner: false,
             showResetPasswordSpinner: false,
-            showDeleteAccountSpinner: false
+            showDeleteAccountSpinner: false,
+            alertText: '',
+            alertColor: ''
         }
     }
 
@@ -115,18 +118,25 @@ export default class Settings extends React.Component {
             if (this.isEmailSettingsChanged()) {
                 data.emailSettings = this.state.emailSettings;
             }
+
             const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/settings`, data);
-            this.setState({
-                usernameInvalidReason: res.data.usernameInvalidReason || '',
-                emailInvalidReason: res.data.emailInvalidReason || '',
-                showSaveSettingsSpinner: false
-            });
-            if (!(res.data.usernameInvalidReason || res.data.emailInvalidReason)) {
+            if (res.status === 200) {
                 this.setState({
-                    startingUsername: this.state.username,
-                    startingEmail: this.state.email,
-                    startingEmailSettings: this.state.emailSettings
+                    usernameInvalidReason: res.data.usernameInvalidReason || '',
+                    emailInvalidReason: res.data.emailInvalidReason || '',
+                    showSaveSettingsSpinner: false
                 });
+                if (!(res.data.usernameInvalidReason || res.data.emailInvalidReason)) {
+                    this.setState({
+                        startingUsername: this.state.username,
+                        startingEmail: this.state.email,
+                        startingEmailSettings: this.state.emailSettings
+                    });
+                    this.showAlert('Successfully updated account settings', 'success');
+                }
+            } else {
+                this.setState({showSaveSettingsSpinner: false});
+                this.showAlert('An error occurred when updating account settings. Please try again later.', 'danger');
             }
         });
     }
@@ -165,17 +175,34 @@ export default class Settings extends React.Component {
                 newPassword: this.state.newPassword,
                 confirmNewPassword: this.state.confirmNewPassword
             });
-            this.setState({
-                currentPasswordInvalidReason: res.data.currentPasswordInvalidReason || '',
-                newPasswordInvalidReason: res.data.newPasswordInvalidReason || '',
-                confirmNewPasswordInvalidReason: res.data.confirmNewPasswordInvalidReason || '',
-                showResetPasswordSpinner: false
-            });
-            if (!(this.state.currentPasswordInvalidReason
-                || this.state.newPasswordInvalidReason
-                || this.state.confirmNewPasswordInvalidReason)) {
-                this.resetPasswordToggle();
+            if (res.status === 200) {
+                this.setState({
+                    currentPasswordInvalidReason: res.data.currentPasswordInvalidReason || '',
+                    newPasswordInvalidReason: res.data.newPasswordInvalidReason || '',
+                    confirmNewPasswordInvalidReason: res.data.confirmNewPasswordInvalidReason || '',
+                    showResetPasswordSpinner: false
+                });
+                if (!(this.state.currentPasswordInvalidReason
+                    || this.state.newPasswordInvalidReason
+                    || this.state.confirmNewPasswordInvalidReason)) {
+                    this.resetPasswordToggle();
+                    this.showAlert('Successfully updated password', 'success');
+                }
+            } else {
+                this.setState({showResetPasswordSpinner: false});
+                this.showAlert('An error occurred when updating password. Please try again later.', 'danger');
             }
+        });
+    }
+
+    showAlert(alertText, alertColor) {
+        this.setState({alertText, alertColor}, () => {
+            setTimeout(() => {
+                this.setState({
+                    alertText: '',
+                    alertColor: ''
+                });
+            }, alertTimeout);
         });
     }
 
@@ -312,8 +339,16 @@ export default class Settings extends React.Component {
             </div>
         ) : (
             <React.Fragment>
-                <Container fluid='lg' className='mt-5'>
-                    <h4>Account Settings</h4>
+                <Container fluid='lg'>
+                    <Alert color={this.state.alertColor} className='mt-3' isOpen={this.state.alertText}>
+                        {this.state.alertText}
+                    </Alert>
+
+                    <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
+                        <Col>
+                            <h4>Account Settings</h4>
+                        </Col>
+                    </Row>
                     <hr className='my-4'/>
                     <Row>
                         <Col xs='12'>
@@ -356,7 +391,7 @@ export default class Settings extends React.Component {
                                     <input name='newSubscribers' type='checkbox' className='mr-1'
                                            checked={this.state.emailSettings.newSubscribers}
                                            onChange={this.handleEmailSettingsChange}/>
-                                    Send an email when someone subscribes to me
+                                    Send emails about new subscribers
                                 </label>
                                 <br />
                                 <label>
@@ -367,10 +402,10 @@ export default class Settings extends React.Component {
                                 </label>
                                 <br />
                                 <label>
-                                    <input name='subscriptionCreatedScheduledStream' type='checkbox' className='mr-1'
-                                           checked={this.state.emailSettings.subscriptionCreatedScheduledStream}
+                                    <input name='subscriptionsCreatedScheduledStreams' type='checkbox' className='mr-1'
+                                           checked={this.state.emailSettings.subscriptionsCreatedScheduledStreams}
                                            onChange={this.handleEmailSettingsChange}/>
-                                    Send an email when someone I am subscribed to schedules a livestream
+                                    Send emails about scheduled livestreams created by users I am subscribed to
                                 </label>
                                 <br />
                                 <label>Send an email when someone I am subscribed to has a stream scheduled to start:

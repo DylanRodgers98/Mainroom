@@ -11,7 +11,7 @@ if (config.email.enabled) {
     mainroomEventEmitter
         .on('onNewSubscribers', sesEmailSender.notifyUserOfNewSubscribers)
         .on('onWentLive', sesEmailSender.notifySubscribersUserWentLive)
-        .on('onSubscribersCreatedScheduledStreams', sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams)
+        .on('onSubscriptionsCreatedScheduledStreams', sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams)
         .on('onScheduledStreamStartingSoon', sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon);
 }
 

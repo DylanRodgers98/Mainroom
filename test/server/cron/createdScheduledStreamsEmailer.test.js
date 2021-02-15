@@ -110,7 +110,7 @@ afterAll(() => {
 });
 
 describe('createdScheduledStreamsEmailer', () => {
-    it('should emit onSubscribersCreatedScheduledStreams event from mainroomEventEmitter when cron job triggers', async () => {
+    it('should emit onSubscriptionsCreatedScheduledStreams event from mainroomEventEmitter when cron job triggers', async () => {
         // given
         job.setTime(new CronTime('* * * * * *'));
 
@@ -121,7 +121,7 @@ describe('createdScheduledStreamsEmailer', () => {
 
         // then
         job.stop();
-        expect(mockEmit).toHaveBeenCalledWith('onSubscribersCreatedScheduledStreams', mockUser1, mockUser1ExpectedStreams);
-        expect(mockEmit).toHaveBeenCalledWith('onSubscribersCreatedScheduledStreams', mockUser2, mockUser2ExpectedStreams);
+        expect(mockEmit).toHaveBeenCalledWith('onSubscriptionsCreatedScheduledStreams', mockUser1, mockUser1ExpectedStreams);
+        expect(mockEmit).toHaveBeenCalledWith('onSubscriptionsCreatedScheduledStreams', mockUser2, mockUser2ExpectedStreams);
     });
 });
