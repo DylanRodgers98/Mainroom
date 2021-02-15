@@ -20,7 +20,7 @@ import {
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
-import {alertTimeout} from '../../mainroom.config';
+import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
 
 export default class Schedule extends React.Component {
 
@@ -59,8 +59,9 @@ export default class Schedule extends React.Component {
             scheduleStreamGenre: '',
             scheduleStreamCategory: '',
             scheduleStreamTags: [],
-            showSpinner: false,
-            alertText: ''
+            showAddToScheduleSpinner: false,
+            alertText: '',
+            alertColor: ''
         }
     }
 
@@ -225,7 +226,7 @@ export default class Schedule extends React.Component {
     }
 
     addToSchedule() {
-        this.setState({showSpinner: true}, async () => {
+        this.setState({showAddToScheduleSpinner: true}, async () => {
             const res = await axios.post('/api/scheduled-streams', {
                 userId: this.state.loggedInUserId,
                 startTime: convertLocalToUTC(this.state.scheduleStreamStartTime),
@@ -243,9 +244,7 @@ export default class Schedule extends React.Component {
                 const alertText = `Successfully scheduled ${this.state.scheduleStreamTitle ? 
                     `'${this.state.scheduleStreamTitle}'` : 'stream'} for ${dateRange}`;
 
-                this.scheduleStreamToggle();
                 this.setState({
-                    alertText,
                     scheduleGroups: [],
                     scheduleItems: [],
                     scheduleStreamStartTime: moment(),
@@ -254,15 +253,20 @@ export default class Schedule extends React.Component {
                     scheduleStreamGenre: '',
                     scheduleStreamCategory: '',
                     scheduleStreamTags: [],
-                    loaded: false,
-                    showSpinner: false
+                    loaded: false
                 }, () => {
-                    setTimeout(() => this.setState({alertText: ''}), alertTimeout);
+                    displaySuccessMessage(this, alertText);
                     this.getSchedule();
                 });
+            } else {
+                displayFailureMessage(this, 'An error occurred when creating scheduled stream. Please try again later.');
             }
+            this.scheduleStreamToggle();
+            this.setState({showAddToScheduleSpinner: false});
         });
     }
+
+
 
     isNoMobileMode() {
         const mdBreakpointValue = window.getComputedStyle(document.documentElement)
@@ -359,8 +363,8 @@ export default class Schedule extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.addToSchedule}>
-                        {this.state.showSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showSpinner ? 'sr-only' : undefined}>
+                        {this.state.showAddToScheduleSpinner ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showAddToScheduleSpinner ? 'sr-only' : undefined}>
                             Add to Schedule
                         </span>
                     </Button>
@@ -377,7 +381,7 @@ export default class Schedule extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid>
-                    <Alert color='success' className='mt-3' isOpen={this.state.alertText}>
+                    <Alert className='mt-3' isOpen={this.state.alertText} color={this.state.alertColor}>
                         {this.state.alertText}
                     </Alert>
 

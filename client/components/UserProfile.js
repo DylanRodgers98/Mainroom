@@ -3,12 +3,12 @@ import axios from 'axios';
 import {Alert, Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import moment from 'moment';
-import {pagination, alertTimeout} from '../../mainroom.config';
+import {pagination} from '../../mainroom.config';
 import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayGenreAndCategory} from '../utils/displayUtils';
+import {displayFailureMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -48,6 +48,7 @@ const STARTING_STATE = {
     showChangeProfilePicSpinner: false,
     showEditProfileSpinner: false,
     alertText: '',
+    alertColor: '',
     nextPage: STARTING_PAGE
 };
 
@@ -509,11 +510,9 @@ export default class UserProfile extends React.Component {
                 });
                 if (res.status === 200) {
                     this.reloadProfile();
-                    this.setState({
-                        alertText: 'Successfully updated profile'
-                    }, () => {
-                        setTimeout(() => this.setState({alertText: ''}), alertTimeout);
-                    });
+                    displaySuccessMessage(this, 'Successfully updated profile');
+                } else {
+                    displayFailureMessage(this, 'An error occurred when updating profile. Please try again later.');
                 }
             } else {
                 this.setState({showEditProfileSpinner: false});
@@ -758,7 +757,7 @@ export default class UserProfile extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid='lg'>
-                    <Alert color='success' className='mt-3' isOpen={this.state.alertText}>
+                    <Alert className='mt-3' isOpen={this.state.alertText} color={this.state.alertColor}>
                         {this.state.alertText}
                     </Alert>
 

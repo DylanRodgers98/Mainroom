@@ -17,10 +17,10 @@ import {
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
-import {pagination, alertTimeout} from '../../mainroom.config';
+import {pagination} from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDate} from '../utils/dateUtils';
-import {displayGenreAndCategory} from '../utils/displayUtils';
+import {displayFailureMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -65,6 +65,7 @@ export default class ManageRecordedStreams extends React.Component {
             showDeleteSpinner: false,
             alertIndex: undefined,
             alertText: '',
+            alertColor: '',
             nextPage: STARTING_PAGE
         }
     }
@@ -219,6 +220,7 @@ export default class ManageRecordedStreams extends React.Component {
                 category: this.state.selectedStreamCategory,
                 tags: this.state.selectedStreamTags
             });
+
             if (res.status === 200) {
                 const recordedStreams = [...this.state.recordedStreams];
                 const recordedStream = recordedStreams[this.state.selectedStreamIndex];
@@ -232,25 +234,35 @@ export default class ManageRecordedStreams extends React.Component {
 
                 this.setState({
                     recordedStreams,
-                    showSaveChangesSpinner: false,
-                    alertIndex: this.state.selectedStreamIndex,
-                    alertText
+                    alertIndex: this.state.selectedStreamIndex
                 }, () => {
-                    this.editStreamToggle();
-                    setTimeout(() => {
-                        this.setState({
-                            alertIndex: undefined,
-                            alertText: '',
-                            selectedStreamIndex: undefined,
-                            selectedStreamId: '',
-                            selectedStreamTitle: '',
-                            selectedStreamGenre: '',
-                            selectedStreamCategory: '',
-                            selectedStreamTags: []
-                        });
-                    }, alertTimeout);
+                    displaySuccessMessage(this, alertText, () => {
+                        this.setState({alertIndex: undefined});
+                    });
+                });
+            } else {
+                const alertText = `An error occurred when editing ${this.state.selectedStreamTitle ?
+                    `'${this.state.selectedStreamTitle}'` : 'recorded stream'}. Please try again later.`;
+
+                this.setState({
+                    alertIndex: this.state.selectedStreamIndex
+                }, () => {
+                    displayFailureMessage(this, alertText, () => {
+                        this.setState({alertIndex: undefined});
+                    });
                 });
             }
+
+            this.editStreamToggle();
+            this.setState({
+                showSaveChangesSpinner: false,
+                selectedStreamIndex: undefined,
+                selectedStreamId: '',
+                selectedStreamTitle: '',
+                selectedStreamGenre: '',
+                selectedStreamCategory: '',
+                selectedStreamTags: []
+            });
         });
     }
 
@@ -273,31 +285,42 @@ export default class ManageRecordedStreams extends React.Component {
     deleteRecordedStream() {
         this.setState({showDeleteSpinner: true}, async () => {
             const res = await axios.delete(`/api/recorded-streams/${this.state.selectedStreamId}`);
+
             if (res.status === 200) {
                 const recordedStreams = [...this.state.recordedStreams];
                 recordedStreams.splice(this.state.selectedStreamIndex, 1);
 
-                const alertText = `Successfully deleted ${this.state.selectedStreamTitle ? 
+                const alertText = `Successfully deleted ${this.state.selectedStreamTitle ?
                     `'${this.state.selectedStreamTitle}'` : 'recorded stream'}`
 
                 this.setState({
                     recordedStreams,
-                    showDeleteSpinner: false,
-                    alertText,
                     alertIndex: this.state.selectedStreamIndex
                 }, () => {
-                    this.deleteStreamToggle();
-                    setTimeout(() => {
-                        this.setState({
-                            alertIndex: undefined,
-                            alertText: '',
-                            selectedStreamIndex: undefined,
-                            selectedStreamId: '',
-                            selectedStreamTitle: ''
-                        });
-                    }, alertTimeout);
+                    displaySuccessMessage(this, alertText, () => {
+                        this.setState({alertIndex: undefined});
+                    });
+                });
+            } else {
+                const alertText = `An error occurred when deleting ${this.state.selectedStreamTitle ?
+                    `'${this.state.selectedStreamTitle}'` : 'recorded stream'}. Please try again later.`;
+
+                this.setState({
+                    alertIndex: this.state.selectedStreamIndex
+                }, () => {
+                    displayFailureMessage(this, alertText, () => {
+                        this.setState({alertIndex: undefined});
+                    });
                 });
             }
+
+            this.deleteStreamToggle();
+            this.setState({
+                showDeleteSpinner: false,
+                selectedStreamIndex: undefined,
+                selectedStreamId: '',
+                selectedStreamTitle: ''
+            });
         });
     }
 
@@ -369,7 +392,7 @@ export default class ManageRecordedStreams extends React.Component {
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.editRecordedStream}
                             disabled={!this.state.unsavedChanges}>
-                        {this.state.showSaveChangesSpinner ? <Spinner size='sm' /> : undefined}
+                        {this.state.showSaveChangesSpinner ? <Spinner size='sm'/> : undefined}
                         <span className={this.state.showSaveChangesSpinner ? 'sr-only' : undefined}>
                             Save Changes
                         </span>
@@ -390,7 +413,7 @@ export default class ManageRecordedStreams extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.deleteRecordedStream}>
-                        {this.state.showDeleteSpinner ? <Spinner size='sm' /> : undefined}
+                        {this.state.showDeleteSpinner ? <Spinner size='sm'/> : undefined}
                         <span className={this.state.showDeleteSpinner ? 'sr-only' : undefined}>
                             Delete
                         </span>
@@ -420,7 +443,7 @@ export default class ManageRecordedStreams extends React.Component {
             );
 
             const alert = this.state.alertIndex !== index ? undefined : (
-                <Alert color='success' className='my-3' isOpen={this.state.alertText}>
+                <Alert className='my-3' isOpen={this.state.alertText} color={this.state.alertColor}>
                     {this.state.alertText}
                 </Alert>
             );
@@ -428,9 +451,9 @@ export default class ManageRecordedStreams extends React.Component {
             const requiresMargin = !(nextHasAlert && this.state.alertText);
 
             return (
-                <React.Fragment>
+                <React.Fragment key={index}>
                     {alert}
-                    <Row key={index} className={requiresMargin ? 'margin-bottom-thick' : undefined}>
+                    <Row className={requiresMargin ? 'margin-bottom-thick' : undefined}>
                         <Col className='stream' md='6' lg='4'>
                             <span className='video-duration'>{stream.videoDuration}</span>
                             <span className='view-count'>
@@ -486,7 +509,7 @@ export default class ManageRecordedStreams extends React.Component {
     render() {
         return !this.state.loaded ? (
             <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner' />
+                <Spinner color='dark' className='loading-spinner'/>
             </div>
         ) : (
             <React.Fragment>

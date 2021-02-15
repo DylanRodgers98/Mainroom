@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner, Alert} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
-import {alertTimeout} from '../../mainroom.config';
+import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
 
 export default class GoLive extends React.Component {
 
@@ -35,7 +35,8 @@ export default class GoLive extends React.Component {
             streamCategory: '',
             streamTags: [],
             showSpinner: false,
-            alertText: ''
+            alertText: '',
+            alertColor: ''
         };
     }
 
@@ -182,13 +183,13 @@ export default class GoLive extends React.Component {
                     streamGenre: res.data.genre,
                     streamCategory: res.data.category,
                     streamTags: res.data.tags,
-                    unsavedChanges: false,
-                    showSpinner: false,
-                    alertText: 'Successfully updated stream settings'
-                }, () => {
-                    setTimeout(() => this.setState({alertText: ''}), alertTimeout);
+                    unsavedChanges: false
                 });
+                displaySuccessMessage(this, 'Successfully updated stream settings');
+            } else {
+                displayFailureMessage(this, 'An error occurred when updating stream settings. Please try again later.');
             }
+            this.setState({showSpinner: false});
         });
     }
 
@@ -199,7 +200,7 @@ export default class GoLive extends React.Component {
             </div>
         ) : (
             <Container fluid='lg'>
-                <Alert color='success' className='mt-3' isOpen={this.state.alertText}>
+                <Alert className='mt-3' isOpen={this.state.alertText} color={this.state.alertColor}>
                     {this.state.alertText}
                 </Alert>
 

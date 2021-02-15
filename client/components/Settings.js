@@ -3,7 +3,7 @@ import axios from 'axios';
 import Container from 'reactstrap/es/Container';
 import {Alert, Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import _ from 'lodash';
-import {alertTimeout} from '../../mainroom.config';
+import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
 
 export default class Settings extends React.Component {
 
@@ -16,8 +16,9 @@ export default class Settings extends React.Component {
         this.setNewPassword = this.setNewPassword.bind(this);
         this.setConfirmNewPassword = this.setConfirmNewPassword.bind(this);
         this.saveSettings = this.saveSettings.bind(this);
-        this.resetPasswordToggle = this.resetPasswordToggle.bind(this);
-        this.resetPassword = this.resetPassword.bind(this);
+        this.changePasswordToggle = this.changePasswordToggle.bind(this);
+        this.changePassword = this.changePassword.bind(this);
+        this.changePasswordHandleKeyDown = this.changePasswordHandleKeyDown.bind(this);
         this.handleEmailSettingsChange = this.handleEmailSettingsChange.bind(this);
         this.deleteAccountToggle = this.deleteAccountToggle.bind(this);
         this.deleteAccount = this.deleteAccount.bind(this);
@@ -33,7 +34,7 @@ export default class Settings extends React.Component {
             emailSettings: undefined,
             usernameInvalidReason: '',
             emailInvalidReason: '',
-            resetPasswordOpen: false,
+            changePasswordOpen: false,
             currentPassword: '',
             newPassword: '',
             confirmNewPassword: '',
@@ -42,7 +43,7 @@ export default class Settings extends React.Component {
             confirmNewPasswordInvalidReason: '',
             deleteAccountOpen: false,
             showSaveSettingsSpinner: false,
-            showResetPasswordSpinner: false,
+            showChangePasswordSpinner: false,
             showDeleteAccountSpinner: false,
             alertText: '',
             alertColor: ''
@@ -132,11 +133,11 @@ export default class Settings extends React.Component {
                         startingEmail: this.state.email,
                         startingEmailSettings: this.state.emailSettings
                     });
-                    this.showAlert('Successfully updated account settings', 'success');
+                    displaySuccessMessage(this, 'Successfully updated account settings');
                 }
             } else {
                 this.setState({showSaveSettingsSpinner: false});
-                this.showAlert('An error occurred when updating account settings. Please try again later.', 'danger');
+                displayFailureMessage(this, 'An error occurred when updating account settings. Please try again later.');
             }
         });
     }
@@ -159,17 +160,23 @@ export default class Settings extends React.Component {
         });
     }
 
-    resetPasswordToggle() {
+    changePasswordToggle() {
         this.setState(prevState => ({
-            resetPasswordOpen: !prevState.resetPasswordOpen,
+            changePasswordOpen: !prevState.changePasswordOpen,
             currentPassword: '',
             newPassword: '',
             confirmNewPassword: ''
         }));
     }
 
-    resetPassword() {
-        this.setState({showResetPasswordSpinner: true}, async () => {
+    changePasswordHandleKeyDown(e) {
+        if (e.key === 'Enter' && this.enableChangePasswordButton()) {
+            this.changePassword();
+        }
+    }
+
+    changePassword() {
+        this.setState({showChangePasswordSpinner: true}, async () => {
             const res = await axios.post(`/api/users/${this.state.loggedInUserId}/password`, {
                 currentPassword: this.state.currentPassword,
                 newPassword: this.state.newPassword,
@@ -180,29 +187,18 @@ export default class Settings extends React.Component {
                     currentPasswordInvalidReason: res.data.currentPasswordInvalidReason || '',
                     newPasswordInvalidReason: res.data.newPasswordInvalidReason || '',
                     confirmNewPasswordInvalidReason: res.data.confirmNewPasswordInvalidReason || '',
-                    showResetPasswordSpinner: false
+                    showChangePasswordSpinner: false
                 });
                 if (!(this.state.currentPasswordInvalidReason
                     || this.state.newPasswordInvalidReason
                     || this.state.confirmNewPasswordInvalidReason)) {
-                    this.resetPasswordToggle();
-                    this.showAlert('Successfully updated password', 'success');
+                    this.changePasswordToggle();
+                    displaySuccessMessage(this, 'Successfully updated password');
                 }
             } else {
-                this.setState({showResetPasswordSpinner: false});
-                this.showAlert('An error occurred when updating password. Please try again later.', 'danger');
+                this.setState({showChangePasswordSpinner: false});
+                displayFailureMessage(this, 'An error occurred when updating password. Please try again later.');
             }
-        });
-    }
-
-    showAlert(alertText, alertColor) {
-        this.setState({alertText, alertColor}, () => {
-            setTimeout(() => {
-                this.setState({
-                    alertText: '',
-                    alertColor: ''
-                });
-            }, alertTimeout);
         });
     }
 
@@ -215,7 +211,7 @@ export default class Settings extends React.Component {
             ));
     }
 
-    enableResetPasswordButton() {
+    enableChangePasswordButton() {
         return this.state.currentPassword && this.state.newPassword && this.state.confirmNewPassword;
     }
 
@@ -244,12 +240,14 @@ export default class Settings extends React.Component {
         });
     }
 
-    renderResetPassword() {
+    renderChangePassword() {
         const newPasswordInvalidReason = this.getNewPasswordInvalidReason();
 
         return (
-            <Modal isOpen={this.state.resetPasswordOpen} toggle={this.resetPasswordToggle} centered={true} size='sm'>
-                <ModalHeader toggle={this.resetPasswordToggle}>Reset Password</ModalHeader>
+            <Modal isOpen={this.state.changePasswordOpen} toggle={this.changePasswordToggle} centered={true} size='sm'>
+                <ModalHeader toggle={this.changePasswordToggle}>
+                    Change Password
+                </ModalHeader>
                 <ModalBody>
                     <Container fluid className='remove-padding-lr'>
                         <Row>
@@ -258,7 +256,7 @@ export default class Settings extends React.Component {
                             </Col>
                             <Col xs='12'>
                                 <input className='w-100 rounded-border' type='password' value={this.state.currentPassword}
-                                       onChange={this.setCurrentPassword}/>
+                                       onChange={this.setCurrentPassword} onKeyDown={this.changePasswordHandleKeyDown} />
                             </Col>
                             {!this.state.currentPasswordInvalidReason ? undefined : (
                                 <Col xs='12'>
@@ -272,7 +270,7 @@ export default class Settings extends React.Component {
                             </Col>
                             <Col xs='12'>
                                 <input className='w-100 rounded-border' type='password' value={this.state.newPassword}
-                                       onChange={this.setNewPassword}/>
+                                       onChange={this.setNewPassword} onKeyDown={this.changePasswordHandleKeyDown} />
                             </Col>
                             {!newPasswordInvalidReason ? undefined : (
                                 <Col xs='12'>
@@ -285,8 +283,8 @@ export default class Settings extends React.Component {
                                 <h6>Confirm New Password:</h6>
                             </Col>
                             <Col xs='12'>
-                                <input className='w-100 rounded-border' type='password'
-                                       value={this.state.confirmNewPassword} onChange={this.setConfirmNewPassword}/>
+                                <input className='w-100 rounded-border' type='password' value={this.state.confirmNewPassword}
+                                       onChange={this.setConfirmNewPassword} onKeyDown={this.changePasswordHandleKeyDown} />
                             </Col>
                             {!this.state.confirmNewPasswordInvalidReason ? undefined : (
                                 <Col xs='12'>
@@ -299,11 +297,11 @@ export default class Settings extends React.Component {
                     </Container>
                 </ModalBody>
                 <ModalFooter>
-                    <Button className='btn-dark' onClick={this.resetPassword}
-                            disabled={!this.enableResetPasswordButton()}>
-                        {this.state.showResetPasswordSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showResetPasswordSpinner ? 'sr-only' : undefined}>
-                            Reset Password
+                    <Button className='btn-dark' onClick={this.changePassword}
+                            disabled={!this.enableChangePasswordButton()}>
+                        {this.state.showChangePasswordSpinner ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showChangePasswordSpinner ? 'sr-only' : undefined}>
+                            Change Password
                         </span>
                     </Button>
                 </ModalFooter>
@@ -340,7 +338,7 @@ export default class Settings extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid='lg'>
-                    <Alert color={this.state.alertColor} className='mt-3' isOpen={this.state.alertText}>
+                    <Alert className='mt-3' isOpen={this.state.alertText} color={this.state.alertColor}>
                         {this.state.alertText}
                     </Alert>
 
@@ -372,11 +370,11 @@ export default class Settings extends React.Component {
                             </div>
                         </Col>
                         <Col className='mt-2' xs='12'>
-                            <h5>Reset Password</h5>
+                            <h5>Change Password</h5>
                         </Col>
                         <Col xs='12'>
-                            <Button className='btn-dark' size='sm' onClick={this.resetPasswordToggle}>
-                                Click to reset password
+                            <Button className='btn-dark' size='sm' onClick={this.changePasswordToggle}>
+                                Click to change password
                             </Button>
                         </Col>
                     </Row>
@@ -447,7 +445,7 @@ export default class Settings extends React.Component {
                     </div>
                 </Container>
 
-                {this.renderResetPassword()}
+                {this.renderChangePassword()}
                 {this.renderDeleteAccount()}
             </React.Fragment>
         );
