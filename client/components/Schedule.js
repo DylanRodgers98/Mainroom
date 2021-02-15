@@ -376,12 +376,12 @@ export default class Schedule extends React.Component {
             </div>
         ) : (
             <React.Fragment>
-                <Alert color='success' className='mt-2 mx-2' isOpen={this.state.alertText}>
-                    {this.state.alertText}
-                </Alert>
+                <Container fluid>
+                    <Alert color='success' className='mt-3' isOpen={this.state.alertText}>
+                        {this.state.alertText}
+                    </Alert>
 
-                <Container fluid className='my-5'>
-                    <Row>
+                    <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                         <Col>
                             <h4>Schedule</h4>
                         </Col>

@@ -199,7 +199,7 @@ export default class GoLive extends React.Component {
             </div>
         ) : (
             <Container fluid='lg'>
-                <Alert color='success' className='mt-2' isOpen={this.state.alertText}>
+                <Alert color='success' className='mt-3' isOpen={this.state.alertText}>
                     {this.state.alertText}
                 </Alert>
 

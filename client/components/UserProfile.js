@@ -1,9 +1,9 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
+import {Alert, Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import moment from 'moment';
-import config from '../../mainroom.config';
+import {pagination, alertTimeout} from '../../mainroom.config';
 import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
@@ -47,6 +47,7 @@ const STARTING_STATE = {
     showLoadMoreButton: false,
     showChangeProfilePicSpinner: false,
     showEditProfileSpinner: false,
+    alertText: '',
     nextPage: STARTING_PAGE
 };
 
@@ -213,7 +214,7 @@ export default class UserProfile extends React.Component {
             params: {
                 username: this.props.match.params.username,
                 page: this.state.nextPage,
-                limit: config.pagination.small
+                limit: pagination.small
             }
         });
         this.setState({
@@ -508,6 +509,11 @@ export default class UserProfile extends React.Component {
                 });
                 if (res.status === 200) {
                     this.reloadProfile();
+                    this.setState({
+                        alertText: 'Successfully updated profile'
+                    }, () => {
+                        setTimeout(() => this.setState({alertText: ''}), alertTimeout);
+                    });
                 }
             } else {
                 this.setState({showEditProfileSpinner: false});
@@ -751,8 +757,12 @@ export default class UserProfile extends React.Component {
             </div>
         ) : (
             <React.Fragment>
-                <Container fluid='lg' className='mt-5'>
-                    <Row>
+                <Container fluid='lg'>
+                    <Alert color='success' className='mt-3' isOpen={this.state.alertText}>
+                        {this.state.alertText}
+                    </Alert>
+
+                    <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                         <Col md='4' lg='3'>
                             {this.renderProfilePic()}
                             <h1>{this.state.displayName || this.props.match.params.username}</h1>
