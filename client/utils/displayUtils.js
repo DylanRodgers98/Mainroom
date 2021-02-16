@@ -1,6 +1,6 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {alertTimeout} from '../../mainroom.config';
+import {successMessageTimeout, errorMessageTimeout} from '../../mainroom.config';
 
 export const displayGenreAndCategory = ({genre, category}) => (
     <React.Fragment>
@@ -10,21 +10,23 @@ export const displayGenreAndCategory = ({genre, category}) => (
 );
 
 export const displaySuccessMessage = (component, message, callback) => {
-    displayAlert(component, message, 'success', callback);
+    displayAlert(component, message, 'success', successMessageTimeout, callback);
 }
 
-export const displayFailureMessage = (component, message, callback) => {
-    displayAlert(component, message, 'danger', callback);
+export const displayErrorMessage = (component, message, callback) => {
+    displayAlert(component, message, 'danger', errorMessageTimeout, callback);
 }
 
-const displayAlert = (component, alertText, alertColor, callback) => {
+const displayAlert = (component, alertText, alertColor, timeout, callback) => {
     component.setState({alertText, alertColor}, () => {
         setTimeout(() => {
             component.setState({
                 alertText: '',
                 alertColor: ''
             });
-            callback();
-        }, alertTimeout);
+            if (callback) {
+                callback();
+            }
+        }, timeout);
     });
 }

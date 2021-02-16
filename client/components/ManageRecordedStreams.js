@@ -20,7 +20,7 @@ import axios from 'axios';
 import {pagination, filters} from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDate} from '../utils/dateUtils';
-import {displayFailureMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -212,14 +212,14 @@ export default class ManageRecordedStreams extends React.Component {
 
     editRecordedStream() {
         this.setState({showSaveChangesSpinner: true}, async () => {
-            const res = await axios.patch(`/api/recorded-streams/${this.state.selectedStreamId}`, {
-                title: this.state.selectedStreamTitle,
-                genre: this.state.selectedStreamGenre,
-                category: this.state.selectedStreamCategory,
-                tags: this.state.selectedStreamTags
-            });
+            try {
+                const res = await axios.patch(`/api/recorded-streams/${this.state.selectedStreamId}`, {
+                    title: this.state.selectedStreamTitle,
+                    genre: this.state.selectedStreamGenre,
+                    category: this.state.selectedStreamCategory,
+                    tags: this.state.selectedStreamTags
+                });
 
-            if (res.status === 200) {
                 const recordedStreams = [...this.state.recordedStreams];
                 const recordedStream = recordedStreams[this.state.selectedStreamIndex];
                 recordedStream.title = res.data.title;
@@ -238,14 +238,14 @@ export default class ManageRecordedStreams extends React.Component {
                         this.setState({alertIndex: undefined});
                     });
                 });
-            } else {
+            } catch (err) {
                 const alertText = `An error occurred when editing ${this.state.selectedStreamTitle ?
-                    `'${this.state.selectedStreamTitle}'` : 'recorded stream'}. Please try again later.`;
+                    `'${this.state.selectedStreamTitle}'` : 'recorded stream'}. Please try again later. (${err})`;
 
                 this.setState({
                     alertIndex: this.state.selectedStreamIndex
                 }, () => {
-                    displayFailureMessage(this, alertText, () => {
+                    displayErrorMessage(this, alertText, () => {
                         this.setState({alertIndex: undefined});
                     });
                 });
@@ -282,9 +282,9 @@ export default class ManageRecordedStreams extends React.Component {
 
     deleteRecordedStream() {
         this.setState({showDeleteSpinner: true}, async () => {
-            const res = await axios.delete(`/api/recorded-streams/${this.state.selectedStreamId}`);
+            try {
+                await axios.delete(`/api/recorded-streams/${this.state.selectedStreamId}`);
 
-            if (res.status === 200) {
                 const recordedStreams = [...this.state.recordedStreams];
                 recordedStreams.splice(this.state.selectedStreamIndex, 1);
 
@@ -299,14 +299,14 @@ export default class ManageRecordedStreams extends React.Component {
                         this.setState({alertIndex: undefined});
                     });
                 });
-            } else {
+            } catch (err) {
                 const alertText = `An error occurred when deleting ${this.state.selectedStreamTitle ?
-                    `'${this.state.selectedStreamTitle}'` : 'recorded stream'}. Please try again later.`;
+                    `'${this.state.selectedStreamTitle}'` : 'recorded stream'}. Please try again later. (${err})`;
 
                 this.setState({
                     alertIndex: this.state.selectedStreamIndex
                 }, () => {
-                    displayFailureMessage(this, alertText, () => {
+                    displayErrorMessage(this, alertText, () => {
                         this.setState({alertIndex: undefined});
                     });
                 });
@@ -441,7 +441,7 @@ export default class ManageRecordedStreams extends React.Component {
             );
 
             const alert = this.state.alertIndex !== index ? undefined : (
-                <Alert className='my-3' isOpen={this.state.alertText} color={this.state.alertColor}>
+                <Alert className='my-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
                     {this.state.alertText}
                 </Alert>
             );

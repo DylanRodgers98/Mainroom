@@ -120,6 +120,7 @@ module.exports = {
         ].sort()
     },
     loadLivestreamTimeout: 15 * SECOND,
-    alertTimeout: 3 * SECOND,
+    successMessageTimeout: 3 * SECOND,
+    errorMessageTimeout: 5 * SECOND,
     bugReportURL: 'https://gitreports.com/issue/DylanRodgers98/Mainroom'
 };

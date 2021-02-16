@@ -8,7 +8,7 @@ import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayFailureMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -501,18 +501,18 @@ export default class UserProfile extends React.Component {
         this.setState({showEditProfileSpinner: true}, async () => {
             if (await this.validateLinks()) {
                 this.normaliseLinkUrls();
-                const res = await axios.patch(`/api/users/${this.state.loggedInUser}`, {
-                    displayName: this.state.editDisplayName,
-                    location: this.state.editLocation,
-                    bio: this.state.editBio,
-                    chatColour: this.state.chatColour,
-                    links: this.state.editLinks
-                });
-                if (res.status === 200) {
+                try {
+                    await axios.patch(`/api/users/${this.state.loggedInUser}`, {
+                        displayName: this.state.editDisplayName,
+                        location: this.state.editLocation,
+                        bio: this.state.editBio,
+                        chatColour: this.state.chatColour,
+                        links: this.state.editLinks
+                    });
                     this.reloadProfile();
                     displaySuccessMessage(this, 'Successfully updated profile');
-                } else {
-                    displayFailureMessage(this, 'An error occurred when updating profile. Please try again later.');
+                } catch (err) {
+                    displayErrorMessage(this, `An error occurred when updating profile. Please try again later. (${err})`);
                 }
             } else {
                 this.setState({showEditProfileSpinner: false});
@@ -693,13 +693,17 @@ export default class UserProfile extends React.Component {
             const data = new FormData();
             data.append('profilePic', this.state.uploadedProfilePic);
 
-            const res = await axios.put(`/api/users/${this.state.loggedInUserId}/profile-pic`, data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            if (res.status === 200) {
+            try {
+                await axios.put(`/api/users/${this.state.loggedInUserId}/profile-pic`, data, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
                 location.reload();
+            } catch (err) {
+                this.setState({showChangeProfilePicSpinner: false});
+                this.changeProfilePicToggle();
+                displayErrorMessage(this, `An error occurred when updating profile picture. Please try again later. (${err})`);
             }
         });
     }
@@ -757,7 +761,7 @@ export default class UserProfile extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid='lg'>
-                    <Alert className='mt-3' isOpen={this.state.alertText} color={this.state.alertColor}>
+                    <Alert className='mt-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
                         {this.state.alertText}
                     </Alert>
 

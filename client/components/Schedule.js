@@ -20,7 +20,7 @@ import {
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
-import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displaySuccessMessage} from '../utils/displayUtils';
 import {filters} from '../../mainroom.config';
 
 export default class Schedule extends React.Component {
@@ -226,16 +226,17 @@ export default class Schedule extends React.Component {
 
     addToSchedule() {
         this.setState({showAddToScheduleSpinner: true}, async () => {
-            const res = await axios.post('/api/scheduled-streams', {
-                userId: this.state.loggedInUserId,
-                startTime: convertLocalToUTC(this.state.scheduleStreamStartTime),
-                endTime: convertLocalToUTC(this.state.scheduleStreamEndTime),
-                title: this.state.scheduleStreamTitle,
-                genre: this.state.scheduleStreamGenre,
-                category: this.state.scheduleStreamCategory,
-                tags: this.state.scheduleStreamTags
-            });
-            if (res.status === 200) {
+            try {
+                await axios.post('/api/scheduled-streams', {
+                    userId: this.state.loggedInUserId,
+                    startTime: convertLocalToUTC(this.state.scheduleStreamStartTime),
+                    endTime: convertLocalToUTC(this.state.scheduleStreamEndTime),
+                    title: this.state.scheduleStreamTitle,
+                    genre: this.state.scheduleStreamGenre,
+                    category: this.state.scheduleStreamCategory,
+                    tags: this.state.scheduleStreamTags
+                });
+
                 const dateRange = formatDateRange({
                     start: this.state.scheduleStreamStartTime,
                     end: this.state.scheduleStreamEndTime
@@ -257,8 +258,8 @@ export default class Schedule extends React.Component {
                     displaySuccessMessage(this, alertText);
                     this.getSchedule();
                 });
-            } else {
-                displayFailureMessage(this, 'An error occurred when creating scheduled stream. Please try again later.');
+            } catch (err) {
+                displayErrorMessage(this, `An error occurred when creating scheduled stream. Please try again later. (${err})`);
             }
             this.scheduleStreamToggle();
             this.setState({showAddToScheduleSpinner: false});
@@ -380,7 +381,7 @@ export default class Schedule extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid>
-                    <Alert className='mt-3' isOpen={this.state.alertText} color={this.state.alertColor}>
+                    <Alert className='mt-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
                         {this.state.alertText}
                     </Alert>
 

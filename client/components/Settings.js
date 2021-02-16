@@ -3,7 +3,7 @@ import axios from 'axios';
 import Container from 'reactstrap/es/Container';
 import {Alert, Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import _ from 'lodash';
-import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displaySuccessMessage} from '../utils/displayUtils';
 
 const SUCCESSFUL_UPDATE_PARAM = 'success';
 const SUCCESSFUL_UPDATE_MESSAGE = 'Successfully updated account settings';
@@ -131,9 +131,8 @@ export default class Settings extends React.Component {
             if (this.isEmailSettingsChanged()) {
                 data.emailSettings = this.state.emailSettings;
             }
-
-            const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/settings`, data);
-            if (res.status === 200) {
+            try {
+                const res = await axios.patch(`/api/users/${this.state.loggedInUserId}/settings`, data);
                 this.setState({
                     usernameInvalidReason: res.data.usernameInvalidReason || '',
                     emailInvalidReason: res.data.emailInvalidReason || '',
@@ -151,9 +150,9 @@ export default class Settings extends React.Component {
                         displaySuccessMessage(this, SUCCESSFUL_UPDATE_MESSAGE);
                     }
                 }
-            } else {
+            } catch (err) {
                 this.setState({showSaveSettingsSpinner: false});
-                displayFailureMessage(this, 'An error occurred when updating account settings. Please try again later.');
+                displayErrorMessage(this, `An error occurred when updating account settings. Please try again later. (${err})`);
             }
         });
     }
@@ -193,12 +192,12 @@ export default class Settings extends React.Component {
 
     changePassword() {
         this.setState({showChangePasswordSpinner: true}, async () => {
-            const res = await axios.post(`/api/users/${this.state.loggedInUserId}/password`, {
-                currentPassword: this.state.currentPassword,
-                newPassword: this.state.newPassword,
-                confirmNewPassword: this.state.confirmNewPassword
-            });
-            if (res.status === 200) {
+            try {
+                const res = await axios.post(`/api/users/${this.state.loggedInUserId}/password`, {
+                    currentPassword: this.state.currentPassword,
+                    newPassword: this.state.newPassword,
+                    confirmNewPassword: this.state.confirmNewPassword
+                });
                 this.setState({
                     currentPasswordInvalidReason: res.data.currentPasswordInvalidReason || '',
                     newPasswordInvalidReason: res.data.newPasswordInvalidReason || '',
@@ -211,9 +210,10 @@ export default class Settings extends React.Component {
                     this.changePasswordToggle();
                     displaySuccessMessage(this, 'Successfully updated password');
                 }
-            } else {
+            } catch (err) {
                 this.setState({showChangePasswordSpinner: false});
-                displayFailureMessage(this, 'An error occurred when updating password. Please try again later.');
+                this.changePasswordToggle();
+                displayErrorMessage(this, `An error occurred when updating password. Please try again later. (${err})`);
             }
         });
     }
@@ -354,7 +354,7 @@ export default class Settings extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid='lg'>
-                    <Alert className='mt-3' isOpen={this.state.alertText} color={this.state.alertColor}>
+                    <Alert className='mt-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
                         {this.state.alertText}
                     </Alert>
 

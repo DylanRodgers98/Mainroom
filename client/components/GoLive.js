@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner, Alert} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
-import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displaySuccessMessage} from '../utils/displayUtils';
 import {filters} from '../../mainroom.config';
 
 export default class GoLive extends React.Component {
@@ -166,13 +166,13 @@ export default class GoLive extends React.Component {
 
     saveSettings() {
         this.setState({showSpinner: true}, async () => {
-            const res = await axios.patch(`/api/users/${this.state.loggedInUser}/stream-info`, {
-                title: this.state.streamTitle,
-                genre: this.state.streamGenre,
-                category: this.state.streamCategory,
-                tags: this.state.streamTags
-            });
-            if (res.status === 200) {
+            try {
+                const res = await axios.patch(`/api/users/${this.state.loggedInUser}/stream-info`, {
+                    title: this.state.streamTitle,
+                    genre: this.state.streamGenre,
+                    category: this.state.streamCategory,
+                    tags: this.state.streamTags
+                });
                 this.setState({
                     streamTitle: res.data.title,
                     streamGenre: res.data.genre,
@@ -181,8 +181,8 @@ export default class GoLive extends React.Component {
                     unsavedChanges: false
                 });
                 displaySuccessMessage(this, 'Successfully updated stream settings');
-            } else {
-                displayFailureMessage(this, 'An error occurred when updating stream settings. Please try again later.');
+            } catch (err) {
+                displayErrorMessage(this, `An error occurred when updating stream settings. Please try again later. (${err})`);
             }
             this.setState({showSpinner: false});
         });
@@ -195,7 +195,7 @@ export default class GoLive extends React.Component {
             </div>
         ) : (
             <Container fluid='lg'>
-                <Alert className='mt-3' isOpen={this.state.alertText} color={this.state.alertColor}>
+                <Alert className='mt-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
                     {this.state.alertText}
                 </Alert>
 
