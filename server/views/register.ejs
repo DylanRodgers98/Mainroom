@@ -13,8 +13,7 @@
             <form action="/register" method="post">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input id="username" type="text" name="username" class="form-control" placeholder="Enter username"
-                           required tabindex="1">
+                    <input id="username" type="text" name="username" class="form-control" required tabindex="1">
                     <% if (errors.username.length) { %>
                         <small class="form-text text-danger"><%= errors.username %></small>
                     <% } %>
@@ -22,8 +21,7 @@
 
                 <div class="form-group">
                     <label for="email">Email address</label>
-                    <input id="email" type="email" name="email" class="form-control" placeholder="Enter email"
-                           required tabindex="2">
+                    <input id="email" type="email" name="email" class="form-control" required tabindex="2">
                     <% if (errors.email.length) { %>
                         <small class="form-text text-danger"><%= errors.email %></small>
                     <% } %>
@@ -31,8 +29,7 @@
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input id="password" type="password" name="password" class="form-control" placeholder="Password"
-                           required tabindex="3">
+                    <input id="password" type="password" name="password" class="form-control" required tabindex="3">
                     <% if (errors.password.length) { %>
                         <% errors.password.forEach(error => { %>
                             <small class="d-block text-danger"><%= error %></small>
@@ -43,7 +40,7 @@
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
                     <input id="confirmPassword" type="password" name="confirmPassword"
-                           class="form-control" placeholder="Confirm Password" required tabindex="4">
+                           class="form-control" required tabindex="4">
                     <% if (errors.confirmPassword.length) { %>
                         <small class="form-text text-danger"><%= errors.confirmPassword %></small>
                     <% } %>

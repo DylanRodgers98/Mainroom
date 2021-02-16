@@ -12,9 +12,8 @@
             <hr class="my-4">
             <form action='/login' method="post">
                 <div class="form-group">
-                    <label for="email">Email address</label>
-                    <input id="email" type="email" name="email" class="form-control" placeholder="Enter email"
-                           required tabindex="1">
+                    <label for="usernameOrEmail">Username or email address</label>
+                    <input id="usernameOrEmail" name="usernameOrEmail" type="text" class="form-control" required tabindex="1">
                 </div>
 
                 <div class="form-group">
@@ -22,8 +21,7 @@
                         <label for="password">Password</label>
                         <a class="float-right" href="/forgot-password">Forgot password?</a>
                     </div>
-                    <input id="password" type="password" name="password" class="form-control" placeholder="Password"
-                           required tabindex="2">
+                    <input id="password" type="password" name="password" class="form-control" required tabindex="2">
                     <% if (errors.login.length) { %>
                         <small class="form-text text-danger"><%= errors.login %></small>
                     <% } %>
