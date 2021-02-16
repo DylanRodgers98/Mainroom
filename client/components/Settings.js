@@ -5,6 +5,9 @@ import {Alert, Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spi
 import _ from 'lodash';
 import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
 
+const SUCCESSFUL_UPDATE_PARAM = 'success';
+const SUCCESSFUL_UPDATE_MESSAGE = 'Successfully updated account settings';
+
 export default class Settings extends React.Component {
 
     constructor(props) {
@@ -52,6 +55,7 @@ export default class Settings extends React.Component {
 
     componentDidMount() {
         this.fillComponentIfLoggedIn();
+        this.displaySuccessMessageAfterReload();
     }
 
     async fillComponentIfLoggedIn() {
@@ -78,6 +82,14 @@ export default class Settings extends React.Component {
             emailSettings: res.data.emailSettings,
             loaded: true
         });
+    }
+
+    displaySuccessMessageAfterReload() {
+        const queryParams = new URLSearchParams(this.props.location.search);
+        const wasSuccessfulUpdate = queryParams.get(SUCCESSFUL_UPDATE_PARAM);
+        if (wasSuccessfulUpdate) {
+            displaySuccessMessage(this, SUCCESSFUL_UPDATE_MESSAGE);
+        }
     }
 
     setUsername(event) {
@@ -128,12 +140,16 @@ export default class Settings extends React.Component {
                     showSaveSettingsSpinner: false
                 });
                 if (!(res.data.usernameInvalidReason || res.data.emailInvalidReason)) {
-                    this.setState({
-                        startingUsername: this.state.username,
-                        startingEmail: this.state.email,
-                        startingEmailSettings: this.state.emailSettings
-                    });
-                    displaySuccessMessage(this, 'Successfully updated account settings');
+                    if (this.isUsernameChanged()) {
+                        // if username has changed, reload page to update components that use username (e.g. Links)
+                        window.location.href = `${window.location.pathname}?${SUCCESSFUL_UPDATE_PARAM}=true`;
+                    } else {
+                        this.setState({
+                            startingEmail: this.state.email,
+                            startingEmailSettings: this.state.emailSettings
+                        });
+                        displaySuccessMessage(this, SUCCESSFUL_UPDATE_MESSAGE);
+                    }
                 }
             } else {
                 this.setState({showSaveSettingsSpinner: false});

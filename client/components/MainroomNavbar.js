@@ -44,6 +44,7 @@ export default class MainroomNavbar extends React.Component {
             searchSubmitted: false,
             profileDropdownOpen: false,
             loggedInUsername: '',
+            loggedInDisplayName: '',
             profilePicURL: '',
             navbarOpen: false
         };
@@ -61,7 +62,6 @@ export default class MainroomNavbar extends React.Component {
         if (res.data.username) {
             this.setState({
                 loggedInUsername: res.data.username,
-                loggedInUserId: res.data._id,
                 loggedInDisplayName: res.data.displayName,
                 profilePicURL: res.data.profilePicURL
             });
