@@ -19,8 +19,9 @@ import {
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
-import {displayErrorMessage, displaySuccessMessage, getAlert} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage, getAlert} from '../utils/displayUtils';
 import {filters} from '../../mainroom.config';
+import {Link} from 'react-router-dom';
 
 export default class Schedule extends React.Component {
 
@@ -39,6 +40,8 @@ export default class Schedule extends React.Component {
         this.setTags = this.setTags.bind(this);
         this.scheduleStreamApplyDate = this.scheduleStreamApplyDate.bind(this);
         this.addToSchedule = this.addToSchedule.bind(this);
+        this.selectScheduledStream = this.selectScheduledStream.bind(this);
+        this.deselectScheduledStream = this.deselectScheduledStream.bind(this);
 
         this.state = {
             loaded: false,
@@ -61,7 +64,8 @@ export default class Schedule extends React.Component {
             scheduleStreamTags: [],
             showAddToScheduleSpinner: false,
             alertText: '',
-            alertColor: ''
+            alertColor: '',
+            selectedScheduleItem: undefined
         }
     }
 
@@ -90,15 +94,23 @@ export default class Schedule extends React.Component {
                 scheduleEndTime: convertLocalToUTC(this.state.endTime).toDate()
             }
         });
-        // JSON serializes dates as strings, so parse start and end times using moment
+
         const scheduleItems = res.data.scheduleItems.map(scheduleItem => {
+            // JSON serializes dates as strings, so parse start and end times into moment objects
             scheduleItem.start_time = convertUTCToLocal(scheduleItem.start_time);
             scheduleItem.end_time = convertUTCToLocal(scheduleItem.end_time);
+
+            // disable movement of schedule item
+            scheduleItem.canMove = false;
+            scheduleItem.canResize = false;
+            scheduleItem.canChangeGroup = false;
+
             return scheduleItem;
         });
+
         this.setState({
-            scheduleGroups: [...this.state.scheduleGroups, ...res.data.scheduleGroups],
-            scheduleItems: [...this.state.scheduleItems, ...scheduleItems],
+            scheduleGroups: res.data.scheduleGroups,
+            scheduleItems: scheduleItems,
             loaded: true
         });
     }
@@ -128,8 +140,6 @@ export default class Schedule extends React.Component {
 
     applyDate(startTime, endTime) {
         this.setState({
-            scheduleGroups: [],
-            scheduleItems: [],
             loaded: false,
             startTime: startTime,
             endTime: endTime
@@ -244,8 +254,6 @@ export default class Schedule extends React.Component {
                     `'${this.state.scheduleStreamTitle}'` : 'stream'} for ${dateRange}`;
 
                 this.setState({
-                    scheduleGroups: [],
-                    scheduleItems: [],
                     scheduleStreamStartTime: moment(),
                     scheduleStreamEndTime: moment().add(1, 'hour'),
                     scheduleStreamTitle: '',
@@ -265,13 +273,23 @@ export default class Schedule extends React.Component {
         });
     }
 
-
-
     isNoMobileMode() {
         const mdBreakpointValue = window.getComputedStyle(document.documentElement)
             .getPropertyValue('--breakpoint-md')
             .replace('px', '');
         return window.screen.width >= mdBreakpointValue;
+    }
+
+    selectScheduledStream(itemId, e, time) {
+        this.setState({
+            selectedScheduleItem: this.state.scheduleItems[itemId]
+        });
+    }
+
+    deselectScheduledStream() {
+        this.setState({
+            selectedScheduleItem: undefined
+        });
     }
 
     renderScheduleStream() {
@@ -372,6 +390,47 @@ export default class Schedule extends React.Component {
         );
     }
 
+    renderSelectedScheduledStream() {
+        const scheduledStream = this.state.selectedScheduleItem;
+        return !scheduledStream ? undefined : (
+            <Modal isOpen={true} toggle={this.deselectScheduledStream} centered={true}>
+                <ModalBody>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <Link to={`/user/${scheduledStream.user.username}`}>
+                                        <img className='rounded-circle m-2' src={scheduledStream.user.profilePicURL}
+                                             width='75' height='75'
+                                             alt={`${scheduledStream.user.username} profile picture`}/>
+                                    </Link>
+                                </td>
+                                <td valign='middle' className='w-100'>
+                                    <h5>
+                                        <Link to={`/user/${scheduledStream.user.username}`}>
+                                            {scheduledStream.user.displayName || scheduledStream.user.username}
+                                        </Link>
+                                        {scheduledStream.title ? ` - ${scheduledStream.title}` : ''}
+                                    </h5>
+                                    <h6>
+                                        {displayGenreAndCategory({
+                                            genre: scheduledStream.genre,
+                                            category: scheduledStream.category
+                                        })}
+                                    </h6>
+                                    {!scheduledStream ? undefined : formatDateRange({
+                                        start: scheduledStream.start_time,
+                                        end: scheduledStream.end_time
+                                    })}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </ModalBody>
+            </Modal>
+        );
+    }
+
     render() {
         return !this.state.loaded ? (
             <div className='position-relative h-100'>
@@ -404,6 +463,7 @@ export default class Schedule extends React.Component {
                         </DateTimeRangeContainer>
                     </div>
                     <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
+                              onItemSelect={this.selectScheduledStream} onItemClick={this.selectScheduledStream}
                               visibleTimeStart={this.state.startTime.valueOf()}
                               visibleTimeEnd={this.state.endTime.valueOf()}/>
                     <p className='my-3 text-center'>
@@ -413,6 +473,7 @@ export default class Schedule extends React.Component {
                 </Container>
 
                 {this.renderScheduleStream()}
+                {this.renderSelectedScheduledStream()}
             </React.Fragment>
         )
     }

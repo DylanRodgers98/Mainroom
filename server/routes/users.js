@@ -414,10 +414,10 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
                 startTime: {$lte: req.query.scheduleEndTime},
                 endTime: {$gte: req.query.scheduleStartTime}
             })
-            .select('user title startTime endTime')
+            .select('user title startTime endTime genre category')
             .populate({
                 path: 'user',
-                select: 'username'
+                select: 'username displayName profilePicURL'
             })
             .exec((err, scheduledStreams) => {
                 if (err) {
@@ -456,7 +456,11 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
                                 group: scheduleGroupId,
                                 title: scheduledStream.title || scheduledStreamUsername,
                                 start_time: scheduledStream.startTime,
-                                end_time: scheduledStream.endTime
+                                end_time: scheduledStream.endTime,
+                                genre: scheduledStream.genre,
+                                category: scheduledStream.category,
+                                user: scheduledStream.user,
+                                isNonSubscribed: user.nonSubscribedScheduledStreams.includes(scheduledStream._id)
                             });
                         });
                     }
