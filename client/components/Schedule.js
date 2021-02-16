@@ -304,6 +304,18 @@ export default class Schedule extends React.Component {
         }
     }
 
+    async removeFromSchedule(streamId) {
+        try {
+            await axios.patch(`/api/users/${this.state.loggedInUser}/schedule/remove-non-subscribed/${streamId}`);
+            this.setState({selectedScheduleItem: undefined}, () => {
+                displaySuccessMessage(this, 'Successfully removed stream from schedule');
+                this.getSchedule();
+            });
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when removing stream from schedule. Please try again later. (${err})`);
+        }
+    }
+
     renderScheduleStream() {
         return (
             <Modal isOpen={this.state.scheduleStreamOpen} toggle={this.scheduleStreamToggle} centered={true}>
@@ -443,6 +455,14 @@ export default class Schedule extends React.Component {
                     <ModalFooter>
                         <Button className='btn-dark' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
                             Cancel Stream
+                        </Button>
+                    </ModalFooter>
+                )}
+                {!scheduledStream.isNonSubscribed ? undefined : (
+                    <ModalFooter>
+                        <i>You are not subscribed to {scheduledStream.user.displayName || scheduledStream.user.username}</i>
+                        <Button className='btn-dark' size='sm' onClick={() => this.removeFromSchedule(scheduledStream._id)}>
+                            Remove From Schedule
                         </Button>
                     </ModalFooter>
                 )}

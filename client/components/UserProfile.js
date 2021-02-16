@@ -333,7 +333,7 @@ export default class UserProfile extends React.Component {
                     Cancel Stream
                 </Button>
             ) : (
-                this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
+                this.state.isLoggedInUserSubscribed || this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
                     <Button className='float-right btn-dark' size='sm' onClick={() => this.removeFromSchedule(stream._id)}>
                         In Schedule
                     </Button>
