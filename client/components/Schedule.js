@@ -21,6 +21,7 @@ import {
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
 import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
+import {filters} from '../../mainroom.config';
 
 export default class Schedule extends React.Component {
 
@@ -148,16 +149,14 @@ export default class Schedule extends React.Component {
         });
     }
 
-    async getFilters() {
-        const res = await axios.get('/api/filters');
-
-        const genres = res.data.genres.map((genre, index) => (
+    getFilters() {
+        const genres = filters.genres.map((genre, index) => (
             <div key={index}>
                 <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
             </div>
         ));
 
-        const categories = res.data.categories.map((category, index) => (
+        const categories = filters.categories.map((category, index) => (
             <div key={index}>
                 <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
             </div>

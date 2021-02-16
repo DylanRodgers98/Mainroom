@@ -17,7 +17,7 @@ import {
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
-import {pagination} from '../../mainroom.config';
+import {pagination, filters} from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDate} from '../utils/dateUtils';
 import {displayFailureMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
@@ -136,16 +136,14 @@ export default class ManageRecordedStreams extends React.Component {
         });
     }
 
-    async getFilters() {
-        const res = await axios.get('/api/filters');
-
-        const genres = res.data.genres.map((genre, index) => (
+    getFilters() {
+        const genres = filters.genres.map((genre, index) => (
             <div key={index}>
                 <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
             </div>
         ));
 
-        const categories = res.data.categories.map((category, index) => (
+        const categories = filters.categories.map((category, index) => (
             <div key={index}>
                 <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
             </div>

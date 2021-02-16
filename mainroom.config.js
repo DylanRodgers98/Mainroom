@@ -110,14 +110,14 @@ module.exports = {
             "Drum & Bass",
             "Techno",
             "Bassline"
-        ],
+        ].sort(),
         categories: [
             "DJ Set",
             "Live Set",
             "Production",
             "Tutorial",
             "Q&A"
-        ]
+        ].sort()
     },
     loadLivestreamTimeout: 15 * SECOND,
     alertTimeout: 3 * SECOND,

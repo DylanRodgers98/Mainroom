@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
-import config from '../../mainroom.config';
+import {pagination, filters} from '../../mainroom.config';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 import {displayGenreAndCategory} from '../utils/displayUtils';
@@ -21,7 +21,6 @@ export default class LiveStreamsByCategory extends React.Component {
             loaded: false,
             liveStreams: [],
             nextPage: STARTING_PAGE,
-            categories: [],
             categoryDropdownOpen: false,
             categoryFilter: '',
             showLoadMoreButton: false
@@ -30,7 +29,6 @@ export default class LiveStreamsByCategory extends React.Component {
 
     componentDidMount() {
         this.getLiveStreams();
-        this.getFilters();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -58,7 +56,7 @@ export default class LiveStreamsByCategory extends React.Component {
         const queryParams = {
             params: {
                 page: this.state.nextPage,
-                limit: config.pagination.large
+                limit: pagination.large
             }
         };
         if (this.props.match.params.genre) {
@@ -75,13 +73,6 @@ export default class LiveStreamsByCategory extends React.Component {
             showLoadMoreButton: !!res.data.nextPage,
             loaded: true
         });
-    }
-
-    async getFilters() {
-        const res = await axios.get('/api/filters/categories');
-        this.setState({
-            categories: res.data.categories
-        })
     }
 
     categoryDropdownToggle() {
@@ -161,7 +152,7 @@ export default class LiveStreamsByCategory extends React.Component {
 
         const categoryDropdownText = this.state.categoryFilter || 'Filter';
 
-        const categories = this.state.categories.map((category, index) => (
+        const categories = filters.categories.map((category, index) => (
             <div key={index}>
                 <DropdownItem onClick={this.setCategoryFilter}>{category}</DropdownItem>
             </div>

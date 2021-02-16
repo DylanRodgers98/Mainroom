@@ -14,7 +14,7 @@ import {
     NavItem,
     NavLink
 } from 'reactstrap';
-import config from '../../mainroom.config';
+import {siteTitle, filters} from '../../mainroom.config';
 import axios from 'axios';
 
 export default class MainroomNavbar extends React.Component {
@@ -51,27 +51,12 @@ export default class MainroomNavbar extends React.Component {
     }
 
     componentDidMount() {
-        Promise.all([
-            this.getLoggedInUser(),
-            this.getFilters()
-        ]);
+        this.getFilters();
+        this.getLoggedInUser();
     }
 
-    async getLoggedInUser() {
-        const res = await axios.get('/logged-in-user');
-        if (res.data.username) {
-            this.setState({
-                loggedInUsername: res.data.username,
-                loggedInDisplayName: res.data.displayName,
-                profilePicURL: res.data.profilePicURL
-            });
-        }
-    }
-
-    async getFilters() {
-        const res = await axios.get('/api/filters');
-
-        const genres = res.data.genres.map((genre, index) => {
+    getFilters() {
+        const genres = filters.genres.map((genre, index) => {
             const link = encodeURIComponent(genre.trim());
             return (
                 <div key={index}>
@@ -82,7 +67,7 @@ export default class MainroomNavbar extends React.Component {
             );
         });
 
-        const categories = res.data.categories.map((category, index) => {
+        const categories = filters.categories.map((category, index) => {
             const link = encodeURIComponent(category.trim());
             return (
                 <div key={index}>
@@ -99,6 +84,16 @@ export default class MainroomNavbar extends React.Component {
         });
     }
 
+    async getLoggedInUser() {
+        const res = await axios.get('/logged-in-user');
+        if (res.data.username) {
+            this.setState({
+                loggedInUsername: res.data.username,
+                loggedInDisplayName: res.data.displayName,
+                profilePicURL: res.data.profilePicURL
+            });
+        }
+    }
 
     genreDropdownToggle() {
         this.setState(prevState => ({
@@ -244,7 +239,7 @@ export default class MainroomNavbar extends React.Component {
 
         return (
             <Navbar color='dark' dark expand='md'>
-                <NavbarBrand tag={Link} to={'/'}>{config.siteTitle}</NavbarBrand>
+                <NavbarBrand tag={Link} to={'/'}>{siteTitle}</NavbarBrand>
                 <NavbarToggler onClick={this.navbarToggle} />
                 <Collapse isOpen={this.state.navbarOpen} navbar>
                 <Nav className='mr-auto' navbar>

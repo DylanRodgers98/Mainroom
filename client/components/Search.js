@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import config from '../../mainroom.config';
+import {pagination, filters} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
@@ -32,10 +32,8 @@ export default class LiveStreams extends React.Component {
             users: [],
             usersNextPage: STARTING_PAGE,
             showLoadMoreUsersButton: false,
-            genres: [],
             genreDropdownOpen: false,
             genreFilter: '',
-            categories: [],
             categoryDropdownOpen: false,
             categoryFilter: ''
         }
@@ -48,8 +46,7 @@ export default class LiveStreams extends React.Component {
     async fillComponent() {
         await Promise.all([
             this.getStreams(),
-            this.getUsers(),
-            this.getFilters()
+            this.getUsers()
         ]);
         this.setState({
             loaded: true
@@ -100,7 +97,7 @@ export default class LiveStreams extends React.Component {
             params: {
                 searchQuery: this.props.match.params.query,
                 page: this.state.livestreamsNextPage,
-                limit: config.pagination.large
+                limit: pagination.large
             }
         };
 
@@ -124,7 +121,7 @@ export default class LiveStreams extends React.Component {
             params: {
                 searchQuery: this.props.match.params.query,
                 page: this.state.recordedStreamsNextPage,
-                limit: config.pagination.small
+                limit: pagination.small
             }
         };
 
@@ -148,7 +145,7 @@ export default class LiveStreams extends React.Component {
             params: {
                 searchQuery: this.props.match.params.query,
                 page: this.state.usersNextPage,
-                limit: config.pagination.small
+                limit: pagination.small
             }
         };
 
@@ -157,14 +154,6 @@ export default class LiveStreams extends React.Component {
             users: [...this.state.users, ...(res.data.users || [])],
             usersNextPage: res.data.nextPage,
             showLoadMoreUsersButton: !!res.data.nextPage
-        });
-    }
-
-    async getFilters() {
-        const res = await axios.get('/api/filters');
-        this.setState({
-            genres: res.data.genres,
-            categories: res.data.categories
         });
     }
 
@@ -374,13 +363,13 @@ export default class LiveStreams extends React.Component {
         const genreDropdownText = this.state.genreFilter || 'Genre';
         const categoryDropdownText = this.state.categoryFilter || 'Category';
 
-        const genres = this.state.genres.map((genre, index) => (
+        const genres = filters.genres.map((genre, index) => (
             <div key={index}>
                 <DropdownItem onClick={this.setGenreFilter}>{genre}</DropdownItem>
             </div>
         ));
 
-        const categories = this.state.categories.map((category, index) => (
+        const categories = filters.categories.map((category, index) => (
             <div key={index}>
                 <DropdownItem onClick={this.setCategoryFilter}>{category}</DropdownItem>
             </div>

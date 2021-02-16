@@ -93,7 +93,6 @@ app.use(rateLimit({
 app.use('/login', require('./routes/login'));
 app.use('/register', require('./routes/register'));
 app.use('/forgot-password', require('./routes/forgot-password'));
-app.use('/api/filters', require('./routes/filters'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/livestreams', require('./routes/livestreams'));
 app.use('/api/scheduled-streams', require('./routes/scheduled-streams'));

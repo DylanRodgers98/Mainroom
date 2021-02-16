@@ -3,6 +3,7 @@ import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner, Alert} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
 import {displayFailureMessage, displaySuccessMessage} from '../utils/displayUtils';
+import {filters} from '../../mainroom.config';
 
 export default class GoLive extends React.Component {
 
@@ -58,12 +59,27 @@ export default class GoLive extends React.Component {
     }
 
     async fillComponent() {
-        await Promise.all([
-            this.getStreamInfo(),
-            this.getFilters()
-        ]);
+        this.getFilters();
+        await this.getStreamInfo();
+        this.setState({loaded: true});
+    }
+
+    getFilters() {
+        const genres = filters.genres.map((genre, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
+            </div>
+        ));
+
+        const categories = filters.categories.map((category, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
+            </div>
+        ));
+
         this.setState({
-            loaded: true
+            genres,
+            categories
         });
     }
 
@@ -76,27 +92,6 @@ export default class GoLive extends React.Component {
             streamGenre: res.data.genre,
             streamCategory: res.data.category,
             streamTags: res.data.tags
-        });
-    }
-
-    async getFilters() {
-        const res = await axios.get('/api/filters')
-
-        const genres = res.data.genres.map((genre, index) => (
-            <div key={index}>
-                <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
-            </div>
-        ));
-
-        const categories = res.data.categories.map((category, index) => (
-            <div key={index}>
-                <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
-            </div>
-        ));
-
-        this.setState({
-            genres,
-            categories
         });
     }
 
