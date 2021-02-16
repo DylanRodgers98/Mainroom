@@ -292,6 +292,18 @@ export default class Schedule extends React.Component {
         });
     }
 
+    async cancelStream(streamId) {
+        try {
+            await axios.delete(`/api/scheduled-streams/${streamId}`);
+            this.setState({selectedScheduleItem: undefined}, () => {
+                displaySuccessMessage(this, 'Successfully cancelled scheduled stream');
+                this.getSchedule();
+            });
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when cancelling scheduled stream. Please try again later. (${err})`);
+        }
+    }
+
     renderScheduleStream() {
         return (
             <Modal isOpen={this.state.scheduleStreamOpen} toggle={this.scheduleStreamToggle} centered={true}>
@@ -427,6 +439,13 @@ export default class Schedule extends React.Component {
                         </tbody>
                     </table>
                 </ModalBody>
+                {scheduledStream.user._id !== this.state.loggedInUserId ? undefined : (
+                    <ModalFooter>
+                        <Button className='btn-dark' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
+                            Cancel Stream
+                        </Button>
+                    </ModalFooter>
+                )}
             </Modal>
         );
     }

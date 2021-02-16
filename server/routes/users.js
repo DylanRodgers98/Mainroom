@@ -452,6 +452,7 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
                             }
 
                             scheduleItems.push({
+                                _id: scheduledStream._id,
                                 id: scheduleItems.length,
                                 group: scheduleGroupId,
                                 title: scheduledStream.title || scheduledStreamUsername,
