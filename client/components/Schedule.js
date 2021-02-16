@@ -3,7 +3,6 @@ import axios from 'axios';
 import Timeline from 'react-calendar-timeline'
 import moment from 'moment'
 import {
-    Alert,
     Button,
     Col,
     Container,
@@ -20,7 +19,7 @@ import {
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
-import {displayErrorMessage, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displaySuccessMessage, getAlert} from '../utils/displayUtils';
 import {filters} from '../../mainroom.config';
 
 export default class Schedule extends React.Component {
@@ -381,9 +380,7 @@ export default class Schedule extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid>
-                    <Alert className='mt-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
-                        {this.state.alertText}
-                    </Alert>
+                    {getAlert(this)}
 
                     <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                         <Col>

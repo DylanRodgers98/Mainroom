@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-    Alert,
     Button,
     Col,
     Container,
@@ -20,7 +19,7 @@ import axios from 'axios';
 import {pagination, filters} from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDate} from '../utils/dateUtils';
-import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage, getAlert} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -440,11 +439,7 @@ export default class ManageRecordedStreams extends React.Component {
                 </Dropdown>
             );
 
-            const alert = this.state.alertIndex !== index ? undefined : (
-                <Alert className='my-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
-                    {this.state.alertText}
-                </Alert>
-            );
+            const alert = this.state.alertIndex === index ? getAlert(this) : undefined;
             const nextHasAlert = this.state.alertIndex === index + 1;
             const requiresMargin = !(nextHasAlert && this.state.alertText);
 

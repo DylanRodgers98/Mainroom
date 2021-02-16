@@ -1,8 +1,8 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner, Alert} from 'reactstrap';
+import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
-import {displayErrorMessage, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displaySuccessMessage, getAlert} from '../utils/displayUtils';
 import {filters} from '../../mainroom.config';
 
 export default class GoLive extends React.Component {
@@ -195,9 +195,7 @@ export default class GoLive extends React.Component {
             </div>
         ) : (
             <Container fluid='lg'>
-                <Alert className='mt-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
-                    {this.state.alertText}
-                </Alert>
+                {getAlert(this)}
 
                 <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                     <Col xs='12'>

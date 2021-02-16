@@ -4,7 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
 import {ErrorBoundary} from 'react-error-boundary';
-import config from '../mainroom.config';
+import {headTitle, bugReportURL} from '../mainroom.config';
 import MainroomNavbar from './components/MainroomNavbar';
 import Home from './components/Home';
 import LiveStreamsByGenre from './components/LiveStreamsByGenre';
@@ -22,7 +22,7 @@ import GoLive from './components/GoLive';
 import FourOhFour from './components/FourOhFour';
 import './mainroom.scss';
 
-document.title = config.headTitle;
+document.title = headTitle;
 
 function errorFallback({error, resetErrorBoundary}) {
     return (
@@ -31,7 +31,7 @@ function errorFallback({error, resetErrorBoundary}) {
             <h5>{error.name}: {error.message}</h5>
             Please <a href='javascript:;' onClick={resetErrorBoundary}>
                 try again
-            </a> or <a href={config.bugReportURL} target='_blank' rel='noopener noreferrer'>
+            </a> or <a href={bugReportURL} target='_blank' rel='noopener noreferrer'>
                 report a bug
             </a>.
         </div>

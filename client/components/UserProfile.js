@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import {Alert, Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
+import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import moment from 'moment';
 import {pagination} from '../../mainroom.config';
@@ -8,7 +8,7 @@ import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage, getAlert} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -761,9 +761,7 @@ export default class UserProfile extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid='lg'>
-                    <Alert className='mt-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
-                        {this.state.alertText}
-                    </Alert>
+                    {getAlert(this)}
 
                     <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                         <Col md='4' lg='3'>

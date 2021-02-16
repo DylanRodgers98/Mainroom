@@ -1,9 +1,9 @@
 import React from 'react';
 import axios from 'axios';
 import Container from 'reactstrap/es/Container';
-import {Alert, Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
+import {Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import _ from 'lodash';
-import {displayErrorMessage, displaySuccessMessage} from '../utils/displayUtils';
+import {displayErrorMessage, displaySuccessMessage, getAlert} from '../utils/displayUtils';
 
 const SUCCESSFUL_UPDATE_PARAM = 'success';
 const SUCCESSFUL_UPDATE_MESSAGE = 'Successfully updated account settings';
@@ -354,9 +354,7 @@ export default class Settings extends React.Component {
         ) : (
             <React.Fragment>
                 <Container fluid='lg'>
-                    <Alert className='mt-3' isOpen={!!this.state.alertText} color={this.state.alertColor}>
-                        {this.state.alertText}
-                    </Alert>
+                    {getAlert(this)}
 
                     <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                         <Col>
