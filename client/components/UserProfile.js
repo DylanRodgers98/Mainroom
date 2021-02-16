@@ -316,22 +316,36 @@ export default class UserProfile extends React.Component {
         }
     }
 
+    async cancelStream(streamId) {
+        try {
+            await axios.delete(`/api/scheduled-streams/${streamId}`);
+            this.reloadProfile();
+            displaySuccessMessage(this, 'Successfully cancelled scheduled stream');
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when cancelling scheduled stream. Please try again later. (${err})`);
+        }
+    }
+
     renderUpcomingStreams() {
         const scheduledStreams = this.state.scheduledStreams.map((stream, index) => {
-            const addToScheduleButton = this.state.loggedInUser === this.props.match.params.username ? undefined : (
+            const button = this.state.loggedInUser === this.props.match.params.username ? (
+                <Button className='float-right btn-dark' size='sm' onClick={() => this.cancelStream(stream._id)}>
+                    Cancel Stream
+                </Button>
+            ) : (
                 this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
-                    <Button className='float-right btn-dark' size='sm' onClick={async () => await this.removeFromSchedule(stream._id)}>
+                    <Button className='float-right btn-dark' size='sm' onClick={() => this.removeFromSchedule(stream._id)}>
                         In Schedule
                     </Button>
                 ) : (
-                    <Button className='float-right btn-dark' size='sm' onClick={async () => await this.addToSchedule(stream._id)}>
+                    <Button className='float-right btn-dark' size='sm' onClick={() => this.addToSchedule(stream._id)}>
                         Add to Schedule
                     </Button>
                 )
             );
             return (
                 <Col className='margin-bottom-thick' key={index} md='6'>
-                    {addToScheduleButton}
+                    {button}
                     <h5>{stream.title}</h5>
                     <h6>
                         {displayGenreAndCategory({

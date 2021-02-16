@@ -122,7 +122,7 @@ router.patch('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
             LOGGER.error(`An error occurred when updating info for recorded stream (_id: {}): {}`, id, err);
             next(err);
         } else if (!stream) {
-            res.status(404).send(`Stream (_id: ${escape(id)}) not found`);
+            res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
         } else {
             res.json({
                 title: stream.title,
@@ -141,7 +141,7 @@ router.delete('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
             LOGGER.error(`An error occurred when deleting recorded stream (_id: {}) from database: {}`, id, err);
             next(err);
         } else if (!stream) {
-            res.status(404).send(`Stream (_id: ${escape(id)}) not found`);
+            res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
         } else {
             res.sendStatus(200);
         }

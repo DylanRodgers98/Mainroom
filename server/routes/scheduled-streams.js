@@ -57,4 +57,19 @@ router.get('/', async (req, res, next) => {
     }
 });
 
+router.delete('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const id = sanitise(req.params.id);
+    try {
+        const stream = await ScheduledStream.findByIdAndDelete(id);
+        if (!stream) {
+            res.status(404).send(`Scheduled stream (_id: ${escape(id)}) not found`);
+        } else {
+            res.sendStatus(200);
+        }
+    } catch (err) {
+        LOGGER.error(`An error occurred when deleting scheduled stream (_id: {}) from database: {}`, id, err);
+        next(err);
+    }
+});
+
 module.exports = router;
