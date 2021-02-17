@@ -1,7 +1,7 @@
 import React from 'react';
 import videojs from 'video.js';
 import axios from 'axios';
-import config from '../../mainroom.config';
+import {siteName, pagination, headTitle} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button, Col, Container, Row, Spinner} from 'reactstrap';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
@@ -39,6 +39,7 @@ export default class RecordedStream extends React.Component {
     }
 
     componentDidMount() {
+        document.title = headTitle;
         this.fillComponent();
     }
 
@@ -82,7 +83,7 @@ export default class RecordedStream extends React.Component {
             document.title = [
                 (this.state.displayName || this.state.username),
                 this.state.streamTitle,
-                config.siteTitle
+                siteName
             ].filter(Boolean).join(' - ');
             this.getRecordedStreams();
         });
@@ -93,7 +94,7 @@ export default class RecordedStream extends React.Component {
             params: {
                 username: this.state.username,
                 page: this.state.nextPage,
-                limit: config.pagination.small
+                limit: pagination.small
             }
         });
         this.setState({
@@ -113,7 +114,6 @@ export default class RecordedStream extends React.Component {
         if (this.player) {
             this.player.dispose()
         }
-        document.title = config.headTitle;
     }
 
     setVideoHeight(height) {

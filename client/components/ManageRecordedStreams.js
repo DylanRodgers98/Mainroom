@@ -16,7 +16,7 @@ import {
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
-import {pagination, filters} from '../../mainroom.config';
+import {pagination, filters, siteName} from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDate} from '../utils/dateUtils';
 import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage, getAlert} from '../utils/displayUtils';
@@ -70,11 +70,12 @@ export default class ManageRecordedStreams extends React.Component {
     }
 
     componentDidMount() {
+        document.title = `Manage Recorded Streams - ${siteName}`;
         this.getRecordedStreamsIfLoggedIn();
     }
 
     async getRecordedStreamsIfLoggedIn() {
-        const res = await axios.get('/logged-in-user');
+        const res = await axios.get('/api/logged-in-user');
         if (res.data.username) {
             this.setState({
                 loggedInUser: res.data.username

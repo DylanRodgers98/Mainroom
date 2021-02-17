@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
-import config from '../../mainroom.config';
+import {headTitle, pagination} from '../../mainroom.config';
 import {Button, Col, Container, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 import {displayGenreAndCategory} from '../utils/displayUtils';
@@ -26,6 +26,7 @@ export default class Home extends React.Component {
     }
 
     componentDidMount() {
+        document.title = headTitle;
         this.fillComponent();
     }
 
@@ -33,7 +34,7 @@ export default class Home extends React.Component {
         await this.getLoggedInUser();
         const params = {
             page: STARTING_PAGE,
-            limit: config.pagination[this.state.loggedInUser ? 'small' : 'large']
+            limit: pagination[this.state.loggedInUser ? 'small' : 'large']
         };
         await this.getFeaturedLiveStreams(params);
         if (this.state.loggedInUser) {
@@ -45,7 +46,7 @@ export default class Home extends React.Component {
     }
 
     async getLoggedInUser() {
-        const res = await axios.get('/logged-in-user');
+        const res = await axios.get('/api/logged-in-user');
         this.setState({
             loggedInUser: res.data.username
         });
@@ -88,7 +89,7 @@ export default class Home extends React.Component {
         const loadMoreButton = this.renderLoadMoreButton(async () => {
             await this.getFeaturedLiveStreams({
                 page: this.state.featuredLiveStreamsPage,
-                limit: config.pagination[this.state.loggedInUser ? 'small' : 'large']
+                limit: pagination[this.state.loggedInUser ? 'small' : 'large']
             });
         });
 
@@ -105,7 +106,7 @@ export default class Home extends React.Component {
         const loadMoreButton = this.renderLoadMoreButton(async () => {
             await this.getSubscriptionLiveStreams({
                 page: this.state.subscriptionLiveStreamsPage,
-                limit: config.pagination.small
+                limit: pagination.small
             });
         });
 

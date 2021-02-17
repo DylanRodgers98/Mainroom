@@ -1,7 +1,7 @@
 import React from 'react';
 import videojs from 'video.js';
 import axios from 'axios';
-import config from '../../mainroom.config';
+import {siteName, loadLivestreamTimeout, headTitle} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button, Col, Container, Row} from 'reactstrap';
 import io from 'socket.io-client';
@@ -42,6 +42,7 @@ export default class LiveStream extends React.Component {
     }
 
     componentDidMount() {
+        document.title = headTitle;
         Promise.all([
             this.getStreamInfo(),
             this.getViewerUser()
@@ -50,7 +51,7 @@ export default class LiveStream extends React.Component {
 
     async getStreamInfo() {
         try {
-            const res = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
+            const res = await axios.get(`/api/users/${this.props.match.params.username.toLowerCase()}/stream-info`);
             this.setState({
                 socketIOURL: res.data.socketIOURL
             }, () => {
@@ -92,15 +93,15 @@ export default class LiveStream extends React.Component {
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [
-                (this.state.displayName || this.props.match.params.username),
+                (this.state.displayName || this.props.match.params.username.toLowerCase()),
                 this.state.streamTitle,
-                config.siteTitle
+                siteName
             ].filter(Boolean).join(' - ');
         });
     }
 
     async getViewerUser() {
-        const res = await axios.get('/logged-in-user');
+        const res = await axios.get('/api/logged-in-user');
         this.setState({
             viewerUser: res.data
         });
@@ -145,7 +146,7 @@ export default class LiveStream extends React.Component {
             if (this.state.stream === false) {
                 this.getStreamInfo();
             }
-        }, config.loadLivestreamTimeout);
+        }, loadLivestreamTimeout);
     }
 
     endStreamFromSocket() {
@@ -170,8 +171,6 @@ export default class LiveStream extends React.Component {
             this.player.dispose();
             this.player = null;
         }
-
-        document.title = config.headTitle;
     }
 
     onMessageTextChange(e) {
@@ -252,16 +251,16 @@ export default class LiveStream extends React.Component {
                                 <tbody>
                                     <tr>
                                         <td>
-                                            <Link to={`/user/${this.props.match.params.username}`}>
+                                            <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
                                                 <img className='rounded-circle m-2' src={this.state.profilePicURL}
                                                      width='75' height='75'
-                                                     alt={`${this.props.match.params.username} profile picture`}/>
+                                                     alt={`${this.props.match.params.username.toLowerCase()} profile picture`}/>
                                             </Link>
                                         </td>
                                         <td valign='middle'>
                                             <h3>
-                                                <Link to={`/user/${this.props.match.params.username}`}>
-                                                    {this.state.displayName || this.props.match.params.username}
+                                                <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
+                                                    {this.state.displayName || this.props.match.params.username.toLowerCase()}
                                                 </Link>
                                                 {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
                                             </h3>
@@ -290,8 +289,8 @@ export default class LiveStream extends React.Component {
             </Container>
         ) : (
             <div className='mt-5 text-center'>
-                <h3>{this.props.match.params.username} is not currently live</h3>
-                <Button className='btn-dark mt-2' tag={Link} to={`/user/${this.props.match.params.username}`}>
+                <h3>{this.props.match.params.username.toLowerCase()} is not currently live</h3>
+                <Button className='btn-dark mt-2' tag={Link} to={`/user/${this.props.match.params.username.toLowerCase()}`}>
                     Go To Profile
                 </Button>
             </div>

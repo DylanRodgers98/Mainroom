@@ -4,6 +4,7 @@ import Container from 'reactstrap/es/Container';
 import {Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import _ from 'lodash';
 import {displayErrorMessage, displaySuccessMessage, getAlert} from '../utils/displayUtils';
+import {siteName} from '../../mainroom.config';
 
 const SUCCESSFUL_UPDATE_PARAM = 'success';
 const SUCCESSFUL_UPDATE_MESSAGE = 'Successfully updated account settings';
@@ -54,12 +55,13 @@ export default class Settings extends React.Component {
     }
 
     componentDidMount() {
+        document.title = `Settings - ${siteName}`;
         this.fillComponentIfLoggedIn();
         this.displaySuccessMessageAfterReload();
     }
 
     async fillComponentIfLoggedIn() {
-        const res = await axios.get('/logged-in-user');
+        const res = await axios.get('/api/logged-in-user');
         if (res.data.username) {
             this.setState({
                 loggedInUserId: res.data._id

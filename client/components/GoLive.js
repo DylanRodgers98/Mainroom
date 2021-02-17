@@ -3,7 +3,7 @@ import axios from 'axios';
 import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner} from 'reactstrap';
 import Container from 'reactstrap/es/Container';
 import {displayErrorMessage, displaySuccessMessage, getAlert} from '../utils/displayUtils';
-import {filters} from '../../mainroom.config';
+import {filters, siteName} from '../../mainroom.config';
 
 export default class GoLive extends React.Component {
 
@@ -42,11 +42,12 @@ export default class GoLive extends React.Component {
     }
 
     componentDidMount() {
+        document.title = `Stream Settings - ${siteName}`;
         this.fillComponentIfLoggedIn();
     }
 
     async fillComponentIfLoggedIn() {
-        const res = await axios.get('/logged-in-user');
+        const res = await axios.get('/api/logged-in-user');
         if (res.data.username) {
             this.setState({
                 loggedInUser: res.data.username

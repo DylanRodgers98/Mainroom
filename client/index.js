@@ -4,7 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
 import {ErrorBoundary} from 'react-error-boundary';
-import {headTitle, bugReportURL} from '../mainroom.config';
+import {bugReportURL} from '../mainroom.config';
 import MainroomNavbar from './components/MainroomNavbar';
 import Home from './components/Home';
 import LiveStreamsByGenre from './components/LiveStreamsByGenre';
@@ -21,8 +21,6 @@ import Settings from './components/Settings';
 import GoLive from './components/GoLive';
 import FourOhFour from './components/FourOhFour';
 import './mainroom.scss';
-
-document.title = headTitle;
 
 function errorFallback({error, resetErrorBoundary}) {
     return (

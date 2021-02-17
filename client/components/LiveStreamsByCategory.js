@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
-import {pagination, filters} from '../../mainroom.config';
+import {pagination, filters, siteName} from '../../mainroom.config';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 import {displayGenreAndCategory} from '../utils/displayUtils';
@@ -32,6 +32,7 @@ export default class LiveStreamsByCategory extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        document.title = `${decodeURIComponent(this.props.match.params.category)} Livestreams - ${siteName}`;
         if (prevProps.match.params.category !== this.props.match.params.category) {
             this.setState({
                 loaded: false,

@@ -20,7 +20,7 @@ import {
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
 import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage, getAlert} from '../utils/displayUtils';
-import {filters} from '../../mainroom.config';
+import {filters, siteName} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 
 export default class Schedule extends React.Component {
@@ -70,11 +70,12 @@ export default class Schedule extends React.Component {
     }
 
     componentDidMount() {
+        document.title = `Schedule - ${siteName}`;
         this.getScheduleIfLoggedIn();
     }
 
     async getScheduleIfLoggedIn() {
-        const res = await axios.get('/logged-in-user');
+        const res = await axios.get('/api/logged-in-user');
         if (res.data.username) {
             this.setState({
                 loggedInUser: res.data.username,

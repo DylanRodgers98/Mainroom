@@ -3,7 +3,7 @@ import axios from 'axios';
 import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import moment from 'moment';
-import {pagination} from '../../mainroom.config';
+import {headTitle, pagination, siteName} from '../../mainroom.config';
 import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
@@ -77,11 +77,12 @@ export default class UserProfile extends React.Component {
     }
 
     componentDidMount() {
+        document.title = headTitle;
         this.loadUserProfile();
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.match.params.username !== this.props.match.params.username) {
+        if (prevProps.match.params.username !== this.props.match.params.username.toLowerCase()) {
             this.reloadProfile();
         }
     }
@@ -108,7 +109,8 @@ export default class UserProfile extends React.Component {
     }
 
     async getUserData() {
-        const res = await axios.get(`/api/users/${this.props.match.params.username}`);
+        const res = await axios.get(`/api/users/${this.props.match.params.username.toLowerCase()}`);
+        document.title = `${res.data.displayName || this.props.match.params.username.toLowerCase().toLowerCase()} - ${siteName}`;
         this.setState({
             profilePicURL: res.data.profilePicURL,
             displayName: res.data.displayName,
@@ -123,7 +125,7 @@ export default class UserProfile extends React.Component {
     async getUpcomingStreams() {
         const res = await axios.get('/api/scheduled-streams', {
             params: {
-                username: this.props.match.params.username,
+                username: this.props.match.params.username.toLowerCase(),
                 scheduleStartTime: this.state.upcomingStreamsStartTime.toDate()
             }
         });
@@ -133,7 +135,7 @@ export default class UserProfile extends React.Component {
     }
 
     async getLoggedInUser() {
-        const res = await axios.get('/logged-in-user')
+        const res = await axios.get('/api/logged-in-user')
         this.setState({
             loggedInUser: res.data.username,
             loggedInUserId: res.data._id
@@ -146,8 +148,8 @@ export default class UserProfile extends React.Component {
     }
 
     async isLoggedInUserSubscribed() {
-        if (this.state.loggedInUser && this.state.loggedInUser !== this.props.match.params.username) {
-            const res = await axios.get(`/api/users/${this.state.loggedInUser}/subscribed-to/${this.props.match.params.username}`);
+        if (this.state.loggedInUser && this.state.loggedInUser !== this.props.match.params.username.toLowerCase()) {
+            const res = await axios.get(`/api/users/${this.state.loggedInUser}/subscribed-to/${this.props.match.params.username.toLowerCase()}`);
             this.setState({
                 isLoggedInUserSubscribed: res.data
             });
@@ -155,10 +157,10 @@ export default class UserProfile extends React.Component {
     }
 
     async getScheduledStreamsInLoggedInUserSchedule() {
-        if (this.state.loggedInUser && this.state.loggedInUser !== this.props.match.params.username) {
+        if (this.state.loggedInUser && this.state.loggedInUser !== this.props.match.params.username.toLowerCase()) {
             const res = await axios.get(`/api/users/${this.state.loggedInUser}/schedule/non-subscribed`, {
                 params: {
-                    scheduledStreamUsername: this.props.match.params.username
+                    scheduledStreamUsername: this.props.match.params.username.toLowerCase()
                 }
             });
             this.setState({
@@ -175,7 +177,7 @@ export default class UserProfile extends React.Component {
     }
 
     async subscribeToUser() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username}`);
+        const res = await axios.post(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username.toLowerCase()}`);
         if (res.status === 200) {
             this.setState({
                 isLoggedInUserSubscribed: true,
@@ -185,7 +187,7 @@ export default class UserProfile extends React.Component {
     }
 
     async unsubscribeFromUser() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username}`);
+        const res = await axios.post(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username.toLowerCase()}`);
         if (res.status === 200) {
             this.setState({
                 isLoggedInUserSubscribed: false,
@@ -195,7 +197,7 @@ export default class UserProfile extends React.Component {
     }
 
     async getLiveStreamIfLive() {
-        const streamInfoRes = await axios.get(`/api/users/${this.props.match.params.username}/stream-info`);
+        const streamInfoRes = await axios.get(`/api/users/${this.props.match.params.username.toLowerCase()}/stream-info`);
         if (streamInfoRes.data.isLive) {
             const streamKey = streamInfoRes.data.streamKey;
             const thumbnailRes = await axios.get(`/api/livestreams/${streamKey}/thumbnail`);
@@ -213,7 +215,7 @@ export default class UserProfile extends React.Component {
     async getRecordedStreams() {
         const res = await axios.get(`/api/recorded-streams`, {
             params: {
-                username: this.props.match.params.username,
+                username: this.props.match.params.username.toLowerCase(),
                 page: this.state.nextPage,
                 limit: pagination.small
             }
@@ -231,7 +233,7 @@ export default class UserProfile extends React.Component {
 
     renderSubscribeOrEditProfileButton() {
         return this.state.loggedInUser ? (
-            this.state.loggedInUser === this.props.match.params.username ? (
+            this.state.loggedInUser === this.props.match.params.username.toLowerCase() ? (
                 <Button className='btn-dark w-100' onClick={this.editProfileToggle}>
                     Edit Profile
                 </Button>
@@ -269,14 +271,14 @@ export default class UserProfile extends React.Component {
                         <span className='view-count'>
                             {shortenNumber(this.state.streamViewCount)} viewer{this.state.streamViewCount === 1 ? '' : 's'}
                         </span>
-                        <Link to={`/user/${this.props.match.params.username}/live`}>
+                        <Link to={`/user/${this.props.match.params.username.toLowerCase()}/live`}>
                             <img className='w-100' src={this.state.streamThumbnailUrl}
-                                 alt={`${this.props.match.params.username} Stream Thumbnail`}/>
+                                 alt={`${this.props.match.params.username.toLowerCase()} Stream Thumbnail`}/>
                         </Link>
                     </Col>
                     <Col md='6'>
                         <h3 className='black-link'>
-                            <Link to={`/user/${this.props.match.params.username}/live`}>
+                            <Link to={`/user/${this.props.match.params.username.toLowerCase()}/live`}>
                                 {this.state.streamTitle}
                             </Link>
                         </h3>
@@ -328,7 +330,7 @@ export default class UserProfile extends React.Component {
 
     renderUpcomingStreams() {
         const scheduledStreams = this.state.scheduledStreams.map((stream, index) => {
-            const button = this.state.loggedInUser === this.props.match.params.username ? (
+            const button = this.state.loggedInUser === this.props.match.params.username.toLowerCase() ? (
                 <Button className='float-right btn-dark' size='sm' onClick={() => this.cancelStream(stream._id)}>
                     Cancel Stream
                 </Button>
@@ -361,7 +363,7 @@ export default class UserProfile extends React.Component {
             );
         });
 
-        const goToScheduleButton = this.state.loggedInUser !== this.props.match.params.username ? undefined : (
+        const goToScheduleButton = this.state.loggedInUser !== this.props.match.params.username.toLowerCase() ? undefined : (
             <div className='float-right'>
                 <Button className='btn-dark' tag={Link} to={'/schedule'} size='sm'>
                     Go to Schedule
@@ -380,7 +382,7 @@ export default class UserProfile extends React.Component {
                 <Row>
                     {scheduledStreams.length ? scheduledStreams : (
                         <Col>
-                            <p>{this.state.displayName || this.props.match.params.username} has no upcoming streams.</p>
+                            <p>{this.state.displayName || this.props.match.params.username.toLowerCase()} has no upcoming streams.</p>
                         </Col>
                     )}
                 </Row>
@@ -418,7 +420,7 @@ export default class UserProfile extends React.Component {
             </Row>
         ));
 
-        const manageRecordedStreamsButton = this.state.loggedInUser !== this.props.match.params.username ? undefined : (
+        const manageRecordedStreamsButton = this.state.loggedInUser !== this.props.match.params.username.toLowerCase() ? undefined : (
             <div className='float-right'>
                 <Button className='btn-dark' tag={Link} to={'/manage-recorded-streams'} size='sm'>
                     Manage Recorded Streams
@@ -445,7 +447,7 @@ export default class UserProfile extends React.Component {
                 {pastStreams.length ? pastStreams : (
                     <Row>
                         <Col>
-                            <p>{this.state.displayName || this.props.match.params.username} has no past streams.</p>
+                            <p>{this.state.displayName || this.props.match.params.username.toLowerCase()} has no past streams.</p>
                         </Col>
                     </Row>
                 )}
@@ -746,7 +748,7 @@ export default class UserProfile extends React.Component {
 
     renderProfilePic() {
         const profilePic = <img src={this.state.profilePicURL + '#' + Date.now()}
-                                alt={`${this.props.match.params.username} Profile Picture`}/>;
+                                alt={`${this.props.match.params.username.toLowerCase()} Profile Picture`}/>;
 
         const changeProfilePicButton = (
             <Button className='btn-dark change-profile-pic-btn' onClick={this.changeProfilePicToggle}>
@@ -754,7 +756,7 @@ export default class UserProfile extends React.Component {
             </Button>
         );
 
-        return this.state.loggedInUser === this.props.match.params.username ? (
+        return this.state.loggedInUser === this.props.match.params.username.toLowerCase() ? (
             <div className='profile-pic'
                  onMouseEnter={this.mouseEnterProfilePic} onMouseLeave={this.mouseLeaveProfilePic}>
                 {profilePic}
@@ -780,10 +782,10 @@ export default class UserProfile extends React.Component {
                     <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                         <Col md='4' lg='3'>
                             {this.renderProfilePic()}
-                            <h1>{this.state.displayName || this.props.match.params.username}</h1>
+                            <h1>{this.state.displayName || this.props.match.params.username.toLowerCase()}</h1>
                             <h5>{this.state.location || 'Planet Earth'}</h5>
                             <h5 className='black-link'>
-                                <Link to={`/user/${this.props.match.params.username}/subscribers`}>
+                                <Link to={`/user/${this.props.match.params.username.toLowerCase()}/subscribers`}>
                                     {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
                                 </Link>
                             </h5>

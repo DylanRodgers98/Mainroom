@@ -1,3 +1,6 @@
+const SITE_NAME = 'Mainroom';
+const HEAD_TITLE = `${SITE_NAME} - Livestreaming for DJs, bands and artists`;
+
 const SECOND = 1000;
 const THIRTY_SECONDS = 30 * SECOND;
 const MINUTE = 60 * SECOND;
@@ -10,8 +13,8 @@ const CRON_EVERY_HOUR = '0 * * * *';
 const logger = require('./logger');
 
 module.exports = {
-    siteTitle: 'Mainroom',
-    headTitle: `Mainroom - Livestreaming for DJs, bands and artists`,
+    siteName: SITE_NAME,
+    headTitle: HEAD_TITLE,
     rtmpServer: {
         host: process.env.RTMP_SERVER_HOST,
         logType: logger.resolveLogLevel(),

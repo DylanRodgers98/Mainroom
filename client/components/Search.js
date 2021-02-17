@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import {pagination, filters} from '../../mainroom.config';
+import {pagination, filters, siteName} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
@@ -54,6 +54,7 @@ export default class LiveStreams extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        document.title = `${decodeURIComponent(this.props.match.params.query)} - ${siteName}`;
         if (prevProps.match.params.query !== this.props.match.params.query) {
             this.setState({
                 loaded: false,

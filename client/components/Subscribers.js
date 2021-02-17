@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import {Button, Col, Container, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
-import config from '../../mainroom.config';
+import {headTitle, siteName, pagination} from '../../mainroom.config';
 
 const STARTING_PAGE = 1;
 
@@ -21,25 +21,27 @@ export default class Subscribers extends React.Component {
     }
 
     componentDidMount() {
+        document.title = headTitle;
         this.isProfileOfLoggedInUser();
         this.getSubscribers();
     }
 
     async isProfileOfLoggedInUser() {
-        const res = await axios.get('/logged-in-user');
+        const res = await axios.get('/api/logged-in-user');
         this.setState({
-            isProfileOfLoggedInUser: res.data.username === this.props.match.params.username,
+            isProfileOfLoggedInUser: res.data.username === this.props.match.params.username.toLowerCase(),
         });
     }
 
     async getSubscribers() {
         try {
-            const res = await axios.get(`/api/users/${this.props.match.params.username}/subscribers`, {
+            const res = await axios.get(`/api/users/${this.props.match.params.username.toLowerCase()}/subscribers`, {
                 params: {
                     page: this.state.nextPage,
-                    limit: config.pagination.large
+                    limit: pagination.large
                 }
             });
+            document.title = `${this.props.match.params.username.toLowerCase()}'s Subscribers - ${siteName}`;
             const subscribers = res.data.subscribers.map((subscriber, index) => (
                 <div key={index}>
                     <Col>
@@ -72,7 +74,7 @@ export default class Subscribers extends React.Component {
         const subscribers = this.state.subscribers.length
             ? <Row xs='1' sm='2' md='2' lg='3' xl='3'>{this.state.subscribers}</Row>
             : <p className='my-4 text-center'>{this.state.isProfileOfLoggedInUser ? 'You have '
-                : this.props.match.params.username + ' has'} no subscribers :(</p>;
+                : this.props.match.params.username.toLowerCase() + ' has'} no subscribers :(</p>;
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>
@@ -90,7 +92,7 @@ export default class Subscribers extends React.Component {
             <Container fluid='lg' className='my-5'>
                 <Row>
                     <Col>
-                        <h4>{this.props.match.params.username}'s Subscribers</h4>
+                        <h4>{this.props.match.params.username.toLowerCase()}'s Subscribers</h4>
                     </Col>
                 </Row>
                 <hr className='mt-4'/>

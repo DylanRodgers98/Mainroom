@@ -1,8 +1,13 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {Button} from 'reactstrap';
+import {siteName} from '../../mainroom.config';
 
 export default class FourOhFour extends React.Component {
+
+    componentDidMount() {
+        document.title = `404 - ${siteName}`;
+    }
 
     render() {
         return (

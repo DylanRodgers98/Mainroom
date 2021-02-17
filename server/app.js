@@ -20,7 +20,7 @@ const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
 const csrf = require('csurf');
 const rateLimit = require('express-rate-limit');
-const {User} = require('./model/schemas');
+const {User, RecordedStream} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
 const mainroomEventEmitter = require('./mainroomEventEmitter');
 const LOGGER = require('../logger')('./server/app.js');
@@ -98,7 +98,7 @@ app.use('/api/livestreams', require('./routes/livestreams'));
 app.use('/api/scheduled-streams', require('./routes/scheduled-streams'));
 app.use('/api/recorded-streams', require('./routes/recorded-streams'));
 
-app.get('/logged-in-user', (req, res) => {
+app.get('/api/logged-in-user', (req, res) => {
     res.json(!req.user ? {} : {
         _id: req.user._id,
         username: req.user.username,
@@ -113,9 +113,130 @@ app.get('/logout', (req, res) => {
     return res.redirect('/');
 });
 
+// set XSRF-TOKEN cookie for all requests to the below routes
+app.use((req, res, next) => {
+    res.cookie('XSRF-TOKEN', req.csrfToken());
+    next();
+});
+
+/**
+ * The following routes all point to the index view, which renders the React SPA,
+ * but the purpose of the separate server side routes is to dynamically set open
+ * graph meta tags for each page.
+ */
+
+app.get('/genre/:genre', (req, res) => {
+    res.render('index', {
+        title: `${req.params.genre} Livestreams - ${config.siteName}`
+    });
+});
+
+app.get('/category/:category', (req, res) => {
+    res.render('index', {
+        title: `${req.params.category} Livestreams - ${config.siteName}`
+    });
+});
+
+app.get('/search/:query', (req, res) => {
+    res.render('index', {
+        title: `${req.params.query} - ${config.siteName}`
+    });
+});
+
+app.get('/user/:username', async (req, res) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    let title;
+    try {
+        const user = await User.findOne({username: username}, 'displayName');
+        title = `${user.displayName || username} - ${config.siteName}`
+    } catch (err) {
+        title = config.headTitle;
+    }
+    res.render('index', {title});
+});
+
+app.get('/user/:username/subscribers', async (req, res) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    let title;
+    try {
+        const user = await User.findOne({username: username}, 'displayName');
+        title = `${user.displayName || username}'s Subscribers - ${config.siteName}`
+    } catch (err) {
+        title = config.headTitle;
+    }
+    res.render('index', {title});
+});
+
+app.get('/user/:username/subscriptions', async (req, res) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    let title;
+    try {
+        const user = await User.findOne({username: username}, 'displayName');
+        title = `${user.displayName || username}'s Subscriptions - ${config.siteName}`
+    } catch (err) {
+        title = config.headTitle;
+    }
+    res.render('index', {title});
+});
+
+app.get('/user/:username/live', async (req, res) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    let title;
+    try {
+        const user = await User.findOne({username: username}, 'displayName streamInfo.title');
+        title = [(user.displayName || username), user.streamInfo.title, config.siteName].filter(Boolean).join(' - ');
+    } catch (err) {
+        title = config.headTitle;
+    }
+    res.render('index', {title});
+});
+
+app.get('/stream/:streamId', async (req, res) => {
+    const streamId = sanitise(req.params.streamId);
+    let title;
+    try {
+        const stream = await RecordedStream.findById(streamId)
+            .select('user title')
+            .populate({
+                path: 'user',
+                select: 'username displayName'
+            })
+            .exec();
+        title = [(stream.user.displayName || stream.user.username), stream.title, config.siteName].filter(Boolean).join(' - ');
+    } catch (err) {
+        title = config.headTitle;
+    }
+    res.render('index', {title});
+});
+
+app.get('/manage-recorded-streams', (req, res) => {
+    res.render('index', {
+        title: `Manage Recorded Streams - ${config.siteName}`
+    });
+});
+
+app.get('/schedule', (req, res) => {
+    res.render('index', {
+        title: `Schedule - ${config.siteName}`
+    });
+});
+
+app.get('/settings', (req, res) => {
+    res.render('index', {
+        title: `Settings - ${config.siteName}`
+    });
+});
+
+app.get('/go-live', (req, res) => {
+    res.render('index', {
+        title: `Stream Settings - ${config.siteName}`
+    });
+});
+
 app.get('*', (req, res) => {
-    res.cookie('XSRF-TOKEN', req.csrfToken())
-    res.render('index');
+    res.render('index', {
+        title: config.headTitle
+    });
 });
 
 // Set up socket.io
@@ -168,7 +289,7 @@ function incrementViewCount(username, increment, next) {
 
 // Start server
 httpServer.listen(process.env.SERVER_HTTP_PORT, () => {
-    LOGGER.info('{} HTTP server listening on port: {}', config.siteTitle, process.env.SERVER_HTTP_PORT);
+    LOGGER.info('{} HTTP server listening on port: {}', config.siteName, process.env.SERVER_HTTP_PORT);
 });
 nodeMediaServer.run();
 

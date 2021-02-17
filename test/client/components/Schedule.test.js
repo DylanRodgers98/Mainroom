@@ -15,7 +15,7 @@ const MOCK_END_TIME = moment().add(13, 'hour');
 jest.mock('axios', () => {
     return {
         get: jest.fn(async url => {
-            if (url === '/logged-in-user') {
+            if (url === '/api/logged-in-user') {
                 return {
                     data: {
                         username: MOCK_OWN_USERNAME

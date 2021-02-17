@@ -14,7 +14,7 @@ import {
     NavItem,
     NavLink
 } from 'reactstrap';
-import {siteTitle, filters} from '../../mainroom.config';
+import {siteName, filters} from '../../mainroom.config';
 import axios from 'axios';
 
 export default class MainroomNavbar extends React.Component {
@@ -85,7 +85,7 @@ export default class MainroomNavbar extends React.Component {
     }
 
     async getLoggedInUser() {
-        const res = await axios.get('/logged-in-user');
+        const res = await axios.get('/api/logged-in-user');
         if (res.data.username) {
             this.setState({
                 loggedInUsername: res.data.username,
@@ -239,7 +239,7 @@ export default class MainroomNavbar extends React.Component {
 
         return (
             <Navbar color='dark' dark expand='md'>
-                <NavbarBrand tag={Link} to={'/'}>{siteTitle}</NavbarBrand>
+                <NavbarBrand tag={Link} to={'/'}>{siteName}</NavbarBrand>
                 <NavbarToggler onClick={this.navbarToggle} />
                 <Collapse isOpen={this.state.navbarOpen} navbar>
                 <Nav className='mr-auto' navbar>
