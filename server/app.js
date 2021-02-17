@@ -147,20 +147,22 @@ app.get('/search/:query', (req, res) => {
 app.get('/user/:username', async (req, res) => {
     const username = sanitise(req.params.username.toLowerCase());
     let title;
+    let description;
     try {
-        const user = await User.findOne({username: username}, 'displayName');
+        const user = await User.findOne({username: username}).select('displayName bio').exec();
         title = `${user.displayName || username} - ${config.siteName}`
+        description = user.bio;
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {title, imageURL});
+    res.render('index', {title, description});
 });
 
 app.get('/user/:username/subscribers', async (req, res) => {
     const username = sanitise(req.params.username.toLowerCase());
     let title;
     try {
-        const user = await User.findOne({username: username}, 'displayName');
+        const user = await User.findOne({username: username}).select('displayName').exec();
         title = `${user.displayName || username}'s Subscribers - ${config.siteName}`
     } catch (err) {
         title = config.headTitle;
@@ -172,7 +174,7 @@ app.get('/user/:username/subscriptions', async (req, res) => {
     const username = sanitise(req.params.username.toLowerCase());
     let title;
     try {
-        const user = await User.findOne({username: username}, 'displayName');
+        const user = await User.findOne({username: username}).select( 'displayName').exec();
         title = `${user.displayName || username}'s Subscriptions - ${config.siteName}`
     } catch (err) {
         title = config.headTitle;
@@ -183,11 +185,15 @@ app.get('/user/:username/subscriptions', async (req, res) => {
 app.get('/user/:username/live', async (req, res) => {
     const username = sanitise(req.params.username.toLowerCase());
     let title;
+    let description;
     let imageURL;
     let imageAlt;
     try {
-        const user = await User.findOne({username: username}, 'displayName streamInfo.title streamInfo.streamKey');
+        const user = await User.findOne({username: username})
+            .select( 'displayName streamInfo.title streamInfo.streamKey streamInfo.genre streamInfo.category')
+            .exec();
         title = [(user.displayName || username), user.streamInfo.title, config.siteName].filter(Boolean).join(' - ');
+        description = `${user.streamInfo.genre ? `${user.streamInfo.genre} ` : ''}${user.streamInfo.category || ''}`;
         imageURL = await getThumbnail(user.streamInfo.streamKey);
         imageAlt = `${username} Stream Thumbnail`;
     } catch (err) {
@@ -195,23 +201,25 @@ app.get('/user/:username/live', async (req, res) => {
         imageURL = config.defaultThumbnailURL;
         imageAlt = 'Stream Thumbnail';
     }
-    res.render('index', {title, imageURL, imageAlt});
+    res.render('index', {title, description, imageURL, imageAlt});
 });
 
 app.get('/stream/:streamId', async (req, res) => {
     const streamId = sanitise(req.params.streamId);
     let title;
+    let description;
     let imageURL;
     let imageAlt;
     try {
         const stream = await RecordedStream.findById(streamId)
-            .select('user title thumbnailURL')
+            .select('user title genre category thumbnailURL')
             .populate({
                 path: 'user',
                 select: 'username displayName'
             })
             .exec();
         title = [(stream.user.displayName || stream.user.username), stream.title, config.siteName].filter(Boolean).join(' - ');
+        description = `${stream.genre ? `${stream.genre} ` : ''}${stream.category || ''}`;
         imageURL = stream.thumbnailURL || config.defaultThumbnailURL;
         imageAlt = `${stream.user.username} Stream Thumbnail`;
     } catch (err) {
@@ -219,7 +227,7 @@ app.get('/stream/:streamId', async (req, res) => {
         imageURL = config.defaultThumbnailURL;
         imageAlt = 'Stream Thumbnail';
     }
-    res.render('index', {title, imageURL, imageAlt});
+    res.render('index', {title, description, imageURL, imageAlt});
 });
 
 app.get('/manage-recorded-streams', (req, res) => {
