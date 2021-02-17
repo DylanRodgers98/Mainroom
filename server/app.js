@@ -184,21 +184,25 @@ app.get('/user/:username/live', async (req, res) => {
     const username = sanitise(req.params.username.toLowerCase());
     let title;
     let imageURL;
+    let imageAlt;
     try {
         const user = await User.findOne({username: username}, 'displayName streamInfo.title streamInfo.streamKey');
         title = [(user.displayName || username), user.streamInfo.title, config.siteName].filter(Boolean).join(' - ');
         imageURL = await getThumbnail(user.streamInfo.streamKey);
+        imageAlt = `${username} Stream Thumbnail`;
     } catch (err) {
         title = config.headTitle;
         imageURL = config.defaultThumbnailURL;
+        imageAlt = 'Stream Thumbnail';
     }
-    res.render('index', {title, imageURL});
+    res.render('index', {title, imageURL, imageAlt});
 });
 
 app.get('/stream/:streamId', async (req, res) => {
     const streamId = sanitise(req.params.streamId);
     let title;
     let imageURL;
+    let imageAlt;
     try {
         const stream = await RecordedStream.findById(streamId)
             .select('user title thumbnailURL')
@@ -209,11 +213,13 @@ app.get('/stream/:streamId', async (req, res) => {
             .exec();
         title = [(stream.user.displayName || stream.user.username), stream.title, config.siteName].filter(Boolean).join(' - ');
         imageURL = stream.thumbnailURL || config.defaultThumbnailURL;
+        imageAlt = `${stream.user.username} Stream Thumbnail`;
     } catch (err) {
         title = config.headTitle;
         imageURL = config.defaultThumbnailURL;
+        imageAlt = 'Stream Thumbnail';
     }
-    res.render('index', {title, imageURL});
+    res.render('index', {title, imageURL, imageAlt});
 });
 
 app.get('/manage-recorded-streams', (req, res) => {
