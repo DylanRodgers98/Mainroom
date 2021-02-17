@@ -23,6 +23,7 @@ const rateLimit = require('express-rate-limit');
 const {User, RecordedStream} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
 const mainroomEventEmitter = require('./mainroomEventEmitter');
+const {getThumbnail} = require('./aws/s3ThumbnailGenerator');
 const LOGGER = require('../logger')('./server/app.js');
 
 // connect to database
@@ -152,7 +153,7 @@ app.get('/user/:username', async (req, res) => {
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {title});
+    res.render('index', {title, imageURL});
 });
 
 app.get('/user/:username/subscribers', async (req, res) => {
@@ -182,31 +183,37 @@ app.get('/user/:username/subscriptions', async (req, res) => {
 app.get('/user/:username/live', async (req, res) => {
     const username = sanitise(req.params.username.toLowerCase());
     let title;
+    let imageURL;
     try {
-        const user = await User.findOne({username: username}, 'displayName streamInfo.title');
+        const user = await User.findOne({username: username}, 'displayName streamInfo.title streamInfo.streamKey');
         title = [(user.displayName || username), user.streamInfo.title, config.siteName].filter(Boolean).join(' - ');
+        imageURL = await getThumbnail(user.streamInfo.streamKey);
     } catch (err) {
         title = config.headTitle;
+        imageURL = config.defaultThumbnailURL;
     }
-    res.render('index', {title});
+    res.render('index', {title, imageURL});
 });
 
 app.get('/stream/:streamId', async (req, res) => {
     const streamId = sanitise(req.params.streamId);
     let title;
+    let imageURL;
     try {
         const stream = await RecordedStream.findById(streamId)
-            .select('user title')
+            .select('user title thumbnailURL')
             .populate({
                 path: 'user',
                 select: 'username displayName'
             })
             .exec();
         title = [(stream.user.displayName || stream.user.username), stream.title, config.siteName].filter(Boolean).join(' - ');
+        imageURL = stream.thumbnailURL || config.defaultThumbnailURL;
     } catch (err) {
         title = config.headTitle;
+        imageURL = config.defaultThumbnailURL;
     }
-    res.render('index', {title});
+    res.render('index', {title, imageURL});
 });
 
 app.get('/manage-recorded-streams', (req, res) => {
