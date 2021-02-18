@@ -25,6 +25,7 @@ const sanitise = require('mongo-sanitize');
 const mainroomEventEmitter = require('./mainroomEventEmitter');
 const {getThumbnail} = require('./aws/s3ThumbnailGenerator');
 const axios = require('axios');
+const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
 const LOGGER = require('../logger')('./server/app.js');
 
 // connect to database
@@ -115,40 +116,34 @@ app.get('/logout', (req, res) => {
     return res.redirect('/');
 });
 
-// set XSRF-TOKEN cookie for all requests to the below routes
-app.use((req, res, next) => {
-    res.cookie('XSRF-TOKEN', req.csrfToken());
-    next();
-});
-
 /**
  * The following routes all point to the index view, which renders the React SPA,
  * but the purpose of the separate server side routes is to dynamically set open
  * graph meta tags for each page.
  */
 
-app.get('/genre/:genre', (req, res) => {
+app.get('/genre/:genre', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
         title: `${req.params.genre} Livestreams - ${config.siteName}`
     });
 });
 
-app.get('/category/:category', (req, res) => {
+app.get('/category/:category', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
         title: `${req.params.category} Livestreams - ${config.siteName}`
     });
 });
 
-app.get('/search/:query', (req, res) => {
+app.get('/search/:query', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
         title: `${req.params.query} - ${config.siteName}`
     });
 });
 
-app.get('/user/:username', async (req, res) => {
+app.get('/user/:username', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
     let title;
     let description;
@@ -163,7 +158,7 @@ app.get('/user/:username', async (req, res) => {
     res.render('index', {siteName, title, description});
 });
 
-app.get('/user/:username/subscribers', async (req, res) => {
+app.get('/user/:username/subscribers', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
     let title;
     try {
@@ -176,7 +171,7 @@ app.get('/user/:username/subscribers', async (req, res) => {
     res.render('index', {siteName, title});
 });
 
-app.get('/user/:username/subscriptions', async (req, res) => {
+app.get('/user/:username/subscriptions', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
     let title;
     try {
@@ -189,7 +184,7 @@ app.get('/user/:username/subscriptions', async (req, res) => {
     res.render('index', {siteName, title});
 });
 
-app.get('/user/:username/live', async (req, res) => {
+app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
     let title;
     let description;
@@ -228,7 +223,7 @@ app.get('/user/:username/live', async (req, res) => {
     res.render('index', {siteName, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard});
 });
 
-app.get('/stream/:streamId', async (req, res) => {
+app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
     let title;
     let description;
@@ -259,35 +254,35 @@ app.get('/stream/:streamId', async (req, res) => {
     res.render('index', {siteName, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard});
 });
 
-app.get('/manage-recorded-streams', (req, res) => {
+app.get('/manage-recorded-streams', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
         title: `Manage Recorded Streams - ${config.siteName}`
     });
 });
 
-app.get('/schedule', (req, res) => {
+app.get('/schedule', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
         title: `Schedule - ${config.siteName}`
     });
 });
 
-app.get('/settings', (req, res) => {
+app.get('/settings', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
         title: `Settings - ${config.siteName}`
     });
 });
 
-app.get('/go-live', (req, res) => {
+app.get('/go-live', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
         title: `Stream Settings - ${config.siteName}`
     });
 });
 
-app.get('*', (req, res) => {
+app.get('*', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
         title: config.headTitle
