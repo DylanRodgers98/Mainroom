@@ -33,6 +33,12 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         const ffmpeg = spawn(process.env.FFMPEG_PATH, args);
         ffmpeg.stderr.on('data', data => {
             LOGGER.debug('stderr: {}', data)
+            if (data.toString().includes(`${inputURL}: Server returned 404 Not Found`)) {
+                // if the file pointed to by inputURL does not exist, destroy stdin and kill child process, before rejecting promise
+                ffmpeg.stdin.destroy();
+                ffmpeg.kill();
+                reject('404 Not Found');
+            }
         });
         ffmpeg.on('error', err => {
             LOGGER.error('An error occurred when generating stream thumbnail (stream URL: {}): {}', inputURL, err);
