@@ -62,7 +62,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
                 mainroomEventEmitter.emit('onStreamEnded', user);
 
                 if (IS_RECORDING_TO_MP4) {
-                    const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, 'live', streamKey);
+                    const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, process.env.RTMP_SERVER_APP_NAME, streamKey);
                     const mp4FileName = findMP4FileName(inputDirectory, sessionId);
                     const inputURL = path.join(inputDirectory, mp4FileName);
                     const Bucket = config.storage.s3.streams.bucketName;
@@ -122,8 +122,13 @@ function getSessionConnectTime(sessionId) {
 }
 
 function findMP4FileName(inputDirectory, sessionConnectTime) {
-    const mp4FileNames = fs.readdirSync(inputDirectory)
-        .filter(fileName => path.extname(fileName).toLowerCase() === '.mp4');
+    LOGGER.debug('Looking for MP4 files in {}', inputDirectory);
+
+    const fileNames = fs.readdirSync(inputDirectory);
+    LOGGER.debug('All files found: {}', fileNames);
+
+    const mp4FileNames = fileNames.filter(fileName => path.extname(fileName).toLowerCase() === '.mp4');
+    LOGGER.debug('MP4 files found: {}', mp4FileNames);
 
     if (mp4FileNames.length === 1) {
         return mp4FileNames[0];
