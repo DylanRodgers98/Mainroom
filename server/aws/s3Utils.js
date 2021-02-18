@@ -15,7 +15,8 @@ async function deleteByURL(s3UrlString) {
 
 function extractBucketAndKeyFromURL(s3UrlString) {
     const url = new URL(s3UrlString);
-    const Bucket = url.hostname.replace('.s3.amazonaws.com', '');
+    const s3UrlSuffix = new RegExp(`\.s3(\.${process.env.AWS_REGION})?.amazonaws\.com`);
+    const Bucket = url.hostname.replace(s3UrlSuffix, ''); // extract bucket from S3 URL
     const Key = url.pathname.substring(1); // remove leading slash
     return {Bucket, Key};
 }
