@@ -34,10 +34,10 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         ffmpeg.stderr.on('data', data => {
             LOGGER.debug('stderr: {}', data)
             if (data.toString().includes(`${inputURL}: Server returned 404 Not Found`)) {
-                // if the file pointed to by inputURL does not exist, destroy stdin and kill child process, before rejecting promise
-                ffmpeg.stdin.destroy();
+                // If the file pointed to by inputURL does not exist, destroy stdout and kill child process.
+                // Destroying stdout with an error will call the 'error' event with the passed in Error.
+                ffmpeg.stdout.destroy(new Error(`'404 Not Found' returned when trying to read ${inputURL}`));
                 ffmpeg.kill();
-                reject('404 Not Found');
             }
         });
         ffmpeg.on('error', err => {
