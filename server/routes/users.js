@@ -219,14 +219,14 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
             res.status(404).send(`User (username: ${escape(otherUsername)}) not found`);
         } else {
             const username = sanitise(req.params.username.toLowerCase());
-            User.findOne({username: username}, '_id', (err, user) => {
+            User.findOne({username}, '_id', (err, user) => {
                 if (err) {
                     LOGGER.error('An error occurred when finding user {}: {}', username, err);
                     next(err);
                 } else if (!user) {
                     res.status(404).send(`User (username: ${escape(username)}) not found`);
                 } else {
-                    const isSubscribed = otherUser.subscribers.some(subscriberId => _.isEqual(subscriberId, user._id));
+                    const isSubscribed = otherUser.subscribers.some(sub => _.isEqual(sub.user, user._id));
                     res.send(isSubscribed);
                 }
             });
@@ -251,7 +251,7 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
                 } else if (!userToSubscribeTo) {
                     res.status(404).send(`User (username: ${escape(usernameToSubscribeTo)}) not found`);
                 } else {
-                    const isAlreadySubscribed = userToSubscribeTo.subscribers.some(subscriberId => _.isEqual(subscriberId, user._id));
+                    const isAlreadySubscribed = userToSubscribeTo.subscribers.some(sub => _.isEqual(sub.user, user._id));
                     if (!isAlreadySubscribed) {
                         userToSubscribeTo.updateOne({$push: {subscribers: {user: user._id}}}, err => {
                             if (err) {
@@ -270,6 +270,8 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
                                 });
                             }
                         });
+                    } else {
+                        res.sendStatus(200);
                     }
                 }
             });
@@ -279,7 +281,7 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
 
 router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, '_id', (err, user) => {
+    User.findOne({username}, (err, user) => {
         if (err) {
             LOGGER.error('An error occurred when finding user {}: {}', username, err);
             next(err);
@@ -287,28 +289,33 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
             res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
             const usernameToUnsubscribeFrom = sanitise(req.params.userToUnsubscribeFrom.toLowerCase())
-            User.findOne({username: usernameToUnsubscribeFrom}, '_id', (err, userToUnsubscribeFrom) => {
+            User.findOne({username: usernameToUnsubscribeFrom}, 'subscribers', (err, userToUnsubscribeFrom) => {
                 if (err) {
                     LOGGER.error('An error occurred when finding user {}: {}', usernameToUnsubscribeFrom, err);
                     next(err);
                 } else if (!userToUnsubscribeFrom) {
                     res.status(404).send(`User (username: ${escape(usernameToUnsubscribeFrom)}) not found`);
                 } else {
-                    userToUnsubscribeFrom.updateOne({$pull: {subscribers: {user: user._id}}}, err => {
-                        if (err) {
-                            LOGGER.error(`An error occurred when removing user {} to user {}'s subscribers: {}`, username, userToUnsubscribeFrom, err);
-                            next(err);
-                        } else {
-                            user.updateOne({$pull: {subscriptions: {user: userToUnsubscribeFrom._id}}}, err => {
-                                if (err) {
-                                    LOGGER.error(`An error occurred when removing user {} to user {}'s subscriptions: {}`, userToUnsubscribeFrom, username, err);
-                                    next(err);
-                                } else {
-                                    res.sendStatus(200);
-                                }
-                            });
-                        }
-                    });
+                    const isSubscribed = userToUnsubscribeFrom.subscribers.some(sub => _.isEqual(sub.user, user._id));
+                    if (isSubscribed) {
+                        userToUnsubscribeFrom.updateOne({$pull: {subscribers: {user: user._id}}}, err => {
+                            if (err) {
+                                LOGGER.error(`An error occurred when removing user {} to user {}'s subscribers: {}`, username, userToUnsubscribeFrom, err);
+                                next(err);
+                            } else {
+                                user.updateOne({$pull: {subscriptions: {user: userToUnsubscribeFrom._id}}}, err => {
+                                    if (err) {
+                                        LOGGER.error(`An error occurred when removing user {} to user {}'s subscriptions: {}`, userToUnsubscribeFrom, username, err);
+                                        next(err);
+                                    } else {
+                                        res.sendStatus(200);
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        res.sendStatus(200);
+                    }
                 }
             });
         }

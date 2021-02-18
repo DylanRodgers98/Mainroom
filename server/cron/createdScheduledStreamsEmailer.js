@@ -45,7 +45,7 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                     users.length, users.length === 1 ? '' : 's');
 
                 for (const user of users) {
-                    const isSubscribedPredicate = stream => user.subscriptions.some(subscriptionId => _.isEqual(subscriptionId, stream.user._id));
+                    const isSubscribedPredicate = stream => user.subscriptions.some(sub => _.isEqual(sub.user, stream.user._id));
                     const subscribedStreams = scheduledStreams.filter(isSubscribedPredicate);
                     mainroomEventEmitter.emit('onSubscriptionsCreatedScheduledStreams', user, subscribedStreams);
                 }

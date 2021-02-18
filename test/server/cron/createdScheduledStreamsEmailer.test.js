@@ -38,7 +38,10 @@ const mockUser1 = {
     username: 'foo',
     displayName: 'bar',
     email: 'foo@bar.com',
-    subscriptions: [USER_ID_MOCK_STREAM_1, USER_ID_MOCK_STREAM_2]
+    subscriptions: [
+        {user: USER_ID_MOCK_STREAM_1},
+        {user: USER_ID_MOCK_STREAM_2}
+    ]
 };
 
 const mockUser1ExpectedStreams = [mockStream1, mockStream2];
@@ -48,7 +51,9 @@ const mockUser2 = {
     username: 'test',
     displayName: 'Test User',
     email: 'test@email.com',
-    subscriptions: [USER_ID_MOCK_STREAM_3]
+    subscriptions: [
+        {user: USER_ID_MOCK_STREAM_3}
+    ]
 };
 
 const mockUser2ExpectedStreams = [mockStream3];
