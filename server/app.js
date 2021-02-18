@@ -24,6 +24,7 @@ const {User, RecordedStream} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
 const mainroomEventEmitter = require('./mainroomEventEmitter');
 const {getThumbnail} = require('./aws/s3ThumbnailGenerator');
+const axios = require('axios');
 const LOGGER = require('../logger')('./server/app.js');
 
 // connect to database
@@ -44,7 +45,7 @@ mongoose.connect(databaseUri, {
         LOGGER.info('Connected to MongoDB database: {}', process.env.DB_DATABASE);
         // Reset user's view count properties, as they may still be non-zero due to a non-graceful server shutdown
         User.updateMany({
-            'streamInfo.viewCount': {$gt: 0}
+            'streamInfo.viewCount': {$ne: 0}
         }, {
             'streamInfo.viewCount': 0,
             'streamInfo.cumulativeViewCount': 0
@@ -128,91 +129,118 @@ app.use((req, res, next) => {
 
 app.get('/genre/:genre', (req, res) => {
     res.render('index', {
+        siteName: config.siteName,
         title: `${req.params.genre} Livestreams - ${config.siteName}`
     });
 });
 
 app.get('/category/:category', (req, res) => {
     res.render('index', {
+        siteName: config.siteName,
         title: `${req.params.category} Livestreams - ${config.siteName}`
     });
 });
 
 app.get('/search/:query', (req, res) => {
     res.render('index', {
+        siteName: config.siteName,
         title: `${req.params.query} - ${config.siteName}`
     });
 });
 
 app.get('/user/:username', async (req, res) => {
-    const username = sanitise(req.params.username.toLowerCase());
+    const siteName = config.siteName;
     let title;
     let description;
     try {
+        const username = sanitise(req.params.username.toLowerCase());
         const user = await User.findOne({username: username}).select('displayName bio').exec();
         title = `${user.displayName || username} - ${config.siteName}`
         description = user.bio;
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {title, description});
+    res.render('index', {siteName, title, description});
 });
 
 app.get('/user/:username/subscribers', async (req, res) => {
-    const username = sanitise(req.params.username.toLowerCase());
+    const siteName = config.siteName;
     let title;
     try {
+        const username = sanitise(req.params.username.toLowerCase());
         const user = await User.findOne({username: username}).select('displayName').exec();
         title = `${user.displayName || username}'s Subscribers - ${config.siteName}`
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {title});
+    res.render('index', {siteName, title});
 });
 
 app.get('/user/:username/subscriptions', async (req, res) => {
-    const username = sanitise(req.params.username.toLowerCase());
+    const siteName = config.siteName;
     let title;
     try {
+        const username = sanitise(req.params.username.toLowerCase());
         const user = await User.findOne({username: username}).select( 'displayName').exec();
         title = `${user.displayName || username}'s Subscriptions - ${config.siteName}`
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {title});
+    res.render('index', {siteName, title});
 });
 
 app.get('/user/:username/live', async (req, res) => {
-    const username = sanitise(req.params.username.toLowerCase());
+    const siteName = config.siteName;
     let title;
     let description;
     let imageURL;
     let imageAlt;
+    let videoURL;
+    let videoMimeType;
+    let twitterCard;
     try {
-        const user = await User.findOne({username: username})
+        // TODO: this practically matches '/:username/stream-info' users API route, so extract into controller method and call here and in API route
+        const username = sanitise(req.params.username.toLowerCase());
+        const user = await User.findOne({username})
             .select( 'displayName streamInfo.title streamInfo.streamKey streamInfo.genre streamInfo.category')
             .exec();
-        title = [(user.displayName || username), user.streamInfo.title, config.siteName].filter(Boolean).join(' - ');
-        description = `${user.streamInfo.genre ? `${user.streamInfo.genre} ` : ''}${user.streamInfo.category || ''}`;
-        imageURL = await getThumbnail(user.streamInfo.streamKey);
-        imageAlt = `${username} Stream Thumbnail`;
+        const streamKey = user.streamInfo.streamKey;
+        const {data} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
+        if (data.isLive) {
+            title = [(user.displayName || username), user.streamInfo.title, config.siteName].filter(Boolean).join(' - ');
+            description = `${user.streamInfo.genre ? `${user.streamInfo.genre} ` : ''}${user.streamInfo.category || ''}`;
+            try {
+                imageURL = await getThumbnail(streamKey);
+            } catch (err) {
+                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
+                imageURL = config.defaultThumbnailURL;
+            }
+            imageAlt = `${username} Stream Thumbnail`;
+            videoURL = `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+            videoMimeType = 'application/x-mpegURL';
+            twitterCard = 'player';
+        } else {
+            title = config.headTitle;
+        }
     } catch (err) {
         title = config.headTitle;
-        imageURL = config.defaultThumbnailURL;
-        imageAlt = 'Stream Thumbnail';
     }
-    res.render('index', {title, description, imageURL, imageAlt});
+    res.render('index', {siteName, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard});
 });
 
 app.get('/stream/:streamId', async (req, res) => {
-    const streamId = sanitise(req.params.streamId);
+    const siteName = config.siteName;
     let title;
     let description;
     let imageURL;
     let imageAlt;
+    let videoURL;
+    let videoMimeType;
+    let twitterCard;
     try {
+        const streamId = sanitise(req.params.streamId);
         const stream = await RecordedStream.findById(streamId)
-            .select('user title genre category thumbnailURL')
+            .select('user title genre category videoURL thumbnailURL')
             .populate({
                 path: 'user',
                 select: 'username displayName'
@@ -222,40 +250,46 @@ app.get('/stream/:streamId', async (req, res) => {
         description = `${stream.genre ? `${stream.genre} ` : ''}${stream.category || ''}`;
         imageURL = stream.thumbnailURL || config.defaultThumbnailURL;
         imageAlt = `${stream.user.username} Stream Thumbnail`;
+        videoURL = stream.videoURL;
+        videoMimeType = 'video/mp4';
+        twitterCard = 'player';
     } catch (err) {
         title = config.headTitle;
-        imageURL = config.defaultThumbnailURL;
-        imageAlt = 'Stream Thumbnail';
     }
-    res.render('index', {title, description, imageURL, imageAlt});
+    res.render('index', {siteName, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard});
 });
 
 app.get('/manage-recorded-streams', (req, res) => {
     res.render('index', {
+        siteName: config.siteName,
         title: `Manage Recorded Streams - ${config.siteName}`
     });
 });
 
 app.get('/schedule', (req, res) => {
     res.render('index', {
+        siteName: config.siteName,
         title: `Schedule - ${config.siteName}`
     });
 });
 
 app.get('/settings', (req, res) => {
     res.render('index', {
+        siteName: config.siteName,
         title: `Settings - ${config.siteName}`
     });
 });
 
 app.get('/go-live', (req, res) => {
     res.render('index', {
+        siteName: config.siteName,
         title: `Stream Settings - ${config.siteName}`
     });
 });
 
 app.get('*', (req, res) => {
     res.render('index', {
+        siteName: config.siteName,
         title: config.headTitle
     });
 });

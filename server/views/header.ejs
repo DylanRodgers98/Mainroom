@@ -3,7 +3,10 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta property="og:site_name" content="Mainroom">
+
+    <% if (locals.siteName) { %>
+        <meta property="og:site_name" content="<%= siteName %>">
+    <% } %>
 
     <% if (locals.title) { %>
         <title><%= title %></title>
@@ -16,11 +19,24 @@
 
     <% if (locals.imageURL) { %>
         <meta property="og:image" content="<%= imageURL %>">
-        <meta name="twitter:card" content="summary_large_image">
     <% } %>
 
     <% if (locals.imageAlt) { %>
+        <meta name="og:image:alt" content="<%= imageAlt %>">
         <meta name="twitter:image:alt" content="<%= imageAlt %>">
+    <% } %>
+
+    <% if (locals.videoURL) { %>
+        <meta name="og:video" content="<%= videoURL %>">
+        <meta name="twitter:player:stream" content="<%= videoURL %>">
+    <% } %>
+
+    <% if (locals.videoMimeType) { %>
+        <meta name="og:video:type" content="<%= videoMimeType %>">
+    <% } %>
+
+    <% if (locals.twitterCard) { %>
+        <meta name="twitter:card" content="<%= twitterCard %>">
     <% } %>
 
     <link rel="stylesheet" href="/style.css">
