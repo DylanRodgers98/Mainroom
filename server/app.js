@@ -5,8 +5,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 const express = require('express');
 const app = express();
-const httpServer = require('http').createServer(app);
-const io = require('socket.io')(httpServer);
+const http = require('http');
+const socketIO = require('socket.io');
 const path = require('path');
 const Session = require('express-session');
 const MongoStore = require('connect-mongo')(Session);
@@ -289,7 +289,26 @@ app.get('*', setXSRFTokenCookie, (req, res) => {
     });
 });
 
+// Start HTTP server
+const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, () => {
+    LOGGER.info('{} HTTP server listening on port: {}', config.siteName, process.env.SERVER_HTTP_PORT);
+});
+
+// start cron jobs only in first pm2 instance of mainroom app, or on
+// non-production environment
+if ((process.env.PM2_APP_NAME === 'mainroom' && process.env.NODE_APP_INSTANCE === '0')
+    || process.env.NODE_ENV !== 'production') {
+    cronJobs.startAll();
+}
+
+// start RTMP server only in rtmpServer pm2 app (which should only contain 1
+// instance) or on non-production environment
+if (process.env.PM2_APP_NAME === 'rtmpServer' || process.env.NODE_ENV !== 'production') {
+    nodeMediaServer.run();
+}
+
 // Set up socket.io
+const io = socketIO(httpServer);
 io.on('connection', (socket, next) => {
     // if connection is from live stream page
     if (socket.request._query.liveStreamUsername) {
@@ -335,18 +354,6 @@ function incrementViewCount(username, increment, next) {
             io.emit(`liveStreamViewCount_${username}`, user.streamInfo.viewCount);
         }
     });
-}
-
-// Start server
-httpServer.listen(process.env.SERVER_HTTP_PORT, () => {
-    LOGGER.info('{} HTTP server listening on port: {}', config.siteName, process.env.SERVER_HTTP_PORT);
-});
-nodeMediaServer.run();
-
-// start cron jobs only in primary pm2 app (which should only contain 1 instance)
-// or on non-production environment
-if (process.env.PM2_APP_NAME === 'primary' || process.env.NODE_ENV !== 'production') {
-    cronJobs.startAll();
 }
 
 // On application shutdown, then disconnect from database and close servers
