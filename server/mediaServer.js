@@ -63,7 +63,7 @@ nms.on('donePublish', (sessionId, streamPath) => {
 
                 if (IS_RECORDING_TO_MP4) {
                     const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, process.env.RTMP_SERVER_APP_NAME, streamKey);
-                    const mp4FileName = findMP4FileName(inputDirectory, sessionId);
+                    const mp4FileName = findMP4FileName(inputDirectory, timestamp);
                     const inputURL = path.join(inputDirectory, mp4FileName);
                     const Bucket = config.storage.s3.streams.bucketName;
                     const Key = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${mp4FileName}`;
