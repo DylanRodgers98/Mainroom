@@ -26,6 +26,7 @@ const mainroomEventEmitter = require('./mainroomEventEmitter');
 const {getThumbnail} = require('./aws/s3ThumbnailGenerator');
 const axios = require('axios');
 const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
+const pm2 = require('pm2');
 const LOGGER = require('../logger')('./server/app.js');
 
 // connect to database
@@ -289,6 +290,12 @@ app.get('*', setXSRFTokenCookie, (req, res) => {
     });
 });
 
+// send all messages to parent process in production environment
+// this allows a clustered environment to share events
+if (process.env.NODE_ENV === 'production') {
+    process.on('message', process.send);
+}
+
 // Start HTTP server
 const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, () => {
     LOGGER.info('{} HTTP server listening on port: {}', config.siteName, process.env.SERVER_HTTP_PORT);
@@ -327,13 +334,26 @@ io.on('connection', (socket, next) => {
             io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUser, msg});
         });
 
-        mainroomEventEmitter.on(`onWentLive_${streamUsername}`, () => {
-            io.emit(`onWentLive_${streamUsername}`);
-        });
+        if (process.env.NODE_ENV === 'production') {
+            // in production environment, listen for events from pm2 God process
+            pm2.launchBus((err, bus) => {
+                bus.on(`onWentLive_${streamUsername}`, () => {
+                    io.emit(`onWentLive_${streamUsername}`);
+                });
 
-        mainroomEventEmitter.on(`onStreamEnded_${streamUsername}`, () => {
-            io.emit(`onStreamEnded_${streamUsername}`);
-        });
+                bus.on(`onStreamEnded_${streamUsername}`, () => {
+                    io.emit(`onStreamEnded_${streamUsername}`);
+                });
+            });
+        } else {
+            mainroomEventEmitter.on(`onWentLive_${streamUsername}`, () => {
+                io.emit(`onWentLive_${streamUsername}`);
+            });
+
+            mainroomEventEmitter.on(`onStreamEnded_${streamUsername}`, () => {
+                io.emit(`onStreamEnded_${streamUsername}`);
+            });
+        }
     }
 });
 
