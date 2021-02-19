@@ -29,6 +29,8 @@ const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
 const pm2 = require('pm2');
 const LOGGER = require('../logger')('./server/app.js');
 
+const PROCESS_ID = parseInt(process.env.NODE_APP_INSTANCE);
+
 // connect to database
 const databaseUri = 'mongodb://'
     + (process.env.DB_USER && process.env.DB_PASSWORD ? `${process.env.DB_USER}:${process.env.DB_PASSWORD}@` : '')
@@ -321,22 +323,21 @@ io.on('connection', (socket, next) => {
     if (socket.request._query.liveStreamUsername) {
         const streamUsername = sanitise(socket.request._query.liveStreamUsername.toLowerCase());
 
-        // increment view count on connection
-        incrementViewCount(streamUsername, 1, next);
-
-        // decrement view count on disconnection
-        socket.on('disconnect', () => {
-            incrementViewCount(streamUsername, -1, next);
-        });
-
-        // emit livestream chat message to correct channel
-        socket.on(`onSendChatMessage`, ({viewerUser, msg}) => {
-            io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUser, msg});
-        });
-
+        // register event listeners
         if (process.env.NODE_ENV === 'production') {
             // in production environment, listen for events from pm2 God process
             pm2.launchBus((err, bus) => {
+                bus.on(`liveStreamViewCount_${streamUsername}`, packet => {
+                    io.emit(`liveStreamViewCount_${streamUsername}`, packet.data.viewCount);
+                });
+
+                bus.on(`onSendChatMessage_${streamUsername}`, packet => {
+                    io.emit(`onReceiveChatMessage_${streamUsername}`, {
+                        viewerUser: packet.data.viewerUser,
+                        msg: packet.data.msg
+                    });
+                });
+
                 bus.on(`onWentLive_${streamUsername}`, () => {
                     io.emit(`onWentLive_${streamUsername}`);
                 });
@@ -354,6 +355,32 @@ io.on('connection', (socket, next) => {
                 io.emit(`onStreamEnded_${streamUsername}`);
             });
         }
+
+        // increment view count on connection
+        incrementViewCount(streamUsername, 1, next);
+
+        // decrement view count on disconnection
+        socket.on('disconnect', () => {
+            incrementViewCount(streamUsername, -1, next);
+        });
+
+        // emit livestream chat message to correct channel
+        socket.on(`onSendChatMessage`, ({viewerUser, msg}) => {
+            if (process.env.NODE_ENV === 'production') {
+                pm2.sendDataToProcessId(PROCESS_ID, {
+                    id: PROCESS_ID,
+                    topic: 'mainroom',
+                    type: `onSendChatMessage_${streamUsername}`,
+                    data: {viewerUser, msg}
+                }, err => {
+                    if (err) {
+                        throw err;
+                    }
+                });
+            } else {
+                io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUser, msg});
+            }
+        });
     }
 });
 
@@ -370,6 +397,19 @@ function incrementViewCount(username, increment, next) {
         } else if (!user) {
             LOGGER.error('User (username: {}) not found', username, err);
             next(new Error(`User (username: ${username}) not found`));
+        } else if (process.env.NODE_ENV === 'production') {
+            pm2.sendDataToProcessId(PROCESS_ID, {
+                id: PROCESS_ID,
+                topic: 'mainroom',
+                type: `liveStreamViewCount_${username}`,
+                data: {
+                    viewCount: user.streamInfo.viewCount
+                }
+            }, err => {
+                if (err) {
+                    throw err;
+                }
+            });
         } else {
             io.emit(`liveStreamViewCount_${username}`, user.streamInfo.viewCount);
         }
