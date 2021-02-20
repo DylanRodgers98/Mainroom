@@ -23,7 +23,7 @@ class MainroomEventBus extends EventEmitter {
                 }
             });
         } else {
-            super.emit(event, data);
+            this.emit(event, data);
         }
     }
 

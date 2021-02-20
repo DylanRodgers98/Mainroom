@@ -83,11 +83,11 @@ jest.mock('../../../server/model/schemas', () => {
     };
 });
 
-const mockEmit = jest.fn();
+const mockNotifyUserOfSubscriptionsStreamsStartingSoon = jest.fn();
 
-jest.mock('../../../server/mainroomEventEmitter', () => {
+jest.mock('../../../server/aws/sesEmailSender', () => {
     return {
-        emit: mockEmit
+        notifyUserOfSubscriptionsStreamsStartingSoon: mockNotifyUserOfSubscriptionsStreamsStartingSoon
     };
 });
 
@@ -104,7 +104,7 @@ afterAll(() => {
 });
 
 describe('upcomingScheduledStreamEmailer', () => {
-    it('should emit onScheduledStreamStartingSoon event from mainroomEventEmitter when cron job triggers', async() => {
+    it('should send emails to required users about streams starting soon when cron job triggers', async() => {
         // given
         job.setTime(new CronTime('* * * * * *'));
 
@@ -115,6 +115,6 @@ describe('upcomingScheduledStreamEmailer', () => {
 
         // then
         job.stop();
-        expect(mockEmit).toHaveBeenCalledWith('onScheduledStreamStartingSoon', expectedUserData, expectedStreams);
+        expect(mockNotifyUserOfSubscriptionsStreamsStartingSoon).toHaveBeenCalledWith(expectedUserData, expectedStreams);
     });
 });

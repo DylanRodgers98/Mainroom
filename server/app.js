@@ -292,8 +292,7 @@ app.get('*', setXSRFTokenCookie, (req, res) => {
     });
 });
 
-// send all messages to parent process in production environment
-// this allows a clustered environment to share events
+// Send all messages to parent process in production environment. This allows a clustered environment to share events
 if (process.env.NODE_ENV === 'production') {
     process.on('message', process.send);
 }
@@ -303,15 +302,13 @@ const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, (
     LOGGER.info('{} HTTP server listening on port: {}', config.siteName, process.env.SERVER_HTTP_PORT);
 });
 
-// start cron jobs only in first pm2 instance of mainroom app, or on
-// non-production environment
+// Start cron jobs only in first pm2 instance of mainroom app, or on non-production environment
 if ((process.env.PM2_APP_NAME === 'mainroom' && process.env.NODE_APP_INSTANCE === '0')
     || process.env.NODE_ENV !== 'production') {
     cronJobs.startAll();
 }
 
-// start RTMP server only in rtmpServer pm2 app (which should only contain 1
-// instance) or on non-production environment
+// Start RTMP server only in rtmpServer pm2 app (which should only contain 1 instance) or on non-production environment
 if (process.env.PM2_APP_NAME === 'rtmpServer' || process.env.NODE_ENV !== 'production') {
     nodeMediaServer.run();
 }
@@ -319,11 +316,10 @@ if (process.env.PM2_APP_NAME === 'rtmpServer' || process.env.NODE_ENV !== 'produ
 // Set up socket.io
 const io = socketIO(httpServer);
 io.on('connection', (socket, next) => {
-    // if connection is from live stream page
+    // register listeners only if connection is from live stream page
     if (socket.request._query.liveStreamUsername) {
         const streamUsername = sanitise(socket.request._query.liveStreamUsername.toLowerCase());
 
-        // register event listeners
         if (process.env.NODE_ENV === 'production') {
             // in production environment, listen for events from pm2 God process
             pm2.launchBus((err, bus) => {

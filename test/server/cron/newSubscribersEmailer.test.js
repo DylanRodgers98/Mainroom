@@ -69,11 +69,11 @@ jest.mock('../../../server/model/schemas', () => {
     };
 });
 
-const mockEmit = jest.fn();
+const mockNotifyUserOfNewSubscribers = jest.fn();
 
-jest.mock('../../../server/mainroomEventEmitter', () => {
+jest.mock('../../../server/aws/sesEmailSender', () => {
     return {
-        emit: mockEmit
+        notifyUserOfNewSubscribers: mockNotifyUserOfNewSubscribers
     };
 });
 
@@ -90,7 +90,7 @@ afterAll(() => {
 });
 
 describe('newSubscribersEmailer', () => {
-    it('should emit onNewSubscribers event from mainroomEventEmitter when cron job triggers', async () => {
+    it('should send emails to required users about new subscribers when cron job triggers', async () => {
         // given
         job.setTime(new CronTime('* * * * * *'));
 
@@ -101,7 +101,7 @@ describe('newSubscribersEmailer', () => {
 
         // then
         job.stop();
-        expect(mockEmit).toHaveBeenCalledWith('onNewSubscribers', mockUser1, mockUser1ExpectedSubscribers);
-        expect(mockEmit).toHaveBeenCalledWith('onNewSubscribers', mockUser2, mockUser2ExpectedSubscribers);
+        expect(mockNotifyUserOfNewSubscribers).toHaveBeenCalledWith(mockUser1, mockUser1ExpectedSubscribers);
+        expect(mockNotifyUserOfNewSubscribers).toHaveBeenCalledWith(mockUser2, mockUser2ExpectedSubscribers);
     });
 });
