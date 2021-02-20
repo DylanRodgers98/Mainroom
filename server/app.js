@@ -29,8 +29,6 @@ const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
 const pm2 = require('pm2');
 const LOGGER = require('../logger')('./server/app.js');
 
-const PROCESS_ID = parseInt(process.env.NODE_APP_INSTANCE);
-
 // connect to database
 const databaseUri = 'mongodb://'
     + (process.env.DB_USER && process.env.DB_PASSWORD ? `${process.env.DB_USER}:${process.env.DB_PASSWORD}@` : '')
@@ -364,16 +362,7 @@ io.on('connection', (socket, next) => {
         socket.on(`onSendChatMessage`, ({viewerUser, msg}) => {
             if (process.env.NODE_ENV === 'production') {
                 // in production environment, send event to pm2 God process so it can notify all child processes
-                pm2.sendDataToProcessId(PROCESS_ID, {
-                    id: PROCESS_ID,
-                    topic: 'mainroom',
-                    type: `onSendChatMessage_${streamUsername}`,
-                    data: {viewerUser, msg}
-                }, err => {
-                    if (err) {
-                        throw err;
-                    }
-                });
+                mainroomEventBus.sendToGodProcess(`onSendChatMessage_${streamUsername}`, {viewerUser, msg});
             } else {
                 io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUser, msg});
             }
@@ -395,17 +384,8 @@ function incrementViewCount(username, increment, next) {
             LOGGER.error('User (username: {}) not found', username, err);
             next(new Error(`User (username: ${username}) not found`));
         } else if (process.env.NODE_ENV === 'production') {
-            pm2.sendDataToProcessId(PROCESS_ID, {
-                id: PROCESS_ID,
-                topic: 'mainroom',
-                type: `liveStreamViewCount_${username}`,
-                data: {
-                    viewCount: user.streamInfo.viewCount
-                }
-            }, err => {
-                if (err) {
-                    throw err;
-                }
+            mainroomEventBus.sendToGodProcess(`liveStreamViewCount_${username}`, {
+                viewCount: user.streamInfo.viewCount
             });
         } else {
             io.emit(`liveStreamViewCount_${username}`, user.streamInfo.viewCount);
