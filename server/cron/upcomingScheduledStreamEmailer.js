@@ -2,8 +2,8 @@ const {CronJob} = require('cron');
 const config = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
 const moment = require('moment');
-const mainroomEventEmitter = require('../mainroomEventEmitter');
 const CompositeError = require('../errors/CompositeError');
+const sesEmailSender = require('../aws/sesEmailSender');
 const LOGGER = require('../../logger')('./server/cron/upcomingScheduledStreamEmailer.js');
 
 const jobName = 'Upcoming Scheduled Stream Emailer';
@@ -32,7 +32,9 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, async () => 
             throw err;
         }
 
+        const promises = [];
         const errors = [];
+
         for (const user of users) {
             // cron job should be configured to trigger every minute, so startTime needs to cover
             // streams that are scheduled for non-zero seconds (e.g. triggered at 1pm = 13:00:00-13:00:59)
@@ -68,12 +70,29 @@ const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, async () => 
                         displayName: user.displayName,
                         username: user.username
                     };
-                    mainroomEventEmitter.emit('onScheduledStreamStartingSoon', userData, streams);
+                    promises.push(sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon(userData, streams));
                 }
             } catch (err) {
                 errors.push(err);
             }
         }
+
+        if (promises.length) {
+            const promiseResults = await Promise.allSettled(promises);
+            const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+
+            const sIfMultiplePromises = promises.length === 1 ? '' : 's';
+            if (rejectedPromises.length) {
+                LOGGER.error('{} out of {} email{} failed to send',
+                    rejectedPromises.length, promises.length, sIfMultiplePromises);
+                rejectedPromises.forEach(promise => errors.push(promise.reason));
+            } else {
+                LOGGER.info('Successfully sent {} email{}', promises.length, sIfMultiplePromises);
+            }
+        } else {
+            LOGGER.info('Sending 0 emails about streams starting soon');
+        }
+
         if (errors.length) {
             LOGGER.error('{} error{} occurred when emailing users about streams starting soon',
                 errors.length, errors.length === 1 ? '' : 's');

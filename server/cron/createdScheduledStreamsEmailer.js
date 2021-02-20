@@ -1,8 +1,9 @@
 const {CronJob} = require('cron');
 const config = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
-const mainroomEventEmitter = require('../mainroomEventEmitter');
 const _ = require('lodash');
+const sesEmailSender = require('../aws/sesEmailSender');
+const CompositeError = require('../errors/CompositeError');
 const LOGGER = require('../../logger')('./server/cron/createdScheduledStreamsEmailer.js');
 
 const jobName = 'Subscription-created Scheduled Streams Emailer'
@@ -41,17 +42,29 @@ const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => 
                     .select('username displayName email subscriptions')
                     .exec()
 
-                LOGGER.info('Emitting requests to send emails to {} user{} about new subscriber-created scheduled streams',
-                    users.length, users.length === 1 ? '' : 's');
+                const sIfMultipleUsers = users.length === 1 ? '' : 's';
+                LOGGER.info('Creating request{} to send email{} to {} user{} about new subscriber-created scheduled streams',
+                    sIfMultipleUsers, sIfMultipleUsers, users.length, sIfMultipleUsers);
 
-                for (const user of users) {
+                const promises = users.map(user => {
                     const isSubscribedPredicate = stream => user.subscriptions.some(sub => _.isEqual(sub.user, stream.user._id));
                     const subscribedStreams = scheduledStreams.filter(isSubscribedPredicate);
-                    mainroomEventEmitter.emit('onSubscriptionsCreatedScheduledStreams', user, subscribedStreams);
+                    return sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams(user, subscribedStreams);
+                });
+                const promiseResults = await Promise.allSettled(promises);
+                const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+
+                const sIfMultiplePromises = promises.length === 1 ? '' : 's';
+                if (rejectedPromises.length) {
+                    LOGGER.error('{} out of {} email{} failed to send',
+                        rejectedPromises.length, promises.length, sIfMultiplePromises);
+                    throw new CompositeError(rejectedPromises.map(promise => promise.reason));
+                } else {
+                    LOGGER.info('Successfully sent {} email{}', promises.length, sIfMultiplePromises);
                 }
             }
         } catch (err) {
-            LOGGER.error('An error occurred when emitting requests to email users about newly created scheduled streams from subscriptions: {}', err);
+            LOGGER.error('An error occurred when creating requests to email users about newly created scheduled streams from subscriptions: {}', err);
             throw err;
         }
     }

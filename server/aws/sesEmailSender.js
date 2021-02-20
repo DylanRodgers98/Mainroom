@@ -1,4 +1,5 @@
 const config = require('../../mainroom.config');
+const CompositeError = require('../errors/CompositeError');
 const { SES } = require('@aws-sdk/client-ses');
 const LOGGER = require('../../logger')('./server/aws/sesEmailSender.js');
 
@@ -30,21 +31,28 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'newSubscriber' email to {} using SES: {}`, user.email, err);
+            throw err;
         } else {
             LOGGER.debug(`Successfully sent 'newSubscriber' email to {} using SES`, user.email);
         }
     }
 }
 
-module.exports.notifySubscribersUserWentLive = user => {
+module.exports.notifySubscribersUserWentLive = async user => {
     const subscribers = user.subscribers.map(sub => sub.user._id);
     const emailType = 'subscriptionWentLive';
-    const destinations = getSubscriberDestinations(subscribers, emailType);
+    const destinations = getDestinations(subscribers, emailType);
 
     if (destinations.length) {
-        splitDestinations(destinations).forEach(async (Destinations, i) => {
+        const errors = [];
+        const splits = splitDestinations(destinations);
+
+        const sIfMultipleSplits = splits.length === 1 ? '' : 's';
+        LOGGER.info(`Sending {} bulk '{}' email{}`, splits.length, emailType, sIfMultipleSplits);
+
+        for (let i = 0; i < splits.length; i++) {
             const params = {
-                Destinations,
+                Destinations: splits[i],
                 Source: process.env.NO_REPLY_EMAIL,
                 Template: config.email.ses.templateNames[emailType],
                 DefaultTemplateData: JSON.stringify({
@@ -60,30 +68,36 @@ module.exports.notifySubscribersUserWentLive = user => {
             } catch (err) {
                 if (err) {
                     LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`, i + 1, emailType, err);
+                    errors.push(err);
                 } else {
                     LOGGER.debug(`Successfully sent bulk '{}' email {} using SES`, i + 1, emailType);
                 }
             }
-        });
+        }
+        if (errors.length) {
+            LOGGER.error(`{} out of {} bulk '{}' email{} failed to send`,
+                errors.length, splits.length, emailType, sIfMultipleSplits);
+            throw new CompositeError(errors);
+        }
     }
 }
 
-function getSubscriberDestinations(subscribers, emailType) {
+function getDestinations(users, emailType) {
     const destinations = [];
-    subscribers.forEach(subscriber => {
-        if (subscriber.emailSettings[emailType]) {
+    for (const user of users) {
+        if (user.emailSettings[emailType]) {
             destinations.push({
                 Destination: {
-                    ToAddresses: subscriber.email
+                    ToAddresses: user.email
                 },
                 ReplacementTemplateData: JSON.stringify({
                     subscriber: {
-                        displayName: subscriber.displayName || subscriber.username
+                        displayName: user.displayName || user.username
                     }
                 })
             });
         }
-    });
+    }
     return destinations;
 }
 
@@ -129,6 +143,7 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'subscriptionsCreatedScheduledStreams' email to {} using SES: {}`, user.email, err);
+            throw err;
         } else {
             LOGGER.debug(`Successfully sent 'subscriptionsCreatedScheduledStreams' email to {} using SES`, user.email);
         }
@@ -169,6 +184,7 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'subscriptionScheduledStreamStartingIn' email to {} using SES: {}`, user.email, err);
+            throw err;
         } else {
             LOGGER.debug(`Successfully sent 'subscriptionScheduledStreamStartingIn' email to {} using SES`, user.email);
         }

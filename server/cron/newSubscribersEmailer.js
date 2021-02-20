@@ -1,7 +1,8 @@
 const {CronJob} = require('cron');
 const config = require('../../mainroom.config');
 const {User} = require('../model/schemas');
-const mainroomEventEmitter = require('../mainroomEventEmitter');
+const sesEmailSender = require('../aws/sesEmailSender');
+const CompositeError = require('../errors/CompositeError');
 const LOGGER = require('../../logger')('./server/cron/newSubscribersEmailer.js');
 
 const jobName = 'New Subscribers Emailer';
@@ -46,16 +47,28 @@ const job = new CronJob(config.cron.newSubscribersEmailer, async () => {
                 LOGGER.info('No Users with new subscribers between {} and {}, so sending no emails',
                     lastTimeTriggered, thisTimeTriggered);
             } else {
-                LOGGER.info('Emitting requests to send emails to {} user{} about new subscribers',
-                    users.length, users.length === 1 ? '' : 's');
+                const sIfMultipleUsers = users.length === 1 ? '' : 's';
+                LOGGER.info('Creating request{} to send email{} to {} user{} about new subscribers',
+                    sIfMultipleUsers, sIfMultipleUsers, users.length, sIfMultipleUsers);
 
-                for (const user of users) {
+                const promises = users.map(user => {
                     const subscribers = user.subscribers.map(sub => sub.user);
-                    mainroomEventEmitter.emit('onNewSubscribers', user, subscribers);
+                    return sesEmailSender.notifyUserOfNewSubscribers(user, subscribers);
+                });
+                const promiseResults = await Promise.allSettled(promises);
+                const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+
+                const sIfMultiplePromises = promises.length === 1 ? '' : 's';
+                if (rejectedPromises.length) {
+                    LOGGER.error('{} out of {} email{} failed to send',
+                        rejectedPromises.length, promises.length, sIfMultiplePromises);
+                    throw new CompositeError(rejectedPromises.map(promise => promise.reason));
+                } else {
+                    LOGGER.info('Successfully sent {} email{}', promises.length, sIfMultiplePromises);
                 }
             }
         } catch (err) {
-            LOGGER.error('An error occurred when emitting requests to email users about new subscribers: {}', err);
+            LOGGER.error('An error occurred when creating requests to email users about new subscribers: {}', err);
             throw err;
         }
     }

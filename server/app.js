@@ -22,7 +22,7 @@ const csrf = require('csurf');
 const rateLimit = require('express-rate-limit');
 const {User, RecordedStream} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
-const mainroomEventEmitter = require('./mainroomEventEmitter');
+const mainroomEventBus = require('./mainroomEventBus');
 const {getThumbnail} = require('./aws/s3ThumbnailGenerator');
 const axios = require('axios');
 const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
@@ -347,11 +347,11 @@ io.on('connection', (socket, next) => {
                 });
             });
         } else {
-            mainroomEventEmitter.on(`onWentLive_${streamUsername}`, () => {
+            mainroomEventBus.on(`onWentLive_${streamUsername}`, () => {
                 io.emit(`onWentLive_${streamUsername}`);
             });
 
-            mainroomEventEmitter.on(`onStreamEnded_${streamUsername}`, () => {
+            mainroomEventBus.on(`onStreamEnded_${streamUsername}`, () => {
                 io.emit(`onStreamEnded_${streamUsername}`);
             });
         }
@@ -367,6 +367,7 @@ io.on('connection', (socket, next) => {
         // emit livestream chat message to correct channel
         socket.on(`onSendChatMessage`, ({viewerUser, msg}) => {
             if (process.env.NODE_ENV === 'production') {
+                // in production environment, send event to pm2 God process so it can notify all child processes
                 pm2.sendDataToProcessId(PROCESS_ID, {
                     id: PROCESS_ID,
                     topic: 'mainroom',
