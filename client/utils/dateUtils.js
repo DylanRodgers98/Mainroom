@@ -17,31 +17,35 @@ export const timeSince = date => {
 
     let interval = diffInSeconds / YEAR_IN_SECONDS;
     if (interval >= 1) {
-        return Math.floor(interval) + ' years ago';
+        return pluraliseTimeAgo(Math.floor(interval), 'year');
     }
 
     interval = diffInSeconds / MONTH_IN_SECONDS;
     if (interval >= 1) {
-        return Math.floor(interval) + ' months ago';
+        return pluraliseTimeAgo(Math.floor(interval), 'month');
     }
 
     interval = diffInSeconds / DAY_IN_SECONDS;
     if (interval >= 1) {
-        return Math.floor(interval) + ' days ago';
+        return pluraliseTimeAgo(Math.floor(interval), 'day');
     }
 
     interval = diffInSeconds / HOUR_IN_SECONDS;
     if (interval >= 1) {
-        return Math.floor(interval) + ' hours ago';
+        return pluraliseTimeAgo(Math.floor(interval), 'hour');
     }
 
     interval = diffInSeconds / MINUTE_IN_SECONDS;
     if (interval >= 1) {
-        return Math.floor(interval) + ' minutes ago';
+        return pluraliseTimeAgo(Math.floor(interval), 'minute');
     }
 
-    return Math.floor(diffInSeconds) + ' seconds ago';
+    return pluraliseTimeAgo(Math.floor(diffInSeconds), 'second');
 };
+
+const pluraliseTimeAgo = (value, singularMeasurement) => {
+    return `${value} ${singularMeasurement}${value === 1 ? '' : 's'} ago`;
+}
 
 export const formatDate = timestamp => convertUTCToLocal(timestamp).format(LONG_DATE_FORMAT);
 
