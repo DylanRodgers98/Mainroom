@@ -96,13 +96,19 @@ export default class GoLive extends React.Component {
         });
     }
 
-    async generateStreamKey() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/stream-key`);
-        if (res.status === 200) {
-            this.setState({
-                streamKey: res.data.streamKey
-            });
-        }
+    generateStreamKey() {
+        this.setState({showSpinner: true}, async () => {
+            try {
+                const res = await axios.post(`/api/users/${this.state.loggedInUser}/stream-key`);
+                this.setState({
+                    streamKey: res.data.streamKey
+                });
+                displaySuccessMessage(this, 'Successfully generated a new stream key');
+            } catch (err) {
+                displayErrorMessage(this, `An error occurred when generating a new stream key. Please try again later. (${err})`);
+            }
+            this.setState({showSpinner: false});
+        });
     }
 
     copyFrom(elementId) {

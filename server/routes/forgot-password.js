@@ -104,7 +104,7 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
             req.flash('confirmPassword', 'Passwords do not match')
             res.redirect('/forgot-password/reset');
         } else {
-            user.password = user.generateHash(sanitisedQuery.password);
+            user.password = User.generateHash(sanitisedQuery.password);
             user.save(err => {
                 if (err) {
                     LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, err);

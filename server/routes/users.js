@@ -5,7 +5,6 @@ const {User, ScheduledStream} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
-const shortid = require('shortid');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const S3V2ToV3Bridge = require('../aws/s3-v2-to-v3-bridge');
@@ -127,6 +126,28 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
             res.sendStatus(200);
         }
     })
+});
+
+router.post('/:username/chat-colour', loginChecker.ensureLoggedIn(), (req, res, next) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    User.findOneAndUpdate({
+        username
+    }, {
+        'chatColour': User.getRandomChatColour()
+    }, {
+        new: true
+    }, (err, user) => {
+        if (err) {
+            LOGGER.error(`An error occurred when updating user {}'s chat colour: {}`, username, err);
+            next(err);
+        } else if (!user) {
+            res.status(404).send(`User (username: ${escape(username)}) not found`);
+        } else {
+            res.json({
+                chatColour: user.chatColour
+            });
+        }
+    });
 });
 
 const s3UploadProfilePic = multer({
@@ -414,7 +435,7 @@ router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), (req, res, n
     User.findOneAndUpdate({
         username: username
     }, {
-        'streamInfo.streamKey': shortid.generate()
+        'streamInfo.streamKey': User.generateStreamKey()
     }, {
         new: true
     }, (err, user) => {
@@ -689,7 +710,7 @@ router.post('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next)
                     confirmNewPasswordInvalidReason: 'Passwords do not match'
                 });
             } else {
-                user.password = user.generateHash(req.body.newPassword);
+                user.password = User.generateHash(req.body.newPassword);
                 user.save(err => {
                     if (err) {
                         LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, err);

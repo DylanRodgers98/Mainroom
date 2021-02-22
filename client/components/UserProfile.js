@@ -62,6 +62,7 @@ export default class UserProfile extends React.Component {
         this.setLocation = this.setLocation.bind(this);
         this.setBio = this.setBio.bind(this);
         this.setChatColour = this.setChatColour.bind(this);
+        this.generateRandomColour = this.generateRandomColour.bind(this);
         this.addLink = this.addLink.bind(this);
         this.setLinkTitle = this.setLinkTitle.bind(this);
         this.setLinkUrl = this.setLinkUrl.bind(this);
@@ -494,6 +495,24 @@ export default class UserProfile extends React.Component {
         });
     }
 
+    generateRandomColour() {
+        this.setState({showEditProfileSpinner: true}, async () => {
+            try {
+                const res = await axios.post(`/api/users/${this.state.loggedInUser}/chat-colour`);
+                this.setState({
+                    chatColour: res.data.chatColour,
+                    showEditProfileSpinner: false
+                });
+            } catch (err) {
+                this.setState({
+                    editProfileOpen: false,
+                    showEditProfileSpinner: false
+                });
+                displayErrorMessage(this, `An error occurred when generating a random chat colour. Please try again later. (${err})`);
+            }
+        });
+    }
+
     setLinkTitle(event, index) {
         const links = this.state.editLinks;
         links[index].title = event.target.value;
@@ -641,8 +660,12 @@ export default class UserProfile extends React.Component {
                                 <h5>Chat Colour</h5>
                             </Col>
                             <Col xs='12'>
-                                <input id='chatColour' type='color' value={this.state.chatColour}
-                                       onChange={this.setChatColour}/>
+                                <input id='chatColour' className='h-100 float-left' type='color'
+                                       value={this.state.chatColour} onChange={this.setChatColour}/>
+                                &nbsp;or&nbsp;
+                                <Button className='btn-dark' size='sm' onClick={this.generateRandomColour}>
+                                    Generate Random Colour
+                                </Button>
                             </Col>
                         </Row>
                     </Container>
