@@ -110,7 +110,7 @@ export default class LiveStream extends React.Component {
     async connectToSocketIO() {
         const streamUsername = this.props.match.params.username.toLowerCase();
         this.socket = io(this.state.socketIOURL, {transports: [ 'websocket' ]});
-        this.socket.on(`onReceiveChatMessage_${streamUsername}`, this.addMessageToChat);
+        this.socket.on(`onChatMessage_${streamUsername}`, this.addMessageToChat);
         this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
         this.socket.on(`onWentLive_${streamUsername}`, this.startStreamFromSocket);
         this.socket.on(`onStreamEnded_${streamUsername}`, this.endStreamFromSocket);
@@ -190,7 +190,7 @@ export default class LiveStream extends React.Component {
         if (this.state.msg) {
             const viewerUser = this.state.viewerUser;
             const msg = this.state.msg;
-            this.socket.emit('onSendChatMessage', {viewerUser, msg});
+            this.socket.emit('onChatMessage', {viewerUser, msg});
             this.setState({
                 msg: ''
             });

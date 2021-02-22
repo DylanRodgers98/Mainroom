@@ -111,7 +111,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
 
                 const recordedStream = new RecordedStream({
                     user: user._id,
-                    title: user.streamInfo.title,
+                    title: user.streamInfo.title || 'Untitled Stream',
                     genre: user.streamInfo.genre,
                     category: user.streamInfo.category,
                     tags: user.streamInfo.tags,

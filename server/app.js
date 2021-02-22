@@ -289,9 +289,9 @@ app.get('*', setXSRFTokenCookie, (req, res) => {
 });
 
 // Start HTTP and WebSocket server
-const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, () => {
+const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, async () => {
     LOGGER.info('{} HTTP server listening on port: {}', config.siteName, httpServer.address().port);
-    startWebSocketServer(httpServer, () => {
+    await startWebSocketServer(httpServer, () => {
         LOGGER.info('{} WebSocket server listening on port: {}', config.siteName, httpServer.address().port);
     });
 });
