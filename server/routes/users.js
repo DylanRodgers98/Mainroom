@@ -15,6 +15,9 @@ const _ = require('lodash');
 const axios = require('axios');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
+const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
+const RTMP_SERVER_URL = `rtmp://${process.env.RTMP_SERVER_HOST}${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
+
 router.get('/', (req, res, next) => {
     const sanitisedQuery = sanitise(req.query.searchQuery);
     const escapedQuery = _.escapeRegExp(sanitisedQuery)
@@ -334,9 +337,9 @@ router.get('/:username/stream-info', (req, res, next) => {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
             } else {
                 const streamKey = user.streamInfo.streamKey;
-                const rtmpServerRes = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
+                const {data} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
                 res.json({
-                    isLive: rtmpServerRes.data.isLive,
+                    isLive: data.isLive,
                     displayName: user.displayName,
                     profilePicURL: user.profilePicURL || config.defaultProfilePicURL,
                     streamKey,
@@ -345,7 +348,7 @@ router.get('/:username/stream-info', (req, res, next) => {
                     category: user.streamInfo.category,
                     tags: user.streamInfo.tags,
                     viewCount: user.streamInfo.viewCount,
-                    rtmpServerURL: `rtmp://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`,
+                    rtmpServerURL: RTMP_SERVER_URL,
                     liveStreamURL: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
                     socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}?liveStreamUsername=${username}`,
                 });

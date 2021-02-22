@@ -21,8 +21,8 @@ const UserSchema = new Schema({
         genre: String,
         category: String,
         tags: [String],
-        viewCount: Number,
-        cumulativeViewCount: Number
+        viewCount: {type: Number, default: 0},
+        cumulativeViewCount: {type: Number, default: 0}
     },
     subscribers: [{
         user: {type: Schema.Types.ObjectId, ref: 'User'},
@@ -93,7 +93,7 @@ async function deleteRecordedStreams(user) {
     // to trigger pre-findOneAndDelete middleware in RecordedStreamSchema
     // that deletes video and thumbnail in S3
 
-    const streams = await RecordedStream.find({user}, '_id');
+    const streams = await RecordedStream.find({user}).select( '_id').exec();
     if (streams.length) {
         LOGGER.debug('Deleting {} RecordedStreams for User (_id: {})', streams.length, user._id);
         let deleted = 0;
@@ -113,8 +113,8 @@ async function deleteRecordedStreams(user) {
 async function removeFromSubscriptions(user, model) {
     LOGGER.debug('Removing User (_id: {}) from subscribers/subscriptions lists', user._id);
 
-    const subscribersIds = user.subscribers.map(sub => sub.user._id);
-    const subscriptionsIds = user.subscriptions.map(sub => sub.user._id);
+    const subscribersIds = user.subscribers.map(sub => sub.user);
+    const subscriptionsIds = user.subscriptions.map(sub => sub.user);
 
     const pullFromSubscribers = model.updateMany({_id: {$in: subscribersIds}}, {$pull: {subscribers: {user: user._id}}});
     const pullFromSubscriptions = model.updateMany({_id: {$in: subscriptionsIds}}, {$pull: {subscriptions: {user: user._id}}});

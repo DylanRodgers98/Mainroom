@@ -1,7 +1,7 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {successMessageTimeout, errorMessageTimeout, bugReportURL} from '../../mainroom.config';
-import {Alert} from "reactstrap";
+import {Alert} from 'reactstrap';
 
 export const displayGenreAndCategory = ({genre, category}) => (
     <React.Fragment>

@@ -290,11 +290,6 @@ app.get('*', setXSRFTokenCookie, (req, res) => {
     });
 });
 
-// Send all messages to parent process in production environment. This allows a clustered environment to share events
-if (process.env.NODE_ENV === 'production') {
-    process.on('message', process.send);
-}
-
 // Start HTTP server
 const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, () => {
     LOGGER.info('{} HTTP server listening on port: {}', config.siteName, process.env.SERVER_HTTP_PORT);
@@ -313,42 +308,49 @@ if (process.env.PM2_APP_NAME === 'rtmpServer' || process.env.NODE_ENV !== 'produ
 
 // Set up socket.io
 const io = socketIO(httpServer);
+
+// Register event listeners
+if (process.env.NODE_ENV === 'production') {
+    // Send all messages to parent process in production environment. This allows a clustered environment to share events
+    process.on('message', process.send);
+
+    // In production environment, listen for events from pm2 God process
+    pm2.launchBus((err, bus) => {
+        bus.on('liveStreamViewCount', packet => {
+            io.emit(`liveStreamViewCount_${packet.data.username}`, packet.data.viewCount);
+        });
+
+        bus.on('onSendChatMessage', packet => {
+            io.emit(`onReceiveChatMessage_${packet.data.streamUsername}`, {
+                viewerUser: packet.data.viewerUser,
+                msg: packet.data.msg
+            });
+        });
+
+        bus.on('onWentLive', packet => {
+            io.emit(`onWentLive_${packet.data}`);
+        });
+
+        bus.on('onStreamEnded', packet => {
+            io.emit(`onStreamEnded_${packet.data}`);
+        });
+    });
+} else {
+    //In non-production environment, listen for events from MainroomEventBus
+
+    mainroomEventBus.on('onWentLive', streamUsername => {
+        io.emit(`onWentLive_${streamUsername}`);
+    });
+
+    mainroomEventBus.on('onStreamEnded', streamUsername => {
+        io.emit(`onStreamEnded_${streamUsername}`);
+    });
+}
+
 io.on('connection', (socket, next) => {
     // register listeners only if connection is from live stream page
     if (socket.request._query.liveStreamUsername) {
         const streamUsername = sanitise(socket.request._query.liveStreamUsername.toLowerCase());
-
-        if (process.env.NODE_ENV === 'production') {
-            // in production environment, listen for events from pm2 God process
-            pm2.launchBus((err, bus) => {
-                bus.on(`liveStreamViewCount_${streamUsername}`, packet => {
-                    io.emit(`liveStreamViewCount_${streamUsername}`, packet.data.viewCount);
-                });
-
-                bus.on(`onSendChatMessage_${streamUsername}`, packet => {
-                    io.emit(`onReceiveChatMessage_${streamUsername}`, {
-                        viewerUser: packet.data.viewerUser,
-                        msg: packet.data.msg
-                    });
-                });
-
-                bus.on(`onWentLive_${streamUsername}`, () => {
-                    io.emit(`onWentLive_${streamUsername}`);
-                });
-
-                bus.on(`onStreamEnded_${streamUsername}`, () => {
-                    io.emit(`onStreamEnded_${streamUsername}`);
-                });
-            });
-        } else {
-            mainroomEventBus.on(`onWentLive_${streamUsername}`, () => {
-                io.emit(`onWentLive_${streamUsername}`);
-            });
-
-            mainroomEventBus.on(`onStreamEnded_${streamUsername}`, () => {
-                io.emit(`onStreamEnded_${streamUsername}`);
-            });
-        }
 
         // increment view count on connection
         incrementViewCount(streamUsername, 1, next);
@@ -362,8 +364,9 @@ io.on('connection', (socket, next) => {
         socket.on(`onSendChatMessage`, ({viewerUser, msg}) => {
             if (process.env.NODE_ENV === 'production') {
                 // in production environment, send event to pm2 God process so it can notify all child processes
-                mainroomEventBus.sendToGodProcess(`onSendChatMessage_${streamUsername}`, {viewerUser, msg});
+                mainroomEventBus.sendToGodProcess('onSendChatMessage', {streamUsername, viewerUser, msg});
             } else {
+                // in non-production environment, emit message in current process
                 io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUser, msg});
             }
         });
@@ -384,10 +387,13 @@ function incrementViewCount(username, increment, next) {
             LOGGER.error('User (username: {}) not found', username, err);
             next(new Error(`User (username: ${username}) not found`));
         } else if (process.env.NODE_ENV === 'production') {
-            mainroomEventBus.sendToGodProcess(`liveStreamViewCount_${username}`, {
+            // in production environment, send event to pm2 God process so it can notify all child processes
+            mainroomEventBus.sendToGodProcess('liveStreamViewCount', {
+                username,
                 viewCount: user.streamInfo.viewCount
             });
         } else {
+            // in non-production environment, emit view count in current process
             io.emit(`liveStreamViewCount_${username}`, user.streamInfo.viewCount);
         }
     });

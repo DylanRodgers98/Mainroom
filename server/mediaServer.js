@@ -6,7 +6,8 @@ const {generateStreamThumbnail} = require('../server/aws/s3ThumbnailGenerator');
 const {uploadVideoToS3} = require('../server/aws/s3VideoUploader');
 const path = require('path');
 const fs = require('fs').promises;
-const sesEmailSender = require("./aws/sesEmailSender");
+const sesEmailSender = require('./aws/sesEmailSender');
+const CompositeError = require('./errors/CompositeError');
 const {spawn} = require('child_process');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
@@ -55,7 +56,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
                 throw err;
             }
 
-            mainroomEventBus.send(`onWentLive_${user.username}`);
+            mainroomEventBus.send('onWentLive', user.username);
             if (config.email.enabled) {
                 sesEmailSender.notifySubscribersUserWentLive(user);
             }
@@ -79,7 +80,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
     if (!user) {
         LOGGER.info('Could not find user with stream key {}', streamKey);
     } else {
-        mainroomEventBus.send(`onStreamEnded_${user.username}`);
+        mainroomEventBus.send('onStreamEnded', user.username);
 
         if (IS_RECORDING_TO_MP4) {
             const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, process.env.RTMP_SERVER_APP_NAME, streamKey);
@@ -108,9 +109,6 @@ nms.on('donePublish', async (sessionId, streamPath) => {
                 const {originalFileURLs, videoURL} = promiseResults[1];
                 const thumbnailURL = promiseResults[2];
 
-                // delete original MP4 files
-                await Promise.all(originalFileURLs.map(deleteFile));
-
                 const recordedStream = new RecordedStream({
                     user: user._id,
                     title: user.streamInfo.title,
@@ -123,7 +121,12 @@ nms.on('donePublish', async (sessionId, streamPath) => {
                     videoURL,
                     thumbnailURL
                 });
-                await recordedStream.save();
+
+                await Promise.allSettled([...originalFileURLs.map(deleteFile), recordedStream.save()]);
+                const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+                if (rejectedPromises.length) {
+                    throw new CompositeError(rejectedPromises.map(promise => promise.reason));
+                }
             } catch (err) {
                 LOGGER.error('An error occurred when uploading recorded stream at {} to S3 (bucket: {}, key: {}): {}',
                     inputURL, Bucket, Key, err);
