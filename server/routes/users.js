@@ -14,6 +14,7 @@ const {validatePassword, getInvalidPasswordMessage} = require('../auth/passwordV
 const _ = require('lodash');
 const axios = require('axios');
 const mainroomEventBus = require('../mainroomEventBus');
+const normalizeUrl = require('normalize-url');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
@@ -90,11 +91,33 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
         updateQuery.chatColour = sanitise(req.body.chatColour);
     }
     if (req.body.links && Array.isArray(req.body.links)) {
-        updateQuery.links = sanitise(req.body.links);
+        const sanitisedLinks = sanitise(req.body.links);
+        const normalisedLinks = [];
+        const indexesOfInvalidLinks = []
+        sanitisedLinks.forEach((link, index) => {
+            try {
+                link.url = normalizeUrl(link.url, {
+                    forceHttps: true,
+                    stripWWW: false
+                });
+                normalisedLinks.push(link);
+            } catch (err) {
+                if (err.message.startsWith('Invalid URL') || err.message.startsWith('`view-source:`')) {
+                    indexesOfInvalidLinks.push(index);
+                } else {
+                    LOGGER.error('An error occurred whilst validating URL: {}', url);
+                    throw err;
+                }
+            }
+        });
+        if (indexesOfInvalidLinks.length) {
+            return res.status(400).json({indexesOfInvalidLinks});
+        }
+        updateQuery.links = normalisedLinks;
     }
 
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOneAndUpdate({username: username}, updateQuery, (err, user) => {
+    User.findOneAndUpdate({username}, updateQuery, {new: true},(err, user) => {
         if (err) {
             LOGGER.error('An error occurred when updating user {}: {}', username, err);
             next(err);

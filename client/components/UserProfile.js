@@ -4,7 +4,6 @@ import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row,
 import {Link} from 'react-router-dom';
 import moment from 'moment';
 import {headTitle, pagination, siteName} from '../../mainroom.config';
-import normalizeUrl from 'normalize-url';
 import ImageUploader from 'react-images-upload';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
@@ -516,7 +515,6 @@ export default class UserProfile extends React.Component {
     saveProfile() {
         this.setState({showEditProfileSpinner: true}, async () => {
             if (await this.validateLinks()) {
-                this.normaliseLinkUrls();
                 try {
                     await axios.patch(`/api/users/${this.state.loggedInUser}`, {
                         displayName: this.state.editDisplayName,
@@ -528,11 +526,16 @@ export default class UserProfile extends React.Component {
                     this.reloadProfile();
                     displaySuccessMessage(this, 'Successfully updated profile');
                 } catch (err) {
-                    displayErrorMessage(this, `An error occurred when updating profile. Please try again later. (${err})`);
+                    if (err.response.status === 400) {
+                        this.setState({
+                            indexesOfInvalidLinks: err.response.data.indexesOfInvalidLinks
+                        });
+                    } else {
+                        displayErrorMessage(this, `An error occurred when updating profile. Please try again later. (${err})`);
+                    }
                 }
-            } else {
-                this.setState({showEditProfileSpinner: false});
             }
+            this.setState({showEditProfileSpinner: false});
         });
     }
 
@@ -547,18 +550,6 @@ export default class UserProfile extends React.Component {
             })
         });
         return isValid;
-    }
-
-    normaliseLinkUrls() {
-        this.setState({
-            editLinks: this.state.editLinks.map(link => {
-                link.url = normalizeUrl(link.url, {
-                    forceHttps: true,
-                    stripWWW: false
-                });
-                return link;
-            })
-        });
     }
 
     addLink() {
@@ -605,7 +596,7 @@ export default class UserProfile extends React.Component {
                 </Col>
                 <Col xs='12' lg='3'>
                     {!this.state.indexesOfInvalidLinks.includes(index) ? undefined
-                        : <small className='text-danger'>Link must have a URL</small>}
+                        : <small className='text-danger'>Invalid URL</small>}
                 </Col>
             </Row>
         ));
