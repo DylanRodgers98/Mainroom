@@ -6,7 +6,6 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require('express');
 const app = express();
 const http = require('http');
-const socketIO = require('socket.io');
 const path = require('path');
 const Session = require('express-session');
 const MongoStore = require('connect-mongo')(Session);
@@ -22,11 +21,10 @@ const csrf = require('csurf');
 const rateLimit = require('express-rate-limit');
 const {User, RecordedStream} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
-const mainroomEventBus = require('./mainroomEventBus');
 const {getThumbnail} = require('./aws/s3ThumbnailGenerator');
 const axios = require('axios');
+const {startWebSocketServer} = require('./websocketServer');
 const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
-const pm2 = require('pm2');
 const LOGGER = require('../logger')('./server/app.js');
 
 // connect to database
@@ -290,9 +288,12 @@ app.get('*', setXSRFTokenCookie, (req, res) => {
     });
 });
 
-// Start HTTP server
+// Start HTTP and WebSocket server
 const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, () => {
-    LOGGER.info('{} HTTP server listening on port: {}', config.siteName, process.env.SERVER_HTTP_PORT);
+    LOGGER.info('{} HTTP server listening on port: {}', config.siteName, httpServer.address().port);
+    startWebSocketServer(httpServer, () => {
+        LOGGER.info('{} WebSocket server listening on port: {}', config.siteName, httpServer.address().port);
+    });
 });
 
 // Start cron jobs only in first pm2 instance of mainroom app, or on non-production environment
@@ -306,98 +307,6 @@ if (process.env.PM2_APP_NAME === 'rtmpServer' || process.env.NODE_ENV !== 'produ
     nodeMediaServer.run();
 }
 
-// Set up socket.io
-const io = socketIO(httpServer);
-
-// Register event listeners
-if (process.env.NODE_ENV === 'production') {
-    // Send all messages to parent process in production environment. This allows a clustered environment to share events
-    process.on('message', process.send);
-
-    // In production environment, listen for events from pm2 God process
-    pm2.launchBus((err, bus) => {
-        bus.on('liveStreamViewCount', packet => {
-            io.emit(`liveStreamViewCount_${packet.data.username}`, packet.data.viewCount);
-        });
-
-        bus.on('onSendChatMessage', packet => {
-            io.emit(`onReceiveChatMessage_${packet.data.streamUsername}`, {
-                viewerUser: packet.data.viewerUser,
-                msg: packet.data.msg
-            });
-        });
-
-        bus.on('onWentLive', packet => {
-            io.emit(`onWentLive_${packet.data}`);
-        });
-
-        bus.on('onStreamEnded', packet => {
-            io.emit(`onStreamEnded_${packet.data}`);
-        });
-    });
-} else {
-    //In non-production environment, listen for events from MainroomEventBus
-
-    mainroomEventBus.on('onWentLive', streamUsername => {
-        io.emit(`onWentLive_${streamUsername}`);
-    });
-
-    mainroomEventBus.on('onStreamEnded', streamUsername => {
-        io.emit(`onStreamEnded_${streamUsername}`);
-    });
-}
-
-io.on('connection', (socket, next) => {
-    // register listeners only if connection is from live stream page
-    if (socket.request._query.liveStreamUsername) {
-        const streamUsername = sanitise(socket.request._query.liveStreamUsername.toLowerCase());
-
-        // increment view count on connection
-        incrementViewCount(streamUsername, 1, next);
-
-        // decrement view count on disconnection
-        socket.on('disconnect', () => {
-            incrementViewCount(streamUsername, -1, next);
-        });
-
-        // emit livestream chat message to correct channel
-        socket.on(`onSendChatMessage`, ({viewerUser, msg}) => {
-            if (process.env.NODE_ENV === 'production') {
-                // in production environment, send event to pm2 God process so it can notify all child processes
-                mainroomEventBus.sendToGodProcess('onSendChatMessage', {streamUsername, viewerUser, msg});
-            } else {
-                // in non-production environment, emit message in current process
-                io.emit(`onReceiveChatMessage_${streamUsername}`, {viewerUser, msg});
-            }
-        });
-    }
-});
-
-// TODO: CREATE USER CONTROLLER FILE AND MOVE THIS FUNCTION TO THAT
-function incrementViewCount(username, increment, next) {
-    const $inc = {'streamInfo.viewCount': increment}
-    if (increment > 0) {
-        $inc['streamInfo.cumulativeViewCount'] = increment;
-    }
-    User.findOneAndUpdate({username}, {$inc}, {new: true}, (err, user) => {
-        if (err) {
-            LOGGER.error(`An error occurred when updating user {}'s live stream view count: {}`, username, err);
-            next(err);
-        } else if (!user) {
-            LOGGER.error('User (username: {}) not found', username, err);
-            next(new Error(`User (username: ${username}) not found`));
-        } else if (process.env.NODE_ENV === 'production') {
-            // in production environment, send event to pm2 God process so it can notify all child processes
-            mainroomEventBus.sendToGodProcess('liveStreamViewCount', {
-                username,
-                viewCount: user.streamInfo.viewCount
-            });
-        } else {
-            // in non-production environment, emit view count in current process
-            io.emit(`liveStreamViewCount_${username}`, user.streamInfo.viewCount);
-        }
-    });
-}
 
 // On application shutdown, then disconnect from database and close servers
 process.on('SIGINT', async () => {
