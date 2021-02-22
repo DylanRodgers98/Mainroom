@@ -21,6 +21,7 @@ export default class LiveStream extends React.Component {
         this.addMessageToChat = this.addMessageToChat.bind(this);
         this.startStreamFromSocket = this.startStreamFromSocket.bind(this);
         this.endStreamFromSocket = this.endStreamFromSocket.bind(this);
+        this.updateStreamInfoFromSocket = this.updateStreamInfoFromSocket.bind(this);
 
         this.state = {
             stream: false,
@@ -114,6 +115,7 @@ export default class LiveStream extends React.Component {
         this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
         this.socket.on(`onWentLive_${streamUsername}`, this.startStreamFromSocket);
         this.socket.on(`onStreamEnded_${streamUsername}`, this.endStreamFromSocket);
+        this.socket.on(`streamInfoUpdated_${streamUsername}`, this.updateStreamInfoFromSocket);
     }
 
     addMessageToChat({viewerUser, msg}) {
@@ -161,6 +163,14 @@ export default class LiveStream extends React.Component {
                 chat: []
             });
         }
+    }
+
+    updateStreamInfoFromSocket(streamInfo) {
+        this.setState({
+            streamTitle: streamInfo.title,
+            streamGenre: streamInfo.genre,
+            streamCategory: streamInfo.category
+        });
     }
 
     componentWillUnmount() {

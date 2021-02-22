@@ -25,6 +25,7 @@ class WebSocketServer {
                 bus.on('onChatMessage', ({data}) => emitOnChatMessage(this.io, data));
                 bus.on('onWentLive', ({data}) => emitOnWentLive(this.io, data));
                 bus.on('onStreamEnded', ({data}) => emitOnStreamEnded(this.io, data));
+                bus.on('streamInfoUpdated', ({data}) => emitStreamInfoUpdated(this.io, data));
             } catch (err) {
                 LOGGER.error('An error occurred when launching pm2 message bus: {}', err);
                 throw err;
@@ -45,6 +46,10 @@ class WebSocketServer {
 
             mainroomEventBus.on('onStreamEnded', streamUsername => {
                 emitOnStreamEnded(this.io, streamUsername);
+            });
+
+            mainroomEventBus.on('streamInfoUpdated', streamInfo => {
+                emitStreamInfoUpdated(this.io, streamInfo);
             });
         }
 
@@ -99,6 +104,12 @@ function emitOnWentLive(io, streamUsername) {
 
 function emitOnStreamEnded(io, streamUsername) {
     io.emit(`onStreamEnded_${streamUsername}`);
+}
+
+function emitStreamInfoUpdated(io, streamInfo) {
+    const username = streamInfo.username;
+    delete streamInfo.username;
+    io.emit(`streamInfoUpdated_${username}`, streamInfo);
 }
 
 function incrementViewCount(username, increment, next) {

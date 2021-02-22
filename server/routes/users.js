@@ -13,6 +13,7 @@ const mime = require('mime-types');
 const {validatePassword, getInvalidPasswordMessage} = require('../auth/passwordValidator');
 const _ = require('lodash');
 const axios = require('axios');
+const mainroomEventBus = require('../mainroomEventBus');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
@@ -359,7 +360,7 @@ router.get('/:username/stream-info', (req, res, next) => {
 router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOneAndUpdate({
-        username: username
+        username
     }, {
         'streamInfo.title': sanitise(req.body.title),
         'streamInfo.genre': sanitise(req.body.genre),
@@ -374,12 +375,13 @@ router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res,
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
         } else {
-            res.json({
+            const streamInfo = {
                 title: user.streamInfo.title,
                 genre: user.streamInfo.genre,
-                category: user.streamInfo.category,
-                tags: user.streamInfo.tags
-            });
+                category: user.streamInfo.category
+            };
+            mainroomEventBus.send('streamInfoUpdated', Object.assign(streamInfo, {username}));
+            res.json(Object.assign(streamInfo, {tags: user.streamInfo.tags}));
         }
     });
 });
