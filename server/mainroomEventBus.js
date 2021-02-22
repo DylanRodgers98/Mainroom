@@ -18,6 +18,11 @@ class MainroomEventBus extends EventEmitter {
     }
 
     sendToGodProcess(event, args) {
+        if (process.env.NODE_ENV !== 'production') {
+            LOGGER.error(`Something tried to send an event of type '{}' to the pm2 God process, but the application is` +
+                'not in production mode. This event will be ignored.', event);
+            return;
+        }
         const data = args || {};
         pm2.sendDataToProcessId(PROCESS_ID, {
             id: PROCESS_ID,

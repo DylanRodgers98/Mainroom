@@ -43,7 +43,7 @@ class UploadV2ToV3Bridge {
 
     on(event, listener) {
         if (event !== 'httpUploadProgress') {
-            LOGGER.info(`Something tried to register an event listener for event type '{}' on an instance of UploadV2ToV3Bridge. ` +
+            LOGGER.error(`Something tried to register an event listener for event type '{}' on an instance of UploadV2ToV3Bridge. ` +
                 `The only event type permitted to have a registered event listener is 'httpUploadProcess'`, event);
             return;
         }
