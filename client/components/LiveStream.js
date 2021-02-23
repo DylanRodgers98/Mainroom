@@ -111,6 +111,7 @@ export default class LiveStream extends React.Component {
     async connectToSocketIO() {
         const streamUsername = this.props.match.params.username.toLowerCase();
         this.socket = io(this.state.socketIOURL, {transports: [ 'websocket' ]});
+        this.socket.emit(`onConnection_${streamUsername}`);
         this.socket.on(`onChatMessage_${streamUsername}`, this.addMessageToChat);
         this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
         this.socket.on(`onWentLive_${streamUsername}`, this.startStreamFromSocket);
@@ -142,8 +143,14 @@ export default class LiveStream extends React.Component {
     }
 
     startStreamFromSocket() {
-        // stream is not available as soon as user goes live because .m3u8 playlist file needs to populate,
-        // so wait a timeout (which needs to be longer than the time of each video segment) before loading
+        // When a user goes live, their view count is reset to 0 by the server, so this needs to be updated with the
+        // current number of people viewing this page. This is done by emitting the onConnection_${streamUsername}
+        // event for each user on this page, which increments the view count for streamUsername.
+        const streamUsername = this.props.match.params.username.toLowerCase();
+        this.socket.emit(`onConnection_${streamUsername}`);
+
+        // Stream is not available as soon as user goes live because .m3u8 playlist file needs to populate,
+        // so wait a timeout (which needs to be longer than the time of each video segment) before loading.
         setTimeout(() => {
             if (this.state.stream === false) {
                 this.getStreamInfo();

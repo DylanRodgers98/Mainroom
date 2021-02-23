@@ -41,24 +41,8 @@ mongoose.connect(databaseUri, {
     if (err) {
         LOGGER.error(`An error occurred when connecting to MongoDB database '{}': {}`, process.env.DB_DATABASE, err);
         throw err;
-    } else {
-        LOGGER.info('Connected to MongoDB database: {}', process.env.DB_DATABASE);
-        // Reset user's view count properties, as they may still be non-zero due to a non-graceful server shutdown
-        User.updateMany({
-            'streamInfo.viewCount': {$ne: 0}
-        }, {
-            'streamInfo.viewCount': 0,
-            'streamInfo.cumulativeViewCount': 0
-        }, (err, res) => {
-            if (err) {
-                LOGGER.error(`An error occurred when resetting users' viewCount and cumulativeViewCount properties to 0: {}`, err);
-                throw err;
-            }
-            if (res.nModified > 0) {
-                LOGGER.info('Reset viewCount and cumulativeViewCount properties for {} users', res.nModified);
-            }
-        });
     }
+    LOGGER.info('Connected to MongoDB database: {}', process.env.DB_DATABASE);
 });
 
 // set up views
@@ -291,9 +275,8 @@ app.get('*', setXSRFTokenCookie, (req, res) => {
 // Start HTTP and WebSocket server
 const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, async () => {
     LOGGER.info('{} HTTP server listening on port: {}', config.siteName, httpServer.address().port);
-    await startWebSocketServer(httpServer, () => {
-        LOGGER.info('{} WebSocket server listening on port: {}', config.siteName, httpServer.address().port);
-    });
+    await startWebSocketServer(httpServer);
+    LOGGER.info('{} WebSocket server listening on port: {}', config.siteName, httpServer.address().port);
 });
 
 // Start cron jobs only in first pm2 instance of mainroom app, or on non-production environment

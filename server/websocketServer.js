@@ -11,7 +11,7 @@ class WebSocketServer {
         this.io = socketIO(httpServer);
     }
 
-    async start(callback) {
+    async start() {
         // Register event listeners
         if (process.env.NODE_ENV === 'production') {
             // Send all messages to parent process in production environment.
@@ -32,12 +32,12 @@ class WebSocketServer {
             }
         } else {
             //In non-production environment, listen for events from MainroomEventBus
-            mainroomEventBus.on('liveStreamViewCount', ({streamUsername, viewCount}) => {
-                emitLiveStreamViewCount(this.io, {streamUsername, viewCount})
+            mainroomEventBus.on('liveStreamViewCount', viewCountData => {
+                emitLiveStreamViewCount(this.io, viewCountData);
             });
 
-            mainroomEventBus.on('onChatMessage', ({streamUsername, viewerUser, msg}) => {
-                emitOnChatMessage(this.io, {streamUsername, viewerUser, msg});
+            mainroomEventBus.on('onChatMessage', chatMessageData => {
+                emitOnChatMessage(this.io, chatMessageData);
             });
 
             mainroomEventBus.on('onWentLive', streamUsername => {
@@ -55,14 +55,18 @@ class WebSocketServer {
 
         this.io.on('connection', (socket, next) => {
             // register listeners only if connection is from live stream page
-            if (socket.request._query.liveStreamUsername) {
-                const streamUsername = sanitise(socket.request._query.liveStreamUsername.toLowerCase());
+            if (socket.handshake.query.liveStreamUsername) {
+                const streamUsername = sanitise(socket.handshake.query.liveStreamUsername.toLowerCase());
 
                 // increment view count on connection
-                incrementViewCount(streamUsername, 1, next);
+                socket.on(`onConnection_${streamUsername}`, () => {
+                    incrementViewCount(streamUsername, 1, next);
+                });
 
                 // decrement view count on disconnection
-                socket.on('disconnect', () => incrementViewCount(streamUsername, -1, next));
+                socket.on('disconnect', () => {
+                    incrementViewCount(streamUsername, -1, next)
+                });
 
                 // emit livestream chat message to correct channel
                 socket.on('onChatMessage', ({viewerUser, msg}) => {
@@ -70,10 +74,6 @@ class WebSocketServer {
                 });
             }
         });
-
-        if (callback) {
-            callback();
-        }
     }
 
 }
@@ -112,28 +112,29 @@ function emitStreamInfoUpdated(io, streamInfo) {
     io.emit(`streamInfoUpdated_${username}`, streamInfo);
 }
 
-function incrementViewCount(username, increment, next) {
+async function incrementViewCount(username, increment, next) {
     const $inc = {'streamInfo.viewCount': increment}
     if (increment > 0) {
         $inc['streamInfo.cumulativeViewCount'] = increment;
     }
-    User.findOneAndUpdate({username}, {$inc}, {new: true}, (err, user) => {
-        if (err) {
-            LOGGER.error(`An error occurred when updating user {}'s live stream view count: {}`, username, err);
-            next(err);
-        } else if (!user) {
-            LOGGER.error('User (username: {}) not found', username, err);
-            next(new Error(`User (username: ${username}) not found`));
-        } else {
-            mainroomEventBus.send('liveStreamViewCount', {
-                streamUsername: username,
-                viewCount: user.streamInfo.viewCount
-            });
+    try {
+        const user = await User.findOneAndUpdate({username}, {$inc}, {new: true});
+        if (!user) {
+            const msg = `Could not find user (username: ${username}) to update view count`;
+            LOGGER.error(msg);
+            return next(new Error(msg));
         }
-    });
+        mainroomEventBus.send('liveStreamViewCount', {
+            streamUsername: username,
+            viewCount: user.streamInfo.viewCount
+        });
+    } catch (err) {
+        LOGGER.error(`An error occurred when updating live stream view count for user (username: {}): {}`, username, err);
+        next(err);
+    }
 }
 
-module.exports.startWebSocketServer = async (httpServer, callback) => {
+module.exports.startWebSocketServer = async httpServer => {
     const wsServer = new WebSocketServer(httpServer);
-    await wsServer.start(callback);
+    await wsServer.start();
 }

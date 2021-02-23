@@ -47,8 +47,9 @@ nms.on('prePublish', async (sessionId, streamPath) => {
                 sessionId, streamKey);
         } else {
             try {
-                // set cumulative view count to number of users currently viewing stream page
-                user.streamInfo.cumulativeViewCount = user.streamInfo.viewCount;
+                // reset view counts before starting stream. These are updated using WebSockets
+                user.streamInfo.viewCount = 0;
+                user.streamInfo.cumulativeViewCount = 0;
                 await user.save();
             } catch (err) {
                 LOGGER.error('An error occurred when updating cumulative view count for user (username: {}): {}',

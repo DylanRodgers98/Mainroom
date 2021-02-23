@@ -9,10 +9,10 @@ class MainroomEventBus extends EventEmitter {
     send(event, args) {
         if (process.env.NODE_ENV === 'production') {
             // in production environment, send event to pm2 God process so it can notify all child processes
-            LOGGER.debug(`Sending '{}' event to pm2 God process`, event);
+            LOGGER.debug(`Sending "{}" event with args {} to pm2 God process`, event, JSON.stringify(args));
             this.sendToGodProcess(event, args);
         } else {
-            LOGGER.debug(`Emitting '{}' event using EventEmitter`, event);
+            LOGGER.debug(`Emitting "{}" event with args {} using EventEmitter`, event, JSON.stringify(args));
             this.emit(event, args);
         }
     }
