@@ -47,7 +47,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
                 sessionId, streamKey);
         } else {
             try {
-                // reset view counts before starting stream. These are updated using WebSockets
+                // reset view counts before starting stream. These counts will be updated in websocketServer
                 user.streamInfo.viewCount = 0;
                 user.streamInfo.cumulativeViewCount = 0;
                 await user.save();

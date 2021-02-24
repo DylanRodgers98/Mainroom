@@ -21,6 +21,8 @@ router.get('/', async (req, res, next) => {
             const searchQuery = new RegExp(`^${escapedQuery}$`, 'i');
             query.$or = [
                 {'streamInfo.title': searchQuery},
+                {'streamInfo.genre': searchQuery},
+                {'streamInfo.category': searchQuery},
                 {'streamInfo.tags': searchQuery},
                 {username: searchQuery},
                 {displayName: searchQuery}
