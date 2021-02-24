@@ -1,5 +1,5 @@
 const {CronJob} = require('cron');
-const config = require('../../mainroom.config');
+const {cronTime} = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
 const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
 
@@ -7,7 +7,7 @@ const jobName = 'Scheduled Stream Info Updater';
 
 let lastTimeTriggered = Date.now();
 
-const job = new CronJob(config.cron.scheduledStreamInfoUpdater, () => {
+const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
     LOGGER.debug(`${jobName} triggered`);
 
     const thisTimeTriggered = job.lastDate().valueOf();

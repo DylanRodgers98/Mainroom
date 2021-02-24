@@ -123,8 +123,8 @@ nms.on('donePublish', async (sessionId, streamPath) => {
                     thumbnailURL
                 });
 
-                await Promise.allSettled([...originalFileURLs.map(deleteFile), recordedStream.save()]);
-                const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+                const allSettledResults = await Promise.allSettled([...originalFileURLs.map(deleteFile), recordedStream.save()]);
+                const rejectedPromises = allSettledResults.filter(res => res.status === 'rejected');
                 if (rejectedPromises.length) {
                     throw new CompositeError(rejectedPromises.map(promise => promise.reason));
                 }

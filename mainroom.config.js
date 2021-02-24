@@ -54,18 +54,19 @@ module.exports = {
             allowedSpecialChars: '-[]/{}()*+?.\\^$|~`!#%^&=;,\'":<>'
         }
     },
-    cron: {
+    cronTime: {
         scheduledStreamInfoUpdater: CRON_EVERY_MINUTE,
         upcomingScheduledStreamEmailer: CRON_EVERY_MINUTE,
         createdScheduledStreamsEmailer: CRON_EVERY_HOUR,
-        newSubscribersEmailer: CRON_EVERY_HOUR
+        newSubscribersEmailer: CRON_EVERY_HOUR,
+        expiredScheduledStreamsRemover: CRON_EVERY_HOUR
     },
     storage: {
         thumbnails: {
             ttl: THIRTY_SECONDS
         },
         scheduledStream: {
-            ttl: 7 * DAY
+            ttl: 14 * DAY
         },
         passwordResetToken: {
             ttl: 10 * MINUTE

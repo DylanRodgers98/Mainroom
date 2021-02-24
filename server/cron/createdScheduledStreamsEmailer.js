@@ -1,5 +1,5 @@
 const {CronJob} = require('cron');
-const config = require('../../mainroom.config');
+const {cronTime, email} = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
 const _ = require('lodash');
 const sesEmailSender = require('../aws/sesEmailSender');
@@ -10,12 +10,12 @@ const jobName = 'Subscription-created Scheduled Streams Emailer'
 
 let lastTimeTriggered = Date.now();
 
-const job = new CronJob(config.cron.createdScheduledStreamsEmailer, async () => {
+const job = new CronJob(cronTime.createdScheduledStreamsEmailer, async () => {
     LOGGER.debug(`${jobName} triggered`);
 
     const thisTimeTriggered = job.lastDate().valueOf();
 
-    if (!config.email.enabled) {
+    if (!email.enabled) {
         LOGGER.info('Email is not enabled, so will not send emails about subscription-created scheduled streams');
     } else {
         try {

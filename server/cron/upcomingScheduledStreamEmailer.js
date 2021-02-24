@@ -1,5 +1,5 @@
 const {CronJob} = require('cron');
-const config = require('../../mainroom.config');
+const {cronTime, email} = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
 const moment = require('moment');
 const CompositeError = require('../errors/CompositeError');
@@ -8,10 +8,10 @@ const LOGGER = require('../../logger')('./server/cron/upcomingScheduledStreamEma
 
 const jobName = 'Upcoming Scheduled Stream Emailer';
 
-const job = new CronJob(config.cron.upcomingScheduledStreamEmailer, async () => {
+const job = new CronJob(cronTime.upcomingScheduledStreamEmailer, async () => {
     LOGGER.debug(`${jobName} triggered`);
 
-    if (!config.email.enabled) {
+    if (!email.enabled) {
         LOGGER.info('Email is not enabled, so will not send emails about upcoming scheduled streams');
     } else {
         let users;
