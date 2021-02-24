@@ -13,17 +13,22 @@ const job = new CronJob(cronTime.expiredScheduledStreamsRemover, async () => {
         const expiryTime = Date.now() - storage.scheduledStream.ttl;
         const streams = await ScheduledStream.find({endTime: {$lte: expiryTime}}).select('_id').exec();
 
-        const promises = [];
-        streams.forEach(stream => {
-            const pullReferences = User.updateMany({nonSubscribedScheduledStreams: stream._id}, {$pull: {nonSubscribedScheduledStreams: stream._id}});
-            const deleteStream = ScheduledStream.findByIdAndDelete(stream._id);
-            promises.push(pullReferences, deleteStream);
-        });
+        if (streams.length) {
+            LOGGER.info('Deleting {} ScheduledStream{} from database that finished before {}',
+                streams.length, streams.length === 1 ? '' : 's', expiryTime);
 
-        const promiseResults = await Promise.allSettled(promises);
-        const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
-        if (rejectedPromises.length) {
-            throw new CompositeError(rejectedPromises.map(promise => promise.reason));
+            const promises = [];
+            streams.forEach(stream => {
+                const pullReferences = User.updateMany({nonSubscribedScheduledStreams: stream._id}, {$pull: {nonSubscribedScheduledStreams: stream._id}});
+                const deleteStream = ScheduledStream.findByIdAndDelete(stream._id);
+                promises.push(pullReferences, deleteStream);
+            });
+
+            const promiseResults = await Promise.allSettled(promises);
+            const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+            if (rejectedPromises.length) {
+                throw new CompositeError(rejectedPromises.map(promise => promise.reason));
+            }
         }
     } catch (err) {
         LOGGER.error('An error occurred when deleting ScheduledStreams past their TTL from database: {}', err);
