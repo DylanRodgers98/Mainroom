@@ -111,11 +111,11 @@ export default class LiveStream extends React.Component {
     async connectToSocketIO() {
         const streamUsername = this.props.match.params.username.toLowerCase();
         this.socket = io(this.state.socketIOURL, {transports: [ 'websocket' ]});
-        this.socket.emit(`onConnection_${streamUsername}`);
-        this.socket.on(`onChatMessage_${streamUsername}`, this.addMessageToChat);
+        this.socket.emit(`connection_${streamUsername}`);
+        this.socket.on(`chatMessage_${streamUsername}`, this.addMessageToChat);
         this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
-        this.socket.on(`onWentLive_${streamUsername}`, this.startStreamFromSocket);
-        this.socket.on(`onStreamEnded_${streamUsername}`, this.endStreamFromSocket);
+        this.socket.on(`streamStarted_${streamUsername}`, this.startStreamFromSocket);
+        this.socket.on(`streamEnded_${streamUsername}`, this.endStreamFromSocket);
         this.socket.on(`streamInfoUpdated_${streamUsername}`, this.updateStreamInfoFromSocket);
     }
 
@@ -144,10 +144,10 @@ export default class LiveStream extends React.Component {
 
     startStreamFromSocket() {
         // When a user goes live, their view count is reset to 0 by the server, so this needs to be updated with the
-        // current number of people viewing this page. This is done by emitting the onConnection_${streamUsername}
+        // current number of people viewing this page. This is done by emitting the connection_${streamUsername}
         // event for each user on this page, which increments the view count for streamUsername.
         const streamUsername = this.props.match.params.username.toLowerCase();
-        this.socket.emit(`onConnection_${streamUsername}`);
+        this.socket.emit(`connection_${streamUsername}`);
 
         // Stream is not available as soon as user goes live because .m3u8 playlist file needs to populate,
         // so wait a timeout (which needs to be longer than the time of each video segment) before loading.
@@ -207,7 +207,7 @@ export default class LiveStream extends React.Component {
         if (this.state.msg) {
             const viewerUser = this.state.viewerUser;
             const msg = this.state.msg;
-            this.socket.emit('onChatMessage', {viewerUser, msg});
+            this.socket.emit('chatMessage', {viewerUser, msg});
             this.setState({
                 msg: ''
             });

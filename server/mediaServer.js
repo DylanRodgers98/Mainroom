@@ -57,7 +57,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
                 throw err;
             }
 
-            mainroomEventBus.send('onWentLive', user.username);
+            mainroomEventBus.send('streamStarted', user.username);
             if (config.email.enabled) {
                 sesEmailSender.notifySubscribersUserWentLive(user);
             }
@@ -81,7 +81,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
     if (!user) {
         LOGGER.info('Could not find user with stream key {}', streamKey);
     } else {
-        mainroomEventBus.send('onStreamEnded', user.username);
+        mainroomEventBus.send('streamEnded', user.username);
 
         if (IS_RECORDING_TO_MP4) {
             const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, process.env.RTMP_SERVER_APP_NAME, streamKey);
