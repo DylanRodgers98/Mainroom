@@ -71,7 +71,7 @@ UserSchema.pre('findOneAndDelete', async function() {
     if (user) {
         await Promise.all([
             deleteProfilePic(user),
-            deleteScheduledStreams(user),
+            deleteScheduledStreams(user, this.model),
             deleteRecordedStreams(user),
             removeFromSubscriptions(user, this.model)
         ]);
@@ -92,10 +92,28 @@ async function deleteProfilePic(user) {
     }
 }
 
-async function deleteScheduledStreams(user) {
-    LOGGER.debug('Deleting ScheduledStreams for User (_id: {})', user._id);
-    await ScheduledStream.deleteMany({user});
-    LOGGER.debug('Successfully deleted ScheduledStreams for User (_id: {})', user._id);
+async function deleteScheduledStreams(user, model) {
+    // deletion must be done in for-each loop so references to ScheduledStreams being deleted
+    // can be pulled from other Users' nonSubscribedScheduledStreams array, which can't be done
+    // using mongoose middleware due to the ordering of imports in ./server/model/schemas.js
+
+    const streams = await ScheduledStream.find({user}).select( '_id').exec();
+    if (streams.length) {
+        LOGGER.debug('Deleting {} ScheduledStreams for User (_id: {})', streams.length, user._id);
+        let deleted = 0;
+        for (const stream of streams) {
+            try {
+                const pullReferences = model.updateMany({nonSubscribedScheduledStreams: stream._id}, {$pull: {nonSubscribedScheduledStreams: stream._id}}).exec();
+                const deleteStream = ScheduledStream.findByIdAndDelete(stream._id);
+                await Promise.all([pullReferences, deleteStream]);
+                deleted++;
+            } catch (err) {
+                LOGGER.error('An error occurred when deleting ScheduledStream (_id: {}) for User (_id: {}): {}',
+                    stream._id, user._id, err);
+            }
+        }
+        LOGGER.debug('Successfully deleted {} ScheduledStreams for User (_id: {})', deleted, user._id);
+    }
 }
 
 async function deleteRecordedStreams(user) {
@@ -129,10 +147,7 @@ async function removeFromSubscriptions(user, model) {
     const pullFromSubscribers = model.updateMany({_id: {$in: subscribersIds}}, {$pull: {subscribers: {user: user._id}}});
     const pullFromSubscriptions = model.updateMany({_id: {$in: subscriptionsIds}}, {$pull: {subscriptions: {user: user._id}}});
 
-    const promiseResults = await Promise.all([
-        pullFromSubscribers,
-        pullFromSubscriptions
-    ]);
+    const promiseResults = await Promise.all([pullFromSubscribers, pullFromSubscriptions]);
 
     LOGGER.debug('Successfully removed User (_id: {}) from {} subscribers lists and {} subscriptions lists',
         user._id, promiseResults[0].nModified, promiseResults[1].nModified);

@@ -62,10 +62,12 @@ router.delete('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     try {
         const stream = await ScheduledStream.findByIdAndDelete(id);
         if (!stream) {
-            res.status(404).send(`Scheduled stream (_id: ${escape(id)}) not found`);
-        } else {
-            res.sendStatus(200);
+            return res.status(404).send(`Scheduled stream (_id: ${escape(id)}) not found`);
         }
+        // Pull reference to ScheduledStream from nonSubscribedScheduledStreams arrays.
+        // This can't be done using mongoose middleware due to the ordering of imports in ./server/model/schemas.js
+        await User.updateMany({nonSubscribedScheduledStreams: id}, {$pull: {nonSubscribedScheduledStreams: id}}).exec();
+        res.sendStatus(200);
     } catch (err) {
         LOGGER.error(`An error occurred when deleting scheduled stream (_id: {}) from database: {}`, id, err);
         next(err);
