@@ -22,9 +22,9 @@ class WebSocketServer {
                 // In production environment, listen for events from pm2 God process
                 const bus = await launchPm2MessageBus();
                 bus.on('liveStreamViewCount', ({data}) => emitLiveStreamViewCount(this.io, data));
-                bus.on('onChatMessage', ({data}) => emitOnChatMessage(this.io, data));
-                bus.on('onWentLive', ({data}) => emitOnWentLive(this.io, data));
-                bus.on('onStreamEnded', ({data}) => emitOnStreamEnded(this.io, data));
+                bus.on('chatMessage', ({data}) => emitOnChatMessage(this.io, data));
+                bus.on('streamStarted', ({data}) => emitOnWentLive(this.io, data));
+                bus.on('streamEnded', ({data}) => emitOnStreamEnded(this.io, data));
                 bus.on('streamInfoUpdated', ({data}) => emitStreamInfoUpdated(this.io, data));
             } catch (err) {
                 LOGGER.error('An error occurred when launching pm2 message bus: {}', err);
@@ -36,15 +36,15 @@ class WebSocketServer {
                 emitLiveStreamViewCount(this.io, viewCountData);
             });
 
-            mainroomEventBus.on('onChatMessage', chatMessageData => {
+            mainroomEventBus.on('chatMessage', chatMessageData => {
                 emitOnChatMessage(this.io, chatMessageData);
             });
 
-            mainroomEventBus.on('onWentLive', streamUsername => {
+            mainroomEventBus.on('streamStarted', streamUsername => {
                 emitOnWentLive(this.io, streamUsername);
             });
 
-            mainroomEventBus.on('onStreamEnded', streamUsername => {
+            mainroomEventBus.on('streamEnded', streamUsername => {
                 emitOnStreamEnded(this.io, streamUsername);
             });
 
@@ -53,24 +53,29 @@ class WebSocketServer {
             });
         }
 
-        this.io.on('connection', (socket, next) => {
+        this.io.on('connection', socket => {
             // register listeners only if connection is from live stream page
             if (socket.handshake.query.liveStreamUsername) {
                 const streamUsername = sanitise(socket.handshake.query.liveStreamUsername.toLowerCase());
 
+                let didIncrementViewCount = false;
+
                 // increment view count on connection
-                socket.on(`onConnection_${streamUsername}`, () => {
-                    incrementViewCount(streamUsername, 1, next);
+                socket.on(`connection_${streamUsername}`, () => {
+                    incrementViewCount(streamUsername);
+                    didIncrementViewCount = true;
                 });
 
                 // decrement view count on disconnection
                 socket.on('disconnect', () => {
-                    incrementViewCount(streamUsername, -1, next)
+                    if (didIncrementViewCount) {
+                        decrementViewCount(streamUsername);
+                    }
                 });
 
                 // emit livestream chat message to correct channel
-                socket.on('onChatMessage', ({viewerUser, msg}) => {
-                    mainroomEventBus.send('onChatMessage', {streamUsername, viewerUser, msg});
+                socket.on('chatMessage', ({viewerUser, msg}) => {
+                    mainroomEventBus.send('chatMessage', {streamUsername, viewerUser, msg});
                 });
             }
         });
@@ -95,15 +100,15 @@ function emitLiveStreamViewCount(io, {streamUsername, viewCount}) {
 }
 
 function emitOnChatMessage(io, {streamUsername, viewerUser, msg}) {
-    io.emit(`onChatMessage_${streamUsername}`, {viewerUser, msg});
+    io.emit(`chatMessage_${streamUsername}`, {viewerUser, msg});
 }
 
 function emitOnWentLive(io, streamUsername) {
-    io.emit(`onWentLive_${streamUsername}`);
+    io.emit(`streamStarted_${streamUsername}`);
 }
 
 function emitOnStreamEnded(io, streamUsername) {
-    io.emit(`onStreamEnded_${streamUsername}`);
+    io.emit(`streamEnded_${streamUsername}`);
 }
 
 function emitStreamInfoUpdated(io, streamInfo) {
@@ -112,17 +117,27 @@ function emitStreamInfoUpdated(io, streamInfo) {
     io.emit(`streamInfoUpdated_${username}`, streamInfo);
 }
 
-async function incrementViewCount(username, increment, next) {
+async function incrementViewCount(username) {
+    await incViewCount(username, 1);
+}
+
+async function decrementViewCount(username) {
+    await incViewCount(username, -1);
+}
+
+async function incViewCount(username, increment) {
     const $inc = {'streamInfo.viewCount': increment}
     if (increment > 0) {
         $inc['streamInfo.cumulativeViewCount'] = increment;
     }
+    const options = {
+        new: true,
+        runValidators: true // run 'min: 0' validators on viewCount and cumulativeViewCount
+    };
     try {
-        const user = await User.findOneAndUpdate({username}, {$inc}, {new: true});
+        const user = await User.findOneAndUpdate({username}, {$inc}, options);
         if (!user) {
-            const msg = `Could not find user (username: ${username}) to update view count`;
-            LOGGER.error(msg);
-            return next(new Error(msg));
+            throw new Error(`Could not find user (username: ${username}) to update view count`);
         }
         mainroomEventBus.send('liveStreamViewCount', {
             streamUsername: username,
@@ -130,7 +145,7 @@ async function incrementViewCount(username, increment, next) {
         });
     } catch (err) {
         LOGGER.error(`An error occurred when updating live stream view count for user (username: {}): {}`, username, err);
-        next(err);
+        throw err;
     }
 }
 
