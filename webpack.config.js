@@ -1,6 +1,6 @@
+const webpack = require('webpack');
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const webpack = require('webpack');
 
 const devMode = process.env.NODE_ENV !== 'production';
 
@@ -28,16 +28,7 @@ module.exports = {
             {
                 test: /\.woff($|\?)|\.woff2($|\?)|\.ttf($|\?)|\.eot($|\?)|\.svg($|\?)/,
                 loader: 'url-loader'
-            },
-            {
-                test: /\.(png|jpg|gif)$/,
-                use: [{
-                    loader: 'file-loader',
-                    options: {
-                        outputPath: '/',
-                    },
-                }],
-            },
+            }
         ]
     },
     devtool: 'source-map',
@@ -48,11 +39,13 @@ module.exports = {
         new webpack.ProvidePlugin({
             $: 'jquery',
             jQuery: 'jquery'
-        })
+        }),
+        // Ignore moment locale files. If required these can be imported from 'moment/locale/${LOCALE_CODE}'
+        new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
     ],
     mode : devMode ? 'development' : 'production',
     watch : devMode,
     performance: {
         hints: process.env.NODE_ENV === 'production' ? 'warning' : false
-    },
+    }
 };

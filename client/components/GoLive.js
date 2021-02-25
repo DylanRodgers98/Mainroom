@@ -1,8 +1,7 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner} from 'reactstrap';
-import Container from 'reactstrap/es/Container';
-import {displayErrorMessage, displaySuccessMessage, getAlert} from '../utils/displayUtils';
+import {Button, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner} from 'reactstrap';
+import {displayErrorMessage, displaySuccessMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {filters, siteName} from '../../mainroom.config';
 
 export default class GoLive extends React.Component {
@@ -196,11 +195,7 @@ export default class GoLive extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (
-            <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner' />
-            </div>
-        ) : (
+        return !this.state.loaded ? (<LoadingSpinner />) : (
             <Container fluid='lg'>
                 {getAlert(this)}
 

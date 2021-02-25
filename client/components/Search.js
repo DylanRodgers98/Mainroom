@@ -2,10 +2,10 @@ import React from 'react';
 import axios from 'axios';
 import {pagination, filters, siteName} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
+import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 import {timeSince} from '../utils/dateUtils';
-import {displayGenreAndCategory} from '../utils/displayUtils';
+import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -420,11 +420,7 @@ export default class LiveStreams extends React.Component {
                     </Col>
                 </Row>
                 <hr className='my-4'/>
-                {!this.state.loaded ? (
-                    <div className='position-relative h-100'>
-                        <Spinner color='dark' className='loading-spinner' />
-                    </div>
-                ) : (
+                {!this.state.loaded ? (<LoadingSpinner />) : (
                     <React.Fragment>
                         {this.renderLiveStreams()}
                         {this.renderPastStreams()}

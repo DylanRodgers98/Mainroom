@@ -1,12 +1,12 @@
+// needed for polyfilling ES2015 features
 import 'regenerator-runtime/runtime';
 
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React, {Suspense, lazy} from 'react';
+import {render} from 'react-dom';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
-import {ErrorBoundary} from 'react-error-boundary';
-import {bugReportURL} from '../mainroom.config';
-import MainroomNavbar from './components/MainroomNavbar';
-import Home from './components/Home';
+import ErrorBoundary from './components/ErrorBoundary';
+import {LoadingSpinner} from './utils/displayUtils';
+import MainroomNavbar from'./components/MainroomNavbar';
 import LiveStreamsByGenre from './components/LiveStreamsByGenre';
 import LiveStreamsByCategory from './components/LiveStreamsByCategory';
 import Search from './components/Search';
@@ -15,37 +15,24 @@ import Subscribers from './components/Subscribers';
 import Subscriptions from './components/Subscriptions';
 import LiveStream from './components/LiveStream';
 import RecordedStream from './components/RecordedStream';
-import ManageRecordedStreams from './components/ManageRecordedStreams';
-import Schedule from './components/Schedule';
-import Settings from './components/Settings';
-import GoLive from './components/GoLive';
-import FourOhFour from './components/FourOhFour';
 import './mainroom.scss';
 
-function errorFallback({error, resetErrorBoundary}) {
-    return (
-        <div className='text-center mt-5'>
-            <h2>Oops! An error occurred :(</h2>
-            <h5>{error.name}: {error.message}</h5>
-            Please <a href='javascript:;' onClick={resetErrorBoundary}>
-                try again
-            </a> or <a href={bugReportURL} target='_blank' rel='noopener noreferrer'>
-                report a bug
-            </a>.
-        </div>
-    );
-}
+// lazy load components that do not require props to be passed to them
+const Home = lazy(() => import('./components/Home'));
+const ManageRecordedStreams = lazy(() => import('./components/ManageRecordedStreams'));
+const Schedule = lazy(() => import('./components/Schedule'));
+const Settings = lazy(() => import('./components/Settings'));
+const GoLive = lazy(() => import('./components/GoLive'));
+const FourOhFour = lazy(() => import('./components/FourOhFour'));
 
 if (document.getElementById('root')) {
-    ReactDOM.render(
+    render(
         <BrowserRouter>
-            <React.Fragment>
+            <ErrorBoundary>
                 <MainroomNavbar/>
-                <ErrorBoundary FallbackComponent={errorFallback}>
+                <Suspense fallback={<LoadingSpinner />}>
                     <Switch>
-                        <Route exact path='/' render={props => (
-                            <Home {...props} />
-                        )}/>
+                        <Route exact path='/' component={Home}/>
 
                         <Route exact path='/genre/:genre' render={props => (
                             <LiveStreamsByGenre {...props} />
@@ -79,27 +66,16 @@ if (document.getElementById('root')) {
                             <RecordedStream {...props} />
                         )}/>
 
-                        <Route exact path='/manage-recorded-streams' render={props => (
-                            <ManageRecordedStreams {...props} />
-                        )}/>
-
-                        <Route exact path='/schedule' render={props => (
-                            <Schedule {...props} />
-                        )}/>
-
-                        <Route exact path='/settings' render={props => (
-                            <Settings {...props} />
-                        )}/>
-
-                        <Route exact path='/go-live' render={props => (
-                            <GoLive {...props} />
-                        )}/>
+                        <Route exact path='/manage-recorded-streams' component={ManageRecordedStreams}/>
+                        <Route exact path='/schedule' component={Schedule}/>
+                        <Route exact path='/settings' component={Settings}/>
+                        <Route exact path='/go-live' component={GoLive}/>
 
                         {/* matches none -> 404 */}
                         <Route component={FourOhFour}/>
                     </Switch>
-                </ErrorBoundary>
-            </React.Fragment>
+                </Suspense>
+            </ErrorBoundary>
         </BrowserRouter>,
         document.getElementById('root')
     );

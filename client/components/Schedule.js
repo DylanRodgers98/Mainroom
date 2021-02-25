@@ -19,7 +19,13 @@ import {
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
-import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage, getAlert} from '../utils/displayUtils';
+import {
+    displayErrorMessage,
+    displayGenreAndCategory,
+    displaySuccessMessage,
+    getAlert,
+    LoadingSpinner
+} from '../utils/displayUtils';
 import {filters, siteName} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 
@@ -105,6 +111,10 @@ export default class Schedule extends React.Component {
             scheduleItem.canMove = false;
             scheduleItem.canResize = false;
             scheduleItem.canChangeGroup = false;
+
+            scheduleItem.itemProps = {
+                onDoubleClick: () => this.selectScheduledStream(scheduleItem.id)
+            };
 
             return scheduleItem;
         });
@@ -472,11 +482,7 @@ export default class Schedule extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (
-            <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner' />
-            </div>
-        ) : (
+        return !this.state.loaded ? (<LoadingSpinner />) : (
             <React.Fragment>
                 <Container fluid>
                     {getAlert(this)}

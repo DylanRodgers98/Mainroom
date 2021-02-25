@@ -1,9 +1,7 @@
 import React from 'react';
 import axios from 'axios';
-import Container from 'reactstrap/es/Container';
-import {Button, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
-import _ from 'lodash';
-import {displayErrorMessage, displaySuccessMessage, getAlert} from '../utils/displayUtils';
+import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
+import {displayErrorMessage, displaySuccessMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {siteName} from '../../mainroom.config';
 
 const SUCCESSFUL_UPDATE_PARAM = 'success';
@@ -119,7 +117,13 @@ export default class Settings extends React.Component {
     }
 
     isEmailSettingsChanged() {
-        return !_.isEqual(this.state.emailSettings, this.state.startingEmailSettings);
+        const settings = Object.keys(this.state.emailSettings);
+        for (const setting of settings) {
+            if (this.state.emailSettings[setting] != this.state.startingEmailSettings[setting]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     saveSettings() {
@@ -349,11 +353,7 @@ export default class Settings extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (
-            <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner' />
-            </div>
-        ) : (
+        return !this.state.loaded ? (<LoadingSpinner />) : (
             <React.Fragment>
                 <Container fluid='lg'>
                     {getAlert(this)}

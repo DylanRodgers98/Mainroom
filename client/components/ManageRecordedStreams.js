@@ -19,7 +19,13 @@ import axios from 'axios';
 import {pagination, filters, siteName} from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDate} from '../utils/dateUtils';
-import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage, getAlert} from '../utils/displayUtils';
+import {
+    displayErrorMessage,
+    displayGenreAndCategory,
+    displaySuccessMessage,
+    getAlert,
+    LoadingSpinner
+} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -501,11 +507,7 @@ export default class ManageRecordedStreams extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (
-            <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner'/>
-            </div>
-        ) : (
+        return !this.state.loaded ? (<LoadingSpinner />) : (
             <React.Fragment>
                 <Container fluid='lg' className='mt-5'>
                     <Row>

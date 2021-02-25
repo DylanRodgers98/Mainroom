@@ -3,12 +3,11 @@ import videojs from 'video.js';
 import axios from 'axios';
 import {siteName, pagination, headTitle} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Col, Container, Row, Spinner} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
-import {timeSince} from '../utils/dateUtils';
-import moment from 'moment';
+import {formatDate, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayGenreAndCategory} from '../utils/displayUtils';
+import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -76,7 +75,7 @@ export default class RecordedStream extends React.Component {
             streamTitle: recordedStream.title,
             streamGenre: recordedStream.genre,
             streamCategory: recordedStream.category,
-            streamTimestamp: moment(recordedStream.timestamp).format('ddd, DD MMM, yyyy · HH:mm'),
+            streamTimestamp: formatDate(recordedStream.timestamp),
             viewCount: recordedStream.viewCount
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
@@ -187,11 +186,7 @@ export default class RecordedStream extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (
-            <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner' />
-            </div>
-        ) : (
+        return !this.state.loaded ? (<LoadingSpinner />) : (
             <Container fluid className='remove-padding-lr'>
                 <Row className='remove-margin-r'>
                     <Col className='remove-padding-r' xs='12' md='9'>

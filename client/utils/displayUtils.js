@@ -1,7 +1,7 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {successMessageTimeout, errorMessageTimeout, bugReportURL} from '../../mainroom.config';
-import {Alert} from 'reactstrap';
+import {Alert, Spinner} from 'reactstrap';
 
 export const displayGenreAndCategory = ({genre, category}) => (
     <React.Fragment>
@@ -44,4 +44,10 @@ export const getAlert = component => (
             </div>
         )}
     </Alert>
+);
+
+export const LoadingSpinner = () => (
+    <div className='position-relative h-100'>
+        <Spinner color='dark' className='loading-spinner' />
+    </div>
 );

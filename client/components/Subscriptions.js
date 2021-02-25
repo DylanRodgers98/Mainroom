@@ -1,8 +1,9 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Col, Container, Row, Spinner} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import {headTitle, siteName, pagination} from '../../mainroom.config';
+import {LoadingSpinner} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -84,11 +85,7 @@ export default class Subscribers extends React.Component {
             </div>
         );
 
-        return !this.state.loaded ? (
-            <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner' />
-            </div>
-        ) : (
+        return !this.state.loaded ? (<LoadingSpinner />) : (
             <Container fluid='lg' className='my-5'>
                 <Row>
                     <Col>

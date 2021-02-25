@@ -2,9 +2,9 @@ import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
 import {headTitle, pagination} from '../../mainroom.config';
-import {Button, Col, Container, Row, Spinner} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayGenreAndCategory} from '../utils/displayUtils';
+import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -205,11 +205,7 @@ export default class Home extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (
-            <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner' />
-            </div>
-        ) : (
+        return !this.state.loaded ? (<LoadingSpinner />) : (
             <Container fluid='lg' className='mt-5'>
                 {this.renderStreamBoxes()}
             </Container>

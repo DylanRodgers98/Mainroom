@@ -2,12 +2,17 @@ import React from 'react';
 import axios from 'axios';
 import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
-import moment from 'moment';
 import {headTitle, pagination, siteName} from '../../mainroom.config';
 import ImageUploader from 'react-images-upload';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayErrorMessage, displayGenreAndCategory, displaySuccessMessage, getAlert} from '../utils/displayUtils';
+import {
+    displayErrorMessage,
+    displayGenreAndCategory,
+    displaySuccessMessage,
+    getAlert,
+    LoadingSpinner
+} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -31,7 +36,6 @@ const STARTING_STATE = {
     streamCategory: '',
     streamThumbnailUrl: '',
     streamViewCount: 0,
-    upcomingStreamsStartTime: moment(),
     editProfileOpen: false,
     unsavedChanges: false,
     editDisplayName: '',
@@ -126,7 +130,7 @@ export default class UserProfile extends React.Component {
         const res = await axios.get('/api/scheduled-streams', {
             params: {
                 username: this.props.match.params.username.toLowerCase(),
-                scheduleStartTime: this.state.upcomingStreamsStartTime.toDate()
+                scheduleStartTime: Date.now()
             }
         });
         this.setState({
@@ -784,11 +788,7 @@ export default class UserProfile extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (
-            <div className='position-relative h-100'>
-                <Spinner color='dark' className='loading-spinner' />
-            </div>
-        ) : (
+        return !this.state.loaded ? (<LoadingSpinner />) : (
             <React.Fragment>
                 <Container fluid='lg'>
                     {getAlert(this)}
