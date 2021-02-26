@@ -156,6 +156,9 @@ const s3UploadProfilePic = multer({
         s3: new S3V2ToV3Bridge(),
         bucket: config.storage.s3.staticContent.bucketName,
         contentType: multerS3.AUTO_CONTENT_TYPE,
+        metadata: (req, file, cb) => {
+            cb(null, undefined); // set metadata explicitly to undefined
+        },
         key: (req, file, cb) => {
             const path = config.storage.s3.staticContent.keyPrefixes.profilePics;
             const userId = sanitise(req.params.userId);
