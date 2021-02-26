@@ -1,9 +1,8 @@
-import React from 'react';
+import React, {Suspense, lazy} from 'react';
 import axios from 'axios';
 import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import {headTitle, pagination, siteName} from '../../mainroom.config';
-import ImageUploader from 'react-images-upload';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
 import {
@@ -13,6 +12,8 @@ import {
     getAlert,
     LoadingSpinner
 } from '../utils/displayUtils';
+
+const ImageUploader = lazy(() => import('react-images-upload'));
 
 const STARTING_PAGE = 1;
 
@@ -747,9 +748,11 @@ export default class UserProfile extends React.Component {
             <Modal isOpen={this.state.changeProfilePicOpen} toggle={this.changeProfilePicToggle} centered={true}>
                 <ModalHeader toggle={this.changeProfilePicToggle}>Change Profile Picture</ModalHeader>
                 <ModalBody>
-                    <ImageUploader buttonText='Choose Image' label='Maximum file size: 2MB'
-                                   maxFileSize={2 * 1024 * 1024} onChange={this.onProfilePicUpload}
-                                   withPreview={true} singleImage={true} withIcon={false}/>
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <ImageUploader buttonText='Choose Image' label='Maximum file size: 2MB'
+                                       maxFileSize={2 * 1024 * 1024} onChange={this.onProfilePicUpload}
+                                       withPreview={true} singleImage={true} withIcon={false}/>
+                    </Suspense>
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' disabled={!this.state.uploadedProfilePic}

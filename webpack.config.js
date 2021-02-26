@@ -7,8 +7,10 @@ const devMode = process.env.NODE_ENV !== 'production';
 module.exports = {
     entry : './client/index.js',
     output : {
-        filename : 'bundle.js',
-        path : path.resolve(__dirname, 'public')
+        filename : '[name].bundle.js',
+        chunkFilename: '[name].chunk.js',
+        path : path.resolve(__dirname, 'public'),
+        publicPath: '/'
     },
     module : {
         rules : [
@@ -34,7 +36,8 @@ module.exports = {
     devtool: 'source-map',
     plugins: [
         new MiniCssExtractPlugin({
-            filename: 'style.css'
+            filename: '[name].style.css',
+            chunkFilename: '[name].chunk.css'
         }),
         new webpack.ProvidePlugin({
             $: 'jquery',

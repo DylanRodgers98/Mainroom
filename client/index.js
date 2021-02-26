@@ -7,18 +7,17 @@ import {BrowserRouter, Route, Switch} from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import {LoadingSpinner} from './utils/displayUtils';
 import MainroomNavbar from'./components/MainroomNavbar';
-import LiveStreamsByGenre from './components/LiveStreamsByGenre';
-import LiveStreamsByCategory from './components/LiveStreamsByCategory';
-import Search from './components/Search';
-import UserProfile from './components/UserProfile';
-import Subscribers from './components/Subscribers';
-import Subscriptions from './components/Subscriptions';
-import LiveStream from './components/LiveStream';
-import RecordedStream from './components/RecordedStream';
 import './mainroom.scss';
 
-// lazy load components that do not require props to be passed to them
 const Home = lazy(() => import('./components/Home'));
+const LiveStreamsByGenre = lazy(() => import('./components/LiveStreamsByGenre'));
+const LiveStreamsByCategory = lazy(() => import('./components/LiveStreamsByCategory'));
+const Search = lazy(() => import('./components/Search'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
+const Subscribers = lazy(() => import('./components/Subscribers'));
+const Subscriptions = lazy(() => import('./components/Subscriptions'));
+const LiveStream = lazy(() => import('./components/LiveStream'));
+const RecordedStream = lazy(() => import('./components/RecordedStream'));
 const ManageRecordedStreams = lazy(() => import('./components/ManageRecordedStreams'));
 const Schedule = lazy(() => import('./components/Schedule'));
 const Settings = lazy(() => import('./components/Settings'));
@@ -33,47 +32,21 @@ if (document.getElementById('root')) {
                 <ErrorBoundary>
                     <Suspense fallback={<LoadingSpinner />}>
                         <Switch>
-                            <Route exact path='/' component={Home}/>
-
-                            <Route exact path='/genre/:genre' render={props => (
-                                <LiveStreamsByGenre {...props} />
-                            )}/>
-
-                            <Route exact path='/category/:category' render={props => (
-                                <LiveStreamsByCategory {...props} />
-                            )}/>
-
-                            <Route exact path='/search/:query' render={props => (
-                                <Search {...props} />
-                            )}/>
-
-                            <Route exact path='/user/:username' render={props => (
-                                <UserProfile {...props} />
-                            )}/>
-
-                            <Route exact path='/user/:username/subscribers' render={props => (
-                                <Subscribers {...props} />
-                            )}/>
-
-                            <Route exact path='/user/:username/subscriptions' render={props => (
-                                <Subscriptions {...props} />
-                            )}/>
-
-                            <Route exact path='/user/:username/live' render={props => (
-                                <LiveStream {...props} />
-                            )}/>
-
-                            <Route exact path='/stream/:streamId' render={props => (
-                                <RecordedStream {...props} />
-                            )}/>
-
-                            <Route exact path='/manage-recorded-streams' component={ManageRecordedStreams}/>
-                            <Route exact path='/schedule' component={Schedule}/>
-                            <Route exact path='/settings' component={Settings}/>
-                            <Route exact path='/go-live' component={GoLive}/>
-
+                            <Route exact path='/' render={() => <Home />}/>
+                            <Route exact path='/genre/:genre' render={props => <LiveStreamsByGenre {...props} />}/>
+                            <Route exact path='/category/:category' render={props => <LiveStreamsByCategory {...props} />}/>
+                            <Route exact path='/search/:query' render={props => <Search {...props} />}/>
+                            <Route exact path='/user/:username' render={props => <UserProfile {...props} />}/>
+                            <Route exact path='/user/:username/subscribers' render={props => <Subscribers {...props} />}/>
+                            <Route exact path='/user/:username/subscriptions' render={props => <Subscriptions {...props} />}/>
+                            <Route exact path='/user/:username/live' render={props => <LiveStream {...props} />}/>
+                            <Route exact path='/stream/:streamId' render={props => <RecordedStream {...props} />}/>
+                            <Route exact path='/manage-recorded-streams' render={() => <ManageRecordedStreams />}/>
+                            <Route exact path='/schedule' render={() => <Schedule />}/>
+                            <Route exact path='/settings' render={() => <Settings />}/>
+                            <Route exact path='/go-live' render={() => <GoLive />}/>
                             {/* matches none -> 404 */}
-                            <Route component={FourOhFour}/>
+                            <Route render={() => <FourOhFour />}/>
                         </Switch>
                     </Suspense>
                 </ErrorBoundary>

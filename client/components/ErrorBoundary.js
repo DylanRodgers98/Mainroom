@@ -13,14 +13,10 @@ export default class ErrorBoundary extends React.Component {
     }
 
     componentDidCatch(error, errorInfo) {
-        if (error.name === 'ChunkLoadError') {
-            window.location.href = '/404';
-        } else {
-            this.setState({
-                error: error,
-                errorInfo: errorInfo
-            });
-        }
+        this.setState({
+            error: error,
+            errorInfo: errorInfo
+        });
     }
 
     render() {
