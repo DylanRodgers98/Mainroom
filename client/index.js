@@ -1,7 +1,7 @@
 // needed for polyfilling ES2015 features
 import 'regenerator-runtime/runtime';
 
-import React, {Suspense, lazy} from 'react';
+import React, {Fragment, Suspense, lazy} from 'react';
 import {render} from 'react-dom';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -28,54 +28,56 @@ const FourOhFour = lazy(() => import('./components/FourOhFour'));
 if (document.getElementById('root')) {
     render(
         <BrowserRouter>
-            <ErrorBoundary>
+            <Fragment>
                 <MainroomNavbar/>
-                <Suspense fallback={<LoadingSpinner />}>
-                    <Switch>
-                        <Route exact path='/' component={Home}/>
+                <ErrorBoundary>
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <Switch>
+                            <Route exact path='/' component={Home}/>
 
-                        <Route exact path='/genre/:genre' render={props => (
-                            <LiveStreamsByGenre {...props} />
-                        )}/>
+                            <Route exact path='/genre/:genre' render={props => (
+                                <LiveStreamsByGenre {...props} />
+                            )}/>
 
-                        <Route exact path='/category/:category' render={props => (
-                            <LiveStreamsByCategory {...props} />
-                        )}/>
+                            <Route exact path='/category/:category' render={props => (
+                                <LiveStreamsByCategory {...props} />
+                            )}/>
 
-                        <Route exact path='/search/:query' render={props => (
-                            <Search {...props} />
-                        )}/>
+                            <Route exact path='/search/:query' render={props => (
+                                <Search {...props} />
+                            )}/>
 
-                        <Route exact path='/user/:username' render={props => (
-                            <UserProfile {...props} />
-                        )}/>
+                            <Route exact path='/user/:username' render={props => (
+                                <UserProfile {...props} />
+                            )}/>
 
-                        <Route exact path='/user/:username/subscribers' render={props => (
-                            <Subscribers {...props} />
-                        )}/>
+                            <Route exact path='/user/:username/subscribers' render={props => (
+                                <Subscribers {...props} />
+                            )}/>
 
-                        <Route exact path='/user/:username/subscriptions' render={props => (
-                            <Subscriptions {...props} />
-                        )}/>
+                            <Route exact path='/user/:username/subscriptions' render={props => (
+                                <Subscriptions {...props} />
+                            )}/>
 
-                        <Route exact path='/user/:username/live' render={props => (
-                            <LiveStream {...props} />
-                        )}/>
+                            <Route exact path='/user/:username/live' render={props => (
+                                <LiveStream {...props} />
+                            )}/>
 
-                        <Route exact path='/stream/:streamId' render={props => (
-                            <RecordedStream {...props} />
-                        )}/>
+                            <Route exact path='/stream/:streamId' render={props => (
+                                <RecordedStream {...props} />
+                            )}/>
 
-                        <Route exact path='/manage-recorded-streams' component={ManageRecordedStreams}/>
-                        <Route exact path='/schedule' component={Schedule}/>
-                        <Route exact path='/settings' component={Settings}/>
-                        <Route exact path='/go-live' component={GoLive}/>
+                            <Route exact path='/manage-recorded-streams' component={ManageRecordedStreams}/>
+                            <Route exact path='/schedule' component={Schedule}/>
+                            <Route exact path='/settings' component={Settings}/>
+                            <Route exact path='/go-live' component={GoLive}/>
 
-                        {/* matches none -> 404 */}
-                        <Route component={FourOhFour}/>
-                    </Switch>
-                </Suspense>
-            </ErrorBoundary>
+                            {/* matches none -> 404 */}
+                            <Route component={FourOhFour}/>
+                        </Switch>
+                    </Suspense>
+                </ErrorBoundary>
+            </Fragment>
         </BrowserRouter>,
         document.getElementById('root')
     );

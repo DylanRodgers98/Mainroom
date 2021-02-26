@@ -733,7 +733,7 @@ export default class UserProfile extends React.Component {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                location.reload();
+                location.reload(); // reload page to refresh profile pic in browser cache
             } catch (err) {
                 this.setState({showChangeProfilePicSpinner: false});
                 this.changeProfilePicToggle();

@@ -14,6 +14,7 @@ const _ = require('lodash');
 const axios = require('axios');
 const mainroomEventBus = require('../mainroomEventBus');
 const normalizeUrl = require('normalize-url');
+const {deleteByURL} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
@@ -154,13 +155,12 @@ const s3UploadProfilePic = multer({
     storage: multerS3({
         s3: new S3V2ToV3Bridge(),
         bucket: config.storage.s3.staticContent.bucketName,
-        cacheControl: 'max-age=0, must-revalidate',
         contentType: multerS3.AUTO_CONTENT_TYPE,
         key: (req, file, cb) => {
             const path = config.storage.s3.staticContent.keyPrefixes.profilePics;
             const userId = sanitise(req.params.userId);
             const extension = mime.extension(file.mimetype);
-            cb(null, `${path}/${userId}.${extension}`);
+            cb(null, `${path}/${userId}/${Date.now()}.${extension}`);
         }
     })
 }).single('profilePic');
@@ -168,21 +168,25 @@ const s3UploadProfilePic = multer({
 router.put('/:userId/profile-pic', (req, res, next) => {
     const userId = sanitise(req.params.userId);
     if (userId) {
-        s3UploadProfilePic(req, res, err => {
+        s3UploadProfilePic(req, res, async err => {
             if (err) {
                 LOGGER.error('An error occurred when uploading profile pic to S3 for user {}: {}', userId, err);
+                return next(err);
+            }
+            try {
+                const user = await User.findById(userId).select('profilePicURL').exec();
+                if (!user) {
+                    return res.status(404).send(`User (_id: ${escape(userId)}) not found`);
+                }
+                const oldProfilePicURL = user.profilePicURL;
+                const deleteOldProfilePicPromise = deleteByURL(oldProfilePicURL);
+                user.profilePicURL = req.file.location;
+                const updateUserPromise = user.save();
+                await Promise.all([deleteOldProfilePicPromise, updateUserPromise]);
+                res.sendStatus(200);
+            } catch (err) {
+                LOGGER.error('An error occurred when updating profile pic info for user (_id: {}): {}', userId, err);
                 next(err);
-            } else {
-                User.findByIdAndUpdate(userId, {profilePicURL: req.file.location}, (err, user) => {
-                    if (err) {
-                        LOGGER.error('An error occurred when updating user with _id {}: {}', userId, err);
-                        next(err);
-                    } else if (!user) {
-                        res.status(404).send(`User (_id: ${escape(userId)}) not found`);
-                    } else {
-                        res.sendStatus(200);
-                    }
-                })
             }
         });
     }
