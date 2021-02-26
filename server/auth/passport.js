@@ -85,7 +85,7 @@ const loginOptions = {
 passport.use('localLogin', new LocalStrategy(loginOptions, async (req, usernameOrEmail, password, done) => {
     const usernameOrEmailLowercase = usernameOrEmail.toLowerCase();
     try {
-        const user = User.findOne({$or: [{'username': usernameOrEmailLowercase}, {'email': usernameOrEmailLowercase}]})
+        const user = await User.findOne({$or: [{'username': usernameOrEmailLowercase}, {'email': usernameOrEmailLowercase}]})
             .select('+password')
             .exec();
         if (!(user && user.checkPassword(password))) {
