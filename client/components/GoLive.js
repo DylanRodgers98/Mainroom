@@ -113,6 +113,7 @@ export default class GoLive extends React.Component {
     copyFrom(elementId) {
         document.getElementById(elementId).select();
         document.execCommand('copy');
+        displaySuccessMessage(this, 'Copied to clipboard');
     }
 
     genreDropdownToggle() {
