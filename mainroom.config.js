@@ -27,7 +27,7 @@ module.exports = {
         },
         http: {
             port: process.env.RTMP_SERVER_HTTP_PORT,
-            mediaroot: './server/media',
+            mediaroot: './public',
             allow_origin: '*'
         },
         trans: {

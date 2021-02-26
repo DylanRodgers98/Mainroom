@@ -1,16 +1,12 @@
 # ignore Jetbrains files
 .idea
 
-# ignore Webpack files
+# ignore static files
 public
 
 # ignore Node files
 node_modules
 npm-debug.log
-
-# ignore media but keep folder
-server/media/*
-!server/media/.gitkeep
 
 # ignore test coverage
 coverage/
