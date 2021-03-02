@@ -43,7 +43,7 @@ if (document.getElementById('root')) {
                             <Route exact path='/stream/:streamId' render={props => <RecordedStream {...props} />}/>
                             <Route exact path='/manage-recorded-streams' render={() => <ManageRecordedStreams />}/>
                             <Route exact path='/schedule' render={() => <Schedule />}/>
-                            <Route exact path='/settings' render={() => <Settings />}/>
+                            <Route exact path='/settings' render={props => <Settings {...props} />}/>
                             <Route exact path='/go-live' render={() => <GoLive />}/>
                             {/* matches none -> 404 */}
                             <Route render={() => <FourOhFour />}/>
