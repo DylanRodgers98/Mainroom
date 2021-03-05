@@ -75,6 +75,7 @@
     "react-height": "^3.0.1",
     "react-images-upload": "^1.2.8",
     "react-router-dom": "^5.2.0",
+    "react-share": "^4.4.0",
     "reactstrap": "^8.6.0",
     "regenerator-runtime": "^0.13.7",
     "sass-loader": "^7.3.1",

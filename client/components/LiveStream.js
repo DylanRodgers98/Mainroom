@@ -1,12 +1,15 @@
-import React from 'react';
+import React, {Fragment, Suspense, lazy} from 'react';
 import videojs from 'video.js';
 import axios from 'axios';
 import {siteName, loadLivestreamTimeout, headTitle} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Col, Container, Row} from 'reactstrap';
+import {Button, Col, Container, Modal, ModalBody, ModalHeader, Row} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
-import {displayGenreAndCategory} from '../utils/displayUtils';
+import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
+import ShareIcon from '../share.svg';
+
+const SocialShareButtons = lazy(() => import('./SocialShareButtons'));
 
 const SCROLL_MARGIN_HEIGHT = 30;
 
@@ -22,6 +25,7 @@ export default class LiveStream extends React.Component {
         this.startStreamFromSocket = this.startStreamFromSocket.bind(this);
         this.endStreamFromSocket = this.endStreamFromSocket.bind(this);
         this.updateStreamInfoFromSocket = this.updateStreamInfoFromSocket.bind(this);
+        this.shareModalToggle = this.shareModalToggle.bind(this);
 
         this.state = {
             stream: false,
@@ -38,7 +42,8 @@ export default class LiveStream extends React.Component {
             chat: [],
             chatHeight: 0,
             chatInputHeight: 0,
-            viewCount: 0
+            viewCount: 0,
+            shareModalOpen: false
         }
     }
 
@@ -240,6 +245,27 @@ export default class LiveStream extends React.Component {
         }
     }
 
+    shareModalToggle() {
+        this.setState(prevState => ({
+            shareModalOpen: !prevState.shareModalOpen
+        }));
+    }
+
+    renderShareModal() {
+        return (
+            <Modal isOpen={this.state.shareModalOpen} toggle={this.shareModalToggle} centered={true} size='md'>
+                <ModalHeader toggle={this.shareModalToggle}>
+                    Share
+                </ModalHeader>
+                <ModalBody>
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <SocialShareButtons />
+                    </Suspense>
+                </ModalBody>
+            </Modal>
+        );
+    }
+
     renderChatInput() {
         return !(this.state.viewerUser && this.state.viewerUser.username) ? (
             <div className='text-center mt-3'>
@@ -255,55 +281,64 @@ export default class LiveStream extends React.Component {
 
     render() {
         return this.state.stream ? (
-            <Container fluid className='remove-padding-lr'>
-                <Row className='remove-margin-r no-gutters'>
-                    <Col xs='12' md='9'>
-                        <ReactHeight onHeightReady={height => this.setChatHeight(height)}>
-                            <div data-vjs-player>
-                                <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
-                            </div>
-                        </ReactHeight>
-                        <ReactHeight onHeightReady={height => this.setChatInputHeight(height)}>
-                            <table>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
-                                                <img className='rounded-circle m-2' src={this.state.profilePicURL}
-                                                     width='75' height='75'
-                                                     alt={`${this.props.match.params.username.toLowerCase()} profile picture`}/>
-                                            </Link>
-                                        </td>
-                                        <td valign='middle'>
-                                            <h3>
+            <Fragment>
+                <Container fluid className='remove-padding-lr'>
+                    <Row className='remove-margin-r no-gutters'>
+                        <Col xs='12' md='9'>
+                            <ReactHeight onHeightReady={height => this.setChatHeight(height)}>
+                                <div data-vjs-player>
+                                    <video ref={node => this.videoNode = node} className='video-js vjs-big-play-centered'/>
+                                </div>
+                            </ReactHeight>
+                            <ReactHeight onHeightReady={height => this.setChatInputHeight(height)}>
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
                                                 <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
-                                                    {this.state.displayName || this.props.match.params.username.toLowerCase()}
+                                                    <img className='rounded-circle m-2' src={this.state.profilePicURL}
+                                                         width='75' height='75'
+                                                         alt={`${this.props.match.params.username.toLowerCase()} profile picture`}/>
                                                 </Link>
-                                                {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
-                                            </h3>
-                                            <h6>
-                                                {displayGenreAndCategory({
-                                                    genre: this.state.streamGenre,
-                                                    category: this.state.streamCategory
-                                                })}
-                                            </h6>
-                                            <h6>
-                                                {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'}
-                                            </h6>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </ReactHeight>
-                    </Col>
-                    <Col xs='12' md='3'>
-                        <div id='messages' className='chat-messages' style={{height: this.state.chatHeight + 'px'}}>
-                            {this.state.chat}
-                        </div>
-                        {this.renderChatInput()}
-                    </Col>
-                </Row>
-            </Container>
+                                            </td>
+                                            <td className='w-100' valign='middle'>
+                                                <h3>
+                                                    <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
+                                                        {this.state.displayName || this.props.match.params.username.toLowerCase()}
+                                                    </Link>
+                                                    {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
+                                                </h3>
+                                                <h6>
+                                                    {displayGenreAndCategory({
+                                                        genre: this.state.streamGenre,
+                                                        category: this.state.streamCategory
+                                                    })}
+                                                </h6>
+                                                <h6>
+                                                    {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'}
+                                                </h6>
+                                            </td>
+                                            <td className='w-100' valign='top'>
+                                                <a href='javascript:;' onClick={this.shareModalToggle} title='Share'>
+                                                    <img src={ShareIcon} className='float-right m-2' alt='Share button'/>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </ReactHeight>
+                        </Col>
+                        <Col xs='12' md='3'>
+                            <div id='messages' className='chat-messages' style={{height: this.state.chatHeight + 'px'}}>
+                                {this.state.chat}
+                            </div>
+                            {this.renderChatInput()}
+                        </Col>
+                    </Row>
+                </Container>
+
+                {this.renderShareModal()}
+            </Fragment>
         ) : (
             <div className='mt-5 text-center'>
                 <h3>{this.props.match.params.username.toLowerCase()} is not currently live</h3>
