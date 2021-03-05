@@ -84,7 +84,7 @@ i {
 }
 
 .navbar-dropdown,
-.navbar-dropdown-no-hover {
+.navbar-dropdown-no-bkg-on-hover {
     .btn {
         padding: 0.375rem;
     }
@@ -103,8 +103,9 @@ i {
     }
 }
 
-.navbar-dropdown-no-hover {
+.navbar-dropdown-no-bkg-on-hover {
     .btn-secondary:hover {
+        color: white;
         background-color: #343a40 !important;
         border-color: #343a40 !important;
     }

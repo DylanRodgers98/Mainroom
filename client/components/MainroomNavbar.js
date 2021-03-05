@@ -23,11 +23,7 @@ export default class MainroomNavbar extends React.Component {
         super(props);
 
         this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
-        this.onMouseEnterGenreDropdown = this.onMouseEnterGenreDropdown.bind(this);
-        this.onMouseLeaveGenreDropdown = this.onMouseLeaveGenreDropdown.bind(this);
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
-        this.onMouseEnterCategoryDropdown = this.onMouseEnterCategoryDropdown.bind(this);
-        this.onMouseLeaveCategoryDropdown = this.onMouseLeaveCategoryDropdown.bind(this);
         this.onSearchTextChange = this.onSearchTextChange.bind(this);
         this.searchHandleKeyDown = this.searchHandleKeyDown.bind(this);
         this.clearSearchBox = this.clearSearchBox.bind(this);
@@ -41,7 +37,6 @@ export default class MainroomNavbar extends React.Component {
             categoryDropdownOpen: false,
             categories: [],
             searchText: '',
-            searchSubmitted: false,
             profileDropdownOpen: false,
             loggedInUsername: '',
             loggedInDisplayName: '',
@@ -101,34 +96,10 @@ export default class MainroomNavbar extends React.Component {
         }));
     }
 
-    onMouseEnterGenreDropdown() {
-        this.setState({
-            genreDropdownOpen: true
-        });
-    }
-
-    onMouseLeaveGenreDropdown() {
-        this.setState({
-            genreDropdownOpen: false
-        });
-    }
-
     categoryDropdownToggle() {
         this.setState(prevState => ({
             categoryDropdownOpen: !prevState.categoryDropdownOpen
         }));
-    }
-
-    onMouseEnterCategoryDropdown() {
-        this.setState({
-            categoryDropdownOpen: true
-        });
-    }
-
-    onMouseLeaveCategoryDropdown() {
-        this.setState({
-            categoryDropdownOpen: false
-        });
     }
 
     onSearchTextChange(e) {
@@ -184,7 +155,7 @@ export default class MainroomNavbar extends React.Component {
         return this.state.loggedInUsername ? (
             <Nav navbar>
                 <NavItem>
-                    <Dropdown className='navbar-menu navbar-dropdown-no-hover text-center' nav inNavbar
+                    <Dropdown className='navbar-menu navbar-dropdown-no-bkg-on-hover text-center' nav inNavbar
                               isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}
                               title='Click for menu'>
                         <DropdownToggle caret={this.isSmallBreakpoint()}>
@@ -255,18 +226,14 @@ export default class MainroomNavbar extends React.Component {
                         </Button>
                     </NavItem>
                     <NavItem className='ml-md-2'>
-                        <Dropdown className='navbar-dropdown navbar-menu text-center' nav inNavbar
-                            onMouseOver={this.onMouseEnterGenreDropdown} onMouseLeave={this.onMouseLeaveGenreDropdown}
-                            isOpen={this.state.genreDropdownOpen}
-                            toggle={this.genreDropdownToggle}>
+                        <Dropdown className='navbar-dropdown navbar-menu navbar-dropdown-no-bkg-on-hover text-center' nav inNavbar
+                            isOpen={this.state.genreDropdownOpen} toggle={this.genreDropdownToggle}>
                             <DropdownToggle caret>Genre</DropdownToggle>
                             <DropdownMenu>{this.state.genres}</DropdownMenu>
                         </Dropdown>
                     </NavItem>
                     <NavItem>
-                        <Dropdown className='navbar-dropdown navbar-menu text-center' nav inNavbar
-                                  onMouseOver={this.onMouseEnterCategoryDropdown}
-                                  onMouseLeave={this.onMouseLeaveCategoryDropdown}
+                        <Dropdown className='navbar-dropdown navbar-menu navbar-dropdown-no-bkg-on-hover text-center' nav inNavbar
                                   isOpen={this.state.categoryDropdownOpen} toggle={this.categoryDropdownToggle}>
                             <DropdownToggle caret>Category</DropdownToggle>
                             <DropdownMenu>{this.state.categories}</DropdownMenu>
