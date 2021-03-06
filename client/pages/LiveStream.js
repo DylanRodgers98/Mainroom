@@ -8,6 +8,7 @@ import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {displayGenreAndCategory} from '../utils/displayUtils';
 import SocialShareButton from '../components/SocialShareButton';
+import {formatDate} from '../utils/dateUtils';
 
 const SCROLL_MARGIN_HEIGHT = 30;
 
@@ -34,6 +35,7 @@ export default class LiveStream extends React.Component {
             streamTitle: '',
             streamGenre: '',
             streamCategory: '',
+            streamStartTime: '',
             socketIOURL: '',
             msg: '',
             chat: [],
@@ -91,7 +93,8 @@ export default class LiveStream extends React.Component {
             profilePicURL: data.profilePicURL,
             streamTitle: data.title,
             streamGenre: data.genre,
-            streamCategory: data.category
+            streamCategory: data.category,
+            streamStartTime: formatDate(data.startTime)
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [
@@ -290,7 +293,7 @@ export default class LiveStream extends React.Component {
                                                     })}
                                                 </h6>
                                                 <h6>
-                                                    {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'}
+                                                    {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'} · Started at {this.state.streamStartTime}
                                                 </h6>
                                             </td>
                                             <td className='w-100' valign='top'>

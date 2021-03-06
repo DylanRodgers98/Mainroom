@@ -35,6 +35,7 @@ const STARTING_STATE = {
     streamTitle: '',
     streamGenre: '',
     streamCategory: '',
+    streamStartTime: '',
     streamThumbnailUrl: '',
     streamViewCount: 0,
     editProfileOpen: false,
@@ -212,6 +213,7 @@ export default class UserProfile extends React.Component {
                 streamGenre: streamInfoRes.data.genre,
                 streamCategory: streamInfoRes.data.category,
                 streamViewCount: streamInfoRes.data.viewCount,
+                streamStartTime: streamInfoRes.data.startTime,
                 streamThumbnailUrl: thumbnailRes.data.thumbnailURL
             });
         }
@@ -287,12 +289,13 @@ export default class UserProfile extends React.Component {
                                 {this.state.streamTitle}
                             </Link>
                         </h3>
-                        <h5>
+                        <h6>
                             {displayGenreAndCategory({
                                 genre: this.state.streamGenre,
                                 category: this.state.streamCategory
                             })}
-                        </h5>
+                        </h6>
+                        <h6>Started {timeSince(this.state.streamStartTime)}</h6>
                     </Col>
                 </Row>
                 <hr className='mb-4'/>

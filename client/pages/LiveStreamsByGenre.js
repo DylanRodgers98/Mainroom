@@ -5,6 +5,7 @@ import {pagination, filters, siteName} from '../../mainroom.config';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
+import {timeSince} from '../utils/dateUtils';
 
 const STARTING_PAGE = 1;
 
@@ -108,7 +109,7 @@ export default class LiveStreamsByCategory extends React.Component {
                 <table>
                     <tbody>
                         <tr>
-                            <td>
+                            <td valign='top'>
                                 <Link to={`/user/${liveStream.username}`}>
                                     <img className='rounded-circle m-2' src={liveStream.profilePicURL}
                                          width='50' height='50'
@@ -132,6 +133,7 @@ export default class LiveStreamsByCategory extends React.Component {
                                         category: liveStream.category
                                     })}
                                 </h6>
+                                <h6>Started {timeSince(liveStream.startTime)}</h6>
                             </td>
                         </tr>
                     </tbody>

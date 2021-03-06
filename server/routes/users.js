@@ -380,7 +380,7 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
 router.get('/:username/stream-info', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username},
-        'displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount',
+        'displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount streamInfo.startTime',
         async (err, user) => {
             if (err) {
                 LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
@@ -400,6 +400,7 @@ router.get('/:username/stream-info', (req, res, next) => {
                     category: user.streamInfo.category,
                     tags: user.streamInfo.tags,
                     viewCount: user.streamInfo.viewCount,
+                    startTime: user.streamInfo.startTime,
                     rtmpServerURL: RTMP_SERVER_URL,
                     liveStreamURL: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
                     socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}?liveStreamUsername=${username}`,
