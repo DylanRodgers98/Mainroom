@@ -1,15 +1,13 @@
-import React, {Fragment, Suspense, lazy} from 'react';
+import React, {Fragment} from 'react';
 import videojs from 'video.js';
 import axios from 'axios';
 import {siteName, loadLivestreamTimeout, headTitle} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Col, Container, Modal, ModalBody, ModalHeader, Row} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
-import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
-import ShareIcon from '../share.svg';
-
-const SocialShareButtons = lazy(() => import('./SocialShareButtons'));
+import {displayGenreAndCategory} from '../utils/displayUtils';
+import SocialShareButton from './SocialShareButton';
 
 const SCROLL_MARGIN_HEIGHT = 30;
 
@@ -25,7 +23,6 @@ export default class LiveStream extends React.Component {
         this.startStreamFromSocket = this.startStreamFromSocket.bind(this);
         this.endStreamFromSocket = this.endStreamFromSocket.bind(this);
         this.updateStreamInfoFromSocket = this.updateStreamInfoFromSocket.bind(this);
-        this.shareModalToggle = this.shareModalToggle.bind(this);
 
         this.state = {
             stream: false,
@@ -42,8 +39,7 @@ export default class LiveStream extends React.Component {
             chat: [],
             chatHeight: 0,
             chatInputHeight: 0,
-            viewCount: 0,
-            shareModalOpen: false
+            viewCount: 0
         }
     }
 
@@ -245,27 +241,6 @@ export default class LiveStream extends React.Component {
         }
     }
 
-    shareModalToggle() {
-        this.setState(prevState => ({
-            shareModalOpen: !prevState.shareModalOpen
-        }));
-    }
-
-    renderShareModal() {
-        return (
-            <Modal isOpen={this.state.shareModalOpen} toggle={this.shareModalToggle} centered={true} size='md'>
-                <ModalHeader toggle={this.shareModalToggle}>
-                    Share
-                </ModalHeader>
-                <ModalBody>
-                    <Suspense fallback={<LoadingSpinner />}>
-                        <SocialShareButtons />
-                    </Suspense>
-                </ModalBody>
-            </Modal>
-        );
-    }
-
     renderChatInput() {
         return !(this.state.viewerUser && this.state.viewerUser.username) ? (
             <div className='text-center mt-3'>
@@ -319,9 +294,7 @@ export default class LiveStream extends React.Component {
                                                 </h6>
                                             </td>
                                             <td className='w-100' valign='top'>
-                                                <a href='javascript:;' onClick={this.shareModalToggle} title='Share'>
-                                                    <img src={ShareIcon} className='float-right m-2' alt='Share button'/>
-                                                </a>
+                                                <SocialShareButton />
                                             </td>
                                         </tr>
                                     </tbody>
@@ -336,8 +309,6 @@ export default class LiveStream extends React.Component {
                         </Col>
                     </Row>
                 </Container>
-
-                {this.renderShareModal()}
             </Fragment>
         ) : (
             <div className='mt-5 text-center'>

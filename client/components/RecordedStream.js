@@ -1,16 +1,14 @@
-import React, {Fragment, Suspense, lazy} from 'react';
+import React, {Fragment} from 'react';
 import videojs from 'video.js';
 import axios from 'axios';
 import {siteName, pagination, headTitle} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Col, Container, Modal, ModalBody, ModalHeader, Row} from 'reactstrap';
+import {Button, Col, Container, Row} from 'reactstrap';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {formatDate, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
 import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
-import ShareIcon from '../share.svg';
-
-const SocialShareButtons = lazy(() => import('./SocialShareButtons'));
+import SocialShareButton from './SocialShareButton';
 
 const STARTING_PAGE = 1;
 
@@ -29,7 +27,6 @@ const STARTING_STATE = {
     videoHeight: 0,
     streamHeadingsHeight: 0,
     showLoadMoreButton: false,
-    shareModalOpen: false,
     nextPage: STARTING_PAGE
 };
 
@@ -37,9 +34,6 @@ export default class RecordedStream extends React.Component {
 
     constructor(props) {
         super(props);
-
-        this.shareModalToggle = this.shareModalToggle.bind(this);
-
         this.state = STARTING_STATE;
     }
 
@@ -137,27 +131,6 @@ export default class RecordedStream extends React.Component {
         }
     }
 
-    shareModalToggle() {
-        this.setState(prevState => ({
-            shareModalOpen: !prevState.shareModalOpen
-        }));
-    }
-
-    renderShareModal() {
-        return (
-            <Modal isOpen={this.state.shareModalOpen} toggle={this.shareModalToggle} centered={true} size='md'>
-                <ModalHeader toggle={this.shareModalToggle}>
-                    Share
-                </ModalHeader>
-                <ModalBody>
-                    <Suspense fallback={<LoadingSpinner />}>
-                        <SocialShareButtons />
-                    </Suspense>
-                </ModalBody>
-            </Modal>
-        );
-    }
-
     renderRecordedStreams() {
         const recordedStreams = this.state.recordedStreams.map((stream, index) => {
             return stream._id === this.props.match.params.streamId ? undefined : (
@@ -252,9 +225,7 @@ export default class RecordedStream extends React.Component {
                                                 </h6>
                                             </td>
                                             <td className='w-100' valign='top'>
-                                                <a href='javascript:;' onClick={this.shareModalToggle} title='Share'>
-                                                    <img src={ShareIcon} className='float-right m-2' alt='Share button'/>
-                                                </a>
+                                                <SocialShareButton />
                                             </td>
                                         </tr>
                                     </tbody>
@@ -266,8 +237,6 @@ export default class RecordedStream extends React.Component {
                         </Col>
                     </Row>
                 </Container>
-
-                {this.renderShareModal()}
             </Fragment>
         );
     }
