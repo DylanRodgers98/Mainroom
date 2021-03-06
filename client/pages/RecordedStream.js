@@ -8,7 +8,7 @@ import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {formatDate, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
 import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
-import SocialShareButton from './SocialShareButton';
+import SocialShareButton from '../components/SocialShareButton';
 
 const STARTING_PAGE = 1;
 

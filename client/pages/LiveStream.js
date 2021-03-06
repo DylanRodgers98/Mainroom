@@ -7,7 +7,7 @@ import {Button, Col, Container, Row} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {displayGenreAndCategory} from '../utils/displayUtils';
-import SocialShareButton from './SocialShareButton';
+import SocialShareButton from '../components/SocialShareButton';
 
 const SCROLL_MARGIN_HEIGHT = 30;
 

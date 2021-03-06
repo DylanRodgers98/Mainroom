@@ -1,7 +1,7 @@
 import React from 'react';
 import {render, unmountComponentAtNode} from 'react-dom';
 import {act} from 'react-dom/test-utils'
-import Schedule from '../../../client/components/Schedule';
+import Schedule from '../../../client/pages/Schedule';
 import moment from 'moment';
 
 const MOCK_OWN_STREAMS_GROUP_TITLE = 'My Streams';

@@ -9,20 +9,20 @@ import {LoadingSpinner} from './utils/displayUtils';
 import MainroomNavbar from'./components/MainroomNavbar';
 import './mainroom.scss';
 
-const Home = lazy(() => import('./components/Home'));
-const LiveStreamsByGenre = lazy(() => import('./components/LiveStreamsByGenre'));
-const LiveStreamsByCategory = lazy(() => import('./components/LiveStreamsByCategory'));
-const Search = lazy(() => import('./components/Search'));
-const UserProfile = lazy(() => import('./components/UserProfile'));
-const Subscribers = lazy(() => import('./components/Subscribers'));
-const Subscriptions = lazy(() => import('./components/Subscriptions'));
-const LiveStream = lazy(() => import('./components/LiveStream'));
-const RecordedStream = lazy(() => import('./components/RecordedStream'));
-const ManageRecordedStreams = lazy(() => import('./components/ManageRecordedStreams'));
-const Schedule = lazy(() => import('./components/Schedule'));
-const Settings = lazy(() => import('./components/Settings'));
-const GoLive = lazy(() => import('./components/GoLive'));
-const FourOhFour = lazy(() => import('./components/FourOhFour'));
+const Home = lazy(() => import('./pages/Home'));
+const LiveStreamsByGenre = lazy(() => import('./pages/LiveStreamsByGenre'));
+const LiveStreamsByCategory = lazy(() => import('./pages/LiveStreamsByCategory'));
+const Search = lazy(() => import('./pages/Search'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
+const Subscribers = lazy(() => import('./pages/Subscribers'));
+const Subscriptions = lazy(() => import('./pages/Subscriptions'));
+const LiveStream = lazy(() => import('./pages/LiveStream'));
+const RecordedStream = lazy(() => import('./pages/RecordedStream'));
+const ManageRecordedStreams = lazy(() => import('./pages/ManageRecordedStreams'));
+const Schedule = lazy(() => import('./pages/Schedule'));
+const Settings = lazy(() => import('./pages/Settings'));
+const GoLive = lazy(() => import('./pages/GoLive'));
+const FourOhFour = lazy(() => import('./pages/FourOhFour'));
 
 if (document.getElementById('root')) {
     render(
