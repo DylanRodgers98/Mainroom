@@ -26,6 +26,9 @@ import {
     getAlert,
     LoadingSpinner
 } from '../utils/displayUtils';
+import EditIcon from '../icons/edit.svg';
+import DeleteIcon from '../icons/trash.svg';
+import WhiteDeleteIcon from '../icons/trash-white-20.svg';
 
 const STARTING_PAGE = 1;
 
@@ -429,9 +432,11 @@ export default class ManageRecordedStreams extends React.Component {
                     <p>Are you sure you want to delete '{this.state.selectedStreamTitle}'?</p>
                 </ModalBody>
                 <ModalFooter>
-                    <Button className='btn-dark' onClick={this.deleteRecordedStream}>
+                    <Button className='btn-danger' onClick={this.deleteRecordedStream}>
                         {this.state.showDeleteSpinner ? <Spinner size='sm'/> : undefined}
                         <span className={this.state.showDeleteSpinner ? 'sr-only' : undefined}>
+                            <img src={WhiteDeleteIcon} width={18} height={18} className='mr-2 mb-1'
+                                 alt='Delete Recorded Stream icon'/>
                             Delete
                         </span>
                     </Button>
@@ -450,9 +455,13 @@ export default class ManageRecordedStreams extends React.Component {
                     </DropdownToggle>
                     <DropdownMenu right>
                         <DropdownItem onClick={() => this.openEditRecordedStreamModal(index, stream)}>
+                            <img src={EditIcon} width={22} height={22} className='mr-3'
+                                 alt='Edit Recorded Stream icon'/>
                             Edit
                         </DropdownItem>
                         <DropdownItem onClick={() => this.openDeleteRecordedStreamModal(index, stream)}>
+                            <img src={DeleteIcon} width={22} height={22} className='mr-3'
+                                 alt='Delete Recorded Stream icon'/>
                             Delete
                         </DropdownItem>
                     </DropdownMenu>
