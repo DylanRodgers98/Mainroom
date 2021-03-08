@@ -1,6 +1,16 @@
 import React, {Suspense, lazy} from 'react';
 import axios from 'axios';
-import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
+import {
+    Button,
+    Col,
+    Container,
+    Modal,
+    ModalBody,
+    ModalFooter,
+    ModalHeader,
+    Row,
+    Spinner
+} from 'reactstrap';
 import {Link} from 'react-router-dom';
 import {headTitle, pagination, siteName} from '../../mainroom.config';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
@@ -12,6 +22,13 @@ import {
     getAlert,
     LoadingSpinner
 } from '../utils/displayUtils';
+import ScheduleIcon from '../icons/calendar-white-20.svg';
+import RecordedStreamsIcon from '../icons/film-white-20.svg';
+import EditProfileIcon from '../icons/edit-white.svg';
+import SubscribeIcon from '../icons/user-plus.svg';
+import SubscribedIcon from '../icons/user-check.svg';
+import AddIcon from '../icons/plus-white-20.svg';
+import RemoveIcon from '../icons/x.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -52,6 +69,7 @@ const STARTING_STATE = {
     showLoadMoreButton: false,
     showChangeProfilePicSpinner: false,
     showEditProfileSpinner: false,
+    showLoadMoreSpinner: false,
     alertText: '',
     alertColor: '',
     nextPage: STARTING_PAGE
@@ -78,6 +96,7 @@ export default class UserProfile extends React.Component {
         this.changeProfilePicToggle = this.changeProfilePicToggle.bind(this);
         this.onProfilePicUpload = this.onProfilePicUpload.bind(this);
         this.saveNewProfilePic = this.saveNewProfilePic.bind(this);
+        this.getRecordedStreams = this.getRecordedStreams.bind(this);
 
         this.state = STARTING_STATE;
     }
@@ -219,18 +238,26 @@ export default class UserProfile extends React.Component {
         }
     }
 
-    async getRecordedStreams() {
-        const res = await axios.get(`/api/recorded-streams`, {
-            params: {
-                username: this.props.match.params.username.toLowerCase(),
-                page: this.state.nextPage,
-                limit: pagination.small
+    getRecordedStreams() {
+        this.setState({showLoadMoreSpinner: true}, async () => {
+            try {
+                const res = await axios.get(`/api/recorded-streams`, {
+                    params: {
+                        username: this.props.match.params.username.toLowerCase(),
+                        page: this.state.nextPage,
+                        limit: pagination.small
+                    }
+                });
+                this.setState({
+                    recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
+                    nextPage: res.data.nextPage,
+                    showLoadMoreButton: !!res.data.nextPage,
+                    showLoadMoreSpinner: false
+                });
+            } catch (err) {
+                this.setState({showLoadMoreSpinner: false});
+                displayErrorMessage(this, `An error occurred when loading past streams. Please try again later. (${err})`);
             }
-        });
-        this.setState({
-            recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
-            nextPage: res.data.nextPage,
-            showLoadMoreButton: !!res.data.nextPage
         });
     }
 
@@ -242,15 +269,19 @@ export default class UserProfile extends React.Component {
         return this.state.loggedInUser ? (
             this.state.loggedInUser === this.props.match.params.username.toLowerCase() ? (
                 <Button className='btn-dark w-100' onClick={this.editProfileToggle}>
+                    <img src={EditProfileIcon} className='float-left' alt='Edit Profile icon'/>
                     Edit Profile
                 </Button>
             ) : (
                 <Button className='btn-dark w-100' onClick={this.onClickSubscribeButton}>
+                    <img src={this.state.isLoggedInUserSubscribed ? SubscribedIcon : SubscribeIcon} className='float-left'
+                         alt={this.state.isLoggedInUserSubscribed ? 'Subscribed icon' : 'Subscribe icon'}/>
                     {this.state.isLoggedInUserSubscribed ? 'Subscribed' : 'Subscribe'}
                 </Button>
             )
         ) : (
             <Button className='btn-dark w-100' href={`/login?redirectTo=${window.location.pathname}`}>
+                <img src={SubscribeIcon} className='float-left' alt='Subscribe icon'/>
                 Subscribe
             </Button>
         );
@@ -374,6 +405,7 @@ export default class UserProfile extends React.Component {
         const goToScheduleButton = this.state.loggedInUser !== this.props.match.params.username.toLowerCase() ? undefined : (
             <div className='float-right'>
                 <Button className='btn-dark' tag={Link} to={'/schedule'} size='sm'>
+                    <img src={ScheduleIcon} className='mr-1' alt='Schedule icon'/>
                     Go to Schedule
                 </Button>
             </div>
@@ -431,6 +463,7 @@ export default class UserProfile extends React.Component {
         const manageRecordedStreamsButton = this.state.loggedInUser !== this.props.match.params.username.toLowerCase() ? undefined : (
             <div className='float-right'>
                 <Button className='btn-dark' tag={Link} to={'/manage-recorded-streams'} size='sm'>
+                    <img src={RecordedStreamsIcon} className='mr-1' alt='Recorded Streams icon'/>
                     Manage Recorded Streams
                 </Button>
             </div>
@@ -438,8 +471,9 @@ export default class UserProfile extends React.Component {
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>
-                <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
-                    Load More
+                <Button className='btn-dark' onClick={this.getRecordedStreams}>
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
+                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
                 </Button>
             </div>
         );
@@ -601,27 +635,27 @@ export default class UserProfile extends React.Component {
     renderEditLinks() {
         const headers = !this.state.editLinks.length ? undefined : (
             <Row>
-                <Col className='remove-padding-r' xs='4' lg='3'>Title:</Col>
-                <Col className='remove-padding-l ml-1' xs='6' lg='5'>URL:</Col>
+                <Col className='remove-padding-r' xs='4' lg='4'>Title:</Col>
+                <Col className='remove-padding-l ml-1' xs='6' lg='7'>URL:</Col>
             </Row>
         );
 
         const links = this.state.editLinks.map((link, index) => (
             <Row className='mt-1' key={index}>
-                <Col className='remove-padding-r' xs='4' lg='3'>
+                <Col className='remove-padding-r' xs='4'>
                     <input className='rounded-border w-100' type='text' value={link.title}
                            onChange={e => this.setLinkTitle(e, index)}/>
                 </Col>
-                <Col className='remove-padding-lr' xs='5' lg='5'>
+                <Col className='remove-padding-lr' xs='7'>
                     <input className='rounded-border w-100 mx-1' type='text' value={link.url}
                            onChange={e => this.setLinkUrl(e, index)}/>
                 </Col>
-                <Col className='remove-padding-lr-lg remove-padding-l-xs' xs='3' lg='1'>
-                    <Button className='btn-dark mx-2' size='sm' onClick={() => this.removeLink(index)}>
-                        Remove
-                    </Button>
+                <Col className='remove-padding-l' xs='1'>
+                    <a href='javascript:;' onClick={() => this.removeLink(index)}>
+                        <img src={RemoveIcon} className='ml-2' alt='Remove Link icon'/>
+                    </a>
                 </Col>
-                <Col xs='12' lg='3'>
+                <Col xs='12'>
                     {!this.state.indexesOfInvalidLinks.includes(index) ? undefined
                         : <small className='text-danger'>Invalid URL</small>}
                 </Col>
@@ -684,6 +718,7 @@ export default class UserProfile extends React.Component {
                         <Row className='mt-2'>
                             <Col xs='12'>
                                 <Button className='btn-dark' size='sm' onClick={this.addLink}>
+                                    <img src={AddIcon} className='mr-1' alt='Add Link icon'/>
                                     Add Link
                                 </Button>
                             </Col>

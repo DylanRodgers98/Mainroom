@@ -206,18 +206,6 @@ i {
     }
 }
 
-@include media-breakpoint-up(lg) {
-    .remove-padding-lr-lg,
-    .remove-padding-l-lg {
-        padding-left: 0 !important;
-    }
-
-    .remove-padding-lr-lg,
-    .remove-padding-r-lg {
-        padding-right: 0 !important;
-    }
-}
-
 @include media-breakpoint-up(md) {
     .search-box {
         border-top-right-radius: 0;
@@ -270,10 +258,6 @@ i {
 
     .w-50-xs {
         width: 50%;
-    }
-
-    .remove-padding-l-xs {
-        padding-left: 0;
     }
 }
 
