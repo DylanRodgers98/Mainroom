@@ -3,6 +3,7 @@ import axios from 'axios';
 import {Button, Col, Container, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner} from 'reactstrap';
 import {displayErrorMessage, displaySuccessMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {siteName} from '../../mainroom.config';
+import WhiteDeleteIcon from '../icons/trash-white-20.svg';
 
 const SUCCESSFUL_UPDATE_PARAM = 'success';
 const SUCCESSFUL_UPDATE_MESSAGE = 'Successfully updated account settings';
@@ -344,6 +345,7 @@ export default class Settings extends React.Component {
                     <Button className='btn-danger' onClick={this.deleteAccount}>
                         {this.state.showDeleteAccountSpinner ? <Spinner size='sm' /> : undefined}
                         <span className={this.state.showDeleteAccountSpinner ? 'sr-only' : undefined}>
+                            <img src={WhiteDeleteIcon} className='mr-2 mb-1' alt='Permanently Delete Account icon'/>
                             Delete Account
                         </span>
                     </Button>
@@ -445,6 +447,8 @@ export default class Settings extends React.Component {
                         </Col>
                         <Col className='mt-2' xs='12'>
                             <Button className='btn-danger' size='sm' onClick={this.deleteAccountToggle}>
+                                <img src={WhiteDeleteIcon} width={18} height={18} className='mr-1 mb-1'
+                                     alt='Permanently Delete Account icon'/>
                                 Click to permanently delete account
                             </Button>
                         </Col>

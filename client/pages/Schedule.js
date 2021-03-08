@@ -28,6 +28,9 @@ import {
 } from '../utils/displayUtils';
 import {filters, siteName} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
+import PlusIcon from '../icons/plus-white.svg';
+import CalendarIcon from '../icons/calendar-white-20.svg';
+import WhiteDeleteIcon from '../icons/trash-white-20.svg';
 
 export default class Schedule extends React.Component {
 
@@ -464,7 +467,9 @@ export default class Schedule extends React.Component {
                 </ModalBody>
                 {scheduledStream.user._id !== this.state.loggedInUserId ? undefined : (
                     <ModalFooter>
-                        <Button className='btn-dark' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
+                        <Button className='btn-danger' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
+                            <img src={WhiteDeleteIcon} width={18} height={18} className='mr-1 mb-1'
+                                 alt='Cancel Stream icon'/>
                             Cancel Stream
                         </Button>
                     </ModalFooter>
@@ -493,6 +498,8 @@ export default class Schedule extends React.Component {
                         </Col>
                         <Col>
                             <Button className='btn-dark float-right' onClick={this.scheduleStreamToggle}>
+                                <img src={PlusIcon} width={22} height={22} className='mr-1'
+                                     alt='Schedule a Stream icon'/>
                                 Schedule a Stream
                             </Button>
                         </Col>
@@ -504,7 +511,11 @@ export default class Schedule extends React.Component {
                                                 applyCallback={this.applyDate} leftMode={true}
                                                 noMobileMode={this.isNoMobileMode()}>
                             <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
-                                <DropdownToggle caret>Select Time Period</DropdownToggle>
+                                <DropdownToggle caret>
+                                    <img src={CalendarIcon} width={18} height={18} className='mr-2 mb-1'
+                                         alt='Select Time Period icon'/>
+                                    Select Time Period
+                                </DropdownToggle>
                             </Dropdown>
                         </DateTimeRangeContainer>
                     </div>

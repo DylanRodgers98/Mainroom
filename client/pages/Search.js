@@ -352,7 +352,7 @@ export default class LiveStreams extends React.Component {
 
         return !pastStreams.length ? undefined : (
             <React.Fragment>
-                <h4>Past Streams</h4>
+                <h5>Past Streams</h5>
                 <hr className='my-4'/>
                 <Row xs='1' sm='1' md='2' lg='3' xl='3'>
                     {pastStreams}
@@ -386,7 +386,7 @@ export default class LiveStreams extends React.Component {
 
         return !users.length ? undefined : (
             <React.Fragment>
-                <h4>Users</h4>
+                <h5>Users</h5>
                 <hr className='my-4'/>
                 <Row xs='1' sm='1' md='2' lg='3' xl='3'>
                     {users}

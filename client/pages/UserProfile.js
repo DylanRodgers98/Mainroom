@@ -29,6 +29,8 @@ import SubscribeIcon from '../icons/user-plus.svg';
 import SubscribedIcon from '../icons/user-check.svg';
 import AddIcon from '../icons/plus-white-20.svg';
 import RemoveIcon from '../icons/x.svg';
+import DeleteIcon from '../icons/trash.svg';
+import TickIcon from '../icons/check-white-20.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -348,12 +350,17 @@ export default class UserProfile extends React.Component {
     }
 
     async removeFromSchedule(streamId) {
-        const res = await axios.patch(`/api/users/${this.state.loggedInUser}/schedule/remove-non-subscribed/${streamId}`);
-        if (res.status === 200) {
+        if (this.state.isLoggedInUserSubscribed) {
+            return;
+        }
+        try {
+            await axios.patch(`/api/users/${this.state.loggedInUser}/schedule/remove-non-subscribed/${streamId}`);
             const arrayWithStreamRemoved = this.state.scheduledStreamsInLoggedInUserSchedule.filter(id => id !== streamId);
             this.setState({
                 scheduledStreamsInLoggedInUserSchedule: arrayWithStreamRemoved
             });
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when removing stream from schedule. Please try again later. (${err})`);
         }
     }
 
@@ -370,16 +377,21 @@ export default class UserProfile extends React.Component {
     renderUpcomingStreams() {
         const scheduledStreams = this.state.scheduledStreams.map((stream, index) => {
             const button = this.state.loggedInUser === this.props.match.params.username.toLowerCase() ? (
-                <Button className='float-right btn-dark' size='sm' onClick={() => this.cancelStream(stream._id)}>
-                    Cancel Stream
-                </Button>
+                <a href='javascript:;' className='float-right' title={`Cancel '${stream.title}'`}
+                   onClick={() => this.cancelStream(stream._id)}>
+                    <img src={DeleteIcon} width={20} height={20} className='mb-1' alt='Cancel Stream icon'/>
+                </a>
             ) : (
                 this.state.isLoggedInUserSubscribed || this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
                     <Button className='float-right btn-dark' size='sm' onClick={() => this.removeFromSchedule(stream._id)}>
-                        In Schedule
+                        <span title={this.state.isLoggedInUserSubscribed ? undefined : `Remove '${stream.title}' from Schedule`}>
+                            <img src={TickIcon} className='mr-1' alt='In Schedule icon'/>
+                            In Schedule
+                        </span>
                     </Button>
                 ) : (
                     <Button className='float-right btn-dark' size='sm' onClick={() => this.addToSchedule(stream._id)}>
+                        <img src={AddIcon} className='mr-1' alt='Add to Schedule icon'/>
                         Add to Schedule
                     </Button>
                 )
