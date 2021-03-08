@@ -19,6 +19,7 @@ export default class LiveStreamsByCategory extends React.Component {
         this.clearGenreFilter = this.clearGenreFilter.bind(this);
 
         this.state = {
+            pageHeader: '',
             loaded: false,
             liveStreams: [],
             nextPage: STARTING_PAGE,
@@ -29,7 +30,13 @@ export default class LiveStreamsByCategory extends React.Component {
     }
 
     componentDidMount() {
-        this.getLiveStreams();
+        const queriedCategory = decodeURIComponent(this.props.match.params.category);
+        if (filters.categories.includes(queriedCategory)) {
+            this.setState({pageHeader: `${queriedCategory} Livestreams`})
+            this.getLiveStreams();
+        } else {
+            window.location.href = '/404';
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -151,8 +158,6 @@ export default class LiveStreamsByCategory extends React.Component {
             </p>
         );
 
-        const pageHeader = `${decodeURIComponent(this.props.match.params.category)} Livestreams`;
-
         const genreDropdownText = this.state.genreFilter || 'Filter';
 
         const genres = filters.genres.map((genre, index) => (
@@ -173,7 +178,7 @@ export default class LiveStreamsByCategory extends React.Component {
             <Container fluid='lg' className='mt-5'>
                 <Row>
                     <Col>
-                        <h4>{pageHeader}</h4>
+                        <h4>{this.state.pageHeader}</h4>
                     </Col>
                     <Col>
                         <Dropdown className='dropdown-hover-darkred float-right' isOpen={this.state.genreDropdownOpen}
