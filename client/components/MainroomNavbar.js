@@ -223,7 +223,7 @@ export default class MainroomNavbar extends React.Component {
     }
 
     render() {
-        const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText.trim()}` : '';
+        const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText.trim()}` : window.location.path;
 
         return (
             <Navbar color='dark' dark expand='md'>
