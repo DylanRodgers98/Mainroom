@@ -23,6 +23,7 @@ import GoLiveIcon from '../icons/video.svg';
 import RecordedStreamsIcon from '../icons/film.svg';
 import SettingsIcon from '../icons/settings.svg';
 import LogOutIcon from '../icons/log-out.svg';
+import SearchIcon from '../icons/search.svg';
 
 export default class MainroomNavbar extends React.Component {
 
@@ -238,7 +239,7 @@ export default class MainroomNavbar extends React.Component {
                     <NavItem>
                         <Button id='searchButton' className='form-control search-button' onClick={this.clearSearchBox}
                                 tag={Link} to={searchButtonLink}>
-                            Search
+                            <img src={SearchIcon} alt='Search icon' className='mb-1'/>
                         </Button>
                     </NavItem>
                     <NavItem className='ml-md-2'>
