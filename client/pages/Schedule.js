@@ -494,39 +494,41 @@ export default class Schedule extends React.Component {
 
                     <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                         <Col>
-                            <h4>Schedule</h4>
-                        </Col>
-                        <Col>
                             <Button className='btn-dark float-right' onClick={this.scheduleStreamToggle}>
                                 <img src={PlusIcon} width={22} height={22} className='mr-1'
                                      alt='Schedule a Stream icon'/>
                                 Schedule a Stream
                             </Button>
+                            <h4>Schedule</h4>
                         </Col>
                     </Row>
                     <hr className='mt-4'/>
-                    <div className='float-right mb-1'>
-                        <DateTimeRangeContainer ranges={this.getDatePickerRange()} local={this.getDatePickerFormat()}
-                                                start={this.state.startTime} end={this.state.endTime}
-                                                applyCallback={this.applyDate} leftMode={true}
-                                                noMobileMode={this.isNoMobileMode()}>
-                            <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
-                                <DropdownToggle caret>
-                                    <img src={CalendarIcon} width={18} height={18} className='mr-2 mb-1'
-                                         alt='Select Time Period icon'/>
-                                    Select Time Period
-                                </DropdownToggle>
-                            </Dropdown>
-                        </DateTimeRangeContainer>
-                    </div>
-                    <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
-                              onItemSelect={this.selectScheduledStream} onItemClick={this.selectScheduledStream}
-                              visibleTimeStart={this.state.startTime.valueOf()}
-                              visibleTimeEnd={this.state.endTime.valueOf()}/>
-                    <p className='my-3 text-center'>
-                        {this.state.scheduleGroups.length > 1 ? ''
-                            : 'Streams scheduled by your subscriptions during the selected time period will appear here'}
-                    </p>
+                    <Row>
+                        <Col>
+                            <div className='float-right mb-1'>
+                                <DateTimeRangeContainer ranges={this.getDatePickerRange()} local={this.getDatePickerFormat()}
+                                                        start={this.state.startTime} end={this.state.endTime}
+                                                        applyCallback={this.applyDate} leftMode={true}
+                                                        noMobileMode={this.isNoMobileMode()}>
+                                    <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
+                                        <DropdownToggle caret>
+                                            <img src={CalendarIcon} width={18} height={18} className='mr-2 mb-1'
+                                                 alt='Select Time Period icon'/>
+                                            Select Time Period
+                                        </DropdownToggle>
+                                    </Dropdown>
+                                </DateTimeRangeContainer>
+                            </div>
+                            <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
+                                      onItemSelect={this.selectScheduledStream} onItemClick={this.selectScheduledStream}
+                                      visibleTimeStart={this.state.startTime.valueOf()}
+                                      visibleTimeEnd={this.state.endTime.valueOf()}/>
+                            <p className='my-3 text-center'>
+                                {this.state.scheduleGroups.length > 1 ? ''
+                                    : 'Streams scheduled by your subscriptions during the selected time period will appear here'}
+                            </p>
+                        </Col>
+                    </Row>
                 </Container>
 
                 {this.renderScheduleStream()}

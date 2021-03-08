@@ -227,7 +227,9 @@ export default class MainroomNavbar extends React.Component {
 
         return (
             <Navbar color='dark' dark expand='md'>
-                <NavbarBrand tag={Link} to={'/'}>{siteName}</NavbarBrand>
+                <NavbarBrand tag={Link} to={'/'} onClick={this.closeNavbar}>
+                    {siteName}
+                </NavbarBrand>
                 <NavbarToggler onClick={this.navbarToggle} />
                 <Collapse isOpen={this.state.navbarOpen} navbar>
                 <Nav className='mr-auto' navbar>
