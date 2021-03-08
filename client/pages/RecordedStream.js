@@ -3,11 +3,11 @@ import videojs from 'video.js';
 import axios from 'axios';
 import {siteName, pagination, headTitle} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Col, Container, Row} from 'reactstrap';
+import {Button, Col, Container, Row, Spinner} from 'reactstrap';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
 import {formatDate, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import SocialShareButton from '../components/SocialShareButton';
 
 const STARTING_PAGE = 1;
@@ -27,6 +27,9 @@ const STARTING_STATE = {
     videoHeight: 0,
     streamHeadingsHeight: 0,
     showLoadMoreButton: false,
+    showLoadMoreSpinner: false,
+    alertText: '',
+    alertColor: '',
     nextPage: STARTING_PAGE
 };
 
@@ -34,6 +37,9 @@ export default class RecordedStream extends React.Component {
 
     constructor(props) {
         super(props);
+
+        this.getRecordedStreams = this.getRecordedStreams.bind(this);
+
         this.state = STARTING_STATE;
     }
 
@@ -88,18 +94,26 @@ export default class RecordedStream extends React.Component {
         });
     }
 
-    async getRecordedStreams() {
-        const res = await axios.get(`/api/recorded-streams`, {
-            params: {
-                username: this.state.username,
-                page: this.state.nextPage,
-                limit: pagination.small
+    getRecordedStreams() {
+        this.setState({showLoadMoreSpinner: true}, async () => {
+            try {
+                const res = await axios.get(`/api/recorded-streams`, {
+                    params: {
+                        username: this.state.username,
+                        page: this.state.nextPage,
+                        limit: pagination.small
+                    }
+                });
+                this.setState({
+                    recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
+                    nextPage: res.data.nextPage,
+                    showLoadMoreButton: !!res.data.nextPage,
+                    showLoadMoreSpinner: false
+                });
+            } catch (err) {
+                this.setState({showLoadMoreSpinner: false});
+                displayErrorMessage(this, `An error occurred when loading more streams. Please try again later. (${err})`);
             }
-        });
-        this.setState({
-            recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
-            nextPage: res.data.nextPage,
-            showLoadMoreButton: !!res.data.nextPage
         });
     }
 
@@ -166,8 +180,9 @@ export default class RecordedStream extends React.Component {
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-2'>
-                <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
-                    Load More
+                <Button className='btn-dark' onClick={this.getRecordedStreams}>
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
+                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
                 </Button>
             </div>
         );
@@ -189,6 +204,8 @@ export default class RecordedStream extends React.Component {
         return !this.state.loaded ? (<LoadingSpinner />) : (
             <Fragment>
                 <Container fluid className='remove-padding-lr'>
+                    {getAlert(this)}
+
                     <Row className='remove-margin-r'>
                         <Col className='remove-padding-r' xs='12' md='9'>
                             <ReactHeight onHeightReady={height => this.setVideoHeight(height)}>

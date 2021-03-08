@@ -1,6 +1,6 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {successMessageTimeout, errorMessageTimeout, bugReportURL} from '../../mainroom.config';
+import {successMessageTimeout, bugReportURL} from '../../mainroom.config';
 import {Alert, Spinner} from 'reactstrap';
 
 export const displayGenreAndCategory = ({genre, category}) => (
@@ -10,25 +10,27 @@ export const displayGenreAndCategory = ({genre, category}) => (
     </React.Fragment>
 );
 
-export const displaySuccessMessage = (component, message, callback) => {
-    displayAlert(component, message, 'success', successMessageTimeout, callback);
+export const displaySuccessMessage = (component, message, timeoutCallback) => {
+    displayAlert(component, message, 'success', timeoutCallback, successMessageTimeout);
 }
 
-export const displayErrorMessage = (component, message, callback) => {
-    displayAlert(component, message, 'danger', errorMessageTimeout, callback);
+export const displayErrorMessage = (component, message, timeoutCallback) => {
+    displayAlert(component, message, 'danger', timeoutCallback);
 }
 
-const displayAlert = (component, alertText, alertColor, timeout, callback) => {
+const displayAlert = (component, alertText, alertColor, timeoutCallback, timeout) => {
     component.setState({alertText, alertColor}, () => {
-        setTimeout(() => {
-            component.setState({
-                alertText: '',
-                alertColor: ''
-            });
-            if (callback) {
-                callback();
-            }
-        }, timeout);
+        if (timeout) {
+            setTimeout(() => {
+                component.setState({
+                    alertText: '',
+                    alertColor: ''
+                });
+                if (timeoutCallback) {
+                    timeoutCallback();
+                }
+            }, timeout);
+        }
     });
 }
 

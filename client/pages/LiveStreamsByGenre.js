@@ -2,9 +2,9 @@ import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
 import {pagination, filters, siteName} from '../../mainroom.config';
-import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
+import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {timeSince} from '../utils/dateUtils';
 
 const STARTING_PAGE = 1;
@@ -17,6 +17,7 @@ export default class LiveStreamsByCategory extends React.Component {
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
         this.setCategoryFilter = this.setCategoryFilter.bind(this);
         this.clearCategoryFilter = this.clearCategoryFilter.bind(this);
+        this.getLiveStreams = this.getLiveStreams.bind(this);
 
         this.state = {
             pageHeader: '',
@@ -25,7 +26,10 @@ export default class LiveStreamsByCategory extends React.Component {
             nextPage: STARTING_PAGE,
             categoryDropdownOpen: false,
             categoryFilter: '',
-            showLoadMoreButton: false
+            showLoadMoreButton: false,
+            showLoadMoreSpinner: false,
+            alertText: '',
+            alertColor: ''
         }
     }
 
@@ -61,7 +65,7 @@ export default class LiveStreamsByCategory extends React.Component {
         }
     }
 
-    async getLiveStreams() {
+    getLiveStreams() {
         const queryParams = {
             params: {
                 page: this.state.nextPage,
@@ -75,12 +79,20 @@ export default class LiveStreamsByCategory extends React.Component {
             queryParams.params.category = this.state.categoryFilter;
         }
 
-        const res = await axios.get('/api/livestreams', queryParams);
-        this.setState({
-            liveStreams: [...this.state.liveStreams, ...(res.data.streams || [])],
-            nextPage: res.data.nextPage,
-            showLoadMoreButton: !!res.data.nextPage,
-            loaded: true
+        this.setState({showLoadMoreSpinner: true}, async () => {
+            try {
+                const res = await axios.get('/api/livestreams', queryParams);
+                this.setState({
+                    liveStreams: [...this.state.liveStreams, ...(res.data.streams || [])],
+                    nextPage: res.data.nextPage,
+                    showLoadMoreButton: !!res.data.nextPage,
+                    loaded: true,
+                    showLoadMoreSpinner: false
+                });
+            } catch (err) {
+                this.setState({showLoadMoreSpinner: false});
+                displayErrorMessage(this, `An error occurred when loading more streams. Please try again later. (${err})`);
+            }
         });
     }
 
@@ -168,14 +180,17 @@ export default class LiveStreamsByCategory extends React.Component {
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>
-                <Button className='btn-dark' onClick={async () => await this.getLiveStreams()}>
-                    Load More
+                <Button className='btn-dark' onClick={this.getLiveStreams}>
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
+                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
                 </Button>
             </div>
         );
 
         return (
             <Container fluid='lg' className='mt-5'>
+                {getAlert(this)}
+
                 <Row>
                     <Col>
                         <h4>{this.state.pageHeader}</h4>

@@ -125,7 +125,6 @@ module.exports = {
     },
     loadLivestreamTimeout: 15 * SECOND,
     successMessageTimeout: 3 * SECOND,
-    errorMessageTimeout: 8 * SECOND,
     bugReportURL: 'https://gitreports.com/issue/DylanRodgers98/Mainroom',
     chatColours: {
         aqua: "#00ffff",

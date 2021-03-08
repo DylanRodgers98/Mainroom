@@ -2,9 +2,9 @@ import React from 'react';
 import axios from 'axios';
 import {Link} from 'react-router-dom';
 import {headTitle, pagination} from '../../mainroom.config';
-import {Button, Col, Container, Row} from 'reactstrap';
+import {Button, Col, Container, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
-import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {timeSince} from '../utils/dateUtils';
 
 const STARTING_PAGE = 1;
@@ -22,7 +22,11 @@ export default class Home extends React.Component {
             featuredLiveStreamsPage: STARTING_PAGE,
             subscriptionsLiveStreamsPage: STARTING_PAGE,
             showLoadMoreFeaturedButton: false,
-            showLoadMoreSubscriptionsButton: false
+            showLoadMoreFeaturedSpinner: false,
+            showLoadMoreSubscriptionsButton: false,
+            showLoadMoreSubscriptionsSpinner: false,
+            alertText: '',
+            alertColor: ''
         }
     }
 
@@ -87,7 +91,7 @@ export default class Home extends React.Component {
     }
 
     renderFeaturedLiveStreams() {
-        const loadMoreButton = this.renderLoadMoreButton(async () => {
+        const loadMoreButton = this.renderLoadMoreButton('showLoadMoreFeaturedSpinner', async () => {
             await this.getFeaturedLiveStreams({
                 page: this.state.featuredLiveStreamsPage,
                 limit: pagination[this.state.loggedInUser ? 'small' : 'large']
@@ -104,7 +108,7 @@ export default class Home extends React.Component {
     }
 
     renderSubscriptionLiveStreams() {
-        const loadMoreButton = this.renderLoadMoreButton(async () => {
+        const loadMoreButton = this.renderLoadMoreButton('showLoadMoreSubscriptionsSpinner', async () => {
             await this.getSubscriptionLiveStreams({
                 page: this.state.subscriptionLiveStreamsPage,
                 limit: pagination.small
@@ -120,11 +124,22 @@ export default class Home extends React.Component {
         );
     }
 
-    renderLoadMoreButton(loadMoreOnClick) {
+    renderLoadMoreButton(spinnerStateKey, loadMoreOnClick) {
+        const onClick = () => {
+            this.setState({[spinnerStateKey]: true}, async () => {
+                try {
+                    await loadMoreOnClick();
+                } catch (err) {
+                    displayErrorMessage(this, `An error occurred when loading more streams. Please try again later. (${err})`);
+                }
+                this.setState({[spinnerStateKey]: false});
+            });
+        };
         return (
             <div className='text-center'>
-                <Button className='btn-dark' onClick={async () => await loadMoreOnClick()}>
-                    Load More
+                <Button className='btn-dark' onClick={onClick}>
+                    {this.state[spinnerStateKey] ? <Spinner size='sm' /> : undefined}
+                    {this.state[spinnerStateKey] ? undefined : 'Load More'}
                 </Button>
             </div>
         );
@@ -209,6 +224,8 @@ export default class Home extends React.Component {
     render() {
         return !this.state.loaded ? (<LoadingSpinner />) : (
             <Container fluid='lg' className='mt-5'>
+                {getAlert(this)}
+
                 {this.renderStreamBoxes()}
             </Container>
         )

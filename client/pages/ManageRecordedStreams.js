@@ -46,6 +46,7 @@ export default class ManageRecordedStreams extends React.Component {
         this.setTags = this.setTags.bind(this);
         this.editRecordedStream = this.editRecordedStream.bind(this);
         this.deleteRecordedStream = this.deleteRecordedStream.bind(this);
+        this.getRecordedStreams = this.getRecordedStreams.bind(this);
 
         this.state = {
             loaded: false,
@@ -69,6 +70,7 @@ export default class ManageRecordedStreams extends React.Component {
             showSaveChangesSpinner: false,
             showDeleteSpinner: false,
             alertIndex: undefined,
+            isGlobalAlert: false,
             alertText: '',
             alertColor: '',
             nextPage: STARTING_PAGE
@@ -93,21 +95,32 @@ export default class ManageRecordedStreams extends React.Component {
         }
     }
 
-    async getRecordedStreams() {
-        const res = await axios.get(`/api/recorded-streams`, {
-            params: {
-                username: this.state.loggedInUser,
-                page: this.state.nextPage,
-                limit: pagination.large
+    getRecordedStreams() {
+        this.setState({showLoadMoreSpinner: true}, async () => {
+            try {
+                const res = await axios.get(`/api/recorded-streams`, {
+                    params: {
+                        username: this.state.loggedInUser,
+                        page: this.state.nextPage,
+                        limit: pagination.large
+                    }
+                });
+                const recordedStreams = [...this.state.recordedStreams, ...(res.data.recordedStreams || [])];
+                this.setState({
+                    recordedStreams,
+                    dropdownState: new Array(recordedStreams.length).fill(false),
+                    nextPage: res.data.nextPage,
+                    showLoadMoreButton: !!res.data.nextPage,
+                    loaded: true,
+                    showLoadMoreSpinner: false
+                });
+            } catch (err) {
+                this.setState({
+                    isGlobalAlert: true,
+                    showLoadMoreSpinner: false
+                });
+                displayErrorMessage(this, `An error occurred when loading more recorded streams. Please try again later. (${err})`);
             }
-        });
-        const recordedStreams = [...this.state.recordedStreams, ...(res.data.recordedStreams || [])];
-        this.setState({
-            recordedStreams,
-            dropdownState: new Array(recordedStreams.length).fill(false),
-            nextPage: res.data.nextPage,
-            showLoadMoreButton: !!res.data.nextPage,
-            loaded: true
         });
     }
 
@@ -486,8 +499,9 @@ export default class ManageRecordedStreams extends React.Component {
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>
-                <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
-                    Load More
+                <Button className='btn-dark' onClick={this.getRecordedStreams}>
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
+                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
                 </Button>
             </div>
         );
@@ -510,6 +524,8 @@ export default class ManageRecordedStreams extends React.Component {
         return !this.state.loaded ? (<LoadingSpinner />) : (
             <React.Fragment>
                 <Container fluid='lg' className='mt-5'>
+                    {this.state.isGlobalAlert ? getAlert(this) : undefined}
+
                     <Row>
                         <Col>
                             <h4>Manage Recorded Streams</h4>

@@ -2,10 +2,10 @@ import React from 'react';
 import axios from 'axios';
 import {pagination, filters, siteName} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
-import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row} from 'reactstrap';
+import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
 import {timeSince} from '../utils/dateUtils';
-import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
+import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
 
 const STARTING_PAGE = 1;
 
@@ -20,6 +20,9 @@ export default class LiveStreams extends React.Component {
         this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
         this.setCategoryFilter = this.setCategoryFilter.bind(this);
         this.clearCategoryFilter = this.clearCategoryFilter.bind(this);
+        this.getLiveStreams = this.getLiveStreams.bind(this);
+        this.getPastStreams = this.getPastStreams.bind(this);
+        this.getUsers = this.getUsers.bind(this);
 
         this.state = {
             loaded: false,
@@ -35,7 +38,12 @@ export default class LiveStreams extends React.Component {
             genreDropdownOpen: false,
             genreFilter: '',
             categoryDropdownOpen: false,
-            categoryFilter: ''
+            categoryFilter: '',
+            showLoadMoreLivestreamsSpinner: false,
+            showLoadMorePastStreamsSpinner: false,
+            showLoadMoreUsersSpinner: false,
+            alertText: '',
+            alertColor: ''
         }
     }
 
@@ -89,11 +97,11 @@ export default class LiveStreams extends React.Component {
     async getStreams() {
         await Promise.all([
             this.getLiveStreams(),
-            this.getRecordedStreams()
+            this.getPastStreams()
         ]);
     }
 
-    async getLiveStreams() {
+    getLiveStreams() {
         const queryParams = {
             params: {
                 searchQuery: this.props.match.params.query,
@@ -109,15 +117,23 @@ export default class LiveStreams extends React.Component {
             queryParams.params.category = this.state.categoryFilter;
         }
 
-        const res = await axios.get('/api/livestreams', queryParams);
-        this.setState({
-            liveStreams: [...this.state.liveStreams, ...(res.data.streams || [])],
-            livestreamsNextPage: res.data.nextPage,
-            showLoadMoreLivestreamsButton: !!res.data.nextPage
+        this.setState({showLoadMoreLivestreamsSpinner: true}, async () => {
+            try {
+                const res = await axios.get('/api/livestreams', queryParams);
+                this.setState({
+                    liveStreams: [...this.state.liveStreams, ...(res.data.streams || [])],
+                    livestreamsNextPage: res.data.nextPage,
+                    showLoadMoreLivestreamsButton: !!res.data.nextPage,
+                    showLoadMoreLivestreamsSpinner: false
+                });
+            } catch (err) {
+                this.setState({showLoadMoreLivestreamsSpinner: false});
+                displayErrorMessage(this, `An error occurred when loading more livestreams. Please try again later. (${err})`);
+            }
         });
     }
 
-    async getRecordedStreams() {
+    getPastStreams() {
         const queryParams = {
             params: {
                 searchQuery: this.props.match.params.query,
@@ -133,15 +149,23 @@ export default class LiveStreams extends React.Component {
             queryParams.params.category = this.state.categoryFilter;
         }
 
-        const res = await axios.get('/api/recorded-streams', queryParams);
-        this.setState({
-            recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
-            recordedStreamsNextPage: res.data.nextPage,
-            showLoadMorePastStreamsButton: !!res.data.nextPage
+        this.setState({showLoadMorePastStreamsSpinner: true}, async () => {
+            try {
+                const res = await axios.get('/api/recorded-streams', queryParams);
+                this.setState({
+                    recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
+                    recordedStreamsNextPage: res.data.nextPage,
+                    showLoadMorePastStreamsButton: !!res.data.nextPage,
+                    showLoadMorePastStreamsSpinner: false
+                });
+            } catch (err) {
+                this.setState({showLoadMorePastStreamsSpinner: false});
+                displayErrorMessage(this, `An error occurred when loading more past streams. Please try again later. (${err})`);
+            }
         });
     }
 
-    async getUsers() {
+    getUsers() {
         const queryParams = {
             params: {
                 searchQuery: this.props.match.params.query,
@@ -150,11 +174,19 @@ export default class LiveStreams extends React.Component {
             }
         };
 
-        const res = await axios.get('/api/users', queryParams);
-        this.setState({
-            users: [...this.state.users, ...(res.data.users || [])],
-            usersNextPage: res.data.nextPage,
-            showLoadMoreUsersButton: !!res.data.nextPage
+        this.setState({showLoadMoreUsersSpinner: true}, async () => {
+            try {
+                const res = await axios.get('/api/users', queryParams);
+                this.setState({
+                    users: [...this.state.users, ...(res.data.users || [])],
+                    usersNextPage: res.data.nextPage,
+                    showLoadMoreUsersButton: !!res.data.nextPage,
+                    showLoadMoreUsersSpinner: false
+                });
+            } catch (err) {
+                this.setState({showLoadMoreUsersSpinner: false});
+                displayErrorMessage(this, `An error occurred when loading more users. Please try again later. (${err})`);
+            }
         });
     }
 
@@ -242,8 +274,9 @@ export default class LiveStreams extends React.Component {
 
         const loadMoreLiveStreamsButton = !this.state.showLoadMoreLivestreamsButton ? undefined : (
             <div className='text-center mb-4'>
-                <Button className='btn-dark' onClick={async () => await this.getLiveStreams()}>
-                    Load More Livestreams
+                <Button className='btn-dark' onClick={this.getLiveStreams}>
+                    {this.state.showLoadMoreLivestreamsSpinner ? <Spinner size='sm' /> : undefined}
+                    {this.state.showLoadMoreLivestreamsSpinner ? undefined : 'Load More Livestreams'}
                 </Button>
             </div>
         );
@@ -310,8 +343,9 @@ export default class LiveStreams extends React.Component {
 
         const loadMorePastStreamsButton = !this.state.showLoadMorePastStreamsButton ? undefined : (
             <div className='text-center mb-4'>
-                <Button className='btn-dark' onClick={async () => await this.getRecordedStreams()}>
-                    Load More Past Streams
+                <Button className='btn-dark' onClick={this.getPastStreams}>
+                    {this.state.showLoadMorePastStreamsSpinner ? <Spinner size='sm' /> : undefined}
+                    {this.state.showLoadMorePastStreamsSpinner ? undefined : 'Load More Past Streams'}
                 </Button>
             </div>
         );
@@ -343,8 +377,9 @@ export default class LiveStreams extends React.Component {
 
         const loadMoreUsersButton = !this.state.showLoadMoreUsersButton ? undefined : (
             <div className='text-center mb-4'>
-                <Button className='btn-dark' onClick={async () => await this.getUsers()}>
-                    Load More Users
+                <Button className='btn-dark' onClick={this.getUsers}>
+                    {this.state.showLoadMoreUsersSpinner ? <Spinner size='sm' /> : undefined}
+                    {this.state.showLoadMoreUsersSpinner ? undefined : 'Load More Users'}
                 </Button>
             </div>
         );
@@ -379,6 +414,8 @@ export default class LiveStreams extends React.Component {
 
         return (
             <Container fluid='lg' className='mt-5'>
+                {getAlert(this)}
+
                 <Row>
                     <Col>
                         <h4>Search: '{this.props.match.params.query}'</h4>
