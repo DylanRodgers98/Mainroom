@@ -16,6 +16,13 @@ import {
 } from 'reactstrap';
 import {siteName, filters} from '../../mainroom.config';
 import axios from 'axios';
+import ProfileIcon from '../icons/user.svg';
+import ScheduleIcon from '../icons/calendar.svg';
+import SubscriptionsIcon from '../icons/users.svg';
+import GoLiveIcon from '../icons/video.svg';
+import RecordedStreamsIcon from '../icons/film.svg';
+import SettingsIcon from '../icons/settings.svg';
+import LogOutIcon from '../icons/log-out.svg';
 
 export default class MainroomNavbar extends React.Component {
 
@@ -159,34 +166,43 @@ export default class MainroomNavbar extends React.Component {
                               isOpen={this.state.profileDropdownOpen} toggle={this.profileDropdownToggle}
                               title='Click for menu'>
                         <DropdownToggle caret={this.isSmallBreakpoint()}>
-                            <img className='rounded-circle' src={this.state.profilePicURL + '#' + Date.now()}
+                            <img className='rounded-circle' src={this.state.profilePicURL}
                                  width='25' height='25' alt='Menu'/>
                             {!this.isSmallBreakpoint() ? undefined
                                 : <span className='ml-1'>{this.state.loggedInDisplayName || this.state.loggedInUsername}</span>}
                         </DropdownToggle>
                         <DropdownMenu right>
                             <DropdownItem tag={Link} to={`/user/${this.state.loggedInUsername}`} onClick={this.closeNavbar}>
+                                <img src={ProfileIcon} width={22} height={22} className='mr-3' alt='Profile icon'/>
                                 Profile
                             </DropdownItem>
                             <DropdownItem tag={Link} to={'/schedule'} onClick={this.closeNavbar}>
+                                <img src={ScheduleIcon} width={22} height={22} className='mr-3' alt='Schedule icon'/>
                                 Schedule
                             </DropdownItem>
                             <DropdownItem tag={Link} onClick={this.closeNavbar}
                                           to={`/user/${this.state.loggedInUsername}/subscriptions`}>
+                                <img src={SubscriptionsIcon} width={22} height={22} className='mr-3' alt='Subscriptions icon'/>
                                 Subscriptions
                             </DropdownItem>
                             <DropdownItem divider/>
                             <DropdownItem tag={Link} to={'/go-live'} onClick={this.closeNavbar}>
+                                <img src={GoLiveIcon} width={22} height={22} className='mr-3' alt='Go Live icon'/>
                                 Go Live
                             </DropdownItem>
                             <DropdownItem tag={Link} to={'/manage-recorded-streams'} onClick={this.closeNavbar}>
+                                <img src={RecordedStreamsIcon} width={22} height={22} className='mr-3' alt='Recorded Streams icon'/>
                                 Recorded Streams
                             </DropdownItem>
                             <DropdownItem divider/>
                             <DropdownItem tag={Link} to={'/settings'} onClick={this.closeNavbar}>
+                                <img src={SettingsIcon} width={22} height={22} className='mr-3' alt='Settings icon'/>
                                 Settings
                             </DropdownItem>
-                            <DropdownItem href={'/logout'}>Log Out</DropdownItem>
+                            <DropdownItem href={'/logout'}>
+                                <img src={LogOutIcon} width={22} height={22} className='mr-3' alt='Log Out icon'/>
+                                Log Out
+                            </DropdownItem>
                         </DropdownMenu>
                     </Dropdown>
                 </NavItem>

@@ -771,7 +771,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderProfilePic() {
-        const profilePic = <img src={this.state.profilePicURL + '#' + Date.now()}
+        const profilePic = <img src={this.state.profilePicURL}
                                 alt={`${this.props.match.params.username.toLowerCase()} Profile Picture`}/>;
 
         const changeProfilePicButton = (
