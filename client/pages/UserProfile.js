@@ -31,6 +31,7 @@ import AddIcon from '../icons/plus-white-20.svg';
 import RemoveIcon from '../icons/x.svg';
 import DeleteIcon from '../icons/trash.svg';
 import TickIcon from '../icons/check-white-20.svg';
+import LocationIcon from '../icons/map-pin-20.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -850,7 +851,10 @@ export default class UserProfile extends React.Component {
                         <Col md='4' lg='3'>
                             {this.renderProfilePic()}
                             <h1>{this.state.displayName || this.props.match.params.username.toLowerCase()}</h1>
-                            <h5>{this.state.location || 'Planet Earth'}</h5>
+                            <h5>
+                                <img src={LocationIcon} className='mr-1 mb-1' alt='Location icon'/>
+                                {this.state.location || 'Planet Earth'}
+                            </h5>
                             <h5 className='black-link'>
                                 <Link to={`/user/${this.props.match.params.username.toLowerCase()}/subscribers`}>
                                     {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
