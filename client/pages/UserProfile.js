@@ -517,7 +517,7 @@ export default class UserProfile extends React.Component {
             editDisplayName: this.state.displayName,
             editLocation: this.state.location,
             editBio: this.state.bio,
-            editLinks: this.state.links,
+            editLinks: this.state.links.map(link => ({...link})) // copy all link objects so changes don't pass through
         }));
     }
 
@@ -842,7 +842,7 @@ export default class UserProfile extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (<LoadingSpinner />) : (
+        return !this.state.loaded ? <LoadingSpinner /> : (
             <React.Fragment>
                 <Container fluid='lg'>
                     {getAlert(this)}
