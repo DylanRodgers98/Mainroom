@@ -1,5 +1,5 @@
 const SITE_NAME = 'Mainroom';
-const HEAD_TITLE = `${SITE_NAME} - Livestreaming for DJs, bands and artists`;
+const HEAD_TITLE = `${SITE_NAME} - Livestreaming for DJs`;
 
 const SECOND = 1000;
 const THIRTY_SECONDS = 30 * SECOND;
