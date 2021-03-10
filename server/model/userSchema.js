@@ -4,7 +4,7 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 const {defaultProfilePicURL, chatColours} = require('../../mainroom.config');
 const s3Utils = require('../aws/s3Utils');
 const {RecordedStream, ScheduledStream} = require('./schemas');
-const shortid = require('shortid');
+const nanoid = require('nanoid');
 const LOGGER = require('../../logger')('./server/model/userSchema.js');
 
 const UserSchema = new Schema({
@@ -52,13 +52,9 @@ UserSchema.methods.checkPassword = function (password) {
     return bcrypt.compareSync(password, this.password);
 };
 
-UserSchema.statics.generateStreamKey = () => {
-    return shortid.generate();
-};
+UserSchema.statics.generateStreamKey = nanoid;
 
-UserSchema.statics.getRandomChatColour = () => {
-    return getRandomColour();
-};
+UserSchema.statics.getRandomChatColour = getRandomColour;
 
 function getRandomColour() {
     const keys = Object.keys(chatColours);
