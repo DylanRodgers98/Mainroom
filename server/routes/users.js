@@ -389,7 +389,9 @@ router.get('/:username/stream-info', (req, res, next) => {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
             } else {
                 const streamKey = user.streamInfo.streamKey;
-                const {data} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`);
+                const {data} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
+                    headers: { Authorization: config.rtmpServer.auth.header }
+                });
                 res.json({
                     isLive: data.isLive,
                     displayName: user.displayName,

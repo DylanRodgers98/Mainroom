@@ -18,6 +18,12 @@ module.exports = {
     rtmpServer: {
         host: process.env.RTMP_SERVER_HOST,
         logType: logger.resolveLogLevel(),
+        auth: {
+            api: true,
+            api_user: process.env.RTMP_SERVER_API_USERNAME,
+            api_pass: process.env.RTMP_SERVER_API_PASSWORD,
+            header: `Basic ${Buffer.from(`${process.env.RTMP_SERVER_API_USERNAME}:${process.env.RTMP_SERVER_API_PASSWORD}`).toString('base64')}`
+        },
         rtmp: {
             port: process.env.RTMP_SERVER_RTMP_PORT,
             chunk_size: 60000,
