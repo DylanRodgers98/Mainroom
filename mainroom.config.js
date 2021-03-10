@@ -117,17 +117,37 @@ module.exports = {
     },
     filters: {
         genres: [
-            "Drum & Bass",
-            "Techno",
-            "Bassline"
-        ].sort(),
+            ...[
+                'Drum & Bass',
+                'Techno',
+                'Bassline',
+                'House',
+                'UK Garage',
+                'Jungle',
+                'Dubstep',
+                'Grime',
+                'Hip-Hop/R&B',
+                'Dub/Reggae',
+                'Liquid',
+                'Neurofunk',
+                'EDM',
+                'Trance',
+                'Hardcore/Gabber',
+                'Hardtek/Psytrance',
+                'Breakbeat'
+            ].sort(),
+            'Other'
+        ],
         categories: [
-            "DJ Set",
-            "Live Set",
-            "Production",
-            "Tutorial",
-            "Q&A"
-        ].sort()
+            ...[
+                'DJ Set',
+                'Live Set',
+                'Production',
+                'Tutorial',
+                'Q&A'
+            ].sort(),
+            'Other'
+        ]
     },
     loadLivestreamTimeout: 15 * SECOND,
     successMessageTimeout: 3 * SECOND,

@@ -34,13 +34,7 @@ export default class LiveStreamsByCategory extends React.Component {
     }
 
     componentDidMount() {
-        const queriedCategory = decodeURIComponent(this.props.match.params.category);
-        if (filters.categories.includes(queriedCategory)) {
-            this.setState({pageHeader: `${queriedCategory} Livestreams`})
-            this.getLiveStreams();
-        } else {
-            window.location.href = '/404';
-        }
+        this.fillComponent();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -50,9 +44,10 @@ export default class LiveStreamsByCategory extends React.Component {
                 loaded: false,
                 liveStreams: [],
                 nextPage: STARTING_PAGE,
-                genreFilter: ''
-            }, async () => {
-                await this.getLiveStreams();
+                genreFilter: '',
+                pageHeader: ''
+            }, () => {
+                this.fillComponent();
             });
         } else if (prevState.genreFilter !== this.state.genreFilter) {
             this.setState({
@@ -62,6 +57,16 @@ export default class LiveStreamsByCategory extends React.Component {
             }, async () => {
                 await this.getLiveStreams();
             });
+        }
+    }
+
+    fillComponent() {
+        const queriedCategory = decodeURIComponent(this.props.match.params.category);
+        if (filters.categories.includes(queriedCategory)) {
+            this.setState({pageHeader: `${queriedCategory} Livestreams`})
+            this.getLiveStreams();
+        } else {
+            window.location.href = '/404';
         }
     }
 
