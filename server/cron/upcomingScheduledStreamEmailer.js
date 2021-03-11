@@ -23,7 +23,7 @@ const job = new CronJob(cronTime.upcomingScheduledStreamEmailer, async () => {
                     select: 'user title startTime endTime genre category',
                     populate: {
                         path: 'user',
-                        select: 'username displayName profilePicURL'
+                        select: 'username displayName profilePic.bucket profilePic.key'
                     }
                 })
                 .exec();
@@ -55,7 +55,7 @@ const job = new CronJob(cronTime.upcomingScheduledStreamEmailer, async () => {
                     .select('user title startTime endTime genre category')
                     .populate({
                         path: 'user',
-                        select: 'username displayName profilePicURL'
+                        select: 'username displayName profilePic.bucket profilePic.key'
                     })
                     .exec();
 

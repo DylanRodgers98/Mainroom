@@ -1,7 +1,7 @@
 const {Schema} = require('mongoose');
 const bcrypt = require('bcryptjs');
 const mongoosePaginate = require('mongoose-paginate-v2');
-const {defaultProfilePicURL, chatColours} = require('../../mainroom.config');
+const {chatColours, storage} = require('../../mainroom.config');
 const s3Utils = require('../aws/s3Utils');
 const {RecordedStream, ScheduledStream} = require('./schemas');
 const nanoid = require('nanoid');
@@ -11,7 +11,10 @@ const UserSchema = new Schema({
     username: {type: String, lowercase: true},
     email: String,
     password: {type: String, select: false},
-    profilePicURL: {type: String, default: defaultProfilePicURL},
+    profilePic: {
+        bucket: {type: String, default: storage.s3.defaultProfilePic.bucket},
+        key: {type: String, default: storage.s3.defaultProfilePic.key}
+    },
     displayName: String,
     location: String,
     bio: String,
@@ -56,6 +59,10 @@ UserSchema.statics.generateStreamKey = nanoid;
 
 UserSchema.statics.getRandomChatColour = getRandomColour;
 
+UserSchema.methods.getProfilePicURL = function () {
+    return `https://${storage.cloudfront[this.profilePic.bucket]}/${this.profilePic.key}`;
+};
+
 function getRandomColour() {
     const keys = Object.keys(chatColours);
     return chatColours[keys[keys.length * Math.random() << 0]];
@@ -81,11 +88,13 @@ UserSchema.post('findOneAndDelete', async function() {
 });
 
 async function deleteProfilePic(user) {
-    const profilePicURL = user.profilePicURL;
-    if (profilePicURL !== defaultProfilePicURL) {
-        LOGGER.debug('Deleting profile picture in S3 (URL: {}) for User (_id: {})', profilePicURL, user._id);
-        await s3Utils.deleteByURL(user.profilePicURL);
-        LOGGER.debug('Successfully deleted profile picture in S3 for User (_id: {})', profilePicURL, user._id);
+    const profilePic = user.profilePic;
+    if (profilePic.bucket !== storage.s3.defaultProfilePic.bucket
+        && profilePic.key !== storage.s3.defaultProfilePic.key) {
+        LOGGER.debug('Deleting profile picture in S3 (bucket: {}, key: {}) for User (_id: {})',
+            profilePic.bucket, profilePic.key, user._id);
+        await s3Utils.deleteObject(profilePic);
+        LOGGER.debug('Successfully deleted profile picture in S3 for User (_id: {})', user._id);
     }
 }
 

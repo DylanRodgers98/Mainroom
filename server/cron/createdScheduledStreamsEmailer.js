@@ -29,7 +29,7 @@ const job = new CronJob(cronTime.createdScheduledStreamsEmailer, async () => {
                 .select('user title startTime endTime genre category')
                 .populate({
                     path: 'user',
-                    select: '_id username displayName profilePicURL'
+                    select: '_id username displayName profilePic.bucket profilePic.key'
                 })
                 .exec();
 

@@ -1,4 +1,4 @@
-const config = require('../../mainroom.config');
+const { storage } = require('../../mainroom.config');
 const {spawn} = require('child_process');
 const { S3 } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
@@ -8,13 +8,13 @@ const S3_CLIENT = new S3({});
 
 async function getThumbnail(streamKey) {
     const inputURL = `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/live/${streamKey}/index.m3u8`;
-    const Bucket = config.storage.s3.staticContent.bucketName;
-    const Key = `${config.storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
+    const Bucket = storage.s3.staticContent.bucketName;
+    const Key = `${storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
     try {
         const output = await S3_CLIENT.headObject({Bucket, Key});
-        return Date.now() > output.LastModified.getTime() + config.storage.thumbnails.ttl
+        return Date.now() > output.LastModified.getTime() + storage.thumbnails.ttl
             ? await generateStreamThumbnail({inputURL, Bucket, Key})
-            : `https://${Bucket}.s3.amazonaws.com/${Key}`;
+            : `https://${storage.cloudfront[Bucket]}/${Key}`;
     } catch (err) {
         if (err.name === 'NotFound') {
             try {
@@ -62,7 +62,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         try {
             const result = await upload.done();
             LOGGER.info('Successfully uploaded thumbnail to {}', result.Location);
-            resolve(result.Location);
+            resolve(`https://${storage.cloudfront[Bucket]}/${Key}`);
         } catch (err) {
             LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}',
                 Bucket, Key, err);

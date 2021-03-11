@@ -12,10 +12,10 @@ router.get('/', async (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: '_id user timestamp title genre category tags thumbnailURL viewCount videoDuration',
+        select: '_id user timestamp title genre category tags thumbnail.bucket thumbnail.key viewCount videoDuration',
         populate: {
             path: 'user',
-            select: 'username displayName profilePicURL'
+            select: 'username displayName profilePic.bucket profilePic.key'
         }
     };
 
@@ -72,7 +72,24 @@ router.get('/', async (req, res, next) => {
             next(err);
         } else {
             res.json({
-                recordedStreams: result.docs,
+                recordedStreams: result.docs.map(stream => {
+                    return {
+                        _id: stream._id,
+                        user: {
+                            username: stream.user.username,
+                            displayName: stream.user.displayName,
+                            profilePicURL: stream.user.getProfilePicURL()
+                        },
+                        timestamp: stream.timestamp,
+                        title: stream.title,
+                        genre: stream.genre,
+                        category: stream.category,
+                        tags: stream.tags,
+                        viewCount: stream.viewCount,
+                        videoDuration: stream.videoDuration,
+                        thumbnailURL: stream.getThumbnailURL()
+                    };
+                }),
                 nextPage: result.nextPage
             });
         }
@@ -82,10 +99,10 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', (req, res, next) => {
     const id = sanitise(req.params.id);
     RecordedStream.findById(id)
-        .select('user timestamp title genre category videoURL viewCount')
+        .select('user timestamp title genre category video.bucket video.key viewCount')
         .populate({
             path: 'user',
-            select: 'username displayName profilePicURL'
+            select: 'username displayName profilePic.bucket profilePic.key'
         })
         .exec((err, recordedStream) => {
             if (err) {
@@ -100,7 +117,19 @@ router.get('/:id', (req, res, next) => {
                         next(err);
                     } else {
                         res.json({
-                            recordedStream
+                            recordedStream: {
+                                user: {
+                                    username: recordedStream.user.username,
+                                    displayName: recordedStream.user.displayName,
+                                    profilePicURL: recordedStream.user.getProfilePicURL()
+                                },
+                                timestamp: recordedStream.timestamp,
+                                title: recordedStream.title,
+                                genre: recordedStream.genre,
+                                category: recordedStream.category,
+                                videoURL: recordedStream.getVideoURL(),
+                                viewCount: recordedStream.viewCount
+                            }
                         });
                     }
                 });

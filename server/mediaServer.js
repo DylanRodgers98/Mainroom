@@ -32,7 +32,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
         let select = 'username streamInfo.viewCount';
         if (config.email.enabled) {
             // retrieve fields required for sending email
-            select += ' displayName subscribers profilePicURL';
+            select += ' displayName subscribers profilePic.bucket profilePic.key';
             query.populate({
                 path: 'subscribers.user',
                 select: 'username displayName email emailSettings'

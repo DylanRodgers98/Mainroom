@@ -43,7 +43,7 @@ router.get('/', async (req, res, next) => {
         const options = {
             page: req.query.page,
             limit: req.query.limit,
-            select: 'username displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
+            select: 'username displayName profilePic.bucket profilePic.key streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
             sort: '-streamInfo.viewCount'
         };
 
@@ -65,7 +65,7 @@ router.get('/', async (req, res, next) => {
                     streams.push({
                         username: user.username,
                         displayName: user.displayName,
-                        profilePicURL: user.profilePicURL,
+                        profilePicURL: user.getProfilePicURL(),
                         title: user.streamInfo.title,
                         genre: user.streamInfo.genre,
                         category: user.streamInfo.category,

@@ -227,7 +227,7 @@ export default class GoLive extends React.Component {
                         <h5>Stream Key</h5>
                     </Col>
                     <Col xs='12'>
-                        <input id='streamKeyInput' className='rounded-border w-25 obfuscate-text' type='text'
+                        <input id='streamKeyInput' className='rounded-border w-50-xs w-25-md obfuscate-text' type='text'
                                value={this.state.streamKey} readOnly={true}/>
                         <Button className='btn-dark ml-1' size='sm'
                                 onClick={() => this.copyFrom('streamKeyInput')}>

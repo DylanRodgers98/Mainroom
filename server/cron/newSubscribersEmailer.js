@@ -38,7 +38,7 @@ const job = new CronJob(cronTime.newSubscribersEmailer, async () => {
                     },
                     populate: {
                         path: 'user',
-                        select: 'username displayName profilePicURL',
+                        select: 'username displayName profilePic.bucket profilePic.key',
                     }
                 })
                 .exec();

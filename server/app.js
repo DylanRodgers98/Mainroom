@@ -89,7 +89,7 @@ app.get('/api/logged-in-user', (req, res) => {
         _id: req.user._id,
         username: req.user.username,
         displayName: req.user.displayName,
-        profilePicURL: req.user.profilePicURL,
+        profilePicURL: req.user.getProfilePicURL(),
         chatColour: req.user.chatColour
     });
 });
@@ -220,7 +220,7 @@ app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
     try {
         const streamId = sanitise(req.params.streamId);
         const stream = await RecordedStream.findById(streamId)
-            .select('user title genre category videoURL thumbnailURL')
+            .select('user title genre category video.bucket video.key thumbnail.bucket thumbnail.key')
             .populate({
                 path: 'user',
                 select: 'username displayName'
@@ -228,9 +228,9 @@ app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
             .exec();
         title = [(stream.user.displayName || stream.user.username), stream.title, config.siteName].filter(Boolean).join(' - ');
         description = `${stream.genre ? `${stream.genre} ` : ''}${stream.category || ''}`;
-        imageURL = stream.thumbnailURL || config.defaultThumbnailURL;
+        imageURL = stream.getThumbnailURL() || config.defaultThumbnailURL;
         imageAlt = `${stream.user.username} Stream Thumbnail`;
-        videoURL = stream.videoURL;
+        videoURL = stream.getVideoURL();
         videoMimeType = 'video/mp4';
         twitterCard = 'player';
     } catch (err) {

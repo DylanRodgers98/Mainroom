@@ -14,7 +14,7 @@ const _ = require('lodash');
 const axios = require('axios');
 const mainroomEventBus = require('../mainroomEventBus');
 const normalizeUrl = require('normalize-url');
-const {deleteByURL} = require('../aws/s3Utils');
+const {deleteObject} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
@@ -35,7 +35,7 @@ router.get('/', (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: 'username displayName profilePicURL',
+        select: 'username displayName profilePic.bucket profilePic.key',
     };
 
     User.paginate(query, options, (err, result) => {
@@ -44,7 +44,13 @@ router.get('/', (req, res, next) => {
             next(err);
         } else {
             res.json({
-                users: result.docs,
+                users: result.docs.map(user => {
+                    return {
+                        username: user.username,
+                        displayName: user.displayName,
+                        profilePicURL: user.getProfilePicURL()
+                    };
+                }),
                 nextPage: result.nextPage
             });
         }
@@ -53,7 +59,7 @@ router.get('/', (req, res, next) => {
 
 router.get('/:username', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, 'username displayName profilePicURL location bio chatColour links subscribers')
+    User.findOne({username: username}, 'username displayName profilePic.bucket profilePic.key location bio chatColour links subscribers')
         .exec((err, user) => {
             if (err) {
                 LOGGER.error('An error occurred when finding user {}: {}', username, err);
@@ -63,7 +69,7 @@ router.get('/:username', (req, res, next) => {
             } else {
                 res.json({
                     username: user.username,
-                    profilePicURL: user.profilePicURL || config.defaultProfilePicURL,
+                    profilePicURL: user.getProfilePicURL() || config.defaultProfilePicURL,
                     displayName: user.displayName,
                     location: user.location,
                     bio: user.bio,
@@ -177,13 +183,18 @@ router.put('/:userId/profile-pic', (req, res, next) => {
                 return next(err);
             }
             try {
-                const user = await User.findById(userId).select('profilePicURL').exec();
+                const user = await User.findById(userId).select('profilePic.bucket profilePic.key').exec();
                 if (!user) {
                     return res.status(404).send(`User (_id: ${escape(userId)}) not found`);
                 }
-                const oldProfilePicURL = user.profilePicURL;
-                const deleteOldProfilePicPromise = deleteByURL(oldProfilePicURL);
-                user.profilePicURL = req.file.location;
+                const deleteOldProfilePicPromise = deleteObject({
+                    Bucket: user.profilePic.bucket,
+                    Key: user.profilePic.key
+                });
+                user.profilePic = {
+                    bucket: req.file.bucket,
+                    key: req.file.key
+                };
                 const updateUserPromise = user.save();
                 await Promise.all([deleteOldProfilePicPromise, updateUserPromise]);
                 res.sendStatus(200);
@@ -197,7 +208,7 @@ router.put('/:userId/profile-pic', (req, res, next) => {
 
 router.get('/:userId/profile-pic', (req, res, next) => {
     const userId = sanitise(req.params.userId);
-    User.findById(userId, 'profilePicURL', (err, user) => {
+    User.findById(userId, 'profilePic.bucket profilePic.key', (err, user) => {
         if (err) {
             LOGGER.error('An error occurred when finding user with _id {}: {}', userId, err);
             next(err);
@@ -205,7 +216,7 @@ router.get('/:userId/profile-pic', (req, res, next) => {
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
         } else {
             res.json({
-                profilePicURL: user.profilePicURL || config.defaultProfilePicURL
+                profilePicURL: user.getProfilePicURL() || config.defaultProfilePicURL
             })
         }
     })
@@ -234,7 +245,7 @@ const getSubscribersOrSubscriptions = key => (req, res, next) => {
             User.findOne({username}, key)
                 .populate({
                     path: `${key}.user`,
-                    select: 'username profilePicURL',
+                    select: 'username profilePic.bucket profilePic.key',
                     skip,
                     limit
                 })
@@ -249,7 +260,7 @@ const getSubscribersOrSubscriptions = key => (req, res, next) => {
                             [key]: (user[key] || []).map(sub => {
                                 return {
                                     username: sub.user.username,
-                                    profilePicURL: sub.user.profilePicURL || config.defaultProfilePicURL
+                                    profilePicURL: sub.user.getProfilePicURL() || config.defaultProfilePicURL
                                 };
                             }),
                             nextPage: page < pages ? page + 1 : null
@@ -380,7 +391,7 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
 router.get('/:username/stream-info', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username},
-        'displayName profilePicURL streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount streamInfo.startTime',
+        'displayName profilePic.bucket profilePic.key streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount streamInfo.startTime',
         async (err, user) => {
             if (err) {
                 LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
@@ -395,7 +406,7 @@ router.get('/:username/stream-info', (req, res, next) => {
                 res.json({
                     isLive: data.isLive,
                     displayName: user.displayName,
-                    profilePicURL: user.profilePicURL || config.defaultProfilePicURL,
+                    profilePicURL: user.getProfilePicURL() || config.defaultProfilePicURL,
                     streamKey,
                     title: user.streamInfo.title,
                     genre: user.streamInfo.genre,
@@ -483,7 +494,7 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
             .select('user title startTime endTime genre category')
             .populate({
                 path: 'user',
-                select: 'username displayName profilePicURL'
+                select: 'username displayName profilePic.bucket profilePic.key'
             })
             .exec((err, scheduledStreams) => {
                 if (err) {
@@ -526,7 +537,11 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
                                 end_time: scheduledStream.endTime,
                                 genre: scheduledStream.genre,
                                 category: scheduledStream.category,
-                                user: scheduledStream.user,
+                                user: {
+                                    username: scheduledStream.user.username,
+                                    displayName: scheduledStream.user.displayName,
+                                    profilePicURL: scheduledStream.user.getProfilePicURL()
+                                },
                                 isNonSubscribed: user.nonSubscribedScheduledStreams.includes(scheduledStream._id)
                             });
                         });

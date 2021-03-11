@@ -10,6 +10,15 @@ const DAY = 24 * HOUR;
 const CRON_EVERY_MINUTE = '* * * * *';
 const CRON_EVERY_HOUR = '0 * * * *';
 
+const STATIC_CONTENT_BUCKET_NAME = 'mainroom-static-content';
+const STREAMS_BUCKET_NAME = 'mainroom-streams';
+
+const STATIC_CONTENT_CLOUDFRONT_DOMAIN = 'dp8ki4pcym3cc.cloudfront.net';
+const STREAMS_CLOUDFRONT_DOMAIN = 'd9wctuq44cpzl.cloudfront.net';
+
+const DEFAULT_PROFILE_PIC_KEY = 'default_profile_pic.png';
+const DEFAULT_STREAM_THUMBNAIL_KEY = 'default_stream_thumbnail.png';
+
 const logger = require('./logger');
 
 module.exports = {
@@ -79,26 +88,38 @@ module.exports = {
         },
         s3: {
             staticContent: {
-                bucketName: 'mainroom-static-content',
+                bucketName: STATIC_CONTENT_BUCKET_NAME,
                 keyPrefixes: {
                     profilePics: 'profile-pics',
                     streamThumbnails: 'stream-thumbnails'
                 }
             },
             streams: {
-                bucketName: 'mainroom-streams',
+                bucketName: STREAMS_BUCKET_NAME,
                 keyPrefixes : {
                     recorded: 'recorded'
                 }
-            }
+            },
+            defaultProfilePic: {
+                bucket: STATIC_CONTENT_BUCKET_NAME,
+                key: DEFAULT_PROFILE_PIC_KEY
+            },
+            defaultStreamThumbnail: {
+                bucket: STATIC_CONTENT_BUCKET_NAME,
+                key: DEFAULT_STREAM_THUMBNAIL_KEY
+            },
+        },
+        cloudfront: {
+            [STATIC_CONTENT_BUCKET_NAME]: STATIC_CONTENT_CLOUDFRONT_DOMAIN,
+            [STREAMS_BUCKET_NAME]: STREAMS_CLOUDFRONT_DOMAIN
         }
     },
+    defaultProfilePicURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/${DEFAULT_PROFILE_PIC_KEY}`,
+    defaultThumbnailURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/${DEFAULT_STREAM_THUMBNAIL_KEY}`,
     pagination: {
         small: 6,
         large: 12
     },
-    defaultProfilePicURL: 'https://mainroom-static-content.s3.amazonaws.com/default_profile_pic.png',
-    defaultThumbnailURL: 'https://mainroom-static-content.s3.amazonaws.com/default_stream_thumbnail.png',
     email: {
         enabled: false,
         ses: {

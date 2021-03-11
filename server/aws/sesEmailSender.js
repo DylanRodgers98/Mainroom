@@ -21,7 +21,7 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
                 return {
                     displayName: subscriber.displayName || subscriber.username,
                     username: subscriber.username,
-                    profilePicURL: subscriber.profilePicURL
+                    profilePicURL: subscriber.getProfilePicURL()
                 };
             })
         })
@@ -59,7 +59,7 @@ module.exports.notifySubscribersUserWentLive = async user => {
                     user: {
                         displayName: user.displayName || user.username,
                         username: user.username,
-                        profilePicURL: user.profilePicURL
+                        profilePicURL: user.getProfilePicURL()
                     }
                 })
             };
@@ -125,7 +125,7 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
                     user: {
                         displayName: stream.user.displayName || stream.user.username,
                         username: stream.user.username,
-                        profilePicURL: stream.user.profilePicURL
+                        profilePicURL: stream.user.getProfilePicURL()
                     },
                     stream: {
                         title: stream.title,
@@ -166,7 +166,7 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
                     user: {
                         displayName: stream.user.displayName || stream.user.username,
                         username: stream.user.username,
-                        profilePicURL: stream.user.profilePicURL
+                        profilePicURL: stream.user.getProfilePicURL()
                     },
                     stream: {
                         title: stream.title,
