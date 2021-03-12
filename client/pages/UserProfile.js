@@ -32,6 +32,7 @@ import RemoveIcon from '../icons/x.svg';
 import DeleteIcon from '../icons/trash.svg';
 import TickIcon from '../icons/check-white-20.svg';
 import LocationIcon from '../icons/map-pin-20.svg';
+import CameraIcon from '../icons/camera-white-20.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -100,6 +101,7 @@ export default class UserProfile extends React.Component {
         this.onProfilePicUpload = this.onProfilePicUpload.bind(this);
         this.saveNewProfilePic = this.saveNewProfilePic.bind(this);
         this.getRecordedStreams = this.getRecordedStreams.bind(this);
+        this.closeEditProfileOpenChangeProfilePic = this.closeEditProfileOpenChangeProfilePic.bind(this);
 
         this.state = STARTING_STATE;
     }
@@ -646,6 +648,14 @@ export default class UserProfile extends React.Component {
         });
     }
 
+    closeEditProfileOpenChangeProfilePic() {
+        this.setState({editProfileOpen: false}, () => {
+            setTimeout(() => {
+                this.setState({changeProfilePicOpen: true})
+            }, 400); // set small timeout to avoid funky resizing due to scrollbar changing between modals
+        });
+    }
+
     renderEditLinks() {
         const headers = !this.state.editLinks.length ? undefined : (
             <Row>
@@ -692,6 +702,15 @@ export default class UserProfile extends React.Component {
                     <Container fluid className='remove-padding-lr'>
                         <Row>
                             <Col xs='12'>
+                                <h5>Profile Picture</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <Button className='btn-dark' size='sm' onClick={this.closeEditProfileOpenChangeProfilePic}>
+                                    <img src={CameraIcon} className='mr-2 mb-1' alt='Change Profile Pic icon'/>
+                                    Change Profile Picture
+                                </Button>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
                                 <h5>Display Name</h5>
                             </Col>
                             <Col xs='12'>
