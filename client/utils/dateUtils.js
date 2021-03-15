@@ -1,13 +1,11 @@
 import moment from 'moment';
+import {dateFormat, timeFormat} from '../../mainroom.config';
 
 const YEAR_IN_SECONDS = 31536000;
 const MONTH_IN_SECONDS = 2592000;
 const DAY_IN_SECONDS = 86400;
 const HOUR_IN_SECONDS = 3600;
 const MINUTE_IN_SECONDS = 60;
-
-const TIME_FORMAT = 'HH:mm';
-export const LONG_DATE_FORMAT = `ddd, DD MMM, yyyy · ${TIME_FORMAT}`;
 
 export const convertUTCToLocal = date => moment.utc(date).local();
 export const convertLocalToUTC = date => moment(date).utc();
@@ -40,16 +38,19 @@ export const timeSince = date => {
         return pluraliseTimeAgo(Math.floor(interval), 'minute');
     }
 
-    return pluraliseTimeAgo(Math.floor(diffInSeconds), 'second');
+    if (diffInSeconds > 0) {
+        return pluraliseTimeAgo(Math.floor(diffInSeconds), 'second');
+    }
+    return 'just now';
 };
 
 const pluraliseTimeAgo = (value, singularMeasurement) => {
     return `${value} ${singularMeasurement}${value === 1 ? '' : 's'} ago`;
 }
 
-export const formatDate = timestamp => convertUTCToLocal(timestamp).format(LONG_DATE_FORMAT);
+export const formatDate = timestamp => convertUTCToLocal(timestamp).format(dateFormat);
 
-const formatTime = timestamp => convertUTCToLocal(timestamp).format(TIME_FORMAT);
+const formatTime = timestamp => convertUTCToLocal(timestamp).format(timeFormat);
 
 const isSameDay = (firstTimestamp, secondTimestamp) => {
     return moment(firstTimestamp).isSame(moment(secondTimestamp), 'day');

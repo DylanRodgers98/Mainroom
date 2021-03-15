@@ -18,7 +18,7 @@ import {
     Spinner
 } from 'reactstrap';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
-import {convertLocalToUTC, convertUTCToLocal, formatDateRange, LONG_DATE_FORMAT} from '../utils/dateUtils';
+import {convertLocalToUTC, convertUTCToLocal, formatDateRange} from '../utils/dateUtils';
 import {
     displayErrorMessage,
     displayGenreAndCategory,
@@ -26,7 +26,7 @@ import {
     getAlert,
     LoadingSpinner
 } from '../utils/displayUtils';
-import {filters, siteName} from '../../mainroom.config';
+import {filters, siteName, dateFormat} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import PlusIcon from '../icons/plus-white.svg';
 import CalendarIcon from '../icons/calendar-white-20.svg';
@@ -147,7 +147,7 @@ export default class Schedule extends React.Component {
 
     getDatePickerFormat() {
         return {
-            'format': LONG_DATE_FORMAT,
+            'format': dateFormat,
             'sundayFirst': false
         };
     }

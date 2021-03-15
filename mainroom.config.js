@@ -19,6 +19,9 @@ const STREAMS_CLOUDFRONT_DOMAIN = 'd9wctuq44cpzl.cloudfront.net';
 const DEFAULT_PROFILE_PIC_KEY = 'default_profile_pic.png';
 const DEFAULT_STREAM_THUMBNAIL_KEY = 'default_stream_thumbnail.png';
 
+const TIME_FORMAT = 'HH:mm';
+const DATE_FORMAT = `ddd, DD MMM, yyyy · ${TIME_FORMAT}`;
+
 const logger = require('./logger');
 
 module.exports = {
@@ -208,5 +211,7 @@ module.exports = {
         violet: "#800080",
         red: "#ff0000",
         yellow: "#ffff00"
-    }
+    },
+    dateFormat: DATE_FORMAT,
+    timeFormat: TIME_FORMAT
 };
