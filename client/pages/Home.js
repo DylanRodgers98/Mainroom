@@ -215,9 +215,12 @@ export default class Home extends React.Component {
                 {featuredLiveStreams}
             </React.Fragment>
         ) : (
-            <p className='my-4 text-center'>
-                No one is live right now :(
-            </p>
+            <div className='my-4 text-center'>
+                <p>No one is live right now :(</p>
+                {this.state.loggedInUser
+                    ? <p>Be the first to <Link to={'/go-live'}>go live</Link>!</p>
+                    : <p><a href={'/login'}>Log in</a> or <a href={'/register'}>register</a> and be the first to go live!</p>}
+            </div>
         );
     }
 
