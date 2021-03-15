@@ -1,3 +1,4 @@
+const {resolveObjectURL} = require('./s3Utils');
 const { storage } = require('../../mainroom.config');
 const {spawn} = require('child_process');
 const { S3 } = require('@aws-sdk/client-s3');
@@ -14,7 +15,7 @@ async function getThumbnail(streamKey) {
         const output = await S3_CLIENT.headObject({Bucket, Key});
         return Date.now() > output.LastModified.getTime() + storage.thumbnails.ttl
             ? await generateStreamThumbnail({inputURL, Bucket, Key})
-            : `https://${storage.cloudfront[Bucket]}/${Key}`;
+            : resolveObjectURL({Bucket, Key});
     } catch (err) {
         if (err.name === 'NotFound') {
             try {
@@ -62,7 +63,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         try {
             const result = await upload.done();
             LOGGER.info('Successfully uploaded thumbnail to {}', result.Location);
-            resolve(`https://${storage.cloudfront[Bucket]}/${Key}`);
+            resolve(resolveObjectURL({Bucket, Key}));
         } catch (err) {
             LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}',
                 Bucket, Key, err);

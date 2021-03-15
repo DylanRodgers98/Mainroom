@@ -1,7 +1,8 @@
 const {Schema} = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
-const {storage} = require('../../mainroom.config');
-const s3Utils = require('../aws/s3Utils');
+const {deleteObject} = require("../aws/s3Utils");
+const {storage: {s3: {streams, defaultStreamThumbnail}}} = require('../../mainroom.config');
+const {resolveObjectURL} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/model/recordedStreamSchema.js');
 
 const RecordedStreamSchema = new Schema({
@@ -12,23 +13,29 @@ const RecordedStreamSchema = new Schema({
     category: String,
     tags: [String],
     video: {
-        bucket: {type: String, default: storage.s3.streams.bucketName},
+        bucket: {type: String, default: streams.bucketName},
         key: String
     },
     thumbnail: {
-        bucket: {type: String, default: storage.s3.defaultStreamThumbnail.bucket},
-        key: {type: String, default: storage.s3.defaultStreamThumbnail.key}
+        bucket: {type: String, default: defaultStreamThumbnail.bucket},
+        key: {type: String, default: defaultStreamThumbnail.key}
     },
     viewCount: {type: Number, default: 0},
     videoDuration: String
 });
 
 RecordedStreamSchema.methods.getVideoURL = function () {
-    return `https://${storage.cloudfront[this.video.bucket]}/${this.video.key}`;
+    return resolveObjectURL({
+        Bucket: this.video.bucket,
+        Key: this.video.key
+    });
 };
 
 RecordedStreamSchema.methods.getThumbnailURL = function () {
-    return `https://${storage.cloudfront[this.thumbnail.bucket]}/${this.thumbnail.key}`;
+    return resolveObjectURL({
+        Bucket: this.thumbnail.bucket,
+        Key: this.thumbnail.key
+    });
 };
 
 RecordedStreamSchema.pre('findOneAndDelete', async function() {
@@ -52,12 +59,12 @@ async function deleteVideoAndThumbnail(recordedStream) {
 
     const promises = []
 
-    const deleteVideoPromise = s3Utils.deleteObject(video);
+    const deleteVideoPromise = deleteObject(video);
     promises.push(deleteVideoPromise);
 
-    if (thumbnail.bucket !== storage.s3.defaultStreamThumbnail.bucket
-        && thumbnail.key !== storage.s3.defaultStreamThumbnail.key) {
-        const deleteThumbnailPromise = s3Utils.deleteObject(thumbnail)
+    if (thumbnail.bucket !== defaultStreamThumbnail.bucket
+        && thumbnail.key !== defaultStreamThumbnail.key) {
+        const deleteThumbnailPromise = deleteObject(thumbnail)
         promises.push(deleteThumbnailPromise);
     }
 

@@ -253,7 +253,6 @@ export default class UserProfile extends React.Component {
                         limit: pagination.small
                     }
                 });
-                console.log(JSON.stringify(res.data, undefined, 2));
                 this.setState({
                     recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
                     nextPage: res.data.nextPage,

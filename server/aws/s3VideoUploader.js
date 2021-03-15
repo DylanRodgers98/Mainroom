@@ -1,5 +1,6 @@
 const {spawn} = require('child_process');
 const fs = require('fs');
+const {resolveObjectURL} = require('./s3Utils');
 const { S3 } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 const { storage } = require('../../mainroom.config');
@@ -45,7 +46,7 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
                     LOGGER.info('Successfully uploaded recorded stream to {}', result.Location);
                     resolve({
                         originalFileURLs: [inputURL, outputURL],
-                        videoURL: `https://${storage.cloudfront[Bucket]}/${Key}`
+                        videoURL: resolveObjectURL({Bucket, Key})
                     });
                 } catch (err) {
                     LOGGER.error('An error occurred when uploading recorded stream to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);

@@ -1,6 +1,8 @@
 const { S3 } = require('@aws-sdk/client-s3');
-const S3_CLIENT = new S3({});
+const {storage: {cloudfront}} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/aws/s3Utils.js');
+
+const S3_CLIENT = new S3({});
 
 async function deleteObject({Bucket, Key}) {
     try {
@@ -13,6 +15,15 @@ async function deleteObject({Bucket, Key}) {
     }
 }
 
+function resolveObjectURL({Bucket, Key}) {
+    if (cloudfront[Bucket]) {
+        return `https://${cloudfront[Bucket]}/${Key}`;
+    }
+    LOGGER.info(`Cloudfront distribution not configured for bucket '{}', returning S3 URL`, Bucket);
+    return `https://${Bucket}.s3.amazonaws.com/${Key}`;
+}
+
 module.exports = {
-    deleteObject
+    deleteObject,
+    resolveObjectURL
 }
