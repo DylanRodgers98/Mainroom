@@ -102,7 +102,6 @@ export default class Home extends React.Component {
             <React.Fragment>
                 {this.renderLiveStreams('Featured', this.state.featuredLiveStreams)}
                 {this.state.showLoadMoreFeaturedButton ? loadMoreButton : undefined}
-                <div className='my-4'/>
             </React.Fragment>
         );
     }
@@ -210,12 +209,12 @@ export default class Home extends React.Component {
         const featuredLiveStreams = this.renderFeaturedLiveStreams();
 
         return subscriptionLiveStreams || featuredLiveStreams ? (
-            <React.Fragment>
+            <div className={this.state.alertText ? 'my-4' : 'my-5'}>
                 {subscriptionLiveStreams}
                 {featuredLiveStreams}
-            </React.Fragment>
+            </div>
         ) : (
-            <div className='my-4 text-center'>
+            <div className='my-5 text-center'>
                 <p>No one is live right now :(</p>
                 {this.state.loggedInUser
                     ? <p>Be the first to <Link to={'/go-live'}>go live</Link>!</p>
@@ -225,12 +224,12 @@ export default class Home extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (<LoadingSpinner />) : (
-            <Container fluid='lg' className='mt-5'>
+        return !this.state.loaded ? <LoadingSpinner /> : (
+            <Container fluid='lg'>
                 {getAlert(this)}
 
                 {this.renderStreamBoxes()}
             </Container>
-        )
+        );
     }
 }
