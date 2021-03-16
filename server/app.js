@@ -61,10 +61,11 @@ mongoose.connect(databaseUri, {
     useFindAndModify: false,
     useUnifiedTopology: true,
     useCreateIndex: true
-}, err => {
+}, async err => {
     if (err) {
-        LOGGER.error(`An error occurred when connecting to MongoDB database '{}': {}`, process.env.DB_DATABASE, err);
-        throw err;
+        LOGGER.error(`An error occurred when connecting to MongoDB database '{}': {}`,
+            process.env.DB_DATABASE, err.toString());
+        return await snsErrorPublisher.publish(err);
     }
     LOGGER.info('Connected to MongoDB database: {}', process.env.DB_DATABASE);
 });

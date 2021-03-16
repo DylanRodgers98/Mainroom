@@ -1,5 +1,6 @@
 const EventEmitter = require('events');
 const pm2 = require('pm2');
+const snsErrorPublisher = require('./aws/snsErrorPublisher');
 const LOGGER = require('../logger')('./server/mainroomEventBus.js');
 
 const PROCESS_ID = parseInt(process.env.NODE_APP_INSTANCE);
@@ -29,10 +30,10 @@ class MainroomEventBus extends EventEmitter {
             topic: 'mainroom',
             type: event,
             data
-        }, err => {
+        }, async err => {
             if (err) {
-                LOGGER.error(`An error occurred when sending '{}' event to pm2 God process: {}`, event, err);
-                throw err;
+                LOGGER.error(`An error occurred when sending '{}' event to pm2 God process: {}`, event, err.toString());
+                await snsErrorPublisher.publish(err);
             }
         });
     }

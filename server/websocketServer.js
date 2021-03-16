@@ -3,6 +3,7 @@ const pm2 = require('pm2');
 const mainroomEventBus = require('./mainroomEventBus');
 const {User} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
+const snsErrorPublisher = require('./aws/snsErrorPublisher');
 const LOGGER = require('../logger')('./server/websocketServer.js');
 
 class WebSocketServer {
@@ -27,8 +28,8 @@ class WebSocketServer {
                 bus.on('streamEnded', ({data}) => emitOnStreamEnded(this.io, data));
                 bus.on('streamInfoUpdated', ({data}) => emitStreamInfoUpdated(this.io, data));
             } catch (err) {
-                LOGGER.error('An error occurred when launching pm2 message bus: {}', err);
-                throw err;
+                LOGGER.error('An error occurred when launching pm2 message bus: {}', err.toString());
+                await snsErrorPublisher.publish(err);
             }
         } else {
             //In non-production environment, listen for events from MainroomEventBus
@@ -144,8 +145,9 @@ async function incViewCount(username, increment) {
             viewCount: user.streamInfo.viewCount
         });
     } catch (err) {
-        LOGGER.error(`An error occurred when updating live stream view count for user (username: {}): {}`, username, err);
-        throw err;
+        LOGGER.error(`An error occurred when updating live stream view count for user (username: {}): {}`,
+            username, err.toString());
+        await snsErrorPublisher.publish(err);
     }
 }
 

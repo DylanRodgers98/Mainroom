@@ -9,6 +9,7 @@ const fs = require('fs').promises;
 const sesEmailSender = require('./aws/sesEmailSender');
 const CompositeError = require('./errors/CompositeError');
 const {spawn} = require('child_process');
+const snsErrorPublisher = require('./aws/snsErrorPublisher');
 const LOGGER = require('../logger')('./server/mediaServer.js');
 
 const EXPECTED_APP_NAME = `/${process.env.RTMP_SERVER_APP_NAME}`;
@@ -40,8 +41,8 @@ nms.on('prePublish', async (sessionId, streamPath) => {
         }
         user = await query.select(select).exec();
     } catch (err) {
-        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
-        throw err;
+        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.toString());
+        return await snsErrorPublisher.publish(err);
     }
 
     if (!user) {
@@ -57,8 +58,8 @@ nms.on('prePublish', async (sessionId, streamPath) => {
             await user.save();
         } catch (err) {
             LOGGER.error('An error occurred when updating cumulative view count for user (username: {}): {}',
-                user.username, err);
-            throw err;
+                user.username, err.toString());
+            return await snsErrorPublisher.publish(err);
         }
 
         mainroomEventBus.send('streamStarted', user.username);
@@ -77,8 +78,8 @@ nms.on('donePublish', async (sessionId, streamPath) => {
             .select('_id username streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
             .exec();
     } catch (err) {
-        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
-        throw err;
+        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.toString());
+        return await snsErrorPublisher.publish(err);
     }
     if (!user) {
         LOGGER.info('Could not find user with stream key {}', streamKey);
@@ -91,6 +92,8 @@ nms.on('donePublish', async (sessionId, streamPath) => {
         const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, process.env.RTMP_SERVER_APP_NAME, streamKey);
         const timestamp = getSessionConnectTime(sessionId);
         const mp4FileName = await findMP4FileName(inputDirectory, timestamp);
+        if (!mp4FileName) return;
+
         const inputURL = path.join(inputDirectory, mp4FileName);
         const Bucket = config.storage.s3.streams.bucketName;
         const Key = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${mp4FileName}`;
@@ -134,8 +137,8 @@ nms.on('donePublish', async (sessionId, streamPath) => {
             }
         } catch (err) {
             LOGGER.error('An error occurred when uploading recorded stream at {} to S3 (bucket: {}, key: {}): {}',
-                inputURL, Bucket, Key, err);
-            throw err;
+                inputURL, Bucket, Key, err.toString());
+            await snsErrorPublisher.publish(err);
         }
     }
 });
@@ -184,13 +187,20 @@ async function findMP4FileName(inputDirectory, sessionConnectTime) {
     }
 
     if (deletePromises.length) {
-        await Promise.all(deletePromises);
+        const allSettledResults = await Promise.allSettled(deletePromises);
+        const rejectedPromises = allSettledResults.filter(res => res.status === 'rejected');
+        if (rejectedPromises.length) {
+            const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
+            LOGGER.error('One or more errors occurred when deleting MP4 files: {}', err.toString());
+            await snsErrorPublisher.publish(err);
+        }
     }
 
     if (possibleMp4FileNames.length !== 1) {
         const msg = `Expected 1 file in ${inputDirectory} to have creation time >= session connect time of ${sessionConnectTime}, but found ${possibleMp4FileNames.length}`
         LOGGER.error(msg);
-        throw new Error(msg);
+        await snsErrorPublisher.publish(new Error(msg));
+        return undefined;
     }
 
     const mp4FileName = possibleMp4FileNames[0];
