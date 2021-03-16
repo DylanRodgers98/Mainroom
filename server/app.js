@@ -28,6 +28,29 @@ const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
 const snsErrorPublisher = require('./aws/snsErrorPublisher');
 const LOGGER = require('../logger')('./server/app.js');
 
+// in production environment, publish info about uncaught exceptions and unhandled promise rejections to SNS topic
+if (process.env.NODE_ENV === 'production') {
+    process.on('uncaughtException', async err => {
+        try {
+            await snsErrorPublisher.publish(err);
+        } catch (publisherError) {
+            LOGGER.error(`An error occurred when publishing info about an existing error '{}' to SNS. New error: {}`,
+                err.name, publisherError.toString());
+        }
+    });
+
+    process.on('unhandledRejection', async reason => {
+        const err = reason instanceof Error || (reason && reason.name && reason.message && reason.stack)
+            ? reason : new Error(reason ? reason.toString() : 'An unhandled promise rejection occurred with no reason');
+        try {
+            await snsErrorPublisher.publish(err);
+        } catch (publisherError) {
+            LOGGER.error(`An error occurred when publishing info about an unhandled promise rejection to SNS: {}`,
+                publisherError.toString());
+        }
+    });
+}
+
 // connect to database
 const databaseUri = 'mongodb://'
     + (process.env.DB_USER && process.env.DB_PASSWORD ? `${process.env.DB_USER}:${process.env.DB_PASSWORD}@` : '')
@@ -309,7 +332,6 @@ if ((process.env.PM2_APP_NAME === 'mainroom' && process.env.NODE_APP_INSTANCE ==
 if (process.env.PM2_APP_NAME === 'rtmpServer' || process.env.NODE_ENV !== 'production') {
     nodeMediaServer.run();
 }
-
 
 // On application shutdown, then disconnect from database and close servers
 process.on('SIGINT', async () => {
