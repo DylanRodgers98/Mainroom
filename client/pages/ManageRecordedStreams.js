@@ -26,6 +26,7 @@ import {
     getAlert,
     LoadingSpinner
 } from '../utils/displayUtils';
+import DownloadIcon from '../icons/download.svg';
 import EditIcon from '../icons/edit.svg';
 import DeleteIcon from '../icons/trash.svg';
 import WhiteDeleteIcon from '../icons/trash-white-20.svg';
@@ -454,6 +455,11 @@ export default class ManageRecordedStreams extends React.Component {
                         Options
                     </DropdownToggle>
                     <DropdownMenu right>
+                        <DropdownItem href={stream.videoURL} download>
+                            <img src={DownloadIcon} width={22} height={22} className='mr-3'
+                                 alt='Download Recorded Stream icon'/>
+                            Download
+                        </DropdownItem>
                         <DropdownItem onClick={() => this.openEditRecordedStreamModal(index, stream)}>
                             <img src={EditIcon} width={22} height={22} className='mr-3'
                                  alt='Edit Recorded Stream icon'/>

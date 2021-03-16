@@ -87,7 +87,8 @@ router.get('/', async (req, res, next) => {
                         tags: stream.tags,
                         viewCount: stream.viewCount,
                         videoDuration: stream.videoDuration,
-                        thumbnailURL: stream.getThumbnailURL()
+                        thumbnailURL: stream.getThumbnailURL(),
+                        videoURL: stream.getVideoURL()
                     };
                 }),
                 nextPage: result.nextPage
