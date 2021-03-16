@@ -30,6 +30,7 @@ import DownloadIcon from '../icons/download.svg';
 import EditIcon from '../icons/edit.svg';
 import DeleteIcon from '../icons/trash.svg';
 import WhiteDeleteIcon from '../icons/trash-white-20.svg';
+import ViewersIcon from '../icons/eye.svg';
 
 const STARTING_PAGE = 1;
 
@@ -485,7 +486,8 @@ export default class ManageRecordedStreams extends React.Component {
                         <Col className='stream' md='6' lg='4'>
                             <span className='video-duration'>{stream.videoDuration}</span>
                             <span className='view-count'>
-                                {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'}
+                                <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='View icon'/>
+                                {shortenNumber(stream.viewCount)}
                             </span>
                             <Link to={`/stream/${stream._id}`}>
                                 <img className='w-100' src={stream.thumbnailURL}

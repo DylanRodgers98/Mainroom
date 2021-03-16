@@ -33,6 +33,7 @@ import DeleteIcon from '../icons/trash.svg';
 import TickIcon from '../icons/check-white-20.svg';
 import LocationIcon from '../icons/map-pin-20.svg';
 import CameraIcon from '../icons/camera-white-20.svg';
+import ViewersIcon from '../icons/eye.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -312,7 +313,8 @@ export default class UserProfile extends React.Component {
                     <Col className='stream' md='6'>
                         <span className='live-label'>LIVE</span>
                         <span className='view-count'>
-                            {shortenNumber(this.state.streamViewCount)} viewer{this.state.streamViewCount === 1 ? '' : 's'}
+                            <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Viewers icon'/>
+                            {shortenNumber(this.state.streamViewCount)}
                         </span>
                         <Link to={`/user/${this.props.match.params.username.toLowerCase()}/live`}>
                             <img className='w-100' src={this.state.streamThumbnailUrl}
@@ -451,7 +453,8 @@ export default class UserProfile extends React.Component {
                 <Col className='stream' md='6' lg='4'>
                     <span className='video-duration'>{stream.videoDuration}</span>
                     <span className='view-count'>
-                        {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'}
+                        <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Views icon'/>
+                        {shortenNumber(stream.viewCount)}
                     </span>
                     <Link to={`/stream/${stream._id}`}>
                         <img className='w-100' src={stream.thumbnailURL}

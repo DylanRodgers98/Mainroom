@@ -6,6 +6,7 @@ import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownTo
 import {shortenNumber} from '../utils/numberUtils';
 import {timeSince} from '../utils/dateUtils';
 import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
+import ViewersIcon from "../icons/eye.svg";
 
 const STARTING_PAGE = 1;
 
@@ -231,7 +232,8 @@ export default class LiveStreams extends React.Component {
             <Col className='stream margin-bottom-thick' key={index}>
                 <span className='live-label'>LIVE</span>
                 <span className='view-count'>
-                    {shortenNumber(liveStream.viewCount)} viewer{liveStream.viewCount === 1 ? '' : 's'}
+                    <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Viewers icon'/>
+                    {shortenNumber(liveStream.viewCount)}
                 </span>
                 <Link to={`/user/${liveStream.username}/live`}>
                     <img className='w-100' src={liveStream.thumbnailURL}
@@ -300,7 +302,8 @@ export default class LiveStreams extends React.Component {
             <Col className='stream margin-bottom-thick' key={index}>
                 <span className='video-duration'>{recordedStream.videoDuration}</span>
                 <span className='view-count'>
-                    {shortenNumber(recordedStream.viewCount)} view{recordedStream.viewCount === 1 ? '' : 's'}
+                    <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Views icon'/>
+                    {shortenNumber(recordedStream.viewCount)}
                 </span>
                 <Link to={`/stream/${recordedStream._id}`}>
                     <img className='w-100' src={recordedStream.thumbnailURL}
