@@ -4,6 +4,10 @@ const {sns: {errorTopicArn}} = require('../../mainroom.config');
 const SNS_CLIENT = new SNSClient({});
 
 module.exports.publish = async errorToPublish => {
+    if (process.env.NODE_ENV !== 'production') {
+        // throw if non-production environment
+        throw errorToPublish;
+    }
     const publishCommand = new PublishCommand({
         TopicArn: errorTopicArn,
         Subject: `${errorToPublish.name} occurred in Mainroom ${process.env.NODE_ENV} environment`,

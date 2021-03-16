@@ -3,6 +3,7 @@ const {cronTime, email} = require('../../mainroom.config');
 const {User} = require('../model/schemas');
 const sesEmailSender = require('../aws/sesEmailSender');
 const CompositeError = require('../errors/CompositeError');
+const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const LOGGER = require('../../logger')('./server/cron/newSubscribersEmailer.js');
 
 const jobName = 'New Subscribers Emailer';
@@ -69,7 +70,7 @@ const job = new CronJob(cronTime.newSubscribersEmailer, async () => {
             }
         } catch (err) {
             LOGGER.error('An error occurred when creating requests to email users about new subscribers: {}', err);
-            throw err;
+            await snsErrorPublisher.publish(err);
         }
     }
 

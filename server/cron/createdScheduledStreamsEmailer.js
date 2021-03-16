@@ -4,6 +4,7 @@ const {ScheduledStream, User} = require('../model/schemas');
 const _ = require('lodash');
 const sesEmailSender = require('../aws/sesEmailSender');
 const CompositeError = require('../errors/CompositeError');
+const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const LOGGER = require('../../logger')('./server/cron/createdScheduledStreamsEmailer.js');
 
 const jobName = 'Subscription-created Scheduled Streams Emailer'
@@ -65,7 +66,7 @@ const job = new CronJob(cronTime.createdScheduledStreamsEmailer, async () => {
             }
         } catch (err) {
             LOGGER.error('An error occurred when creating requests to email users about newly created scheduled streams from subscriptions: {}', err);
-            throw err;
+            await snsErrorPublisher.publish(err);
         }
     }
 

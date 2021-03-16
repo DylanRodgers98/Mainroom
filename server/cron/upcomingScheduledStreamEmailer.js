@@ -4,6 +4,7 @@ const {ScheduledStream, User} = require('../model/schemas');
 const moment = require('moment');
 const CompositeError = require('../errors/CompositeError');
 const sesEmailSender = require('../aws/sesEmailSender');
+const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const LOGGER = require('../../logger')('./server/cron/upcomingScheduledStreamEmailer.js');
 
 const jobName = 'Upcoming Scheduled Stream Emailer';
@@ -29,7 +30,7 @@ const job = new CronJob(cronTime.upcomingScheduledStreamEmailer, async () => {
                 .exec();
         } catch (err) {
             LOGGER.error('An error occurred when finding users to email about streams starting soon: {}', err);
-            throw err;
+            return await snsErrorPublisher.publish(err);
         }
 
         const promises = [];
@@ -96,7 +97,7 @@ const job = new CronJob(cronTime.upcomingScheduledStreamEmailer, async () => {
         if (errors.length) {
             LOGGER.error('{} error{} occurred when emailing users about streams starting soon',
                 errors.length, errors.length === 1 ? '' : 's');
-            throw new CompositeError(errors);
+            await snsErrorPublisher.publish(new CompositeError(errors));
         }
     }
 

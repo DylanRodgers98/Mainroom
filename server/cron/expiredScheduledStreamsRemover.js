@@ -2,6 +2,7 @@ const CompositeError = require('../errors/CompositeError');
 const {CronJob} = require('cron');
 const {cronTime, storage} = require('../../mainroom.config');
 const {ScheduledStream, User} = require('../model/schemas');
+const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const LOGGER = require('../../logger')('./server/cron/expiredScheduledStreamsRemover.js');
 
 const jobName = 'Expired ScheduledStreams Remover';
@@ -32,7 +33,7 @@ const job = new CronJob(cronTime.expiredScheduledStreamsRemover, async () => {
         }
     } catch (err) {
         LOGGER.error('An error occurred when deleting ScheduledStreams past their TTL from database: {}', err);
-        throw err;
+        await snsErrorPublisher.publish(err);
     }
 
     LOGGER.debug(`${jobName} finished`);
