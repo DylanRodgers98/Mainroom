@@ -1,4 +1,4 @@
-const { S3 } = require('@aws-sdk/client-s3');
+const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 const LOGGER = require('../../logger')('./server/aws/s3-v2-to-v3-bridge.js');
 
@@ -22,7 +22,7 @@ const LOGGER = require('../../logger')('./server/aws/s3-v2-to-v3-bridge.js');
 class S3V2ToV3Bridge {
 
     constructor(configuration) {
-        this.s3Client = new S3(configuration || {});
+        this.s3Client = new S3Client(configuration || {});
     }
 
     upload(params) {
@@ -30,7 +30,8 @@ class S3V2ToV3Bridge {
     }
 
     deleteObject(args, cb) {
-        this.s3Client.deleteObject(args, cb);
+        const deleteObjectCommand = new DeleteObjectCommand(args);
+        this.s3Client.send(deleteObjectCommand, cb);
     }
 
 }

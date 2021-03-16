@@ -1,12 +1,11 @@
 const {spawn} = require('child_process');
 const fs = require('fs');
 const {resolveObjectURL} = require('./s3Utils');
-const { S3 } = require('@aws-sdk/client-s3');
+const { S3Client } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
-const { storage } = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/aws/s3VideoUploader.js');
 
-const S3_CLIENT = new S3({});
+const S3_CLIENT = new S3Client({});
 
 exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
     return new Promise((resolve, reject) => {

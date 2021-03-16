@@ -4,13 +4,13 @@ const {sns: {errorTopicArn}} = require('../../mainroom.config');
 const SNS_CLIENT = new SNSClient({});
 
 module.exports.publish = async errorToPublish => {
-    const params = new PublishCommand({
+    const publishCommand = new PublishCommand({
         TopicArn: errorTopicArn,
         Subject: `${errorToPublish.name} occurred in Mainroom ${process.env.NODE_ENV} environment`,
         Message: errorToPublish.toString()
     });
-    const response = await SNS_CLIENT.send(params);
+    const response = await SNS_CLIENT.send(publishCommand);
     if (!response.MessageId) {
-        throw new Error('No MessageId returned from SNSClient, indicating message was not saved and will not be sent');
+        throw new Error(`No MessageId returned from SNSClient, so info about error will not be published. Original error: ${errorToPublish}`);
     }
 };

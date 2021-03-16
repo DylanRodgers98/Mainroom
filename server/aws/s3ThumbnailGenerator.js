@@ -1,18 +1,19 @@
 const {resolveObjectURL} = require('./s3Utils');
 const { storage } = require('../../mainroom.config');
 const {spawn} = require('child_process');
-const { S3 } = require('@aws-sdk/client-s3');
+const { S3Client, HeadObjectCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 const LOGGER = require('../../logger')('./server/aws/s3ThumbnailGenerator.js');
 
-const S3_CLIENT = new S3({});
+const S3_CLIENT = new S3Client({});
 
 async function getThumbnail(streamKey) {
     const inputURL = `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/live/${streamKey}/index.m3u8`;
     const Bucket = storage.s3.staticContent.bucketName;
     const Key = `${storage.s3.staticContent.keyPrefixes.streamThumbnails}/${streamKey}.jpg`;
     try {
-        const output = await S3_CLIENT.headObject({Bucket, Key});
+        const headObjectCommand = new HeadObjectCommand({Bucket, Key});
+        const output = await S3_CLIENT.send(headObjectCommand);
         return Date.now() > output.LastModified.getTime() + storage.thumbnails.ttl
             ? await generateStreamThumbnail({inputURL, Bucket, Key})
             : resolveObjectURL({Bucket, Key});
