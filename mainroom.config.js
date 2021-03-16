@@ -213,5 +213,8 @@ module.exports = {
         yellow: "#ffff00"
     },
     dateFormat: DATE_FORMAT,
-    timeFormat: TIME_FORMAT
+    timeFormat: TIME_FORMAT,
+    sns: {
+        errorTopicArn: 'mainroom-errors'
+    }
 };

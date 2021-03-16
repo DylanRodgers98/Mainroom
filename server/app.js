@@ -25,6 +25,7 @@ const {getThumbnail} = require('./aws/s3ThumbnailGenerator');
 const axios = require('axios');
 const {startWebSocketServer} = require('./websocketServer');
 const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
+const snsErrorPublisher = require('./aws/snsErrorPublisher');
 const LOGGER = require('../logger')('./server/app.js');
 
 // connect to database
@@ -272,6 +273,23 @@ app.get('*', setXSRFTokenCookie, (req, res) => {
         siteName: config.siteName,
         title: config.headTitle
     });
+});
+
+// Register global error handler
+app.use(async (err, req, res, next) => {
+    // if non-production environment, send error to default Express error handler
+    if (process.env.NODE_ENV !== 'production') {
+        return next(err);
+    }
+    // if production environment, publish info about error to SNS topic
+    try {
+        await snsErrorPublisher.publish(err);
+        res.status(500);
+    } catch (publisherError) {
+        LOGGER.error(`An error occurred when publishing info about an existing error '{}' to SNS. New error: {}`,
+            err.name, publisherError);
+        next(publisherError);
+    }
 });
 
 // Start HTTP and WebSocket server
