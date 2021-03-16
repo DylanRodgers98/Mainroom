@@ -32,7 +32,7 @@ const job = new CronJob(cronTime.expiredScheduledStreamsRemover, async () => {
             }
         }
     } catch (err) {
-        LOGGER.error('An error occurred when deleting ScheduledStreams past their TTL from database: {}', err);
+        LOGGER.error('An error occurred when deleting ScheduledStreams past their TTL from database: {}', err.toString());
         await snsErrorPublisher.publish(err);
     }
 

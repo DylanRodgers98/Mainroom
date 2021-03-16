@@ -19,11 +19,7 @@ async function getThumbnail(streamKey) {
             : resolveObjectURL({Bucket, Key});
     } catch (err) {
         if (err.name === 'NotFound') {
-            try {
-                return await generateStreamThumbnail({inputURL, Bucket, Key});
-            } catch (err) {
-                throw err;
-            }
+            return await generateStreamThumbnail({inputURL, Bucket, Key});
         }
         throw err;
     }
