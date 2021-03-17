@@ -217,5 +217,6 @@ module.exports = {
     sns: {
         errorTopicArn: 'mainroom-errors'
     },
-    brandingURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/mainroom_banner_and_gun_fingers.png`
+    brandingURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/mainroom_banner_and_gun_fingers.png`,
+    faviconURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/mainroom_favicon.png`
 };

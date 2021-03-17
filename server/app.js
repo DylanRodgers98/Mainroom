@@ -133,26 +133,34 @@ app.get('/logout', (req, res) => {
 app.get('/genre/:genre', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
-        title: `${req.params.genre} Livestreams - ${config.siteName}`
+        title: `${req.params.genre} Livestreams - ${config.siteName}`,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
     });
 });
 
 app.get('/category/:category', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
-        title: `${req.params.category} Livestreams - ${config.siteName}`
+        title: `${req.params.category} Livestreams - ${config.siteName}`,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
     });
 });
 
 app.get('/search/:query', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
-        title: `${req.params.query} - ${config.siteName}`
+        title: `${req.params.query} - ${config.siteName}`,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
     });
 });
 
 app.get('/user/:username', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
+    const brandingURL = config.brandingURL;
+    const faviconURL = config.faviconURL;
     let title;
     let description;
     try {
@@ -163,11 +171,13 @@ app.get('/user/:username', setXSRFTokenCookie, async (req, res) => {
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {siteName, title, description});
+    res.render('index', {siteName, brandingURL, faviconURL, title, description});
 });
 
 app.get('/user/:username/subscribers', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
+    const brandingURL = config.brandingURL;
+    const faviconURL = config.faviconURL;
     let title;
     try {
         const username = sanitise(req.params.username.toLowerCase());
@@ -176,11 +186,13 @@ app.get('/user/:username/subscribers', setXSRFTokenCookie, async (req, res) => {
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {siteName, title});
+    res.render('index', {siteName, brandingURL, faviconURL, title});
 });
 
 app.get('/user/:username/subscriptions', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
+    const brandingURL = config.brandingURL;
+    const faviconURL = config.faviconURL;
     let title;
     try {
         const username = sanitise(req.params.username.toLowerCase());
@@ -189,11 +201,13 @@ app.get('/user/:username/subscriptions', setXSRFTokenCookie, async (req, res) =>
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {siteName, title});
+    res.render('index', {siteName, brandingURL, faviconURL, title});
 });
 
 app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
+    const brandingURL = config.brandingURL;
+    const faviconURL = config.faviconURL;
     let title;
     let description;
     let imageURL;
@@ -230,11 +244,15 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {siteName, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard});
+    res.render('index', {
+        siteName, brandingURL, faviconURL, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard
+    });
 });
 
 app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
+    const brandingURL = config.brandingURL;
+    const faviconURL = config.faviconURL;
     let title;
     let description;
     let imageURL;
@@ -261,41 +279,53 @@ app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {siteName, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard});
+    res.render('index', {
+        siteName, brandingURL, faviconURL, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard
+    });
 });
 
 app.get('/manage-recorded-streams', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
-        title: `Manage Recorded Streams - ${config.siteName}`
+        title: `Manage Recorded Streams - ${config.siteName}`,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
     });
 });
 
 app.get('/schedule', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
-        title: `Schedule - ${config.siteName}`
+        title: `Schedule - ${config.siteName}`,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
     });
 });
 
 app.get('/settings', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
-        title: `Settings - ${config.siteName}`
+        title: `Settings - ${config.siteName}`,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
     });
 });
 
 app.get('/go-live', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
-        title: `Stream Settings - ${config.siteName}`
+        title: `Stream Settings - ${config.siteName}`,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
     });
 });
 
 app.get('*', setXSRFTokenCookie, (req, res) => {
     res.render('index', {
         siteName: config.siteName,
-        title: config.headTitle
+        title: config.headTitle,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
     });
 });
 

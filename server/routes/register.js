@@ -2,9 +2,14 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const loginChecker = require('connect-ensure-login');
+const {siteName, brandingURL, faviconURL} = require('../../mainroom.config');
 
 router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
     res.render('register', {
+        siteName: siteName,
+        title: `Register - ${siteName}`,
+        brandingURL,
+        faviconURL,
         errors: {
             username: req.flash('username'),
             email: req.flash('email'),

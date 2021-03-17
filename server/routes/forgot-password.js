@@ -6,10 +6,15 @@ const {randomBytes, createHash} = require('crypto');
 const sesEmailSender = require('../aws/sesEmailSender');
 const {validatePassword, getInvalidPasswordMessage} = require('../auth/passwordValidator');
 const loginChecker = require('connect-ensure-login');
+const {siteName, brandingURL, faviconURL} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/routes/forgot-password.js');
 
 router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
     res.render('forgotPassword', {
+        siteName: siteName,
+        title: `Forgot Password - ${siteName}`,
+        brandingURL,
+        faviconURL,
         messages: {
             info: req.flash('info'),
             errors: req.flash('errors')
@@ -76,6 +81,10 @@ router.get('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
             return res.redirect('/forgot-password');
         } else {
             res.render('resetPassword', {
+                siteName: siteName,
+                title: `Reset Password - ${siteName}`,
+                brandingURL,
+                faviconURL,
                 errors: {
                     password: req.flash('password'),
                     confirmPassword: req.flash('confirmPassword')

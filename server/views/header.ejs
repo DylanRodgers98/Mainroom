@@ -4,6 +4,10 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <% if (locals.faviconURL) { %>
+        <link rel="icon" type="image/png" href="<%= faviconURL %>"/>
+    <% } %>
+
     <% if (locals.siteName) { %>
         <meta property="og:site_name" content="<%= siteName %>">
     <% } %>
