@@ -1,8 +1,20 @@
 import React from 'react';
 import axios from 'axios';
-import {Button, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Col, Spinner} from 'reactstrap';
+import {
+    Button,
+    Container,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownToggle,
+    Row,
+    Col,
+    Spinner,
+    Modal, ModalHeader, ModalBody
+} from 'reactstrap';
 import {displayErrorMessage, displaySuccessMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {filters, siteName} from '../../mainroom.config';
+import HelpIcon from '../icons/help-darkgrey-36.svg';
 
 export default class GoLive extends React.Component {
 
@@ -19,6 +31,7 @@ export default class GoLive extends React.Component {
         this.clearCategory = this.clearCategory.bind(this);
         this.setTags = this.setTags.bind(this);
         this.saveSettings = this.saveSettings.bind(this);
+        this.helpModalToggle = this.helpModalToggle.bind(this);
 
         this.state = {
             loaded: false,
@@ -36,7 +49,8 @@ export default class GoLive extends React.Component {
             streamTags: [],
             showSpinner: false,
             alertText: '',
-            alertColor: ''
+            alertColor: '',
+            helpModalOpen: false
         };
     }
 
@@ -195,6 +209,52 @@ export default class GoLive extends React.Component {
         });
     }
 
+    helpModalToggle() {
+        this.setState(prevState => ({
+            helpModalOpen: !prevState.helpModalOpen
+        }));
+    }
+
+    renderHelpModal() {
+        return (
+            <Modal isOpen={this.state.helpModalOpen} toggle={this.helpModalToggle} centered={true} size='lg'>
+                <ModalHeader toggle={this.helpModalToggle}>
+                    Help
+                </ModalHeader>
+                <ModalBody>
+                    <details>
+                        <summary>How to stream with OBS Studio</summary>
+                        <ol>
+                            <li>Open OBS Studio.</li>
+                            <li>Select 'Settings'.</li>
+                            <li>Select 'Stream'.</li>
+                            <li>Open the 'Service' dropdown and select 'Custom...'.</li>
+                            <li>Copy the Server URL and paste it in the 'Server' text box.</li>
+                            <li>Copy your Stream Key and paste it in the 'Stream Key' text box.</li>
+                            <li>Select 'OK'.</li>
+                            <li>Select 'Start Streaming' to go live.</li>
+                            <li>To stop streaming, select 'Stop Streaming'.</li>
+                        </ol>
+                    </details>
+                    <details>
+                        <summary>How to stream with XSplit Broadcaster</summary>
+                        <ol>
+                            <li>Open XSplit Broadcaster.</li>
+                            <li>Select 'Broadcast'.</li>
+                            <li>Open the 'Set up a new output' dropdown and select 'Custom RTMP'.</li>
+                            <li>Choose any name for your output in the 'Name' text box.</li>
+                            <li>Copy the Server URL and paste it in the 'RTMP URL' text box.</li>
+                            <li>Copy your Stream Key and paste it in the 'Stream Key' text box.</li>
+                            <li>Select 'OK'.</li>
+                            <li>Select 'Broadcast' then select your newly created output to go live.</li>
+                            <li>To stop streaming, select 'Broadcast' then select your newly created output.</li>
+                        </ol>
+                    </details>
+                </ModalBody>
+            </Modal>
+        );
+    }
+
     render() {
         return !this.state.loaded ? (<LoadingSpinner />) : (
             <Container fluid='lg'>
@@ -202,6 +262,9 @@ export default class GoLive extends React.Component {
 
                 <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                     <Col xs='12'>
+                        <a href='javascript:;' onClick={this.helpModalToggle}>
+                            <img src={HelpIcon} className='float-right' title='Help' />
+                        </a>
                         <h4>Stream Settings</h4>
                     </Col>
                 </Row>
@@ -300,6 +363,8 @@ export default class GoLive extends React.Component {
                         </span>
                     </Button>
                 </div>
+
+                {this.renderHelpModal()}
             </Container>
         );
     }
