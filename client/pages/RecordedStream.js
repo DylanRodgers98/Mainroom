@@ -82,6 +82,7 @@ export default class RecordedStream extends React.Component {
             streamGenre: recordedStream.genre,
             streamCategory: recordedStream.category,
             streamTimestamp: formatDate(recordedStream.timestamp),
+            streamTags: recordedStream.tags,
             viewCount: recordedStream.viewCount
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
@@ -100,6 +101,7 @@ export default class RecordedStream extends React.Component {
                 const res = await axios.get(`/api/recorded-streams`, {
                     params: {
                         username: this.state.username,
+                        tags: this.state.streamTags,
                         page: this.state.nextPage,
                         limit: pagination.small
                     }
@@ -178,7 +180,7 @@ export default class RecordedStream extends React.Component {
             );
         });
 
-        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+        const loadMoreButton = !this.state.showLoadMoreButton || !recordedStreams.length ? undefined : (
             <div className='text-center my-2'>
                 <Button className='btn-dark' onClick={this.getRecordedStreams}>
                     {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
@@ -188,13 +190,9 @@ export default class RecordedStream extends React.Component {
         );
 
         return (
-            <div className='overflow-y-auto' style={{height: (this.state.videoHeight + this.state.streamHeadingsHeight) + 'px'}}>
-                <Row className='mt-2 pl-2'>
-                    <Col>
-                        <h5>More from {this.state.displayName || this.state.username}</h5>
-                    </Col>
-                </Row>
-                {recordedStreams}
+            <div className='hide-scrollbar' style={{height: (this.state.videoHeight + this.state.streamHeadingsHeight) + 'px'}}>
+                {recordedStreams.length ? recordedStreams
+                    : <div className='my-3 text-center'>Could not find any suggested videos</div>}
                 {loadMoreButton}
             </div>
         );

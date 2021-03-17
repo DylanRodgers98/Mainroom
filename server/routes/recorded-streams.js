@@ -26,12 +26,20 @@ router.get('/', async (req, res, next) => {
             if (!user) {
                 return res.status(404).send(`User (username: ${escape(username)}) not found`);
             }
-            query.user = user;
+            if (req.query.tags && req.query.tags.length) {
+                query.$or = [
+                    {user},
+                    {tags: req.query.tags}
+                ]
+                options.sort = '-viewCount';
+            } else {
+                query.user = user;
+                options.sort = '-timestamp';
+            }
         } catch (err) {
             LOGGER.error('An error occurred when finding user {}: {}', username, err);
             next(err);
         }
-        options.sort = '-timestamp';
     } else {
         if (req.query.searchQuery) {
             const sanitisedQuery = sanitise(req.query.searchQuery);
@@ -100,7 +108,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', (req, res, next) => {
     const id = sanitise(req.params.id);
     RecordedStream.findById(id)
-        .select('user timestamp title genre category video.bucket video.key viewCount')
+        .select('user timestamp title genre category tags video.bucket video.key viewCount')
         .populate({
             path: 'user',
             select: 'username displayName profilePic.bucket profilePic.key'
@@ -127,6 +135,7 @@ router.get('/:id', (req, res, next) => {
                                 timestamp: recordedStream.timestamp,
                                 title: recordedStream.title,
                                 genre: recordedStream.genre,
+                                tags: recordedStream.tags,
                                 category: recordedStream.category,
                                 videoURL: recordedStream.getVideoURL(),
                                 viewCount: recordedStream.viewCount
