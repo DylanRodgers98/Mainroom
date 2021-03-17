@@ -216,5 +216,6 @@ module.exports = {
     timeFormat: TIME_FORMAT,
     sns: {
         errorTopicArn: 'mainroom-errors'
-    }
+    },
+    brandingURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/mainroom_banner_and_gun_fingers.png`
 };

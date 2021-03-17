@@ -14,7 +14,7 @@ import {
     NavItem,
     NavLink
 } from 'reactstrap';
-import {siteName, filters} from '../../mainroom.config';
+import {filters, brandingURL} from '../../mainroom.config';
 import axios from 'axios';
 import ProfileIcon from '../icons/user.svg';
 import ScheduleIcon from '../icons/calendar.svg';
@@ -226,12 +226,12 @@ export default class MainroomNavbar extends React.Component {
         const searchButtonLink = this.state.searchText ? `/search/${this.state.searchText.trim()}` : window.location.path;
 
         return (
-            <Navbar color='dark' dark expand='md'>
-                <NavbarBrand tag={Link} to={'/'} onClick={this.closeNavbar}>
-                    {siteName}
+            <Navbar color='dark' dark expand='md' className='py-0 pl-0'>
+                <NavbarBrand tag={Link} to={'/'} className='p-0' onClick={this.closeNavbar}>
+                    <img src={brandingURL} width={222} height={57} alt='Mainroom' />
                 </NavbarBrand>
                 <NavbarToggler onClick={this.navbarToggle} />
-                <Collapse isOpen={this.state.navbarOpen} navbar>
+                <Collapse isOpen={this.state.navbarOpen} navbar className='pl-sm-3 pt-sm-1 pl-md-0 pt-md-0'>
                 <Nav className='mr-auto' navbar>
                     <NavItem>
                         <input id='searchBox' className='form-control search-box' placeholder='Search...'
