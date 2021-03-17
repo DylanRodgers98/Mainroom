@@ -1,5 +1,5 @@
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
+const {Strategy} = require('passport-local');
 const {User} = require('../model/schemas');
 const {validatePassword, getInvalidPasswordMessage} = require('./passwordValidator');
 const mongoose = require('mongoose');
@@ -12,7 +12,10 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
     try {
-        const user = await User.findById(id).exec();
+        const user = await User.findById(id)
+            .select('_id username displayName profilePic.bucket profilePic.key chatColour')
+            .exec();
+
         if (!user) {
             LOGGER.error('User (_id: {}) not found', id);
             return done(new Error(`User (_id: ${id}) not found`));
@@ -20,7 +23,7 @@ passport.deserializeUser(async (id, done) => {
         done(null, user);
     } catch (err) {
         LOGGER.error('Error deserializing user (_id: {})', id);
-        return done(err);
+        done(err);
     }
 });
 
@@ -29,7 +32,7 @@ const registerOptions = {
     passReqToCallback: true
 };
 
-passport.use('localRegister', new LocalStrategy(registerOptions, async (req, email, password, done) => {
+passport.use('localRegister', new Strategy(registerOptions, async (req, email, password, done) => {
     const username = sanitise(req.body.username).toLowerCase();
     const emailLowerCase = email.toLowerCase();
 
@@ -82,19 +85,20 @@ const loginOptions = {
     passReqToCallback: true
 };
 
-passport.use('localLogin', new LocalStrategy(loginOptions, async (req, usernameOrEmail, password, done) => {
+passport.use('localLogin', new Strategy(loginOptions, async (req, usernameOrEmail, password, done) => {
     const usernameOrEmailLowercase = usernameOrEmail.toLowerCase();
     try {
         const user = await User.findOne({$or: [{'username': usernameOrEmailLowercase}, {'email': usernameOrEmailLowercase}]})
             .select('+password')
             .exec();
+
         if (!(user && user.checkPassword(password))) {
             return done(null, false, req.flash('login', 'Incorrect username/email or password'));
         }
         done(null, user);
     } catch (err) {
         LOGGER.error('An error occurred during user login: {}', err);
-        return done(err);
+        done(err);
     }
 }));
 

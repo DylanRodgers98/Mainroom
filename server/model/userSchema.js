@@ -20,7 +20,7 @@ const UserSchema = new Schema({
     bio: String,
     links: [{title: String, url: String}],
     streamInfo: {
-        streamKey: String,
+        streamKey: {type: String, select: false},
         title: String,
         genre: String,
         category: String,

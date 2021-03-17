@@ -43,7 +43,7 @@ router.get('/', async (req, res, next) => {
         const options = {
             page: req.query.page,
             limit: req.query.limit,
-            select: 'username displayName profilePic.bucket profilePic.key streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
+            select: 'username displayName profilePic.bucket profilePic.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
             sort: '-streamInfo.viewCount'
         };
 

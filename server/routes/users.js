@@ -388,38 +388,39 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
     });
 });
 
-router.get('/:username/stream-info', (req, res, next) => {
+router.get('/:username/stream-info', async (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username},
-        'displayName profilePic.bucket profilePic.key streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount streamInfo.startTime',
-        async (err, user) => {
-            if (err) {
-                LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
-                next(err);
-            } else if (!user) {
-                res.status(404).send(`User (username: ${escape(username)}) not found`);
-            } else {
-                const streamKey = user.streamInfo.streamKey;
-                const {data} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
-                    headers: { Authorization: config.rtmpServer.auth.header }
-                });
-                res.json({
-                    isLive: data.isLive,
-                    displayName: user.displayName,
-                    profilePicURL: user.getProfilePicURL() || config.defaultProfilePicURL,
-                    streamKey,
-                    title: user.streamInfo.title,
-                    genre: user.streamInfo.genre,
-                    category: user.streamInfo.category,
-                    tags: user.streamInfo.tags,
-                    viewCount: user.streamInfo.viewCount,
-                    startTime: user.streamInfo.startTime,
-                    rtmpServerURL: RTMP_SERVER_URL,
-                    liveStreamURL: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
-                    socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}?liveStreamUsername=${username}`,
-                });
-            }
+    try {
+        const user = await User.findOne({username: username})
+            .select('displayName profilePic.bucket profilePic.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount streamInfo.startTime')
+            .exec();
+
+        if (!user) {
+            return res.status(404).send(`User (username: ${escape(username)}) not found`);
+        }
+        const streamKey = user.streamInfo.streamKey;
+        const {data: {isLive}} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
+            headers: {Authorization: config.rtmpServer.auth.header}
         });
+        res.json({
+            isLive,
+            streamKey,
+            displayName: user.displayName,
+            profilePicURL: user.getProfilePicURL() || config.defaultProfilePicURL,
+            title: user.streamInfo.title,
+            genre: user.streamInfo.genre,
+            category: user.streamInfo.category,
+            tags: user.streamInfo.tags,
+            viewCount: user.streamInfo.viewCount,
+            startTime: user.streamInfo.startTime,
+            rtmpServerURL: RTMP_SERVER_URL,
+            liveStreamURL: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
+            socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}?liveStreamUsername=${username}`,
+        });
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
+        next(err);
+    }
 });
 
 router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {

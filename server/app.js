@@ -205,7 +205,7 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
         // TODO: this practically matches '/:username/stream-info' users API route, so extract into controller method and call here and in API route
         const username = sanitise(req.params.username.toLowerCase());
         const user = await User.findOne({username})
-            .select( 'displayName streamInfo.title streamInfo.streamKey streamInfo.genre streamInfo.category')
+            .select( 'displayName streamInfo.title +streamInfo.streamKey streamInfo.genre streamInfo.category')
             .exec();
         const streamKey = user.streamInfo.streamKey;
         const {data} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {

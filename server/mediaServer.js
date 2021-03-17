@@ -75,7 +75,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
     let user;
     try {
         user = await User.findOne({'streamInfo.streamKey': streamKey})
-            .select('_id username streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
+            .select('_id username +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
             .exec();
     } catch (err) {
         LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.toString());
