@@ -161,7 +161,7 @@ export default class RecordedStream extends React.Component {
                         </Link>
                     </Col>
                     <Col xs='6' className='remove-padding-lr'>
-                        <div className='black-link'>
+                        <div className='black-link text-break'>
                             <Link to={`/stream/${stream._id}`}>
                                 {stream.title}
                             </Link>

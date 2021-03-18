@@ -296,8 +296,9 @@ export default class UserProfile extends React.Component {
     renderLinks() {
         return this.state.links.map((link, index) => (
             <div key={index}>
+                <img src={`https://www.google.com/s2/favicons?domain=${link.url}`} />
                 <a href={link.url} target='_blank' rel='noopener noreferrer'
-                   className='text-truncate' title={link.title || link.url}>
+                   className='text-truncate ml-1' title={link.title || link.url}>
                     {link.title || link.url}
                 </a>
             </div>
