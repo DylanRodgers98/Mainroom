@@ -496,7 +496,7 @@ export default class ManageRecordedStreams extends React.Component {
                         </Col>
                         <Col md='6' lg='8'>
                             {dropdown}
-                            <h5 className='black-link'>
+                            <h5 className='black-link text-break'>
                                 <Link to={`/stream/${stream._id}`}>
                                     {stream.title}
                                 </Link>

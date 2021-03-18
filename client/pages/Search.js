@@ -320,7 +320,7 @@ export default class LiveStreams extends React.Component {
                                 </Link>
                             </td>
                             <td valign='middle'>
-                                <h5>
+                                <h5 className='text-break'>
                                     <Link to={`/user/${recordedStream.user.username}`}>
                                         {recordedStream.user.displayName || recordedStream.user.username}
                                     </Link>

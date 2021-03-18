@@ -272,7 +272,7 @@ export default class LiveStream extends React.Component {
                                 <table>
                                     <tbody>
                                         <tr>
-                                            <td>
+                                            <td valign='top'>
                                                 <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
                                                     <img className='rounded-circle m-2' src={this.state.profilePicURL}
                                                          width='75' height='75'
@@ -280,7 +280,7 @@ export default class LiveStream extends React.Component {
                                                 </Link>
                                             </td>
                                             <td className='w-100' valign='middle'>
-                                                <h3>
+                                                <h3 className='text-break'>
                                                     <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
                                                         {this.state.displayName || this.props.match.params.username.toLowerCase()}
                                                     </Link>

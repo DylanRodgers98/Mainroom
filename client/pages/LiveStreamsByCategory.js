@@ -143,7 +143,7 @@ export default class LiveStreamsByCategory extends React.Component {
                                 </Link>
                             </td>
                             <td valign='middle' className='w-100'>
-                                <h5>
+                                <h5 className='text-break'>
                                     <Link to={`/user/${liveStream.username}`}>
                                         {liveStream.displayName || liveStream.username}
                                     </Link>

@@ -168,7 +168,7 @@ export default class Home extends React.Component {
                                 </Link>
                             </td>
                             <td valign='middle' className='w-100'>
-                                <h5>
+                                <h5 className='text-break'>
                                     <Link to={`/user/${liveStream.username}`}>
                                         {liveStream.displayName || liveStream.username}
                                     </Link>

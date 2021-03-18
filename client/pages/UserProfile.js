@@ -325,7 +325,7 @@ export default class UserProfile extends React.Component {
                         </Link>
                     </Col>
                     <Col md='6'>
-                        <h3 className='black-link'>
+                        <h3 className='black-link text-break'>
                             <Link to={`/user/${this.props.match.params.username.toLowerCase()}/live`}>
                                 {this.state.streamTitle}
                             </Link>
@@ -465,7 +465,7 @@ export default class UserProfile extends React.Component {
                     </Link>
                 </Col>
                 <Col md='6' lg='8'>
-                    <h5 className='black-link'>
+                    <h5 className='black-link text-break'>
                         <Link to={`/stream/${stream._id}`}>
                             {stream.title}
                         </Link>
