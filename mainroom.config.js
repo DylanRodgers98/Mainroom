@@ -70,6 +70,12 @@ module.exports = {
             minNumeric: 1,
             minSpecialChars: 1,
             allowedSpecialChars: '-[]/{}()*+?.\\^$|~`!#%^&=;,\'":<>'
+        },
+        profile: {
+            displayNameMaxLength: 50,
+            locationMaxLength: 30,
+            bioMaxLength: 200,
+            linkTitleMaxLength: 30
         }
     },
     cronTime: {

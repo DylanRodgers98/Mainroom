@@ -12,7 +12,7 @@ import {
     Spinner
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
-import {headTitle, pagination, siteName} from '../../mainroom.config';
+import {headTitle, pagination, siteName, validation} from '../../mainroom.config';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
 import {
@@ -296,7 +296,10 @@ export default class UserProfile extends React.Component {
     renderLinks() {
         return this.state.links.map((link, index) => (
             <div key={index}>
-                <a href={link.url} target='_blank' rel='noopener noreferrer'>{link.title || link.url}</a>
+                <a href={link.url} target='_blank' rel='noopener noreferrer'
+                   className='text-truncate' title={link.title || link.url}>
+                    {link.title || link.url}
+                </a>
             </div>
         ));
     }
@@ -670,7 +673,8 @@ export default class UserProfile extends React.Component {
             <Row className='mt-1' key={index}>
                 <Col className='remove-padding-r' xs='4'>
                     <input className='rounded-border w-100' type='text' value={link.title}
-                           onChange={e => this.setLinkTitle(e, index)}/>
+                           onChange={e => this.setLinkTitle(e, index)}
+                           maxLength={validation.profile.linkTitleMaxLength}/>
                 </Col>
                 <Col className='remove-padding-lr' xs='7'>
                     <input className='rounded-border w-100 mx-1' type='text' value={link.url}
@@ -717,21 +721,21 @@ export default class UserProfile extends React.Component {
                             </Col>
                             <Col xs='12'>
                                 <input className='rounded-border w-50' type='text' value={this.state.editDisplayName}
-                                       onChange={this.setDisplayName}/>
+                                       onChange={this.setDisplayName} maxLength={validation.profile.displayNameMaxLength} />
                             </Col>
                             <Col className='mt-2' xs='12'>
                                 <h5>Location</h5>
                             </Col>
                             <Col xs='12'>
                                 <input className='rounded-border w-50' type='text' value={this.state.editLocation}
-                                       onChange={this.setLocation}/>
+                                       onChange={this.setLocation} maxLength={validation.profile.locationMaxLength} />
                             </Col>
                             <Col className='mt-2' xs='12'>
                                 <h5>Bio</h5>
                             </Col>
                             <Col xs='12'>
                                 <textarea className='rounded-border w-100' value={this.state.editBio}
-                                          onChange={this.setBio}/>
+                                          onChange={this.setBio} maxLength={validation.profile.bioMaxLength} />
                             </Col>
                             <Col className='mt-2' xs='12'>
                                 <h5>Chat Colour</h5>
@@ -872,18 +876,22 @@ export default class UserProfile extends React.Component {
                     <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                         <Col md='4' lg='3'>
                             {this.renderProfilePic()}
-                            <h1>{this.state.displayName || this.props.match.params.username.toLowerCase()}</h1>
-                            <h5>
+                            <h1 className='text-break' title={this.state.displayName || this.props.match.params.username.toLowerCase()}>
+                                {this.state.displayName || this.props.match.params.username.toLowerCase()}
+                            </h1>
+                            <h5 className='text-break'>
                                 <img src={LocationIcon} className='mr-1 mb-1' alt='Location icon'/>
                                 {this.state.location || 'Planet Earth'}
                             </h5>
-                            <h5 className='black-link'>
+                            <h5 className='black-link text-break'>
                                 <Link to={`/user/${this.props.match.params.username.toLowerCase()}/subscribers`}>
-                                    {this.state.numOfSubscribers} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
+                                    {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
                                 </Link>
                             </h5>
                             {this.renderSubscribeOrEditProfileButton()}
-                            <p>{this.state.bio}</p>
+                            <p className='text-break'>
+                                {this.state.bio}
+                            </p>
                             {this.renderLinks()}
                             <hr className='my-4'/>
                         </Col>
