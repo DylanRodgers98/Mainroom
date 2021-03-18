@@ -444,13 +444,24 @@ router.get('/:username/stream-info', async (req, res, next) => {
 
 router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
+    const sanitisedInput = sanitise(req.body);
+
+    const titleMaxLength = config.validation.streamSettings.titleMaxLength
+    if (sanitisedInput.title > titleMaxLength) {
+        return res.status(403).send(`Length of title was greater than the maximum allowed length of ${titleMaxLength}`);
+    }
+    const tagsMaxAmount = config.validation.streamSettings.tagsMaxAmount;
+    if (sanitisedInput.tags.length > tagsMaxAmount) {
+        return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
+    }
+
     User.findOneAndUpdate({
         username
     }, {
-        'streamInfo.title': sanitise(req.body.title),
-        'streamInfo.genre': sanitise(req.body.genre),
-        'streamInfo.category': sanitise(req.body.category),
-        'streamInfo.tags': sanitise(req.body.tags)
+        'streamInfo.title': sanitisedInput.title,
+        'streamInfo.genre': sanitisedInput.genre,
+        'streamInfo.category': sanitisedInput.category,
+        'streamInfo.tags': sanitisedInput.tags
     }, {
         new: true,
     }, (err, user) => {

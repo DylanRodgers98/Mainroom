@@ -76,6 +76,10 @@ module.exports = {
             locationMaxLength: 30,
             bioMaxLength: 200,
             linkTitleMaxLength: 30
+        },
+        streamSettings: {
+            titleMaxLength: 60,
+            tagsMaxAmount: 8
         }
     },
     cronTime: {

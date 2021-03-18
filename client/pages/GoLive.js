@@ -16,7 +16,7 @@ import {
     UncontrolledTooltip
 } from 'reactstrap';
 import {displayErrorMessage, displaySuccessMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
-import {filters, siteName, storage} from '../../mainroom.config';
+import {filters, siteName, storage, validation} from '../../mainroom.config';
 import HelpIcon from '../icons/help-darkgrey-36.svg';
 
 const INSTRUCTIONS_PATH = '/go-live-instructions'
@@ -186,6 +186,9 @@ export default class GoLive extends React.Component {
 
     setTags(event) {
         const tags = event.target.value.replace(/\s/g, '').split(',');
+        if (tags.length > validation.streamSettings.tagsMaxAmount) {
+            return;
+        }
         this.setState({
             streamTags: tags,
             unsavedChanges: true
@@ -351,7 +354,7 @@ export default class GoLive extends React.Component {
                     </Col>
                     <Col xs='12'>
                         <input className='w-100-xs w-50-md rounded-border' type='text' value={this.state.streamTitle}
-                               onChange={this.setTitle}/>
+                               onChange={this.setTitle} maxLength={validation.streamSettings.titleMaxLength} />
                     </Col>
                     <Col className='mt-2' xs='12'>
                         <h5>Genre</h5>
@@ -395,7 +398,7 @@ export default class GoLive extends React.Component {
                     <Col xs='12'>
                         <input className='rounded-border w-100-xs w-25-md' type='text'
                                value={this.state.streamTags} onChange={this.setTags}/>
-                        <i className='ml-1'>Comma-separated, no spaces</i>
+                        <i className='ml-1'>Up to {validation.streamSettings.tagsMaxAmount} comma-separated tags, no spaces</i>
                     </Col>
                 </Row>
                 <hr className='my-4'/>
