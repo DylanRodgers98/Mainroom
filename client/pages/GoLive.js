@@ -10,11 +10,18 @@ import {
     Row,
     Col,
     Spinner,
-    Modal, ModalHeader, ModalBody
+    Modal,
+    ModalHeader,
+    ModalBody,
+    UncontrolledTooltip
 } from 'reactstrap';
 import {displayErrorMessage, displaySuccessMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {filters, siteName, storage} from '../../mainroom.config';
 import HelpIcon from '../icons/help-darkgrey-36.svg';
+
+const INSTRUCTIONS_PATH = '/go-live-instructions'
+const OBS_INSTRUCTIONS_PATH = `${INSTRUCTIONS_PATH}/obs`;
+const XSPLIT_INSTRUCTIONS_PATH = `${INSTRUCTIONS_PATH}/xsplit`;
 
 export default class GoLive extends React.Component {
 
@@ -48,9 +55,9 @@ export default class GoLive extends React.Component {
             streamCategory: '',
             streamTags: [],
             showSpinner: false,
+            isHelpModalOpen: false,
             alertText: '',
-            alertColor: '',
-            helpModalOpen: false
+            alertColor: ''
         };
     }
 
@@ -211,13 +218,13 @@ export default class GoLive extends React.Component {
 
     helpModalToggle() {
         this.setState(prevState => ({
-            helpModalOpen: !prevState.helpModalOpen
+            isHelpModalOpen: !prevState.isHelpModalOpen
         }));
     }
 
     renderHelpModal() {
         return (
-            <Modal isOpen={this.state.helpModalOpen} toggle={this.helpModalToggle} centered={true} size='lg'>
+            <Modal isOpen={this.state.isHelpModalOpen} toggle={this.helpModalToggle} centered={true} size='lg'>
                 <ModalHeader toggle={this.helpModalToggle}>
                     Help
                 </ModalHeader>
@@ -228,29 +235,29 @@ export default class GoLive extends React.Component {
                             <li><a href='https://obsproject.com/download'>Download OBS Studio</a> if you haven't already.</li>
                             <li>Open OBS Studio.</li>
                             <li>Select 'Settings'.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/1_obs_settings.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${OBS_INSTRUCTIONS_PATH}/1_obs_settings.png`}
                                  alt="OBS Step 1: Select 'Settings'."
                                  className='mw-100 pr-40 mb-1' />
                             <li>Select 'Stream'.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/2_obs_stream.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${OBS_INSTRUCTIONS_PATH}/2_obs_stream.png`}
                                  alt="OBS Step 2: Select 'Stream'."
                                  className='mw-100 pr-40 mb-1' />
                             <li>Open the 'Service' dropdown and select 'Custom...'.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/3_obs_service.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${OBS_INSTRUCTIONS_PATH}/3_obs_service.png`}
                                  alt="OBS Step 3: Open the 'Service' dropdown and select 'Custom...'."
                                  className='mw-100 pr-40 mb-1' />
                             <li>Copy the Server URL and paste it in the 'Server' text box.</li>
                             <li>Copy your Stream Key and paste it in the 'Stream Key' text box.</li>
                             <li>Select 'OK'.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/4_obs_ok.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${OBS_INSTRUCTIONS_PATH}/4_obs_ok.png`}
                                  alt="OBS Step 4: Copy and paste Server URL and Stream Key into OBS, then select 'OK'."
                                  className='mw-100 pr-40 mb-1' />
                             <li>Select 'Start Streaming' to go live.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/5_obs_start.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${OBS_INSTRUCTIONS_PATH}/5_obs_start.png`}
                                  alt="OBS Step 5: Select 'Start Streaming' to go live."
                                  className='mw-100 pr-40 mb-1' />
                             <li>To stop streaming, select 'Stop Streaming'.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/6_obs_stop.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${OBS_INSTRUCTIONS_PATH}/6_obs_stop.png`}
                                  alt="OBS Step 6: To stop streaming, select 'Stop Streaming'."
                                  className='mw-100 pr-40 mb-1' />
                         </ol>
@@ -261,26 +268,26 @@ export default class GoLive extends React.Component {
                             <li><a href='https://www.xsplit.com/broadcaster/thank-you'>Download XSplit Broadcaster</a> if you haven't already.</li>
                             <li>Open XSplit Broadcaster.</li>
                             <li>Select 'Broadcast'.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/1_xsplit_broadcast.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${XSPLIT_INSTRUCTIONS_PATH}/1_xsplit_broadcast.png`}
                                  alt="XSplit Step 1: Select 'Broadcast'."
                                  className='mw-100 pr-40 mb-1' />
                             <li>Open the 'Set up a new output' dropdown and select 'Custom RTMP'.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/2_xsplit_output.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${XSPLIT_INSTRUCTIONS_PATH}/2_xsplit_output.png`}
                                  alt="XSplit Step 2: Open the 'Set up a new output' dropdown and select 'Custom RTMP'."
                                  className='mw-100 pr-40 mb-1' />
                             <li>Choose any name for your output in the 'Name' text box.</li>
                             <li>Copy the Server URL and paste it in the 'RTMP URL' text box.</li>
                             <li>Copy your Stream Key and paste it in the 'Stream Key' text box.</li>
                             <li>Select 'OK'.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/3_xsplit_ok.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${XSPLIT_INSTRUCTIONS_PATH}/3_xsplit_ok.png`}
                                  alt="XSplit Step 3: Choose a channel Name, copy and paste Server URL and Stream Key into XSplit, then select 'OK'."
                                  className='mw-100 pr-40 mb-1' />
                             <li>Select 'Broadcast' then select your newly created output to go live.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/4_xsplit_start.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${XSPLIT_INSTRUCTIONS_PATH}/4_xsplit_start.png`}
                                  alt="XSplit Step 4: Select 'Broadcast' then select your newly created output to go live."
                                  className='mw-100 pr-40 mb-1' />
                             <li>To stop streaming, select 'Broadcast' then select your newly created output.</li>
-                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/5_xsplit_stop.png`}
+                            <img src={`https://${storage.cloudfront.staticContent}${XSPLIT_INSTRUCTIONS_PATH}/5_xsplit_stop.png`}
                                  alt="XSplit Step 5: To stop streaming, select 'Broadcast' then select your newly created output."
                                  className='mw-100 pr-40 mb-1' />
                         </ol>
@@ -297,9 +304,12 @@ export default class GoLive extends React.Component {
 
                 <Row className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                     <Col xs='12'>
-                        <a href='javascript:;' onClick={this.helpModalToggle}>
-                            <img src={HelpIcon} className='float-right' title='Help' />
-                        </a>
+                        <span className='float-right'>
+                            <a href='javascript:;' id='help' onClick={this.helpModalToggle}>
+                                <img src={HelpIcon} />
+                            </a>
+                            <UncontrolledTooltip target='help'>Help</UncontrolledTooltip>
+                        </span>
                         <h4>Stream Settings</h4>
                     </Col>
                 </Row>
