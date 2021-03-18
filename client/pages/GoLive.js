@@ -13,7 +13,7 @@ import {
     Modal, ModalHeader, ModalBody
 } from 'reactstrap';
 import {displayErrorMessage, displaySuccessMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
-import {filters, siteName} from '../../mainroom.config';
+import {filters, siteName, storage} from '../../mainroom.config';
 import HelpIcon from '../icons/help-darkgrey-36.svg';
 
 export default class GoLive extends React.Component {
@@ -222,32 +222,67 @@ export default class GoLive extends React.Component {
                     Help
                 </ModalHeader>
                 <ModalBody>
-                    <details>
+                    <details className='mb-1'>
                         <summary>How to stream with OBS Studio</summary>
                         <ol>
+                            <li><a href='https://obsproject.com/download'>Download OBS Studio</a> if you haven't already.</li>
                             <li>Open OBS Studio.</li>
                             <li>Select 'Settings'.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/1_obs_settings.png`}
+                                 alt="OBS Step 1: Select 'Settings'."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>Select 'Stream'.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/2_obs_stream.png`}
+                                 alt="OBS Step 2: Select 'Stream'."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>Open the 'Service' dropdown and select 'Custom...'.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/3_obs_service.png`}
+                                 alt="OBS Step 3: Open the 'Service' dropdown and select 'Custom...'."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>Copy the Server URL and paste it in the 'Server' text box.</li>
                             <li>Copy your Stream Key and paste it in the 'Stream Key' text box.</li>
                             <li>Select 'OK'.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/4_obs_ok.png`}
+                                 alt="OBS Step 4: Copy and paste Server URL and Stream Key into OBS, then select 'OK'."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>Select 'Start Streaming' to go live.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/5_obs_start.png`}
+                                 alt="OBS Step 5: Select 'Start Streaming' to go live."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>To stop streaming, select 'Stop Streaming'.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/obs/6_obs_stop.png`}
+                                 alt="OBS Step 6: To stop streaming, select 'Stop Streaming'."
+                                 className='mw-100 pr-40 mb-1' />
                         </ol>
                     </details>
                     <details>
                         <summary>How to stream with XSplit Broadcaster</summary>
                         <ol>
+                            <li><a href='https://www.xsplit.com/broadcaster/thank-you'>Download XSplit Broadcaster</a> if you haven't already.</li>
                             <li>Open XSplit Broadcaster.</li>
                             <li>Select 'Broadcast'.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/1_xsplit_broadcast.png`}
+                                 alt="XSplit Step 1: Select 'Broadcast'."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>Open the 'Set up a new output' dropdown and select 'Custom RTMP'.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/2_xsplit_output.png`}
+                                 alt="XSplit Step 2: Open the 'Set up a new output' dropdown and select 'Custom RTMP'."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>Choose any name for your output in the 'Name' text box.</li>
                             <li>Copy the Server URL and paste it in the 'RTMP URL' text box.</li>
                             <li>Copy your Stream Key and paste it in the 'Stream Key' text box.</li>
                             <li>Select 'OK'.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/3_xsplit_ok.png`}
+                                 alt="XSplit Step 3: Choose a channel Name, copy and paste Server URL and Stream Key into XSplit, then select 'OK'."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>Select 'Broadcast' then select your newly created output to go live.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/4_xsplit_start.png`}
+                                 alt="XSplit Step 4: Select 'Broadcast' then select your newly created output to go live."
+                                 className='mw-100 pr-40 mb-1' />
                             <li>To stop streaming, select 'Broadcast' then select your newly created output.</li>
+                            <img src={`https://${storage.cloudfront.staticContent}/go-live-instructions/xsplit/5_xsplit_stop.png`}
+                                 alt="XSplit Step 5: To stop streaming, select 'Broadcast' then select your newly created output."
+                                 className='mw-100 pr-40 mb-1' />
                         </ol>
                     </details>
                 </ModalBody>

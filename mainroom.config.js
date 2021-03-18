@@ -114,7 +114,9 @@ module.exports = {
         },
         cloudfront: {
             [STATIC_CONTENT_BUCKET_NAME]: STATIC_CONTENT_CLOUDFRONT_DOMAIN,
-            [STREAMS_BUCKET_NAME]: STREAMS_CLOUDFRONT_DOMAIN
+            staticContent: STATIC_CONTENT_CLOUDFRONT_DOMAIN,
+            [STREAMS_BUCKET_NAME]: STREAMS_CLOUDFRONT_DOMAIN,
+            streams: STREAMS_CLOUDFRONT_DOMAIN
         }
     },
     defaultProfilePicURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/${DEFAULT_PROFILE_PIC_KEY}`,
