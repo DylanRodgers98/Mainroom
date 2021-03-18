@@ -5,7 +5,7 @@ FROM node:lts-alpine
 RUN apk add ffmpeg
 
 # Create app directory
-WORKDIR /usr/src/app
+WORKDIR /usr/src/mainroom
 
 # Install app dependencies
 COPY . .

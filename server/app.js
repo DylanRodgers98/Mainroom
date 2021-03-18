@@ -26,6 +26,7 @@ const axios = require('axios');
 const {startWebSocketServer} = require('./websocketServer');
 const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
 const snsErrorPublisher = require('./aws/snsErrorPublisher');
+const {renderCountdown} = require('./middleware/renderCountdown');
 const LOGGER = require('../logger')('./server/app.js');
 
 // in production environment, publish info about uncaught exceptions and unhandled promise rejections to SNS topic
@@ -52,22 +53,17 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // connect to database
-const databaseUri = 'mongodb://'
-    + (process.env.DB_USER && process.env.DB_PASSWORD ? `${process.env.DB_USER}:${process.env.DB_PASSWORD}@` : '')
-    + `${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}`;
-
-mongoose.connect(databaseUri, {
+mongoose.connect(process.env.MONGODB_CONNECTION_STRING, {
     useNewUrlParser: true,
     useFindAndModify: false,
     useUnifiedTopology: true,
     useCreateIndex: true
 }, async err => {
     if (err) {
-        LOGGER.error(`An error occurred when connecting to MongoDB database '{}': {}`,
-            process.env.DB_DATABASE, err.toString());
+        LOGGER.error(`An error occurred when connecting to MongoDB database: {}`, err.toString());
         return await snsErrorPublisher.publish(err);
     }
-    LOGGER.info('Connected to MongoDB database: {}', process.env.DB_DATABASE);
+    LOGGER.info('Connected to MongoDB database');
 });
 
 // set up views
@@ -99,6 +95,9 @@ app.use(rateLimit({
     windowMs: config.rateLimiter.windowMs,
     max: config.rateLimiter.maxRequests
 }));
+
+// If pre-launch, render countdown page for all requests
+app.use(renderCountdown);
 
 // Register app routes
 app.use('/login', require('./routes/login'));
