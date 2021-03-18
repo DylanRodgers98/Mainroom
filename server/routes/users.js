@@ -85,22 +85,41 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const updateQuery = {};
 
     if (req.body.displayName) {
-        updateQuery.displayName = sanitise(req.body.displayName);
+        const displayName = sanitise(req.body.displayName);
+        const displayNameMaxLength = config.validation.profile.displayNameMaxLength;
+        if (displayName.length > displayNameMaxLength) {
+            return res.status(403).send(`Length of displayName was greater than the maximum allowed length of ${displayNameMaxLength}`);
+        }
+        updateQuery.displayName = displayName;
     }
     if (req.body.location) {
-        updateQuery.location = sanitise(req.body.location);
+        const location = sanitise(req.body.location);
+        const locationMaxLength = config.validation.profile.locationMaxLength;
+        if (location.length > locationMaxLength) {
+            return res.status(403).send(`Length of location was greater than the maximum allowed length of ${locationMaxLength}`);
+        }
+        updateQuery.location = location;
     }
     if (req.body.bio) {
-        updateQuery.bio = sanitise(req.body.bio);
+        const bio = sanitise(req.body.bio);
+        const bioMaxLength = config.validation.profile.bioMaxLength;
+        if (bio.length > bioMaxLength) {
+            return res.status(403).send(`Length of bio was greater than the maximum allowed length of ${bioMaxLength}`);
+        }
+        updateQuery.bio = bio;
     }
     if (req.body.chatColour) {
         updateQuery.chatColour = sanitise(req.body.chatColour);
     }
     if (req.body.links && Array.isArray(req.body.links)) {
         const sanitisedLinks = sanitise(req.body.links);
+        const linkTitleMaxLength = config.validation.profile.linkTitleMaxLength;
         const normalisedLinks = [];
         const indexesOfInvalidLinks = []
         sanitisedLinks.forEach((link, index) => {
+            if (link.title.length > linkTitleMaxLength) {
+                return res.status(403).send(`Length of a link's title was greater than the maximum allowed length of ${linkTitleMaxLength}`);
+            }
             try {
                 link.url = normalizeUrl(link.url, {
                     forceHttps: true,

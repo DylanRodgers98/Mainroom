@@ -879,17 +879,19 @@ export default class UserProfile extends React.Component {
                             <h1 className='text-break' title={this.state.displayName || this.props.match.params.username.toLowerCase()}>
                                 {this.state.displayName || this.props.match.params.username.toLowerCase()}
                             </h1>
-                            <h5 className='text-break'>
-                                <img src={LocationIcon} className='mr-1 mb-1' alt='Location icon'/>
-                                {this.state.location || 'Planet Earth'}
-                            </h5>
+                            {!this.state.location ? undefined :
+                                <h5 className='text-break'>
+                                    <img src={LocationIcon} className='mr-1 mb-1' alt='Location icon'/>
+                                    {this.state.location}
+                                </h5>
+                            }
                             <h5 className='black-link text-break'>
                                 <Link to={`/user/${this.props.match.params.username.toLowerCase()}/subscribers`}>
                                     {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
                                 </Link>
                             </h5>
                             {this.renderSubscribeOrEditProfileButton()}
-                            <p className='text-break'>
+                            <p className='text-break mt-1'>
                                 {this.state.bio}
                             </p>
                             {this.renderLinks()}
