@@ -26,15 +26,17 @@ jest.mock('@aws-sdk/lib-storage', () => {
     };
 });
 
-const mockS3DeleteObject = jest.fn();
+const mockSend = jest.fn();
+const mockDeleteObjectCommand = jest.fn();
 
 jest.mock('@aws-sdk/client-s3', () => {
     return {
-        S3: jest.fn(() => {
+        S3Client: jest.fn(() => {
             return {
-                deleteObject: mockS3DeleteObject
+                send: mockSend
             };
-        })
+        }),
+        DeleteObjectCommand: jest.fn(() => mockDeleteObjectCommand)
     };
 });
 
@@ -95,7 +97,7 @@ describe('s3-v2-to-v3-bridge', () => {
             // when
             bridge.deleteObject(mockParams, mockCallback);
             // then
-            expect(mockS3DeleteObject).toHaveBeenCalledWith(mockParams, mockCallback);
+            expect(mockSend).toHaveBeenCalledWith(mockDeleteObjectCommand, mockCallback);
         });
     });
 });
