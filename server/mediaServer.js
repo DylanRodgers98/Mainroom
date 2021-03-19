@@ -114,8 +114,8 @@ nms.on('donePublish', async (sessionId, streamPath) => {
             ]);
 
             const videoDuration = promiseResults[0];
-            const {originalFileURLs, videoURL} = promiseResults[1];
-            const thumbnailURL = promiseResults[2];
+            const {originalFileURLs, video} = promiseResults[1];
+            const thumbnail = promiseResults[2];
 
             const recordedStream = new RecordedStream({
                 user: user._id,
@@ -126,8 +126,8 @@ nms.on('donePublish', async (sessionId, streamPath) => {
                 viewCount: user.streamInfo.cumulativeViewCount,
                 timestamp,
                 videoDuration,
-                videoURL,
-                thumbnailURL
+                video,
+                thumbnail
             });
 
             const allSettledResults = await Promise.allSettled([...originalFileURLs.map(deleteFile), recordedStream.save()]);

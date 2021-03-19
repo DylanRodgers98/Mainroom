@@ -15,11 +15,11 @@ async function getThumbnail(streamKey) {
         const headObjectCommand = new HeadObjectCommand({Bucket, Key});
         const output = await S3_CLIENT.send(headObjectCommand);
         return Date.now() > output.LastModified.getTime() + storage.thumbnails.ttl
-            ? await generateStreamThumbnail({inputURL, Bucket, Key})
+            ? resolveObjectURL(await generateStreamThumbnail({inputURL, Bucket, Key}))
             : resolveObjectURL({Bucket, Key});
     } catch (err) {
         if (err.name === 'NotFound') {
-            return await generateStreamThumbnail({inputURL, Bucket, Key});
+            return resolveObjectURL(await generateStreamThumbnail({inputURL, Bucket, Key}));
         }
         throw err;
     }
@@ -60,7 +60,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         try {
             const result = await upload.done();
             LOGGER.info('Successfully uploaded thumbnail to {}', result.Location);
-            resolve(resolveObjectURL({Bucket, Key}));
+            resolve({Bucket, Key});
         } catch (err) {
             LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}',
                 Bucket, Key, err);

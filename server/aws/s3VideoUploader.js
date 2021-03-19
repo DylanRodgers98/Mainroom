@@ -45,7 +45,7 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
                     LOGGER.info('Successfully uploaded recorded stream to {}', result.Location);
                     resolve({
                         originalFileURLs: [inputURL, outputURL],
-                        videoURL: resolveObjectURL({Bucket, Key})
+                        video: {Bucket, Key}
                     });
                 } catch (err) {
                     LOGGER.error('An error occurred when uploading recorded stream to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
