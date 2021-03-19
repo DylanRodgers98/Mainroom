@@ -353,7 +353,7 @@ const httpServer = http.createServer(app).listen(process.env.SERVER_HTTP_PORT, a
 });
 
 // Start cron jobs only in first pm2 instance of mainroom app, or on non-production environment
-if ((process.env.PM2_APP_NAME === 'mainroom' && process.env.NODE_APP_INSTANCE === '0')
+if ((process.env.PM2_APP_NAME === 'mainroom' && process.env.NODE_APP_INSTANCE === process.env.MAIN_PM2_INSTANCE_ID)
     || process.env.NODE_ENV !== 'production') {
     cronJobs.startAll();
 }
