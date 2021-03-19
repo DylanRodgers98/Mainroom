@@ -16,7 +16,10 @@ async function getThumbnail(streamKey) {
         const output = await S3_CLIENT.send(headObjectCommand);
         return Date.now() > output.LastModified.getTime() + storage.thumbnails.ttl
             ? resolveObjectURL(await generateStreamThumbnail({inputURL, Bucket, Key}))
-            : resolveObjectURL({Bucket, Key});
+            : resolveObjectURL({
+                bucket: Bucket,
+                key: Key
+            });
     } catch (err) {
         if (err.name === 'NotFound') {
             return resolveObjectURL(await generateStreamThumbnail({inputURL, Bucket, Key}));
