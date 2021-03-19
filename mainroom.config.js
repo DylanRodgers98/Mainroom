@@ -11,10 +11,10 @@ const CRON_EVERY_MINUTE = '* * * * *';
 const CRON_EVERY_HOUR = '0 * * * *';
 
 const STATIC_CONTENT_BUCKET_NAME = 'mainroom-static-content';
-const STREAMS_BUCKET_NAME = 'mainroom-streams';
+const RECORDED_STREAMS_BUCKET_NAME = 'mainroom-streams';
 
 const STATIC_CONTENT_CLOUDFRONT_DOMAIN = 'dp8ki4pcym3cc.cloudfront.net';
-const STREAMS_CLOUDFRONT_DOMAIN = 'd9wctuq44cpzl.cloudfront.net';
+const RECORDED_STREAMS_CLOUDFRONT_DOMAIN = 'd9wctuq44cpzl.cloudfront.net';
 
 const DEFAULT_PROFILE_PIC_KEY = 'default_profile_pic.png';
 const DEFAULT_STREAM_THUMBNAIL_KEY = 'default_stream_thumbnail.png';
@@ -108,7 +108,7 @@ module.exports = {
                 }
             },
             streams: {
-                bucketName: STREAMS_BUCKET_NAME,
+                bucketName: RECORDED_STREAMS_BUCKET_NAME,
                 keyPrefixes : {
                     recorded: 'recorded'
                 }
@@ -125,8 +125,9 @@ module.exports = {
         cloudfront: {
             [STATIC_CONTENT_BUCKET_NAME]: STATIC_CONTENT_CLOUDFRONT_DOMAIN,
             staticContent: STATIC_CONTENT_CLOUDFRONT_DOMAIN,
-            [STREAMS_BUCKET_NAME]: STREAMS_CLOUDFRONT_DOMAIN,
-            streams: STREAMS_CLOUDFRONT_DOMAIN
+            [RECORDED_STREAMS_BUCKET_NAME]: RECORDED_STREAMS_CLOUDFRONT_DOMAIN,
+            recordedStreams: RECORDED_STREAMS_CLOUDFRONT_DOMAIN,
+            liveStreams: 'd2367g9b1h656u.cloudfront.net'
         }
     },
     defaultProfilePicURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/${DEFAULT_PROFILE_PIC_KEY}`,
@@ -227,7 +228,7 @@ module.exports = {
     dateFormat: DATE_FORMAT,
     timeFormat: TIME_FORMAT,
     sns: {
-        errorTopicArn: 'mainroom-errors'
+        errorTopicArn: 'arn:aws:sns:eu-west-1:523857005791:mainroom-errors'
     },
     brandingURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/mainroom_banner_and_gun_fingers.png`,
     faviconURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/mainroom_favicon.png`
