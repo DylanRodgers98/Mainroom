@@ -70,6 +70,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
 });
 
 nms.on('donePublish', async (sessionId, streamPath) => {
+    const timestamp = getSessionConnectTime(sessionId);
     const {streamKey} = extractAppAndStreamKey(streamPath);
 
     let user;
@@ -90,7 +91,6 @@ nms.on('donePublish', async (sessionId, streamPath) => {
 
     if (IS_RECORDING_TO_MP4) {
         const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, process.env.RTMP_SERVER_APP_NAME, streamKey);
-        const timestamp = getSessionConnectTime(sessionId);
         const mp4FileName = await findMP4FileName(inputDirectory, timestamp);
         if (!mp4FileName) return;
 
