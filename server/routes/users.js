@@ -422,9 +422,9 @@ router.get('/:username/stream-info', async (req, res, next) => {
         const {data: {isLive}} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
             headers: {Authorization: config.rtmpServer.auth.header}
         });
-        const liveStreamURL = process.env.NODE_ENV === 'production'
-            ? `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`
-            : `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+        // const liveStreamURL = process.env.NODE_ENV === 'production'
+        //     ? `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`
+        //     : `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
 
         res.json({
             isLive,
@@ -438,7 +438,7 @@ router.get('/:username/stream-info', async (req, res, next) => {
             viewCount: user.streamInfo.viewCount,
             startTime: user.streamInfo.startTime,
             rtmpServerURL: RTMP_SERVER_URL,
-            liveStreamURL,
+            liveStreamURL: `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
             socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`
         });
     } catch (err) {
