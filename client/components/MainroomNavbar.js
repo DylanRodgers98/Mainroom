@@ -227,11 +227,11 @@ export default class MainroomNavbar extends React.Component {
 
         return (
             <Navbar color='dark' dark expand='md' className='py-0 pl-0'>
-                <NavbarBrand tag={Link} to={'/'} className='p-0' onClick={this.closeNavbar}>
+                <NavbarBrand tag={Link} to={'/'} className='p-0 m-0' onClick={this.closeNavbar}>
                     <img src={brandingURL} width={222} height={57} alt='Mainroom' />
                 </NavbarBrand>
                 <NavbarToggler onClick={this.navbarToggle} />
-                <Collapse isOpen={this.state.navbarOpen} navbar className='pl-sm-3 pt-sm-1 pl-md-0 pt-md-0'>
+                <Collapse isOpen={this.state.navbarOpen} navbar className='pl-3'>
                 <Nav className='mr-auto' navbar>
                     <NavItem>
                         <input id='searchBox' className='form-control search-box' placeholder='Search...'
