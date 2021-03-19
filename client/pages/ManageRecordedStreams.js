@@ -515,7 +515,7 @@ export default class ManageRecordedStreams extends React.Component {
         });
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
-            <div className='text-center my-4'>
+            <div className='text-center mt-4'>
                 <Button className='btn-dark' onClick={this.getRecordedStreams}>
                     {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
                     {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
@@ -540,7 +540,7 @@ export default class ManageRecordedStreams extends React.Component {
     render() {
         return !this.state.loaded ? (<LoadingSpinner />) : (
             <React.Fragment>
-                <Container fluid='lg' className='mt-5'>
+                <Container fluid='lg' className='my-5'>
                     {this.state.isGlobalAlert ? getAlert(this) : undefined}
 
                     <Row>
