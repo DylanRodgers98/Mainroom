@@ -60,7 +60,10 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
         try {
             const result = await upload.done();
             LOGGER.info('Successfully uploaded thumbnail to {}', result.Location);
-            resolve({Bucket, Key});
+            resolve({
+                bucket: Bucket,
+                key: Key
+            });
         } catch (err) {
             LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}',
                 Bucket, Key, err);

@@ -1,6 +1,5 @@
 const {spawn} = require('child_process');
 const fs = require('fs');
-const {resolveObjectURL} = require('./s3Utils');
 const { S3Client } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 const LOGGER = require('../../logger')('./server/aws/s3VideoUploader.js');
@@ -45,7 +44,10 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
                     LOGGER.info('Successfully uploaded recorded stream to {}', result.Location);
                     resolve({
                         originalFileURLs: [inputURL, outputURL],
-                        video: {Bucket, Key}
+                        video: {
+                            bucket: Bucket,
+                            key: Key
+                        }
                     });
                 } catch (err) {
                     LOGGER.error('An error occurred when uploading recorded stream to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);

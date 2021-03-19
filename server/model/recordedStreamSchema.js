@@ -26,15 +26,15 @@ const RecordedStreamSchema = new Schema({
 
 RecordedStreamSchema.methods.getVideoURL = function () {
     return resolveObjectURL({
-        Bucket: this.video.bucket,
-        Key: this.video.key
+        bucket: this.video.bucket,
+        key: this.video.key
     });
 };
 
 RecordedStreamSchema.methods.getThumbnailURL = function () {
     return resolveObjectURL({
-        Bucket: this.thumbnail.bucket,
-        Key: this.thumbnail.key
+        bucket: this.thumbnail.bucket,
+        key: this.thumbnail.key
     });
 };
 

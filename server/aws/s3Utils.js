@@ -17,12 +17,12 @@ async function deleteObject({Bucket, Key}) {
     }
 }
 
-function resolveObjectURL({Bucket, Key}) {
-    if (cloudfront[Bucket]) {
-        return `https://${cloudfront[Bucket]}/${Key}`;
+function resolveObjectURL({bucket, key}) {
+    if (cloudfront[bucket]) {
+        return `https://${cloudfront[bucket]}/${key}`;
     }
-    LOGGER.info(`Cloudfront distribution not configured for bucket '{}', returning S3 URL`, Bucket);
-    return `https://${Bucket}.s3.amazonaws.com/${Key}`;
+    LOGGER.info(`Cloudfront distribution not configured for bucket '{}', returning S3 URL`, bucket);
+    return `https://${bucket}.s3.amazonaws.com/${key}`;
 }
 
 module.exports = {

@@ -61,8 +61,8 @@ UserSchema.statics.getRandomChatColour = getRandomColour;
 
 UserSchema.methods.getProfilePicURL = function () {
     return resolveObjectURL({
-        Bucket: this.profilePic.bucket,
-        Key: this.profilePic.key
+        bucket: this.profilePic.bucket,
+        key: this.profilePic.key
     });
 };
 
