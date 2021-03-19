@@ -438,8 +438,9 @@ router.get('/:username/stream-info', async (req, res, next) => {
             viewCount: user.streamInfo.viewCount,
             startTime: user.streamInfo.startTime,
             rtmpServerURL: RTMP_SERVER_URL,
-            liveStreamURL: `https://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
-            socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`
+            // liveStreamURL: `https://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
+            liveStreamURL: `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`,
+            socketIOURL: `https://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`
         });
     } catch (err) {
         LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
