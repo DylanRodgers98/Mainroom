@@ -12,7 +12,7 @@ async function deleteObject({Bucket, Key}) {
         await S3_CLIENT.send(deleteObjectCommand);
     } catch (err) {
         LOGGER.error('An error occurred when deleting object in S3 (bucket: {}, key: {}): {}',
-            Bucket, Key, err.toString());
+            Bucket, Key, `${err.toString()}\n${err.stack}`);
         await snsErrorPublisher.publish(err);
     }
 }

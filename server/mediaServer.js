@@ -41,7 +41,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
         }
         user = await query.select(select).exec();
     } catch (err) {
-        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.toString());
+        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, `${err.toString()}\n${err.stack}`);
         return await snsErrorPublisher.publish(err);
     }
 
@@ -58,7 +58,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
             await user.save();
         } catch (err) {
             LOGGER.error('An error occurred when updating cumulative view count for user (username: {}): {}',
-                user.username, err.toString());
+                user.username, `${err.toString()}\n${err.stack}`);
             return await snsErrorPublisher.publish(err);
         }
 
@@ -78,7 +78,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
             .select('_id username +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
             .exec();
     } catch (err) {
-        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.toString());
+        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, `${err.toString()}\n${err.stack}`);
         return await snsErrorPublisher.publish(err);
     }
     if (!user) {
@@ -137,7 +137,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
             }
         } catch (err) {
             LOGGER.error('An error occurred when uploading recorded stream at {} to S3 (bucket: {}, key: {}): {}',
-                inputURL, Bucket, Key, err.toString());
+                inputURL, Bucket, Key, `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         }
     }
@@ -191,7 +191,7 @@ async function findMP4FileName(inputDirectory, sessionConnectTime) {
         const rejectedPromises = allSettledResults.filter(res => res.status === 'rejected');
         if (rejectedPromises.length) {
             const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
-            LOGGER.error('One or more errors occurred when deleting MP4 files: {}', err.toString());
+            LOGGER.error('One or more errors occurred when deleting MP4 files: {}', `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         }
     }

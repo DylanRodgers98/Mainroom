@@ -57,7 +57,7 @@ mongoose.connect(process.env.MONGODB_CONNECTION_STRING, {
     useCreateIndex: true
 }, async err => {
     if (err) {
-        LOGGER.error(`An error occurred when connecting to MongoDB database: {}`, err.toString());
+        LOGGER.error(`An error occurred when connecting to MongoDB database: {}`, `${err.toString()}\n${err.stack}`);
         return await snsErrorPublisher.publish(err);
     }
     LOGGER.info('Connected to MongoDB database');

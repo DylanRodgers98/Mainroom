@@ -53,7 +53,7 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
             if (errors.length) {
                 const err = new CompositeError(errors);
                 LOGGER.error('{} error{} occurred when updating user stream info from scheduled streams. Error: {}',
-                    errors.length, errors.length === 1 ? '' : 's', err.toString());
+                    errors.length, errors.length === 1 ? '' : 's', `${err.toString()}\n${err.stack}`);
                 return await snsErrorPublisher.publish(err);
             }
 

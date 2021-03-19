@@ -32,7 +32,7 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'newSubscriber' email to {} using SES: {}`,
-                user.email, err.toString());
+                user.email, `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug(`Successfully sent 'newSubscriber' email to {} using SES`, user.email);
@@ -79,7 +79,7 @@ module.exports.notifySubscribersUserWentLive = async user => {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} bulk '{}' email{} failed to send. Error: {}`,
-                errors.length, splits.length, emailType, sIfMultipleSplits, err.toString());
+                errors.length, splits.length, emailType, sIfMultipleSplits, `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         }
     }
@@ -146,7 +146,7 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'subscriptionsCreatedScheduledStreams' email to {} using SES: {}`,
-                user.email, err.toString());
+                user.email, `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug(`Successfully sent 'subscriptionsCreatedScheduledStreams' email to {} using SES`, user.email);
@@ -188,7 +188,7 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'subscriptionScheduledStreamStartingIn' email to {} using SES: {}`,
-                user.email, err.toString());
+                user.email, `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug(`Successfully sent 'subscriptionScheduledStreamStartingIn' email to {} using SES`, user.email);
@@ -215,7 +215,7 @@ module.exports.sendResetPasswordEmail = async (user, token) => {
     } catch (err) {
         if (err) {
             LOGGER.error(`An error occurred when sending 'resetPassword' email to {} using SES: {}`,
-                user.email, err.toString());
+                user.email, `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug(`Successfully sent 'resetPassword' email to {} using SES`, user.email);

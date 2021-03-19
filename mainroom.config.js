@@ -227,9 +227,6 @@ module.exports = {
     },
     dateFormat: DATE_FORMAT,
     timeFormat: TIME_FORMAT,
-    sns: {
-        errorTopicArn: 'arn:aws:sns:eu-west-1:523857005791:mainroom-errors'
-    },
     brandingURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/mainroom_banner_and_gun_fingers.png`,
     faviconURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/mainroom_favicon.png`
 };

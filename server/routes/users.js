@@ -439,7 +439,7 @@ router.get('/:username/stream-info', async (req, res, next) => {
             startTime: user.streamInfo.startTime,
             rtmpServerURL: RTMP_SERVER_URL,
             liveStreamURL,
-            socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SERVER_HTTP_PORT}?liveStreamUsername=${username}`,
+            socketIOURL: `http://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`
         });
     } catch (err) {
         LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);

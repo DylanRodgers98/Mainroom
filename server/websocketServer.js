@@ -28,7 +28,7 @@ class WebSocketServer {
                 bus.on('streamEnded', ({data}) => emitOnStreamEnded(this.io, data));
                 bus.on('streamInfoUpdated', ({data}) => emitStreamInfoUpdated(this.io, data));
             } catch (err) {
-                LOGGER.error('An error occurred when launching pm2 message bus: {}', err.toString());
+                LOGGER.error('An error occurred when launching pm2 message bus: {}', `${err.toString()}\n${err.stack}`);
                 await snsErrorPublisher.publish(err);
             }
         } else {
@@ -146,7 +146,7 @@ async function incViewCount(username, increment) {
         });
     } catch (err) {
         LOGGER.error(`An error occurred when updating live stream view count for user (username: {}): {}`,
-            username, err.toString());
+            username, `${err.toString()}\n${err.stack}`);
         await snsErrorPublisher.publish(err);
     }
 }

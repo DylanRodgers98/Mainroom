@@ -97,7 +97,7 @@ const job = new CronJob(cronTime.upcomingScheduledStreamEmailer, async () => {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error('{} error{} occurred when emailing users about streams starting soon. Error: {}',
-                errors.length, errors.length === 1 ? '' : 's', err.toString());
+                errors.length, errors.length === 1 ? '' : 's', `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         }
     }
