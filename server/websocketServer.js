@@ -97,24 +97,30 @@ function launchPm2MessageBus() {
 }
 
 function emitLiveStreamViewCount(io, {streamUsername, viewCount}) {
+    LOGGER.debug(`Emitting "liveStreamViewCount_{}" event with args "{}" using socket.io`, streamUsername, viewCount);
     io.emit(`liveStreamViewCount_${streamUsername}`, viewCount);
 }
 
 function emitOnChatMessage(io, {streamUsername, viewerUser, msg}) {
-    io.emit(`chatMessage_${streamUsername}`, {viewerUser, msg});
+    const args = {viewerUser, msg};
+    LOGGER.debug(`Emitting "chatMessage_{}" event with args "{}" using socket.io`, streamUsername, JSON.stringify(args));
+    io.emit(`chatMessage_${streamUsername}`, args);
 }
 
 function emitOnWentLive(io, streamUsername) {
+    LOGGER.debug(`Emitting "streamStarted_{}" event using socket.io`, streamUsername);
     io.emit(`streamStarted_${streamUsername}`);
 }
 
 function emitOnStreamEnded(io, streamUsername) {
+    LOGGER.debug(`Emitting "streamEnded_{}" event using socket.io`, streamUsername);
     io.emit(`streamEnded_${streamUsername}`);
 }
 
 function emitStreamInfoUpdated(io, streamInfo) {
     const username = streamInfo.username;
     delete streamInfo.username;
+    LOGGER.debug(`Emitting "streamInfoUpdated_{}" event with args "{}" using socket.io`, username, JSON.stringify(streamInfo));
     io.emit(`streamInfoUpdated_${username}`, streamInfo);
 }
 
