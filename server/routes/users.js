@@ -206,16 +206,22 @@ router.put('/:userId/profile-pic', (req, res, next) => {
                 if (!user) {
                     return res.status(404).send(`User (_id: ${escape(userId)}) not found`);
                 }
-                const deleteOldProfilePicPromise = deleteObject({
-                    Bucket: user.profilePic.bucket,
-                    Key: user.profilePic.key
-                });
+
+                const promises = [];
+                // delete old profile pic if not default
+                if (user.profilePic.bucket !== config.storage.s3.defaultProfilePic.bucket
+                    && user.profilePic.key !== config.storage.s3.defaultProfilePic.key) {
+                    promises.push(deleteObject({
+                        Bucket: user.profilePic.bucket,
+                        Key: user.profilePic.key
+                    }));
+                }
                 user.profilePic = {
                     bucket: req.file.bucket,
                     key: req.file.key
                 };
-                const updateUserPromise = user.save();
-                await Promise.all([deleteOldProfilePicPromise, updateUserPromise]);
+                promises.push(user.save());
+                await Promise.all(promises);
                 res.sendStatus(200);
             } catch (err) {
                 LOGGER.error('An error occurred when updating profile pic info for user (_id: {}): {}', userId, err);
@@ -422,9 +428,13 @@ router.get('/:username/stream-info', async (req, res, next) => {
         const {data: {isLive}} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
             headers: {Authorization: config.rtmpServer.auth.header}
         });
-        // const liveStreamURL = process.env.NODE_ENV === 'production'
-        //     ? `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`
-        //     : `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+
+        const liveStreamURL = process.env.NODE_ENV === 'production'
+            ? `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`
+            : `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+
+        const socketIOURL = (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+            + `//${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`;
 
         res.json({
             isLive,
@@ -438,9 +448,8 @@ router.get('/:username/stream-info', async (req, res, next) => {
             viewCount: user.streamInfo.viewCount,
             startTime: user.streamInfo.startTime,
             rtmpServerURL: RTMP_SERVER_URL,
-            // liveStreamURL: `https://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`,
-            liveStreamURL: `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`,
-            socketIOURL: `https://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`
+            liveStreamURL,
+            socketIOURL
         });
     } catch (err) {
         LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err);
