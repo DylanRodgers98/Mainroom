@@ -17,11 +17,15 @@ class WebSocketServer {
         if (process.env.NODE_ENV === 'production') {
             // Send all messages to parent process in production environment.
             // This allows a clustered environment to share events
-            process.on('message', process.send);
+            process.on('message', packet => {
+                LOGGER.debug(`Process received "message" event with args {}`, JSON.stringify(packet));
+                process.send(packet);
+            });
 
             try {
                 // In production environment, listen for events from pm2 God process
                 const bus = await launchPm2MessageBus();
+                LOGGER.debug('pm2 message bus started');
                 bus.on('liveStreamViewCount', ({data}) => emitLiveStreamViewCount(this.io, data));
                 bus.on('chatMessage', ({data}) => emitOnChatMessage(this.io, data));
                 bus.on('streamStarted', ({data}) => emitOnWentLive(this.io, data));
