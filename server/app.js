@@ -23,7 +23,6 @@ const axios = require('axios');
 const {startWebSocketServer} = require('./websocketServer');
 const {setXSRFTokenCookie} = require('./middleware/setXSRFTokenCookie');
 const snsErrorPublisher = require('./aws/snsErrorPublisher');
-const {renderCountdown} = require('./middleware/renderCountdown');
 const LOGGER = require('../logger')('./server/app.js');
 
 // in production environment, publish info about uncaught exceptions and unhandled promise rejections to SNS topic
@@ -92,9 +91,6 @@ app.use(rateLimit({
     windowMs: config.rateLimiter.windowMs,
     max: config.rateLimiter.maxRequests
 }));
-
-// If pre-launch, render countdown page for all requests
-app.use(renderCountdown);
 
 // Register app routes
 app.use('/login', require('./routes/login'));
