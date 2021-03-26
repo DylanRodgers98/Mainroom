@@ -69,7 +69,7 @@ async function createEmailTemplate(template) {
         if (err.code === 'AlreadyExists') {
             LOGGER.info(`'{}' email template already exists`, template.TemplateName);
         } else {
-            LOGGER.error(`An error occurred when creating '{}' email template: {}`, template.TemplateName, err);
+            LOGGER.error(`An error occurred when creating '{}' email template: {}`, template.TemplateName, `${err.toString()}\n${err.stack}`);
             throw err;
         }
     }

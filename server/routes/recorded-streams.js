@@ -38,7 +38,7 @@ router.get('/', async (req, res, next) => {
                 options.sort = '-timestamp';
             }
         } catch (err) {
-            LOGGER.error('An error occurred when finding user {}: {}', username, err);
+            LOGGER.error('An error occurred when finding user {}: {}', username, `${err.toString()}\n${err.stack}`);
             next(err);
         }
     } else {
@@ -62,7 +62,7 @@ router.get('/', async (req, res, next) => {
                     query.$or.push({user: {$in: userIds}});
                 }
             } catch (err) {
-                LOGGER.error(`An error occurred when finding users using search query '{}': {}`, searchQuery, err);
+                LOGGER.error(`An error occurred when finding users using search query '{}': {}`, searchQuery, `${err.toString()}\n${err.stack}`);
                 next(err);
             }
         }
@@ -77,7 +77,7 @@ router.get('/', async (req, res, next) => {
 
     RecordedStream.paginate(query, options, (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when finding recorded streams: {}', err);
+            LOGGER.error('An error occurred when finding recorded streams: {}', `${err.toString()}\n${err.stack}`);
             next(err);
         } else {
             res.json({
@@ -116,14 +116,14 @@ router.get('/:id', (req, res, next) => {
         })
         .exec((err, recordedStream) => {
             if (err) {
-                LOGGER.error('An error occurred when finding recorded stream (_id: {}): {}', id, err);
+                LOGGER.error('An error occurred when finding recorded stream (_id: {}): {}', id, `${err.toString()}\n${err.stack}`);
                 next(err);
             } else if (!recordedStream) {
                 res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
             } else {
                 recordedStream.updateOne({$inc: {viewCount: 1}}, err => {
                     if (err) {
-                        LOGGER.error('An error occurred when incrementing view count for recorded stream (_id: {}): {}', id, err);
+                        LOGGER.error('An error occurred when incrementing view count for recorded stream (_id: {}): {}', id, `${err.toString()}\n${err.stack}`);
                         next(err);
                     } else {
                         res.json({
@@ -181,7 +181,7 @@ router.patch('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
             tags: recordedStream.tags
         });
     } catch (err) {
-        LOGGER.error(`An error occurred when updating info for recorded stream (_id: {}): {}`, id, err);
+        LOGGER.error(`An error occurred when updating info for recorded stream (_id: {}): {}`, id, `${err.toString()}\n${err.stack}`);
         next(err);
     }
 });
@@ -201,7 +201,7 @@ router.delete('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         await RecordedStream.findByIdAndDelete(id);
         res.sendStatus(200);
     } catch (err) {
-        LOGGER.error(`An error occurred when deleting recorded stream (_id: {}) from database: {}`, id, err);
+        LOGGER.error(`An error occurred when deleting recorded stream (_id: {}) from database: {}`, id, `${err.toString()}\n${err.stack}`);
         next(err);
     }
 });

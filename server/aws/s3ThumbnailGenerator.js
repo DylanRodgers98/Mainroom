@@ -43,7 +43,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
             }
         });
         ffmpeg.on('error', err => {
-            LOGGER.error('An error occurred when generating stream thumbnail (stream URL: {}): {}', inputURL, err);
+            LOGGER.error('An error occurred when generating stream thumbnail (stream URL: {}): {}', inputURL, `${err.toString()}\n${err.stack}`);
             reject(err);
         });
         ffmpeg.on('close', () => {
@@ -69,7 +69,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
             });
         } catch (err) {
             LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}',
-                Bucket, Key, err);
+                Bucket, Key, `${err.toString()}\n${err.stack}`);
             reject(err);
         }
     });

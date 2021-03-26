@@ -43,7 +43,7 @@ class MainroomEventBus extends EventEmitter {
 const mainroomEventBus = new MainroomEventBus();
 
 mainroomEventBus.on('error', err => {
-    LOGGER.error('An error event was emitted: {}', err);
+    LOGGER.error('An error event was emitted: {}', `${err.toString()}\n${err.stack}`);
 });
 
 module.exports = mainroomEventBus;

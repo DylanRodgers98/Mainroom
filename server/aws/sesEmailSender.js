@@ -69,7 +69,7 @@ module.exports.notifySubscribersUserWentLive = async user => {
                 await SES_CLIENT.send(params);
             } catch (err) {
                 if (err) {
-                    LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`, i + 1, emailType, err);
+                    LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`, i + 1, emailType, `${err.toString()}\n${err.stack}`);
                     errors.push(err);
                 } else {
                     LOGGER.debug(`Successfully sent bulk '{}' email {} using SES`, i + 1, emailType);

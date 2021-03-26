@@ -29,7 +29,7 @@ const LOGGER = require('../logger')('./server/app.js');
 if (process.env.NODE_ENV === 'production') {
     process.on('uncaughtException', async err => {
         try {
-            LOGGER.error('An uncaught exception occurred: {}', err);
+            LOGGER.error('An uncaught exception occurred: {}', `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         } catch (publisherError) {
             LOGGER.error(`An error occurred when publishing info about an existing error '{}' to SNS. New error: {}`,
@@ -41,7 +41,7 @@ if (process.env.NODE_ENV === 'production') {
         const err = reason instanceof Error || (reason && reason.name && reason.message && reason.stack)
             ? reason : new Error(reason ? reason.toString() : 'An unhandled promise rejection occurred with no reason');
         try {
-            LOGGER.error('An unhandled promise rejection occurred: {}', err);
+            LOGGER.error('An unhandled promise rejection occurred: {}', `${err.toString()}\n${err.stack}`);
             await snsErrorPublisher.publish(err);
         } catch (publisherError) {
             LOGGER.error(`An error occurred when publishing info about an unhandled promise rejection to SNS: {}`,
@@ -226,7 +226,7 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
             try {
                 imageURL = await getThumbnail(streamKey);
             } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
+                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, `${err.toString()}\n${err.stack}`);
                 imageURL = config.defaultThumbnailURL;
             }
             imageAlt = `${username} Stream Thumbnail`;
@@ -245,10 +245,10 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
     const params = {
         siteName, brandingURL, faviconURL, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard
     };
-    if (imageURL.startsWith('https')) {
+    if (imageURL && imageURL.startsWith('https')) {
         Object.assign(params, {secureImageURL: imageURL});
     }
-    if (videoURL.startsWith('https')) {
+    if (videoURL && videoURL.startsWith('https')) {
         Object.assign(params, {secureVideoURL: videoURL});
     }
     res.render('index', params);
@@ -289,10 +289,10 @@ app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
     const params = {
         siteName, brandingURL, faviconURL, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard
     };
-    if (imageURL.startsWith('https')) {
+    if (imageURL && imageURL.startsWith('https')) {
         Object.assign(params, {secureImageURL: imageURL});
     }
-    if (videoURL.startsWith('https')) {
+    if (videoURL && videoURL.startsWith('https')) {
         Object.assign(params, {secureVideoURL: videoURL});
     }
     res.render('index', params);
@@ -394,7 +394,7 @@ process.on('SIGINT', async () => {
         LOGGER.info('Application shut down successfully. Exiting process with exit code 0');
         process.exit(0);
     } catch (err) {
-        LOGGER.error('An error occurred during application shutdown. Exiting process with exit code 1. Error: {}', err);
+        LOGGER.error('An error occurred during application shutdown. Exiting process with exit code 1. Error: {}', `${err.toString()}\n${err.stack}`);
         process.exit(1);
     }
 });
@@ -403,7 +403,7 @@ function closeServer() {
     return new Promise((resolve, reject) => {
         httpServer.close(err => {
             if (err) {
-                LOGGER.error('An error occurred when closing HTTP server: {}', err);
+                LOGGER.error('An error occurred when closing HTTP server: {}', `${err.toString()}\n${err.stack}`);
                 reject(err);
             } else {
                 resolve();

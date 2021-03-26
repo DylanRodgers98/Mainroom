@@ -214,7 +214,7 @@ async function deleteFile(filePath) {
         await fs.unlink(filePath);
         LOGGER.info('Successfully deleted file at {}', filePath);
     } catch (err) {
-        LOGGER.error('An error occurred when deleting file at {}: {}', filePath, err);
+        LOGGER.error('An error occurred when deleting file at {}: {}', filePath, `${err.toString()}\n${err.stack}`);
         throw err;
     }
 }
@@ -224,7 +224,7 @@ function getVideoDurationString(inputURL) {
         const args = ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', '-sexagesimal', inputURL];
         const ffprobe = spawn(process.env.FFPROBE_PATH, args);
         ffprobe.on('error', err => {
-            LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, err);
+            LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, `${err.toString()}\n${err.stack}`);
             reject(err);
         });
         ffprobe.stderr.on('data', data => {

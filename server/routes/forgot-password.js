@@ -27,7 +27,7 @@ router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
     const email = sanitise(req.body.email);
     User.findOne({email}, '_id email username displayName', (err, user) => {
         if (err) {
-            LOGGER.error('An error occurred when finding user with email {}: {}', email, err);
+            LOGGER.error('An error occurred when finding user with email {}: {}', email, `${err.toString()}\n${err.stack}`);
             next(err);
         } else if (!user) {
             req.flash('errors', `Could not find a user with the email address ${email}`);
@@ -35,7 +35,7 @@ router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
         } else {
             randomBytes(16, (err, bytes) => {
                 if (err) {
-                    LOGGER.error('An error occurred when generating random bytes for password reset token: {}', err);
+                    LOGGER.error('An error occurred when generating random bytes for password reset token: {}', `${err.toString()}\n${err.stack}`);
                     next(err);
                 } else {
                     const token = bytes.toString('hex');
@@ -46,7 +46,7 @@ router.post('/', loginChecker.ensureLoggedOut(), (req, res, next) => {
                     });
                     passwordResetToken.save(err => {
                         if (err) {
-                            LOGGER.error('An error occurred when saving password reset token for user with email {}: {}', email, err);
+                            LOGGER.error('An error occurred when saving password reset token for user with email {}: {}', email, `${err.toString()}\n${err.stack}`);
                             next(err);
                         } else {
                             sesEmailSender.sendResetPasswordEmail(user, token)
@@ -74,7 +74,7 @@ router.get('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
     const tokenHash = hashToken(sanitisedToken);
     PasswordResetToken.findOne({tokenHash}, (err, token) => {
         if (err) {
-            LOGGER.error('An error occurred when finding password reset token: {}', err);
+            LOGGER.error('An error occurred when finding password reset token: {}', `${err.toString()}\n${err.stack}`);
             next(err);
         } else if (!token) {
             req.flash('errors', 'Password reset link does not exist or has expired. Please send email again.');
@@ -101,10 +101,10 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
     const userId = sanitisedQuery.passwordResetToken.user;
     User.findById(userId).exec((err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, err);
+            LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, `${err.toString()}\n${err.stack}`);
             next(err);
         } else if (!user) {
-            LOGGER.error(`Could not find user (_id: {}) when resetting password: {}`, userId, err);
+            LOGGER.error(`Could not find user (_id: {}) when resetting password: {}`, userId, `${err.toString()}\n${err.stack}`);
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
         }  else if (!validatePassword(sanitisedQuery.password)) {
             getInvalidPasswordMessage().forEach(line => req.flash('password', line));
@@ -116,13 +116,13 @@ router.post('/reset', loginChecker.ensureLoggedOut(), (req, res, next) => {
             user.password = User.generateHash(sanitisedQuery.password);
             user.save(err => {
                 if (err) {
-                    LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, err);
+                    LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, `${err.toString()}\n${err.stack}`);
                     next(err);
                 } else {
                     PasswordResetToken.findByIdAndDelete(sanitisedQuery.passwordResetToken._id, err => {
                         LOGGER.error('An error occurred when trying to delete PasswordResetToken (_id: {}) from database. ' +
                             'These types of objects have an expiry, so MongoDB should delete this automatically. Error: {}',
-                            sanitisedQuery.passwordResetToken._id, err);
+                            sanitisedQuery.passwordResetToken._id, `${err.toString()}\n${err.stack}`);
                     });
                     res.redirect('/login');
                 }

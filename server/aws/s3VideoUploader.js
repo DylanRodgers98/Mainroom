@@ -15,7 +15,7 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
             LOGGER.debug('stderr: {}', data)
         });
         ffmpeg.on('error', err => {
-            LOGGER.error('An error occurred when adding moov atom to recorded stream {}: {}', inputURL, err);
+            LOGGER.error('An error occurred when adding moov atom to recorded stream {}: {}', inputURL, `${err.toString()}\n${err.stack}`);
             reject(err);
         });
         ffmpeg.on('close', async code => {
@@ -25,7 +25,7 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
 
                 const Body = fs.createReadStream(outputURL);
                 Body.on('error', err => {
-                    LOGGER.error('An error occurred when opening read stream at {}: {}', outputURL, err);
+                    LOGGER.error('An error occurred when opening read stream at {}: {}', outputURL, `${err.toString()}\n${err.stack}`);
                     reject(err);
                 });
 
@@ -50,7 +50,7 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
                         }
                     });
                 } catch (err) {
-                    LOGGER.error('An error occurred when uploading recorded stream to S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
+                    LOGGER.error('An error occurred when uploading recorded stream to S3 (bucket: {}, key: {}): {}', Bucket, Key, `${err.toString()}\n${err.stack}`);
                     reject(err);
                 }
             }
