@@ -5,6 +5,8 @@ const {chatColours, storage: {s3: {defaultProfilePic}}} = require('../../mainroo
 const {RecordedStream, ScheduledStream} = require('./schemas');
 const nanoid = require('nanoid');
 const {deleteObject, resolveObjectURL} = require('../aws/s3Utils');
+const CompositeError = require('../errors/CompositeError');
+const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const LOGGER = require('../../logger')('./server/model/userSchema.js');
 
 const UserSchema = new Schema({
@@ -113,18 +115,26 @@ async function deleteScheduledStreams(user, model) {
     if (streams.length) {
         LOGGER.debug('Deleting {} ScheduledStreams for User (_id: {})', streams.length, user._id);
         let deleted = 0;
+        const errors = [];
         for (const stream of streams) {
-            try {
-                const pullReferences = model.updateMany({nonSubscribedScheduledStreams: stream._id}, {$pull: {nonSubscribedScheduledStreams: stream._id}}).exec();
-                const deleteStream = ScheduledStream.findByIdAndDelete(stream._id);
-                await Promise.all([pullReferences, deleteStream]);
+            const pullReferences = model.updateMany({nonSubscribedScheduledStreams: stream._id}, {$pull: {nonSubscribedScheduledStreams: stream._id}}).exec();
+            const deleteStream = ScheduledStream.findByIdAndDelete(stream._id);
+            const promiseResults = await Promise.allSettled([pullReferences, deleteStream]);
+            const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+            if (rejectedPromises.length) {
+                rejectedPromises.forEach(promise => errors.push(promise.reason));
+            } else {
                 deleted++;
-            } catch (err) {
-                LOGGER.error('An error occurred when deleting ScheduledStream (_id: {}) for User (_id: {}): {}',
-                    stream._id, user._id, err);
             }
         }
-        LOGGER.debug('Successfully deleted {} ScheduledStreams for User (_id: {})', deleted, user._id);
+        if (errors.length) {
+            const err = new CompositeError(errors);
+            LOGGER.error(`{} out of {} ScheduledStream{} failed to delete for User (_id: {}). Error: {}`,
+                errors.length, streams.length, streams.length === 1 ? '' : 's', user._id, `${err.toString()}\n${err.stack}`);
+            await snsErrorPublisher.publish(err);
+        } else {
+            LOGGER.debug('Successfully deleted {} ScheduledStreams for User (_id: {})', deleted, user._id);
+        }
     }
 }
 
@@ -137,16 +147,23 @@ async function deleteRecordedStreams(user) {
     if (streams.length) {
         LOGGER.debug('Deleting {} RecordedStreams for User (_id: {})', streams.length, user._id);
         let deleted = 0;
+        const errors = [];
         for (const stream of streams) {
             try {
                 await RecordedStream.findByIdAndDelete(stream._id);
                 deleted++;
             } catch (err) {
-                LOGGER.error('An error occurred when deleting RecordedStream (_id: {}) for User (_id: {}): {}',
-                    stream._id, user._id, err);
+                errors.push(err);
             }
         }
-        LOGGER.debug('Successfully deleted {} RecordedStreams for User (_id: {})', deleted, user._id);
+        if (errors.length) {
+            const err = new CompositeError(errors);
+            LOGGER.error(`{} out of {} RecordedStream{} failed to delete for User (_id: {}). Error: {}`,
+                errors.length, streams.length, streams.length === 1 ? '' : 's', user._id, `${err.toString()}\n${err.stack}`);
+            await snsErrorPublisher.publish(err);
+        } else {
+            LOGGER.debug('Successfully deleted {} RecordedStreams for User (_id: {})', deleted, user._id);
+        }
     }
 }
 
@@ -160,9 +177,17 @@ async function removeFromSubscriptions(user, model) {
     const pullFromSubscriptions = model.updateMany({_id: {$in: subscriptionsIds}}, {$pull: {subscriptions: {user: user._id}}});
 
     const promiseResults = await Promise.all([pullFromSubscribers, pullFromSubscriptions]);
+    const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
 
-    LOGGER.debug('Successfully removed User (_id: {}) from {} subscribers lists and {} subscriptions lists',
-        user._id, promiseResults[0].nModified, promiseResults[1].nModified);
+    if (rejectedPromises.length) {
+        const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
+        LOGGER.error(`Failed to remove User (_id: {}) from subscribers/subscriptions lists. Error: {}`,
+            user._id, `${err.toString()}\n${err.stack}`);
+        await snsErrorPublisher.publish(err);
+    } else {
+        LOGGER.debug('Successfully removed User (_id: {}) from {} subscribers lists and {} subscriptions lists',
+            user._id, promiseResults[0].nModified, promiseResults[1].nModified);
+    }
 }
 
 module.exports = UserSchema;

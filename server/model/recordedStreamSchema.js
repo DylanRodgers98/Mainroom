@@ -1,5 +1,7 @@
 const {Schema} = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
+const CompositeError = require('../errors/CompositeError');
+const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const {deleteObject} = require("../aws/s3Utils");
 const {storage: {s3: {streams, defaultStreamThumbnail}}} = require('../../mainroom.config');
 const {resolveObjectURL} = require('../aws/s3Utils');
@@ -74,9 +76,17 @@ async function deleteVideoAndThumbnail(recordedStream) {
         promises.push(deleteThumbnailPromise);
     }
 
-    await Promise.all(promises);
+    const promiseResults = await Promise.allSettled(promises);
+    const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
 
-    LOGGER.debug('Successfully deleted video and thumbnail in S3 for RecordedStream (_id: {})', recordedStream._id);
+    if (rejectedPromises.length) {
+        const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
+        LOGGER.error(`Failed to delete video (bucket: {}, key: {}) and thumbnail (bucket: {}, key: {}) in S3 for RecordedStream (_id: {}). Error: {}`,
+            video.bucket, video.key, thumbnail.bucket, thumbnail.key, recordedStream._id, `${err.toString()}\n${err.stack}`);
+        await snsErrorPublisher.publish(err);
+    } else {
+        LOGGER.debug('Successfully deleted video and thumbnail in S3 for RecordedStream (_id: {})', recordedStream._id);
+    }
 }
 
 RecordedStreamSchema.plugin(mongoosePaginate);
