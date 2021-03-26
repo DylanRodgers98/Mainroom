@@ -29,6 +29,7 @@ const LOGGER = require('../logger')('./server/app.js');
 if (process.env.NODE_ENV === 'production') {
     process.on('uncaughtException', async err => {
         try {
+            LOGGER.error('An uncaught exception occurred: {}', err);
             await snsErrorPublisher.publish(err);
         } catch (publisherError) {
             LOGGER.error(`An error occurred when publishing info about an existing error '{}' to SNS. New error: {}`,
@@ -40,6 +41,7 @@ if (process.env.NODE_ENV === 'production') {
         const err = reason instanceof Error || (reason && reason.name && reason.message && reason.stack)
             ? reason : new Error(reason ? reason.toString() : 'An unhandled promise rejection occurred with no reason');
         try {
+            LOGGER.error('An unhandled promise rejection occurred: {}', err);
             await snsErrorPublisher.publish(err);
         } catch (publisherError) {
             LOGGER.error(`An error occurred when publishing info about an unhandled promise rejection to SNS: {}`,
@@ -350,7 +352,7 @@ app.use(async (err, req, res, next) => {
     // if production environment, publish info about error to SNS topic
     try {
         await snsErrorPublisher.publish(err);
-        res.status(500);
+        next(err); // send error to default Express error handler which prints error to console and sends 500 response
     } catch (publisherError) {
         LOGGER.error(`An error occurred when publishing info about an existing error '{}' to SNS. New error: {}`,
             err.name, publisherError);
