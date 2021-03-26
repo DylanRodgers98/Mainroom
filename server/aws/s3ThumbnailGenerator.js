@@ -36,10 +36,10 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
             LOGGER.debug('stderr: {}', data)
             if (data.toString().includes(`${inputURL}: Server returned 4`)) {
                 // If the file pointed to by inputURL causes a 4XX error (e.g. due to the stream just starting
-                // and the video not being available to read), destroy stdout and kill child process.
-                // Destroying stdout with an error will call the 'error' event with the passed in Error.
-                ffmpeg.stdout.destroy(new Error(`ffmpeg server returned a 4XX error when trying to read ${inputURL}`));
+                // and the video not being available to read), destroy stdout and kill child process
+                ffmpeg.stdout.destroy();
                 ffmpeg.kill();
+                reject(new Error(`ffmpeg server returned a 4XX error when trying to read ${inputURL}`));
             }
         });
         ffmpeg.on('error', err => {

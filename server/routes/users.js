@@ -435,7 +435,7 @@ router.get('/:username/stream-info', async (req, res, next) => {
             : `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
 
         const socketIOURL = (process.env.NODE_ENV === 'production' ? 'https' : 'http')
-            + `//${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`;
+            + `://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`;
 
         res.json({
             isLive,
