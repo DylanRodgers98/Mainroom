@@ -200,9 +200,6 @@ export default class LiveStreamsByCategory extends React.Component {
 
                 <Row>
                     <Col>
-                        <h4>{this.state.pageHeader}</h4>
-                    </Col>
-                    <Col>
                         <Dropdown className='dropdown-hover-darkred float-right' isOpen={this.state.categoryDropdownOpen}
                                   toggle={this.categoryDropdownToggle} size='sm'>
                             <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
@@ -214,6 +211,7 @@ export default class LiveStreamsByCategory extends React.Component {
                                 {categories}
                             </DropdownMenu>
                         </Dropdown>
+                        <h4>{this.state.pageHeader}</h4>
                     </Col>
                 </Row>
                 <hr className='my-4'/>

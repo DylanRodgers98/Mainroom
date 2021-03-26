@@ -412,9 +412,11 @@ export default class Schedule extends React.Component {
                                 <h5>Tags</h5>
                             </Col>
                             <Col xs='12'>
-                                <input className='rounded-border w-100-xs w-50-md' type='text'
+                                <input className='rounded-border w-100' type='text'
                                        value={this.state.scheduleStreamTags} onChange={this.setTags}/>
-                                <i className='ml-1'>Up to {validation.streamSettings.tagsMaxAmount} comma-separated tags, no spaces</i>
+                            </Col>
+                            <Col xs='12'>
+                                <i>Up to {validation.streamSettings.tagsMaxAmount} comma-separated tags, no spaces</i>
                             </Col>
                         </Row>
                     </Container>

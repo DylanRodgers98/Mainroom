@@ -421,43 +421,41 @@ export default class LiveStreams extends React.Component {
 
                 <Row>
                     <Col>
-                        <h4>Search: '{this.props.match.params.query}'</h4>
-                    </Col>
-                    <Col>
                         <table className='float-right'>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
-                                                  toggle={this.genreDropdownToggle} size='sm'>
-                                            <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
-                                            <DropdownMenu right>
-                                                <DropdownItem onClick={this.clearGenreFilter}
-                                                              disabled={!this.state.genreFilter}>
-                                                    Clear Filter
-                                                </DropdownItem>
-                                                <DropdownItem divider/>
-                                                {genres}
-                                            </DropdownMenu>
-                                        </Dropdown>
-                                    </td>
-                                    <td>
-                                        <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
-                                                  toggle={this.categoryDropdownToggle} size='sm'>
-                                            <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
-                                            <DropdownMenu right>
-                                                <DropdownItem onClick={this.clearCategoryFilter}
-                                                              disabled={!this.state.categoryFilter}>
-                                                    Clear Filter
-                                                </DropdownItem>
-                                                <DropdownItem divider/>
-                                                {categories}
-                                            </DropdownMenu>
-                                        </Dropdown>
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td>
+                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
+                                              toggle={this.genreDropdownToggle} size='sm'>
+                                        <DropdownToggle caret>{genreDropdownText}</DropdownToggle>
+                                        <DropdownMenu right>
+                                            <DropdownItem onClick={this.clearGenreFilter}
+                                                          disabled={!this.state.genreFilter}>
+                                                Clear Filter
+                                            </DropdownItem>
+                                            <DropdownItem divider/>
+                                            {genres}
+                                        </DropdownMenu>
+                                    </Dropdown>
+                                </td>
+                                <td>
+                                    <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
+                                              toggle={this.categoryDropdownToggle} size='sm'>
+                                        <DropdownToggle caret>{categoryDropdownText}</DropdownToggle>
+                                        <DropdownMenu right>
+                                            <DropdownItem onClick={this.clearCategoryFilter}
+                                                          disabled={!this.state.categoryFilter}>
+                                                Clear Filter
+                                            </DropdownItem>
+                                            <DropdownItem divider/>
+                                            {categories}
+                                        </DropdownMenu>
+                                    </Dropdown>
+                                </td>
+                            </tr>
                             </tbody>
                         </table>
+                        <h4>Search: '{this.props.match.params.query}'</h4>
                     </Col>
                 </Row>
                 <hr className='my-4'/>

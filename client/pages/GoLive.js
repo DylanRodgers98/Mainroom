@@ -346,7 +346,7 @@ export default class GoLive extends React.Component {
                         </Button>
                         <Button className='btn-dark ml-1' size='sm'
                                 onClick={this.generateStreamKey}>
-                            Generate a new key
+                            Generate new key
                         </Button>
                     </Col>
                     <Col className='mt-2' xs='12'>
