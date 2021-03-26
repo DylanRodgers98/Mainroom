@@ -207,6 +207,7 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
     let videoURL;
     let videoMimeType;
     let twitterCard;
+
     try {
         // TODO: this practically matches '/:username/stream-info' users API route, so extract into controller method and call here and in API route
         const username = sanitise(req.params.username.toLowerCase());
@@ -227,7 +228,9 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
                 imageURL = config.defaultThumbnailURL;
             }
             imageAlt = `${username} Stream Thumbnail`;
-            videoURL = `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+            videoURL = process.env.NODE_ENV === 'production'
+                ? `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`
+                : `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
             videoMimeType = 'application/x-mpegURL';
             twitterCard = 'player';
         } else {
@@ -236,9 +239,17 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {
+
+    const params = {
         siteName, brandingURL, faviconURL, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard
-    });
+    };
+    if (imageURL.startsWith('https')) {
+        Object.assign(params, {secureImageURL: imageURL});
+    }
+    if (videoURL.startsWith('https')) {
+        Object.assign(params, {secureVideoURL: videoURL});
+    }
+    res.render('index', params);
 });
 
 app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
@@ -252,6 +263,7 @@ app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
     let videoURL;
     let videoMimeType;
     let twitterCard;
+
     try {
         const streamId = sanitise(req.params.streamId);
         const stream = await RecordedStream.findById(streamId)
@@ -271,9 +283,17 @@ app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
     } catch (err) {
         title = config.headTitle;
     }
-    res.render('index', {
+
+    const params = {
         siteName, brandingURL, faviconURL, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard
-    });
+    };
+    if (imageURL.startsWith('https')) {
+        Object.assign(params, {secureImageURL: imageURL});
+    }
+    if (videoURL.startsWith('https')) {
+        Object.assign(params, {secureVideoURL: videoURL});
+    }
+    res.render('index', params);
 });
 
 app.get('/manage-recorded-streams', setXSRFTokenCookie, (req, res) => {

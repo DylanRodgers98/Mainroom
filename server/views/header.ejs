@@ -25,6 +25,10 @@
         <meta property="og:image" content="<%= imageURL %>">
     <% } %>
 
+    <% if (locals.secureImageURL) { %>
+        <meta property="og:image:secure_url" content="<%= secureImageURL %>">
+    <% } %>
+
     <% if (locals.imageAlt) { %>
         <meta name="og:image:alt" content="<%= imageAlt %>">
         <meta name="twitter:image:alt" content="<%= imageAlt %>">
@@ -33,6 +37,10 @@
     <% if (locals.videoURL) { %>
         <meta name="og:video" content="<%= videoURL %>">
         <meta name="twitter:player:stream" content="<%= videoURL %>">
+    <% } %>
+
+    <% if (locals.secureVideoURL) { %>
+        <meta name="og:video:secure_url" content="<%= secureVideoURL %>">
     <% } %>
 
     <% if (locals.videoMimeType) { %>
