@@ -4,6 +4,8 @@ const {User} = require('../model/schemas');
 const {validatePassword, getInvalidPasswordMessage} = require('./passwordValidator');
 const mongoose = require('mongoose');
 const sanitise = require('mongo-sanitize');
+const {email} = require('../../mainroom.config');
+const {sendWelcomeEmail} = require('../aws/sesEmailSender');
 const LOGGER = require('../../logger')('./server/passport.js');
 
 passport.serializeUser((user, done) => {
@@ -73,6 +75,9 @@ passport.use('localRegister', new Strategy(registerOptions, async (req, email, p
     });
     try {
         await newUser.save();
+        if (email.enabled) {
+            sendWelcomeEmail(emailLowerCase, username);
+        }
         done(null, newUser);
     } catch (err) {
         LOGGER.error('An error occurred when saving new User: {}, Error: {}', JSON.stringify(newUser), err);

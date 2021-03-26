@@ -140,6 +140,7 @@ module.exports = {
         enabled: false,
         ses: {
             templateNames: {
+                welcomeNewUser: 'welcomeNewUser',
                 newSubscribers: 'newSubscribers',
                 subscriptionWentLive: 'subscriptionWentLive',
                 subscriptionsCreatedScheduledStreams: 'subscriptionsCreatedScheduledStreams',

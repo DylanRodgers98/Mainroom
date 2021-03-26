@@ -222,3 +222,25 @@ module.exports.sendResetPasswordEmail = async (user, token) => {
         }
     }
 }
+
+module.exports.sendWelcomeEmail = async (email, username) => {
+    const params = new SendTemplatedEmailCommand({
+        Destination: {
+            ToAddresses: [email]
+        },
+        Source: process.env.NO_REPLY_EMAIL,
+        Template: config.email.ses.templateNames.welcomeNewUser,
+        TemplateData: JSON.stringify({username})
+    });
+    try {
+        await SES_CLIENT.send(params);
+    } catch (err) {
+        if (err) {
+            LOGGER.error(`An error occurred when sending 'welcomeNewUser' email to {} using SES: {}`,
+                email, `${err.toString()}\n${err.stack}`);
+            await snsErrorPublisher.publish(err);
+        } else {
+            LOGGER.debug(`Successfully sent 'resetPassword' email to {} using SES`, email);
+        }
+    }
+}
