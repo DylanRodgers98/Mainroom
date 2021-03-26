@@ -26,7 +26,7 @@ import {
     getAlert,
     LoadingSpinner
 } from '../utils/displayUtils';
-import {filters, siteName, dateFormat} from '../../mainroom.config';
+import {filters, siteName, dateFormat, validation} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import PlusIcon from '../icons/plus-white.svg';
 import CalendarIcon from '../icons/calendar-white-20.svg';
@@ -235,6 +235,9 @@ export default class Schedule extends React.Component {
 
     setTags(event) {
         const tags = event.target.value.replace(/\s/g, '').split(',');
+        if (tags.length > validation.streamSettings.tagsMaxAmount) {
+            return;
+        }
         this.setState({
             scheduleStreamTags: tags
         });
@@ -364,8 +367,8 @@ export default class Schedule extends React.Component {
                                 <h5>Title</h5>
                             </Col>
                             <Col xs='12'>
-                                <input className='w-100 rounded-border' type='text'
-                                       value={this.state.scheduleStreamTitle} onChange={this.setTitle}/>
+                                <input className='w-100 rounded-border' type='text' value={this.state.scheduleStreamTitle}
+                                       onChange={this.setTitle} maxLength={validation.streamSettings.titleMaxLength} />
                             </Col>
                             <Col className='mt-2' xs='12'>
                                 <h5>Genre</h5>
@@ -411,7 +414,7 @@ export default class Schedule extends React.Component {
                             <Col xs='12'>
                                 <input className='rounded-border w-100-xs w-50-md' type='text'
                                        value={this.state.scheduleStreamTags} onChange={this.setTags}/>
-                                <i className='ml-1'>Comma-separated, no spaces</i>
+                                <i className='ml-1'>Up to {validation.streamSettings.tagsMaxAmount} comma-separated tags, no spaces</i>
                             </Col>
                         </Row>
                     </Container>
