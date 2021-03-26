@@ -16,7 +16,7 @@ import {
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
-import {pagination, filters, siteName} from '../../mainroom.config';
+import {pagination, filters, siteName, validation} from '../../mainroom.config';
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDate} from '../utils/dateUtils';
 import {
@@ -228,6 +228,9 @@ export default class ManageRecordedStreams extends React.Component {
 
     setTags(event) {
         const tags = event.target.value.replace(/\s/g, '').split(',');
+        if (tags.length > validation.streamSettings.tagsMaxAmount) {
+            return;
+        }
         this.setState({
             selectedStreamTags: tags,
             unsavedChanges: true
@@ -359,8 +362,8 @@ export default class ManageRecordedStreams extends React.Component {
                                 <h5>Title</h5>
                             </Col>
                             <Col xs='12'>
-                                <input className='w-100 rounded-border' type='text'
-                                       value={this.state.selectedStreamTitle} onChange={this.setTitle}/>
+                                <input className='w-100 rounded-border' type='text' value={this.state.selectedStreamTitle}
+                                       onChange={this.setTitle} maxLength={validation.streamSettings.titleMaxLength} />
                             </Col>
                             <Col className='mt-2' xs='12'>
                                 <h5>Genre</h5>
@@ -406,7 +409,7 @@ export default class ManageRecordedStreams extends React.Component {
                             <Col xs='12'>
                                 <input className='rounded-border w-100-xs w-50-md' type='text'
                                        value={this.state.selectedStreamTags} onChange={this.setTags}/>
-                                <i className='ml-1'>Comma-separated, no spaces</i>
+                                <i className='ml-1'>Up to {validation.streamSettings.tagsMaxAmount} comma-separated tags, no spaces</i>
                             </Col>
                         </Row>
                     </Container>
