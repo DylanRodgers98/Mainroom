@@ -3,18 +3,27 @@ const router = express.Router();
 const {ScheduledStream, User} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
+const {validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/routes/scheduled-streams.js');
 
 router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
-    const sanitisedQuery = sanitise(req.body);
+    const sanitisedInput = sanitise(req.body);
+
+    if (sanitisedInput.title > titleMaxLength) {
+        return res.status(403).send(`Length of title was greater than the maximum allowed length of ${titleMaxLength}`);
+    }
+    if (sanitisedInput.tags.length > tagsMaxAmount) {
+        return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
+    }
+
     const scheduledStream = new ScheduledStream({
-        user: sanitisedQuery.userId,
-        startTime: sanitisedQuery.startTime,
-        endTime: sanitisedQuery.endTime,
-        title: sanitisedQuery.title,
-        genre: sanitisedQuery.genre,
-        category: sanitisedQuery.category,
-        tags: sanitisedQuery.tags
+        user: sanitisedInput.userId,
+        startTime: sanitisedInput.startTime,
+        endTime: sanitisedInput.endTime,
+        title: sanitisedInput.title,
+        genre: sanitisedInput.genre,
+        category: sanitisedInput.category,
+        tags: sanitisedInput.tags
     });
     try {
         await scheduledStream.save();

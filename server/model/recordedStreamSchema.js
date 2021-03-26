@@ -3,17 +3,20 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const {deleteObject} = require("../aws/s3Utils");
-const {storage: {s3: {streams, defaultStreamThumbnail}}} = require('../../mainroom.config');
+const {
+    storage: {s3: {streams, defaultStreamThumbnail}},
+    validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}
+} = require('../../mainroom.config');
 const {resolveObjectURL} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/model/recordedStreamSchema.js');
 
 const RecordedStreamSchema = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},
     timestamp: Date,
-    title: String,
+    title: {type: String, maxlength: titleMaxLength},
     genre: String,
     category: String,
-    tags: [String],
+    tags: {type: [String], validate: tags => tags.length <= tagsMaxAmount},
     video: {
         bucket: {type: String, default: streams.bucketName},
         key: String

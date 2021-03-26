@@ -4,6 +4,7 @@ const sanitise = require('mongo-sanitize');
 const _ = require('lodash');
 const {User, RecordedStream} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
+const {validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/routes/recorded-streams.js');
 
 router.get('/', async (req, res, next) => {
@@ -149,11 +150,20 @@ router.get('/:id', (req, res, next) => {
 
 router.patch('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
     const id = sanitise(req.params.id);
+    const sanitisedInput = sanitise(req.body);
+
+    if (sanitisedInput.title > titleMaxLength) {
+        return res.status(403).send(`Length of title was greater than the maximum allowed length of ${titleMaxLength}`);
+    }
+    if (sanitisedInput.tags.length > tagsMaxAmount) {
+        return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
+    }
+
     RecordedStream.findByIdAndUpdate(id, {
-        title: sanitise(req.body.title),
-        genre: sanitise(req.body.genre),
-        category: sanitise(req.body.category),
-        tags: sanitise(req.body.tags)
+        title: sanitisedInput.title,
+        genre: sanitisedInput.genre,
+        category: sanitisedInput.category,
+        tags: sanitisedInput.tags
     }, {
         new: true,
     }, (err, stream) => {

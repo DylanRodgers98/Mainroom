@@ -1,7 +1,11 @@
 const {Schema} = require('mongoose');
 const bcrypt = require('bcryptjs');
 const mongoosePaginate = require('mongoose-paginate-v2');
-const {chatColours, storage: {s3: {defaultProfilePic}}} = require('../../mainroom.config');
+const {
+    chatColours,
+    storage: {s3: {defaultProfilePic}},
+    validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}
+} = require('../../mainroom.config');
 const {RecordedStream, ScheduledStream} = require('./schemas');
 const nanoid = require('nanoid');
 const {deleteObject, resolveObjectURL} = require('../aws/s3Utils');
@@ -23,10 +27,10 @@ const UserSchema = new Schema({
     links: [{title: String, url: String}],
     streamInfo: {
         streamKey: {type: String, select: false},
-        title: String,
+        title: {type: String, maxlength: titleMaxLength},
         genre: String,
         category: String,
-        tags: [String],
+        tags: {type: [String], validate: tags => tags.length <= tagsMaxAmount},
         viewCount: {type: Number, default: 0, min: 0},
         cumulativeViewCount: {type: Number, default: 0, min: 0},
         startTime: Date

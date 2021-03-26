@@ -1,14 +1,14 @@
 const {Schema} = require('mongoose');
-const config = require('../../mainroom.config');
+const {validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}} = require('../../mainroom.config');
 
 const ScheduledStreamSchema = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},
     startTime: Date,
     endTime: Date,
-    title: String,
+    title: {type: String, maxlength: titleMaxLength},
     genre: String,
     category: String,
-    tags: [String]
+    tags: {type: [String], validate: tags => tags.length <= tagsMaxAmount}
 }, {
     timestamps: true
 });
