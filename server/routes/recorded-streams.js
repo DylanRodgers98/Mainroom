@@ -148,7 +148,7 @@ router.get('/:id', (req, res, next) => {
         });
 });
 
-router.patch('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const id = sanitise(req.params.id);
     const sanitisedInput = sanitise(req.body);
 
@@ -159,42 +159,51 @@ router.patch('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
     }
 
-    RecordedStream.findByIdAndUpdate(id, {
-        title: sanitisedInput.title,
-        genre: sanitisedInput.genre,
-        category: sanitisedInput.category,
-        tags: sanitisedInput.tags
-    }, {
-        new: true,
-    }, (err, stream) => {
-        if (err) {
-            LOGGER.error(`An error occurred when updating info for recorded stream (_id: {}): {}`, id, err);
-            next(err);
-        } else if (!stream) {
-            res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
-        } else {
-            res.json({
-                title: stream.title,
-                genre: stream.genre,
-                category: stream.category,
-                tags: stream.tags
-            });
-        }
-    });
+    const recordedStream = await RecordedStream.findById(id).select('user').exec();
+    if (!recordedStream) {
+        res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
+    }
+    if (recordedStream.user.toString() !== req.user._id.toString()) {
+        return res.sendStatus(401);
+    }
+
+    recordedStream.title = sanitisedInput.title;
+    recordedStream.genre = sanitisedInput.genre;
+    recordedStream.category = sanitisedInput.category;
+    recordedStream.tags = sanitisedInput.tags;
+
+    try {
+        await recordedStream.save();
+        res.json({
+            title: recordedStream.title,
+            genre: recordedStream.genre,
+            category: recordedStream.category,
+            tags: recordedStream.tags
+        });
+    } catch (err) {
+        LOGGER.error(`An error occurred when updating info for recorded stream (_id: {}): {}`, id, err);
+        next(err);
+    }
 });
 
-router.delete('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.delete('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const id = sanitise(req.params.id);
-    RecordedStream.findByIdAndDelete(id, (err, stream) => {
-        if (err) {
-            LOGGER.error(`An error occurred when deleting recorded stream (_id: {}) from database: {}`, id, err);
-            next(err);
-        } else if (!stream) {
-            res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
-        } else {
-            res.sendStatus(200);
-        }
-    });
+    const recordedStream = await RecordedStream.findById(id).select('user').exec();
+
+    if (!recordedStream) {
+        res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
+    }
+    if (recordedStream.user.toString() !== req.user._id.toString()) {
+        return res.sendStatus(401);
+    }
+
+    try {
+        await RecordedStream.findByIdAndDelete(id);
+        res.sendStatus(200);
+    } catch (err) {
+        LOGGER.error(`An error occurred when deleting recorded stream (_id: {}) from database: {}`, id, err);
+        next(err);
+    }
 });
 
 module.exports = router;

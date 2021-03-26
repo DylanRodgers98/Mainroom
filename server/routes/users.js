@@ -14,6 +14,7 @@ const _ = require('lodash');
 const axios = require('axios');
 const mainroomEventBus = require('../mainroomEventBus');
 const normalizeUrl = require('normalize-url');
+const {isAuthorised} = require('../middleware/isAuthorised');
 const {deleteObject} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
@@ -81,7 +82,7 @@ router.get('/:username', (req, res, next) => {
         });
 });
 
-router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:username', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const updateQuery = {};
 
     if (req.body.displayName) {
@@ -154,7 +155,7 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), (req, res, next) => {
     })
 });
 
-router.post('/:username/chat-colour', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.post('/:username/chat-colour', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOneAndUpdate({
         username
@@ -193,7 +194,7 @@ const s3UploadProfilePic = multer({
     })
 }).single('profilePic');
 
-router.put('/:userId/profile-pic', (req, res, next) => {
+router.put('/:userId/profile-pic', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const userId = sanitise(req.params.userId);
     if (userId) {
         s3UploadProfilePic(req, res, async err => {
@@ -325,7 +326,7 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
     });
 });
 
-router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, (err, user) => {
         if (err) {
@@ -370,7 +371,7 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
     });
 });
 
-router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username}, (err, user) => {
         if (err) {
@@ -416,7 +417,7 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
 router.get('/:username/stream-info', async (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     try {
-        const user = await User.findOne({username: username})
+        const user = await User.findOne({username})
             .select('displayName profilePic.bucket profilePic.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount streamInfo.startTime')
             .exec();
 
@@ -457,7 +458,7 @@ router.get('/:username/stream-info', async (req, res, next) => {
     }
 });
 
-router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     const sanitisedInput = sanitise(req.body);
 
@@ -497,7 +498,7 @@ router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), (req, res,
     });
 });
 
-router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOneAndUpdate({
         username: username
@@ -519,7 +520,7 @@ router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), (req, res, n
     });
 });
 
-router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.get('/:username/schedule', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, 'subscriptions nonSubscribedScheduledStreams', (err, user) => {
         if (err) {
@@ -540,7 +541,7 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
             .select('user title startTime endTime genre category')
             .populate({
                 path: 'user',
-                select: 'username displayName profilePic.bucket profilePic.key'
+                select: '_id username displayName profilePic.bucket profilePic.key'
             })
             .exec((err, scheduledStreams) => {
                 if (err) {
@@ -584,6 +585,7 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
                                 genre: scheduledStream.genre,
                                 category: scheduledStream.category,
                                 user: {
+                                    _id: scheduledStream.user._id,
                                     username: scheduledStream.user.username,
                                     displayName: scheduledStream.user.displayName,
                                     profilePicURL: scheduledStream.user.getProfilePicURL()
@@ -603,7 +605,7 @@ router.get('/:username/schedule', loginChecker.ensureLoggedIn(), (req, res, next
     });
 });
 
-router.get('/:username/schedule/non-subscribed', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.get('/:username/schedule/non-subscribed', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     const scheduledStreamUsername = sanitise(req.query.scheduledStreamUsername.toLowerCase());
     User.findOne({username})
@@ -633,7 +635,7 @@ router.get('/:username/schedule/non-subscribed', loginChecker.ensureLoggedIn(), 
         });
 });
 
-router.patch('/:username/schedule/add-non-subscribed/:scheduledStreamId', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:username/schedule/add-non-subscribed/:scheduledStreamId', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     const scheduledStreamId = sanitise(req.params.scheduledStreamId);
     User.findOneAndUpdate({
@@ -652,7 +654,7 @@ router.patch('/:username/schedule/add-non-subscribed/:scheduledStreamId', loginC
     });
 });
 
-router.patch('/:username/schedule/remove-non-subscribed/:scheduledStreamId', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:username/schedule/remove-non-subscribed/:scheduledStreamId', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     const scheduledStreamId = sanitise(req.params.scheduledStreamId);
     User.findOneAndUpdate({
@@ -671,7 +673,7 @@ router.patch('/:username/schedule/remove-non-subscribed/:scheduledStreamId', log
     });
 });
 
-router.get('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.get('/:userId/settings', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const userId = sanitise(req.params.userId);
     User.findById(userId, 'username email emailSettings').exec((err, user) => {
         if (err) {
@@ -689,7 +691,7 @@ router.get('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) 
     });
 });
 
-router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const findQuery = {$or: []};
     const updateQuery = {};
 
@@ -755,7 +757,7 @@ function updateUserSettings(updateQuery, req, res, next) {
     });
 }
 
-router.post('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next) => {
+router.post('/:userId/password', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const userId = sanitise(req.params.userId);
     User.findById(userId).select('+password').exec((err, user) => {
         if (err) {
@@ -795,19 +797,19 @@ router.post('/:userId/password', loginChecker.ensureLoggedIn(), (req, res, next)
     });
 });
 
-router.delete('/:id', loginChecker.ensureLoggedIn(), (req, res, next) => {
-    const id = sanitise(req.params.id);
-    User.findById(id, (err, user) => {
+router.delete('/:userId', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
+    const userId = sanitise(req.params.userId);
+    User.findById(userId, (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when finding user (_id: {}) in database: {}`, id, err);
+            LOGGER.error(`An error occurred when finding user (_id: {}) in database: {}`, userId, err);
             next(err);
         } else if (!user) {
-            res.status(404).send(`User (username: ${escape(id)}) not found`);
+            res.status(404).send(`User (username: ${escape(userId)}) not found`);
         } else {
             req.logout()
-            User.findByIdAndDelete(id, err => {
+            User.findByIdAndDelete(userId, err => {
                 if (err) {
-                    LOGGER.error(`An error occurred when deleting user (_id: {}) from database: {}`, id, err);
+                    LOGGER.error(`An error occurred when deleting user (_id: {}) from database: {}`, userId, err);
                     next(err);
                 } else {
                     res.sendStatus(200);

@@ -9,6 +9,10 @@ const LOGGER = require('../../logger')('./server/routes/scheduled-streams.js');
 router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const sanitisedInput = sanitise(req.body);
 
+    if (sanitisedInput.userId !== req.user._id.toString()) {
+        return res.sendStatus(401);
+    }
+
     if (sanitisedInput.title > titleMaxLength) {
         return res.status(403).send(`Length of title was greater than the maximum allowed length of ${titleMaxLength}`);
     }
@@ -69,10 +73,15 @@ router.get('/', async (req, res, next) => {
 router.delete('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const id = sanitise(req.params.id);
     try {
-        const stream = await ScheduledStream.findByIdAndDelete(id);
-        if (!stream) {
+        const scheduledStream = await ScheduledStream.findById(id).select('user').exec();
+        if (!scheduledStream) {
             return res.status(404).send(`Scheduled stream (_id: ${escape(id)}) not found`);
         }
+        if (scheduledStream.user.toString() !== req.user._id.toString()) {
+            return res.sendStatus(401);
+        }
+        await ScheduledStream.findByIdAndDelete(id);
+
         // Pull reference to ScheduledStream from nonSubscribedScheduledStreams arrays.
         // This can't be done using mongoose middleware due to the ordering of imports in ./server/model/schemas.js
         await User.updateMany({nonSubscribedScheduledStreams: id}, {$pull: {nonSubscribedScheduledStreams: id}}).exec();
