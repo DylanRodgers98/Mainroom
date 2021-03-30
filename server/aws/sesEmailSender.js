@@ -1,10 +1,12 @@
-const config = require('../../mainroom.config');
+const {email: {ses: {templateNames}}, dateFormat, timeFormat, siteName} = require('../../mainroom.config');
 const CompositeError = require('../errors/CompositeError');
 const { SESClient, SendTemplatedEmailCommand, SendBulkTemplatedEmailCommand } = require('@aws-sdk/client-ses');
 const snsErrorPublisher = require('./snsErrorPublisher');
+const moment = require('moment');
 const LOGGER = require('../../logger')('./server/aws/sesEmailSender.js');
 
 const SES_CLIENT = new SESClient({});
+const SOURCE = `${siteName} ${process.env.NO_REPLY_EMAIL}`;
 const BULK_EMAIL_MAX_DESTINATIONS = 50;
 
 module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
@@ -12,11 +14,12 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
         Destination: {
             ToAddresses: [user.email]
         },
-        Source: process.env.NO_REPLY_EMAIL,
-        Template: config.email.ses.templateNames.newSubscribers,
+        Source: SOURCE,
+        Template: templateNames.newSubscribers,
         TemplateData: JSON.stringify({
             user: {
-                displayName: user.displayName || user.username
+                displayName: user.displayName || user.username,
+                username: user.username
             },
             newSubscribers: subscribers.map(subscriber => {
                 return {
@@ -55,8 +58,8 @@ module.exports.notifySubscribersUserWentLive = async user => {
         for (let i = 0; i < splits.length; i++) {
             const params = new SendBulkTemplatedEmailCommand({
                 Destinations: splits[i],
-                Source: process.env.NO_REPLY_EMAIL,
-                Template: config.email.ses.templateNames[emailType],
+                Source: SOURCE,
+                Template: templateNames[emailType],
                 DefaultTemplateData: JSON.stringify({
                     user: {
                         displayName: user.displayName || user.username,
@@ -91,7 +94,7 @@ function getDestinations(users, emailType) {
         if (user.emailSettings[emailType]) {
             destinations.push({
                 Destination: {
-                    ToAddresses: user.email
+                    ToAddresses: [user.email]
                 },
                 ReplacementTemplateData: JSON.stringify({
                     subscriber: {
@@ -117,8 +120,8 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
         Destination: {
             ToAddresses: [user.email]
         },
-        Source: process.env.NO_REPLY_EMAIL,
-        Template: config.email.ses.templateNames.subscriptionsCreatedScheduledStreams,
+        Source: SOURCE,
+        Template: templateNames.subscriptionsCreatedScheduledStreams,
         TemplateData: JSON.stringify({
             user: {
                 displayName: user.displayName || user.username
@@ -132,10 +135,12 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
                     },
                     stream: {
                         title: stream.title,
-                        startTime: stream.startTime,
-                        endTime: stream.endTime,
                         genre: stream.genre,
-                        category: stream.category
+                        category: stream.category,
+                        timeRange: formatDateRange({
+                            start: stream.startTime,
+                            end: stream.endTime
+                        })
                     },
                 }
             })
@@ -159,8 +164,8 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
         Destination: {
             ToAddresses: [user.email]
         },
-        Source: process.env.NO_REPLY_EMAIL,
-        Template: config.email.ses.templateNames.subscriptionScheduledStreamStartingIn,
+        Source: SOURCE,
+        Template: templateNames.subscriptionScheduledStreamStartingIn,
         TemplateData: JSON.stringify({
             user: {
                 displayName: user.displayName || user.username
@@ -174,10 +179,12 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
                     },
                     stream: {
                         title: stream.title,
-                        startTime: stream.startTime,
-                        endTime: stream.endTime,
                         genre: stream.genre,
-                        category: stream.category
+                        category: stream.category,
+                        timeRange: formatDateRange({
+                            start: stream.startTime,
+                            end: stream.endTime
+                        })
                     },
                 }
             })
@@ -201,8 +208,8 @@ module.exports.sendResetPasswordEmail = async (user, token) => {
         Destination: {
             ToAddresses: [user.email]
         },
-        Source: process.env.NO_REPLY_EMAIL,
-        Template: config.email.ses.templateNames.resetPassword,
+        Source: SOURCE,
+        Template: templateNames.resetPassword,
         TemplateData: JSON.stringify({
             user: {
                 displayName: user.displayName || user.username
@@ -228,8 +235,8 @@ module.exports.sendWelcomeEmail = async (email, username) => {
         Destination: {
             ToAddresses: [email]
         },
-        Source: process.env.NO_REPLY_EMAIL,
-        Template: config.email.ses.templateNames.welcomeNewUser,
+        Source: SOURCE,
+        Template: templateNames.welcomeNewUser,
         TemplateData: JSON.stringify({username})
     });
     try {
@@ -243,4 +250,16 @@ module.exports.sendWelcomeEmail = async (email, username) => {
             LOGGER.debug(`Successfully sent 'resetPassword' email to {} using SES`, email);
         }
     }
+}
+
+function formatDateRange({start, end}) {
+    const startMoment = moment(start);
+    const endMoment = moment(end);
+
+    const startFormatted = startMoment.format(dateFormat);
+    const endFormatted = startMoment.isSame(endMoment, 'day')
+        ? `-${endMoment.format(timeFormat)}`
+        : ` - ${endMoment.format(dateFormat)}`;
+
+    return `${startFormatted}${endFormatted}`;
 }

@@ -137,7 +137,7 @@ module.exports = {
         large: 12
     },
     email: {
-        enabled: false,
+        enabled: process.env.NODE_ENV === 'production',
         ses: {
             templateNames: {
                 welcomeNewUser: 'welcomeNewUser',
