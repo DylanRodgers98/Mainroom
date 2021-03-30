@@ -293,7 +293,7 @@ export default class LiveStream extends React.Component {
                                                     })}
                                                 </h6>
                                                 <h6>
-                                                    {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'} · Started at {this.state.streamStartTime}
+                                                    {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'} · Started {this.state.streamStartTime}
                                                 </h6>
                                             </td>
                                             <td className='w-100' valign='top'>
