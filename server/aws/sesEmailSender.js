@@ -6,7 +6,6 @@ const moment = require('moment');
 const LOGGER = require('../../logger')('./server/aws/sesEmailSender.js');
 
 const SES_CLIENT = new SESClient({});
-const SOURCE = `${siteName} ${process.env.NO_REPLY_EMAIL}`;
 const BULK_EMAIL_MAX_DESTINATIONS = 50;
 
 module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
@@ -14,7 +13,7 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
         Destination: {
             ToAddresses: [user.email]
         },
-        Source: SOURCE,
+        Source: process.env.NO_REPLY_EMAIL,
         Template: templateNames.newSubscribers,
         TemplateData: JSON.stringify({
             user: {
@@ -58,7 +57,7 @@ module.exports.notifySubscribersUserWentLive = async user => {
         for (let i = 0; i < splits.length; i++) {
             const params = new SendBulkTemplatedEmailCommand({
                 Destinations: splits[i],
-                Source: SOURCE,
+                Source: process.env.NO_REPLY_EMAIL,
                 Template: templateNames[emailType],
                 DefaultTemplateData: JSON.stringify({
                     user: {
@@ -120,7 +119,7 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
         Destination: {
             ToAddresses: [user.email]
         },
-        Source: SOURCE,
+        Source: process.env.NO_REPLY_EMAIL,
         Template: templateNames.subscriptionsCreatedScheduledStreams,
         TemplateData: JSON.stringify({
             user: {
@@ -164,7 +163,7 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
         Destination: {
             ToAddresses: [user.email]
         },
-        Source: SOURCE,
+        Source: process.env.NO_REPLY_EMAIL,
         Template: templateNames.subscriptionScheduledStreamStartingIn,
         TemplateData: JSON.stringify({
             user: {
@@ -208,7 +207,7 @@ module.exports.sendResetPasswordEmail = async (user, token) => {
         Destination: {
             ToAddresses: [user.email]
         },
-        Source: SOURCE,
+        Source: process.env.NO_REPLY_EMAIL,
         Template: templateNames.resetPassword,
         TemplateData: JSON.stringify({
             user: {
@@ -235,7 +234,7 @@ module.exports.sendWelcomeEmail = async (email, username) => {
         Destination: {
             ToAddresses: [email]
         },
-        Source: SOURCE,
+        Source: process.env.NO_REPLY_EMAIL,
         Template: templateNames.welcomeNewUser,
         TemplateData: JSON.stringify({username})
     });
