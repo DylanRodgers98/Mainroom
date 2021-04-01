@@ -20,7 +20,7 @@ class MainroomEventBus extends EventEmitter {
 
     sendToGodProcess(event, args) {
         if (process.env.NODE_ENV !== 'production') {
-            LOGGER.error(`Something tried to send an event of type '{}' to the pm2 God process, but the application is ` +
+            LOGGER.error(`Something tried to send an event of type "{}" to the pm2 God process, but the application is ` +
                 'not in production mode. This event will be ignored.', event);
             return;
         }
@@ -32,8 +32,10 @@ class MainroomEventBus extends EventEmitter {
             data
         }, async err => {
             if (err) {
-                LOGGER.error(`An error occurred when sending '{}' event to pm2 God process: {}`, event, `${err.toString()}\n${err.stack}`);
+                LOGGER.error(`An error occurred when sending "{}" event to pm2 God process: {}`, event, err.stack);
                 await snsErrorPublisher.publish(err);
+            } else {
+                LOGGER.debug(`Successfully sent "{}" event to pm2 God process`, event);
             }
         });
     }
@@ -43,7 +45,7 @@ class MainroomEventBus extends EventEmitter {
 const mainroomEventBus = new MainroomEventBus();
 
 mainroomEventBus.on('error', err => {
-    LOGGER.error('An error event was emitted: {}', `${err.toString()}\n${err.stack}`);
+    LOGGER.error('An error event was emitted: {}', err.stack);
 });
 
 module.exports = mainroomEventBus;

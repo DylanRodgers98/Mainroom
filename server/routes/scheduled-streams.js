@@ -33,7 +33,7 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         await scheduledStream.save();
         res.sendStatus(200);
     } catch (err) {
-        LOGGER.error('An error occurred when saving new ScheduledStream: {}, Error: {}', JSON.stringify(scheduledStream), `${err.toString()}\n${err.stack}`);
+        LOGGER.error('An error occurred when saving new ScheduledStream: {}, Error: {}', JSON.stringify(scheduledStream), err.stack);
         next(err);
     }
 });
@@ -46,7 +46,7 @@ router.get('/', async (req, res, next) => {
     try {
         user = await User.findOne({username}).select('_id').exec();
     } catch (err) {
-        LOGGER.error(`An error occurred when finding user {}: {}`, username, `${err.toString()}\n${err.stack}`);
+        LOGGER.error(`An error occurred when finding user {}: {}`, username, err.stack);
         return next(err);
     }
 
@@ -65,7 +65,7 @@ router.get('/', async (req, res, next) => {
             .exec();
         res.json({scheduledStreams});
     } catch (err) {
-        LOGGER.error('An error occurred when finding scheduled streams for user {}: {}', username, `${err.toString()}\n${err.stack}`);
+        LOGGER.error('An error occurred when finding scheduled streams for user {}: {}', username, err.stack);
         next(err);
     }
 });
@@ -87,7 +87,7 @@ router.delete('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         await User.updateMany({nonSubscribedScheduledStreams: id}, {$pull: {nonSubscribedScheduledStreams: id}}).exec();
         res.sendStatus(200);
     } catch (err) {
-        LOGGER.error(`An error occurred when deleting scheduled stream (_id: {}) from database: {}`, id, `${err.toString()}\n${err.stack}`);
+        LOGGER.error(`An error occurred when deleting scheduled stream (_id: {}) from database: {}`, id, err.stack);
         next(err);
     }
 });

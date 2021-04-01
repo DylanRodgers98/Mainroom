@@ -134,7 +134,7 @@ async function deleteScheduledStreams(user, model) {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} ScheduledStream{} failed to delete for User (_id: {}). Error: {}`,
-                errors.length, streams.length, streams.length === 1 ? '' : 's', user._id, `${err.toString()}\n${err.stack}`);
+                errors.length, streams.length, streams.length === 1 ? '' : 's', user._id, err.stack);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug('Successfully deleted {} ScheduledStreams for User (_id: {})', deleted, user._id);
@@ -163,7 +163,7 @@ async function deleteRecordedStreams(user) {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} RecordedStream{} failed to delete for User (_id: {}). Error: {}`,
-                errors.length, streams.length, streams.length === 1 ? '' : 's', user._id, `${err.toString()}\n${err.stack}`);
+                errors.length, streams.length, streams.length === 1 ? '' : 's', user._id, err.stack);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug('Successfully deleted {} RecordedStreams for User (_id: {})', deleted, user._id);
@@ -186,7 +186,7 @@ async function removeFromSubscriptions(user, model) {
     if (rejectedPromises.length) {
         const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
         LOGGER.error(`Failed to remove User (_id: {}) from subscribers/subscriptions lists. Error: {}`,
-            user._id, `${err.toString()}\n${err.stack}`);
+            user._id, err.stack);
         await snsErrorPublisher.publish(err);
     } else {
         LOGGER.debug('Successfully removed User (_id: {}) from {} subscribers lists and {} subscriptions lists',

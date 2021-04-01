@@ -41,7 +41,7 @@ router.get('/', (req, res, next) => {
 
     User.paginate(query, options, (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when finding users: {}', `${err.toString()}\n${err.stack}`);
+            LOGGER.error('An error occurred when finding users: {}', err.stack);
             next(err);
         } else {
             res.json({
@@ -63,7 +63,7 @@ router.get('/:username', (req, res, next) => {
     User.findOne({username: username}, 'username displayName profilePic.bucket profilePic.key location bio chatColour links subscribers')
         .exec((err, user) => {
             if (err) {
-                LOGGER.error('An error occurred when finding user {}: {}', username, `${err.toString()}\n${err.stack}`);
+                LOGGER.error('An error occurred when finding user {}: {}', username, err.stack);
                 next(err);
             } else if (!user) {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -145,7 +145,7 @@ router.patch('/:username', loginChecker.ensureLoggedIn(), isAuthorised, (req, re
     const username = sanitise(req.params.username.toLowerCase());
     User.findOneAndUpdate({username}, updateQuery, {new: true},(err, user) => {
         if (err) {
-            LOGGER.error('An error occurred when updating user {}: {}', username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error('An error occurred when updating user {}: {}', username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -165,7 +165,7 @@ router.post('/:username/chat-colour', loginChecker.ensureLoggedIn(), isAuthorise
         new: true
     }, (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when updating user {}'s chat colour: {}`, username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when updating user {}'s chat colour: {}`, username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -199,7 +199,7 @@ router.put('/:userId/profile-pic', loginChecker.ensureLoggedIn(), isAuthorised, 
     if (userId) {
         s3UploadProfilePic(req, res, async err => {
             if (err) {
-                LOGGER.error('An error occurred when uploading profile pic to S3 for user {}: {}', userId, `${err.toString()}\n${err.stack}`);
+                LOGGER.error('An error occurred when uploading profile pic to S3 for user {}: {}', userId, err.stack);
                 return next(err);
             }
             try {
@@ -225,7 +225,7 @@ router.put('/:userId/profile-pic', loginChecker.ensureLoggedIn(), isAuthorised, 
                 await Promise.all(promises);
                 res.sendStatus(200);
             } catch (err) {
-                LOGGER.error('An error occurred when updating profile pic info for user (_id: {}): {}', userId, `${err.toString()}\n${err.stack}`);
+                LOGGER.error('An error occurred when updating profile pic info for user (_id: {}): {}', userId, err.stack);
                 next(err);
             }
         });
@@ -236,7 +236,7 @@ router.get('/:userId/profile-pic', (req, res, next) => {
     const userId = sanitise(req.params.userId);
     User.findById(userId, 'profilePic.bucket profilePic.key', (err, user) => {
         if (err) {
-            LOGGER.error('An error occurred when finding user with _id {}: {}', userId, `${err.toString()}\n${err.stack}`);
+            LOGGER.error('An error occurred when finding user with _id {}: {}', userId, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
@@ -260,7 +260,7 @@ const getSubscribersOrSubscriptions = key => (req, res, next) => {
         }
     ], (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when counting number of {} for user {}: {}', key, username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error('An error occurred when counting number of {} for user {}: {}', key, username, err.stack);
             next(err);
         } else {
             // populate subscribers/subscriptions, paginated
@@ -277,7 +277,7 @@ const getSubscribersOrSubscriptions = key => (req, res, next) => {
                 })
                 .exec((err, user) => {
                     if (err) {
-                        LOGGER.error('An error occurred when getting {} for user {}: {}', key, username, `${err.toString()}\n${err.stack}`);
+                        LOGGER.error('An error occurred when getting {} for user {}: {}', key, username, err.stack);
                         next(err);
                     } else if (!user) {
                         res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -305,7 +305,7 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
     const otherUsername = sanitise(req.params.otherUsername.toLowerCase());
     User.findOne({username: otherUsername}, 'subscribers', (err, otherUser) => {
         if (err) {
-            LOGGER.error('An error occurred when finding user {}: {}', otherUsername, `${err.toString()}\n${err.stack}`);
+            LOGGER.error('An error occurred when finding user {}: {}', otherUsername, err.stack);
             next(err);
         } else if (!otherUser) {
             res.status(404).send(`User (username: ${escape(otherUsername)}) not found`);
@@ -313,7 +313,7 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
             const username = sanitise(req.params.username.toLowerCase());
             User.findOne({username}, '_id', (err, user) => {
                 if (err) {
-                    LOGGER.error('An error occurred when finding user {}: {}', username, `${err.toString()}\n${err.stack}`);
+                    LOGGER.error('An error occurred when finding user {}: {}', username, err.stack);
                     next(err);
                 } else if (!user) {
                     res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -330,7 +330,7 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, (err, user) => {
         if (err) {
-            LOGGER.error('An error occurred when finding user {}: {}', username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error('An error occurred when finding user {}: {}', username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -338,7 +338,7 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
             const usernameToSubscribeTo = sanitise(req.params.userToSubscribeTo.toLowerCase())
             User.findOne({username: usernameToSubscribeTo}, 'subscribers',(err, userToSubscribeTo) => {
                 if (err) {
-                    LOGGER.error('An error occurred when finding user {}: {}', usernameToSubscribeTo, `${err.toString()}\n${err.stack}`);
+                    LOGGER.error('An error occurred when finding user {}: {}', usernameToSubscribeTo, err.stack);
                     next(err);
                 } else if (!userToSubscribeTo) {
                     res.status(404).send(`User (username: ${escape(usernameToSubscribeTo)}) not found`);
@@ -348,13 +348,13 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
                         userToSubscribeTo.updateOne({$push: {subscribers: {user: user._id}}}, err => {
                             if (err) {
                                 LOGGER.error(`An error occurred when adding user {} to user {}'s subscribers: {}`,
-                                    username, usernameToSubscribeTo, `${err.toString()}\n${err.stack}`);
+                                    username, usernameToSubscribeTo, err.stack);
                                 next(err);
                             } else {
                                 user.updateOne({$push: {subscriptions: {user: userToSubscribeTo._id}}}, err => {
                                     if (err) {
                                         LOGGER.error(`An error occurred when adding user {} to user {}'s subscriptions: {}`,
-                                            usernameToSubscribeTo, username, `${err.toString()}\n${err.stack}`);
+                                            usernameToSubscribeTo, username, err.stack);
                                         next(err);
                                     } else {
                                         res.sendStatus(200);
@@ -375,7 +375,7 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username}, (err, user) => {
         if (err) {
-            LOGGER.error('An error occurred when finding user {}: {}', username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error('An error occurred when finding user {}: {}', username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -383,7 +383,7 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
             const usernameToUnsubscribeFrom = sanitise(req.params.userToUnsubscribeFrom.toLowerCase())
             User.findOne({username: usernameToUnsubscribeFrom}, 'subscribers', (err, userToUnsubscribeFrom) => {
                 if (err) {
-                    LOGGER.error('An error occurred when finding user {}: {}', usernameToUnsubscribeFrom, `${err.toString()}\n${err.stack}`);
+                    LOGGER.error('An error occurred when finding user {}: {}', usernameToUnsubscribeFrom, err.stack);
                     next(err);
                 } else if (!userToUnsubscribeFrom) {
                     res.status(404).send(`User (username: ${escape(usernameToUnsubscribeFrom)}) not found`);
@@ -392,12 +392,12 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
                     if (isSubscribed) {
                         userToUnsubscribeFrom.updateOne({$pull: {subscribers: {user: user._id}}}, err => {
                             if (err) {
-                                LOGGER.error(`An error occurred when removing user {} to user {}'s subscribers: {}`, username, userToUnsubscribeFrom, `${err.toString()}\n${err.stack}`);
+                                LOGGER.error(`An error occurred when removing user {} to user {}'s subscribers: {}`, username, userToUnsubscribeFrom, err.stack);
                                 next(err);
                             } else {
                                 user.updateOne({$pull: {subscriptions: {user: userToUnsubscribeFrom._id}}}, err => {
                                     if (err) {
-                                        LOGGER.error(`An error occurred when removing user {} to user {}'s subscriptions: {}`, userToUnsubscribeFrom, username, `${err.toString()}\n${err.stack}`);
+                                        LOGGER.error(`An error occurred when removing user {} to user {}'s subscriptions: {}`, userToUnsubscribeFrom, username, err.stack);
                                         next(err);
                                     } else {
                                         res.sendStatus(200);
@@ -453,7 +453,7 @@ router.get('/:username/stream-info', async (req, res, next) => {
             socketIOURL
         });
     } catch (err) {
-        LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, `${err.toString()}\n${err.stack}`);
+        LOGGER.error(`An error occurred when finding user {}'s stream info: {}`, username, err.stack);
         next(err);
     }
 });
@@ -482,7 +482,7 @@ router.patch('/:username/stream-info', loginChecker.ensureLoggedIn(), isAuthoris
         new: true,
     }, (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when updating user {}'s stream info: {}`, username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when updating user {}'s stream info: {}`, username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -508,7 +508,7 @@ router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), isAuthorised
         new: true
     }, (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when updating user {}'s stream key: {}`, username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when updating user {}'s stream key: {}`, username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -524,7 +524,7 @@ router.get('/:username/schedule', (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username: username}, 'subscriptions nonSubscribedScheduledStreams', (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when getting finding user {}: {}`, username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when getting finding user {}: {}`, username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -545,7 +545,7 @@ router.get('/:username/schedule', (req, res, next) => {
             })
             .exec((err, scheduledStreams) => {
                 if (err) {
-                    LOGGER.error(`An error occurred when getting user {}'s schedule: {}`, username, `${err.toString()}\n${err.stack}`);
+                    LOGGER.error(`An error occurred when getting user {}'s schedule: {}`, username, err.stack);
                     next(err);
                 } else {
                     const scheduleGroups = [{
@@ -623,7 +623,7 @@ router.get('/:username/schedule/non-subscribed', (req, res, next) => {
         })
         .exec((err, user) => {
             if (err) {
-                LOGGER.error(`An error occurred when retrieving non-subscribed scheduled streams for user {}: {}`, username, `${err.toString()}\n${err.stack}`);
+                LOGGER.error(`An error occurred when retrieving non-subscribed scheduled streams for user {}: {}`, username, err.stack);
                 next(err);
             } else if (!user) {
                 res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -644,7 +644,7 @@ router.patch('/:username/schedule/add-non-subscribed/:scheduledStreamId', loginC
         $push: {nonSubscribedScheduledStreams: scheduledStreamId}
     }, (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when adding non-subscribed scheduled stream (ID: {}) to user {}'s schedule: {}`, scheduledStreamId, username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when adding non-subscribed scheduled stream (ID: {}) to user {}'s schedule: {}`, scheduledStreamId, username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -663,7 +663,7 @@ router.patch('/:username/schedule/remove-non-subscribed/:scheduledStreamId', log
         $pull: {nonSubscribedScheduledStreams: scheduledStreamId}
     }, (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when removing non-subscribed scheduled stream (ID: {}) to user {}'s schedule: {}`, scheduledStreamId, username, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when removing non-subscribed scheduled stream (ID: {}) to user {}'s schedule: {}`, scheduledStreamId, username, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(username)}) not found`);
@@ -677,7 +677,7 @@ router.get('/:userId/settings', loginChecker.ensureLoggedIn(), isAuthorised, (re
     const userId = sanitise(req.params.userId);
     User.findById(userId, 'username email emailSettings').exec((err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(userId)}) not found`);
@@ -719,7 +719,7 @@ router.patch('/:userId/settings', loginChecker.ensureLoggedIn(), isAuthorised, (
     if (isUpdatingUsernameOrEmail) {
         User.find(findQuery, 'username email', (err, users) => {
             if (err) {
-                LOGGER.error(`An error occurred when finding users with query {}: {}`, JSON.stringify(findQuery), `${err.toString()}\n${err.stack}`);
+                LOGGER.error(`An error occurred when finding users with query {}: {}`, JSON.stringify(findQuery), err.stack);
                 next(err);
             } else if (users) {
                 const invalidReasons = {};
@@ -747,7 +747,7 @@ function updateUserSettings(updateQuery, req, res, next) {
     const userId = sanitise(req.params.userId);
     User.findByIdAndUpdate(userId, updateQuery, (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when updating user settings for user with _id {}: {}`, userId, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when updating user settings for user with _id {}: {}`, userId, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
@@ -761,7 +761,7 @@ router.post('/:userId/password', loginChecker.ensureLoggedIn(), isAuthorised, (r
     const userId = sanitise(req.params.userId);
     User.findById(userId).select('+password').exec((err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when finding user with _id {}: {}`, userId, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (_id: ${escape(userId)}) not found`);
@@ -786,7 +786,7 @@ router.post('/:userId/password', loginChecker.ensureLoggedIn(), isAuthorised, (r
                 user.password = User.generateHash(req.body.newPassword);
                 user.save(err => {
                     if (err) {
-                        LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, `${err.toString()}\n${err.stack}`);
+                        LOGGER.error(`An error occurred when updating password for user with _id {}: {}`, userId, err.stack);
                         next(err);
                     } else {
                         res.sendStatus(200);
@@ -801,7 +801,7 @@ router.delete('/:userId', loginChecker.ensureLoggedIn(), isAuthorised, (req, res
     const userId = sanitise(req.params.userId);
     User.findById(userId, (err, user) => {
         if (err) {
-            LOGGER.error(`An error occurred when finding user (_id: {}) in database: {}`, userId, `${err.toString()}\n${err.stack}`);
+            LOGGER.error(`An error occurred when finding user (_id: {}) in database: {}`, userId, err.stack);
             next(err);
         } else if (!user) {
             res.status(404).send(`User (username: ${escape(userId)}) not found`);
@@ -809,7 +809,7 @@ router.delete('/:userId', loginChecker.ensureLoggedIn(), isAuthorised, (req, res
             req.logout()
             User.findByIdAndDelete(userId, err => {
                 if (err) {
-                    LOGGER.error(`An error occurred when deleting user (_id: {}) from database: {}`, userId, `${err.toString()}\n${err.stack}`);
+                    LOGGER.error(`An error occurred when deleting user (_id: {}) from database: {}`, userId, err.stack);
                     next(err);
                 } else {
                     res.sendStatus(200);

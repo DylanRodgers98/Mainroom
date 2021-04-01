@@ -85,7 +85,7 @@ async function deleteVideoAndThumbnail(recordedStream) {
     if (rejectedPromises.length) {
         const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
         LOGGER.error(`Failed to delete video (bucket: {}, key: {}) and thumbnail (bucket: {}, key: {}) in S3 for RecordedStream (_id: {}). Error: {}`,
-            video.bucket, video.key, thumbnail.bucket, thumbnail.key, recordedStream._id, `${err.toString()}\n${err.stack}`);
+            video.bucket, video.key, thumbnail.bucket, thumbnail.key, recordedStream._id, err.stack);
         await snsErrorPublisher.publish(err);
     } else {
         LOGGER.debug('Successfully deleted video and thumbnail in S3 for RecordedStream (_id: {})', recordedStream._id);
