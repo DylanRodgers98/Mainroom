@@ -34,9 +34,9 @@ const registerOptions = {
     passReqToCallback: true
 };
 
-passport.use('localRegister', new Strategy(registerOptions, async (req, email, password, done) => {
+passport.use('localRegister', new Strategy(registerOptions, async (req, emailAddress, password, done) => {
     const username = sanitise(req.body.username).toLowerCase();
-    const emailLowerCase = email.toLowerCase();
+    const emailLowerCase = emailAddress.toLowerCase();
 
     let user;
     try {
