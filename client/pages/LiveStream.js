@@ -1,7 +1,7 @@
 import React, {Fragment} from 'react';
 import videojs from 'video.js';
 import axios from 'axios';
-import {siteName, loadLivestreamTimeout, headTitle} from '../../mainroom.config';
+import {siteName, socketIOConnectionTimeout, loadLivestreamTimeout, headTitle} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button, Col, Container, Row} from 'reactstrap';
 import io from 'socket.io-client';
@@ -41,7 +41,8 @@ export default class LiveStream extends React.Component {
             chat: [],
             chatHeight: 0,
             chatInputHeight: 0,
-            viewCount: 0
+            viewCount: 0,
+            isConnectedToSocketIO: false
         }
     }
 
@@ -59,14 +60,12 @@ export default class LiveStream extends React.Component {
             this.setState({
                 socketIOURL: res.data.socketIOURL
             }, () => {
-                const promises = [];
                 if (!this.socket) {
-                    promises.push(this.connectToSocketIO());
+                    this.connectToSocketIO();
                 }
                 if (res.data.isLive) {
-                    promises.push(this.populateStreamData(res.data));
+                    this.populateStreamData(res.data);
                 }
-                Promise.all(promises);
             });
         } catch (err) {
             if (err.response.status === 404) {
@@ -94,7 +93,8 @@ export default class LiveStream extends React.Component {
             streamTitle: data.title,
             streamGenre: data.genre,
             streamCategory: data.category,
-            streamStartTime: formatDate(data.startTime)
+            streamStartTime: formatDate(data.startTime),
+            viewCount: data.viewCount
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [
@@ -112,15 +112,37 @@ export default class LiveStream extends React.Component {
         });
     }
 
-    async connectToSocketIO() {
-        const streamUsername = this.props.match.params.username.toLowerCase();
+    connectToSocketIO() {
+        // connect to socket.io server
         this.socket = io(this.state.socketIOURL, {transports: [ 'websocket' ]});
-        this.socket.emit(`connection_${streamUsername}`);
+
+        //register listeners
+        const streamUsername = this.props.match.params.username.toLowerCase();
         this.socket.on(`chatMessage_${streamUsername}`, this.addMessageToChat);
-        this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => this.setState({viewCount}));
         this.socket.on(`streamStarted_${streamUsername}`, this.startStreamFromSocket);
         this.socket.on(`streamEnded_${streamUsername}`, this.endStreamFromSocket);
         this.socket.on(`streamInfoUpdated_${streamUsername}`, this.updateStreamInfoFromSocket);
+        this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => {
+            this.setState({
+                // liveStreamViewCount is the first event emitted from server after it receives a
+                // `connection_${streamUsername}` event, so use this to test for successful connection
+                isConnectedToSocketIO: true,
+                viewCount
+            });
+        });
+
+        // emit connection event
+        this.socket.emit(`connection_${streamUsername}`);
+
+        // retry on unsuccessful connection
+        setTimeout(() => {
+            if (!this.state.isConnectedToSocketIO) {
+                this.disconnectFromSocketIO();
+                this.setState({isConnectedToSocketIO: false}, () => {
+                    this.connectToSocketIO();
+                });
+            }
+        }, socketIOConnectionTimeout);
     }
 
     addMessageToChat({viewerUser, msg}) {
@@ -185,13 +207,16 @@ export default class LiveStream extends React.Component {
     }
 
     componentWillUnmount() {
-        this.socket.disconnect();
-        this.socket = null;
-
+        this.disconnectFromSocketIO();
         if (this.player) {
             this.player.dispose();
             this.player = null;
         }
+    }
+
+    disconnectFromSocketIO() {
+        this.socket.disconnect();
+        this.socket = null;
     }
 
     onMessageTextChange(e) {

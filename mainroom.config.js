@@ -187,6 +187,7 @@ module.exports = {
             'Other'
         ]
     },
+    socketIOConnectionTimeout: SECOND,
     loadLivestreamTimeout: 15 * SECOND,
     successMessageTimeout: 3 * SECOND,
     bugReportURL: 'https://gitreports.com/issue/DylanRodgers98/Mainroom',
