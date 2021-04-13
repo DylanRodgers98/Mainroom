@@ -21,4 +21,4 @@ EXPOSE 8080
 EXPOSE 1935
 
 # Start command
-CMD [ "npm", "run", "start:prod" ]
+CMD [ "npm", "run", "start:docker" ]
