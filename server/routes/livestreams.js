@@ -9,7 +9,7 @@ const {getThumbnail} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/routes/livestreams.js');
 
 router.get('/', async (req, res, next) => {
-    const result = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams`, {
+    const result = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams`, {
         headers: { Authorization: config.rtmpServer.auth.header }
     });
     const streamKeys = result.data.live ? Object.getOwnPropertyNames(result.data.live) : [];

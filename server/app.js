@@ -217,7 +217,7 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
             .select( 'displayName streamInfo.title +streamInfo.streamKey streamInfo.genre streamInfo.category')
             .exec();
         const streamKey = user.streamInfo.streamKey;
-        const {data} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
+        const {data} = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
             headers: { Authorization: config.rtmpServer.auth.header }
         });
         if (data.isLive) {
@@ -232,7 +232,7 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
             imageAlt = `${username} Stream Thumbnail`;
             videoURL = process.env.NODE_ENV === 'production'
                 ? `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`
-                : `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+                : `http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
             videoMimeType = 'application/x-mpegURL';
             twitterCard = 'player';
         } else {

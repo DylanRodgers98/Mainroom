@@ -19,7 +19,8 @@ const {deleteObject} = require('../aws/s3Utils');
 const LOGGER = require('../../logger')('./server/routes/users.js');
 
 const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
-const RTMP_SERVER_URL = `rtmp://${process.env.RTMP_SERVER_HOST}${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
+const RTMP_SERVER_URL = `rtmp://${process.env.NODE_ENV === 'production' ? process.env.SERVER_HOST : 'localhost'}`
+    + `${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
 
 router.get('/', (req, res, next) => {
     const sanitisedQuery = sanitise(req.query.searchQuery);
@@ -426,13 +427,13 @@ router.get('/:username/stream-info', async (req, res, next) => {
         }
 
         const streamKey = user.streamInfo.streamKey;
-        const {data: {isLive}} = await axios.get(`http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
+        const {data: {isLive}} = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
             headers: {Authorization: config.rtmpServer.auth.header}
         });
 
         const liveStreamURL = process.env.NODE_ENV === 'production'
             ? `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`
-            : `http://${process.env.RTMP_SERVER_HOST}:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+            : `http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
 
         const socketIOURL = (process.env.NODE_ENV === 'production' ? 'https' : 'http')
             + `://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?liveStreamUsername=${username}`;
