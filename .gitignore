@@ -12,4 +12,4 @@ npm-debug.log
 coverage/
 
 # ignore environment variables
-.env
+*.env
