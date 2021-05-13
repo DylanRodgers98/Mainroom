@@ -1,91 +1,89 @@
 {
-  "taskDefinition": {
-    "containerDefinitions": [
-      {
-        "name": "mainroom-container",
-        "image": "523857005791.dkr.ecr.eu-west-1.amazonaws.com/mainroom:latest",
-        "portMappings": [
-          {
-            "containerPort": 8080,
-            "hostPort": 8080,
-            "protocol": "tcp"
-          },
-          {
-            "containerPort": 1935,
-            "hostPort": 1935,
-            "protocol": "tcp"
-          }
-        ],
-        "essential": true,
-        "environmentFiles": [
-          {
-            "value": "arn:aws:s3:::mainroom-environment-files/mainroom-ecs.env",
-            "type": "s3"
-          }
-        ],
-        "secrets": [
-          {
-            "name": "MONGODB_CONNECTION_STRING",
-            "valueFrom": "MONGODB_CONNECTION_STRING"
-          },
-          {
-            "name": "RTMP_SERVER_API_PASSWORD",
-            "valueFrom": "RTMP_SERVER_API_PASSWORD"
-          },
-          {
-            "name": "RTMP_SERVER_API_USERNAME",
-            "valueFrom": "RTMP_SERVER_API_USERNAME"
-          },
-          {
-            "name": "SESSION_SECRET",
-            "valueFrom": "SESSION_SECRET"
-          }
-        ],
-        "logConfiguration": {
-          "logDriver": "awslogs",
-          "options": {
-            "awslogs-group": "mainroom-logs",
-            "awslogs-region": "eu-west-1"
-          }
+  "containerDefinitions": [
+    {
+      "name": "mainroom-container",
+      "image": "523857005791.dkr.ecr.eu-west-1.amazonaws.com/mainroom:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        },
+        {
+          "containerPort": 1935,
+          "hostPort": 1935,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environmentFiles": [
+        {
+          "value": "arn:aws:s3:::mainroom-environment-files/mainroom-ecs.env",
+          "type": "s3"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "MONGODB_CONNECTION_STRING",
+          "valueFrom": "MONGODB_CONNECTION_STRING"
+        },
+        {
+          "name": "RTMP_SERVER_API_PASSWORD",
+          "valueFrom": "RTMP_SERVER_API_PASSWORD"
+        },
+        {
+          "name": "RTMP_SERVER_API_USERNAME",
+          "valueFrom": "RTMP_SERVER_API_USERNAME"
+        },
+        {
+          "name": "SESSION_SECRET",
+          "valueFrom": "SESSION_SECRET"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "mainroom-logs",
+          "awslogs-region": "eu-west-1"
         }
       }
-    ],
-    "family": "mainroom-task-definition",
-    "taskRoleArn": "ecsTaskExecutionRole",
-    "executionRoleArn": "ecsTaskExecutionRole",
-    "requiresAttributes": [
-      {
-        "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
-      },
-      {
-        "name": "ecs.capability.execution-role-awslogs"
-      },
-      {
-        "name": "com.amazonaws.ecs.capability.ecr-auth"
-      },
-      {
-        "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
-      },
-      {
-        "name": "ecs.capability.env-files.s3"
-      },
-      {
-        "name": "com.amazonaws.ecs.capability.task-iam-role"
-      },
-      {
-        "name": "ecs.capability.execution-role-ecr-pull"
-      },
-      {
-        "name": "ecs.capability.secrets.ssm.environment-variables"
-      }
-    ],
-    "compatibilities": [
-      "EC2"
-    ],
-    "requiresCompatibilities": [
-      "EC2"
-    ],
-    "cpu": "4096",
-    "memory": "7764"
-  }
+    }
+  ],
+  "family": "mainroom-task-definition",
+  "taskRoleArn": "ecsTaskExecutionRole",
+  "executionRoleArn": "ecsTaskExecutionRole",
+  "requiresAttributes": [
+    {
+      "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+    },
+    {
+      "name": "ecs.capability.execution-role-awslogs"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.ecr-auth"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+    },
+    {
+      "name": "ecs.capability.env-files.s3"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.task-iam-role"
+    },
+    {
+      "name": "ecs.capability.execution-role-ecr-pull"
+    },
+    {
+      "name": "ecs.capability.secrets.ssm.environment-variables"
+    }
+  ],
+  "compatibilities": [
+    "EC2"
+  ],
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "cpu": "4096",
+  "memory": "7764"
 }
