@@ -2,7 +2,8 @@
 FROM node:lts-alpine
 
 # Install ffmpeg
-RUN apk add ffmpeg
+RUN apk update && \
+    apk add ffmpeg
 
 # Create app directory
 WORKDIR /usr/src/mainroom
