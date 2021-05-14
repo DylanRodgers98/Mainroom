@@ -111,7 +111,8 @@ module.exports = {
             streams: {
                 bucketName: RECORDED_STREAMS_BUCKET_NAME,
                 keyPrefixes : {
-                    recorded: 'recorded'
+                    recorded: 'recorded',
+                    prerecorded: 'prerecorded'
                 }
             },
             defaultProfilePic: {
@@ -123,6 +124,11 @@ module.exports = {
                 key: DEFAULT_STREAM_THUMBNAIL_KEY
             },
             defaultEventThumbnail: {
+                // TODO: CHANGE THESE TO MATCH CORRECT DEFAULT THUMBNAIL
+                bucket: STATIC_CONTENT_BUCKET_NAME,
+                key: DEFAULT_STREAM_THUMBNAIL_KEY
+            },
+            defaultEventStageThumbnail: {
                 // TODO: CHANGE THESE TO MATCH CORRECT DEFAULT THUMBNAIL
                 bucket: STATIC_CONTENT_BUCKET_NAME,
                 key: DEFAULT_STREAM_THUMBNAIL_KEY

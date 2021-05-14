@@ -1,6 +1,6 @@
 const {Schema} = require('mongoose');
 const {
-    storage: {s3: {defaultEventThumbnail}},
+    storage: {s3: {defaultEventStageThumbnail}},
     validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}
 } = require('../../mainroom.config');
 const nanoid = require('nanoid');
@@ -10,8 +10,8 @@ const EventStageSchema = new Schema({
     event: {type: Schema.Types.ObjectId, ref: 'Event'},
     stageName: String,
     thumbnailPic: {
-        bucket: {type: String, default: defaultEventThumbnail.bucket},
-        key: {type: String, default: defaultEventThumbnail.key}
+        bucket: {type: String, default: defaultEventStageThumbnail.bucket},
+        key: {type: String, default: defaultEventStageThumbnail.key}
     },
     scheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}],
     streamInfo: {
