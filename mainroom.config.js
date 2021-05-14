@@ -104,7 +104,8 @@ module.exports = {
                 bucketName: STATIC_CONTENT_BUCKET_NAME,
                 keyPrefixes: {
                     profilePics: 'profile-pics',
-                    streamThumbnails: 'stream-thumbnails'
+                    streamThumbnails: 'stream-thumbnails',
+                    eventImages: 'event-images'
                 }
             },
             streams: {
@@ -121,6 +122,11 @@ module.exports = {
                 bucket: STATIC_CONTENT_BUCKET_NAME,
                 key: DEFAULT_STREAM_THUMBNAIL_KEY
             },
+            defaultEventThumbnail: {
+                // TODO: CHANGE THESE TO MATCH CORRECT DEFAULT THUMBNAIL
+                bucket: STATIC_CONTENT_BUCKET_NAME,
+                key: DEFAULT_STREAM_THUMBNAIL_KEY
+            }
         },
         cloudfront: {
             [STATIC_CONTENT_BUCKET_NAME]: STATIC_CONTENT_CLOUDFRONT_DOMAIN,

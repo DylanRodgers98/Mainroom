@@ -12,6 +12,7 @@ const LOGGER = require('../../logger')('./server/model/recordedStreamSchema.js')
 
 const RecordedStreamSchema = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},
+    eventStage: {type: Schema.Types.ObjectId, ref: 'EventStage'},
     timestamp: Date,
     title: {type: String, maxlength: titleMaxLength},
     genre: String,
