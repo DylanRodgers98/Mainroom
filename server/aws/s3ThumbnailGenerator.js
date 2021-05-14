@@ -62,7 +62,7 @@ function generateStreamThumbnail({inputURL, Bucket, Key}) {
 
         try {
             const result = await upload.done();
-            LOGGER.info('Successfully uploaded thumbnail to {}', result.Location);
+            LOGGER.info('Successfully uploaded thumbnail to {}', decodeURIComponent(result.Location));
             resolve({
                 bucket: Bucket,
                 key: Key

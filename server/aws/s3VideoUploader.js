@@ -41,7 +41,7 @@ exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
 
                 try {
                     const result = await upload.done();
-                    LOGGER.info('Successfully uploaded recorded stream to {}', result.Location);
+                    LOGGER.info('Successfully uploaded recorded stream to {}', decodeURIComponent(result.Location));
                     resolve({
                         originalFileURLs: [inputURL, outputURL],
                         video: {
