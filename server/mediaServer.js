@@ -114,70 +114,43 @@ nms.on('donePublish', async (sessionId, streamPath) => {
 
     let user;
     try {
-        user = await User.findOne({'streamInfo.streamKey': streamKey})
-            .select('_id username +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
-            .exec();
+        user = getUserDonePublish(streamKey);
     } catch (err) {
         LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.stack);
         return await snsErrorPublisher.publish(err);
     }
-    if (!user) {
-        LOGGER.info('Could not find user with stream key {}', streamKey);
+
+    if (user) {
+        mainroomEventBus.send('streamEnded', user.username);
+        if (IS_RECORDING_TO_MP4) {
+            await saveRecordedStream({
+                streamKey,
+                timestamp,
+                streamer: user,
+                userId: user._id
+            });
+        }
         return;
     }
 
-    mainroomEventBus.send('streamEnded', user.username);
+    let eventStage;
+    try {
+        eventStage = getEventStageDonePublish(streamKey);
+    } catch (err) {
+        LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err.stack);
+        return await snsErrorPublisher.publish(err);
+    }
 
-    if (IS_RECORDING_TO_MP4) {
-        const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, process.env.RTMP_SERVER_APP_NAME, streamKey);
-        const mp4FileName = await findMP4FileName(inputDirectory, timestamp);
-        if (!mp4FileName) return;
-
-        const inputURL = path.join(inputDirectory, mp4FileName);
-        const Bucket = config.storage.s3.streams.bucketName;
-        const Key = `${config.storage.s3.streams.keyPrefixes.recorded}/${user._id}/${mp4FileName}`;
-
-        try {
-            const videoDurationPromise = getVideoDurationString(inputURL);
-            const uploadVideoPromise = uploadVideoToS3({inputURL, Bucket, Key});
-            const generateThumbnailPromise = generateStreamThumbnail({
-                inputURL,
-                Bucket,
-                Key: Key.replace('.mp4', '.jpg')
-            });
-
-            const promiseResults = await Promise.all([
-                videoDurationPromise,
-                uploadVideoPromise,
-                generateThumbnailPromise
-            ]);
-
-            const videoDuration = promiseResults[0];
-            const {originalFileURLs, video} = promiseResults[1];
-            const thumbnail = promiseResults[2];
-
-            const recordedStream = new RecordedStream({
-                user: user._id,
-                title: user.streamInfo.title || 'Untitled Stream',
-                genre: user.streamInfo.genre,
-                category: user.streamInfo.category,
-                tags: user.streamInfo.tags,
-                viewCount: user.streamInfo.cumulativeViewCount,
+    if (eventStage) {
+        mainroomEventBus.send('streamEnded', eventStage._id);
+        if (IS_RECORDING_TO_MP4) {
+            await saveRecordedStream({
+                streamKey,
                 timestamp,
-                videoDuration,
-                video,
-                thumbnail
+                streamer: eventStage,
+                userId: eventStage.event.createdBy._id,
+                eventStage
             });
-
-            const allSettledResults = await Promise.allSettled([...originalFileURLs.map(deleteFile), recordedStream.save()]);
-            const rejectedPromises = allSettledResults.filter(res => res.status === 'rejected');
-            if (rejectedPromises.length) {
-                throw new CompositeError(rejectedPromises.map(promise => promise.reason));
-            }
-        } catch (err) {
-            LOGGER.error('An error occurred when uploading recorded stream at {} to S3 (bucket: {}, key: {}): {}',
-                inputURL, Bucket, Key, err.stack);
-            await snsErrorPublisher.publish(err);
         }
     }
 });
@@ -193,6 +166,79 @@ const extractAppAndStreamKey = path => {
 
 function getSessionConnectTime(sessionId) {
     return nms.getSession(sessionId).connectTime;
+}
+
+async function getUserDonePublish(streamKey) {
+    return await User.findOne({'streamInfo.streamKey': streamKey})
+        .select('_id username streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
+        .exec();
+}
+
+async function getEventStageDonePublish(streamKey) {
+    return EventStage.findOne({'streamInfo.streamKey': streamKey})
+        .select('_id event streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
+        .populate({
+            path: 'event',
+            populate: {
+                path: 'createdBy',
+                select: '_id'
+            }
+        })
+        .exec();
+}
+
+async function saveRecordedStream({streamKey, timestamp, streamer, userId, eventStage}) {
+    const inputDirectory = path.join(process.cwd(), config.rtmpServer.http.mediaroot, process.env.RTMP_SERVER_APP_NAME, streamKey);
+    const mp4FileName = await findMP4FileName(inputDirectory, timestamp);
+    if (!mp4FileName) return;
+
+    const inputURL = path.join(inputDirectory, mp4FileName);
+    const Bucket = config.storage.s3.streams.bucketName;
+    const Key = `${config.storage.s3.streams.keyPrefixes.recorded}/${userId}/${mp4FileName}`;
+
+    try {
+        const videoDurationPromise = getVideoDurationString(inputURL);
+        const uploadVideoPromise = uploadVideoToS3({inputURL, Bucket, Key});
+        const generateThumbnailPromise = generateStreamThumbnail({
+            inputURL,
+            Bucket,
+            Key: Key.replace('.mp4', '.jpg')
+        });
+
+        const promiseResults = await Promise.all([
+            videoDurationPromise,
+            uploadVideoPromise,
+            generateThumbnailPromise
+        ]);
+
+        const videoDuration = promiseResults[0];
+        const {originalFileURLs, video} = promiseResults[1];
+        const thumbnail = promiseResults[2];
+
+        const recordedStream = new RecordedStream({
+            user: userId,
+            eventStage,
+            title: streamer.streamInfo.title || 'Untitled Stream',
+            genre: streamer.streamInfo.genre,
+            category: streamer.streamInfo.category,
+            tags: streamer.streamInfo.tags,
+            viewCount: streamer.streamInfo.cumulativeViewCount,
+            timestamp,
+            videoDuration,
+            video,
+            thumbnail
+        });
+
+        const allSettledResults = await Promise.allSettled([...originalFileURLs.map(deleteFile), recordedStream.save()]);
+        const rejectedPromises = allSettledResults.filter(res => res.status === 'rejected');
+        if (rejectedPromises.length) {
+            throw new CompositeError(rejectedPromises.map(promise => promise.reason));
+        }
+    } catch (err) {
+        LOGGER.error('An error occurred when uploading recorded stream at {} to S3 (bucket: {}, key: {}): {}',
+            inputURL, Bucket, Key, err.stack);
+        await snsErrorPublisher.publish(err);
+    }
 }
 
 async function findMP4FileName(inputDirectory, sessionConnectTime) {
