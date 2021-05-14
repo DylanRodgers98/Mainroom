@@ -76,7 +76,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
             return await snsErrorPublisher.publish(err);
         }
 
-        return mainroomEventBus.send('eventStageOpened', eventStage._id);
+        return mainroomEventBus.send('streamStarted', eventStage._id);
     }
 
     nms.getSession(sessionId).reject();
@@ -100,7 +100,7 @@ async function getUserPrePublish(streamKey) {
 
 async function getEventStagePrePublish(streamKey) {
     return EventStage.findOne({'streamInfo.streamKey': streamKey})
-        .select('event stageName')
+        .select('_id event stageName')
         .populate({
             path: 'event',
             select: 'eventName'

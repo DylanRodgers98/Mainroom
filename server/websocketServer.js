@@ -1,7 +1,7 @@
 const socketIO = require('socket.io');
 const pm2 = require('pm2');
 const mainroomEventBus = require('./mainroomEventBus');
-const {User} = require('./model/schemas');
+const {User, EventStage} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
 const snsErrorPublisher = require('./aws/snsErrorPublisher');
 const LOGGER = require('../logger')('./server/websocketServer.js');
@@ -45,12 +45,12 @@ class WebSocketServer {
                 emitOnChatMessage(this.io, chatMessageData);
             });
 
-            mainroomEventBus.on('streamStarted', streamUsername => {
-                emitOnWentLive(this.io, streamUsername);
+            mainroomEventBus.on('streamStarted', streamer => {
+                emitOnWentLive(this.io, streamer);
             });
 
-            mainroomEventBus.on('streamEnded', streamUsername => {
-                emitOnStreamEnded(this.io, streamUsername);
+            mainroomEventBus.on('streamEnded', streamer => {
+                emitOnStreamEnded(this.io, streamer);
             });
 
             mainroomEventBus.on('streamInfoUpdated', streamInfo => {
@@ -59,28 +59,52 @@ class WebSocketServer {
         }
 
         this.io.on('connection', socket => {
-            // register listeners only if connection is from live stream page
+            // register listeners if connection is from live stream page
             if (socket.handshake.query.liveStreamUsername) {
                 const streamUsername = sanitise(socket.handshake.query.liveStreamUsername.toLowerCase());
 
-                let didIncrementViewCount = false;
+                let didIncrementUserViewCount = false;
 
                 // increment view count on connection
                 socket.on(`connection_${streamUsername}`, () => {
-                    incrementViewCount(streamUsername);
-                    didIncrementViewCount = true;
+                    incrementUserViewCount(streamUsername);
+                    didIncrementUserViewCount = true;
                 });
 
                 // decrement view count on disconnection
                 socket.on('disconnect', () => {
-                    if (didIncrementViewCount) {
-                        decrementViewCount(streamUsername);
+                    if (didIncrementUserViewCount) {
+                        decrementUserViewCount(streamUsername);
                     }
                 });
 
                 // emit livestream chat message to correct channel
                 socket.on('chatMessage', ({viewerUser, msg}) => {
-                    mainroomEventBus.send('chatMessage', {streamUsername, viewerUser, msg});
+                    mainroomEventBus.send('chatMessage', {streamer: streamUsername, viewerUser, msg});
+                });
+            }
+            // or register listeners if connection is from event stage stream page
+            else if (socket.handshake.query.eventStageId) {
+                const eventStageId = socket.handshake.query.eventStageId;
+
+                let didIncrementEventStageViewCount = false;
+
+                // increment view count on connection
+                socket.on(`connection_${eventStageId}`, () => {
+                    incrementEventStageViewCount(eventStageId);
+                    didIncrementEventStageViewCount = true;
+                });
+
+                // decrement view count on disconnection
+                socket.on('disconnect', () => {
+                    if (didIncrementEventStageViewCount) {
+                        decrementEventStageViewCount(eventStageId);
+                    }
+                });
+
+                // emit livestream chat message to correct channel
+                socket.on('chatMessage', ({viewerUser, msg}) => {
+                    mainroomEventBus.send('chatMessage', {streamer: eventStageId, viewerUser, msg});
                 });
             }
         });
@@ -100,25 +124,25 @@ function launchPm2MessageBus() {
     });
 }
 
-function emitLiveStreamViewCount(io, {streamUsername, viewCount}) {
-    LOGGER.debug(`Emitting "liveStreamViewCount_{}" event with args "{}" using socket.io`, streamUsername, viewCount);
-    io.emit(`liveStreamViewCount_${streamUsername}`, viewCount);
+function emitLiveStreamViewCount(io, {streamer, viewCount}) {
+    LOGGER.debug(`Emitting "liveStreamViewCount_{}" event with args "{}" using socket.io`, streamer, viewCount);
+    io.emit(`liveStreamViewCount_${streamer}`, viewCount);
 }
 
-function emitOnChatMessage(io, {streamUsername, viewerUser, msg}) {
+function emitOnChatMessage(io, {streamer, viewerUser, msg}) {
     const args = {viewerUser, msg};
-    LOGGER.debug(`Emitting "chatMessage_{}" event with args "{}" using socket.io`, streamUsername, JSON.stringify(args));
-    io.emit(`chatMessage_${streamUsername}`, args);
+    LOGGER.debug(`Emitting "chatMessage_{}" event with args "{}" using socket.io`, streamer, JSON.stringify(args));
+    io.emit(`chatMessage_${streamer}`, args);
 }
 
-function emitOnWentLive(io, streamUsername) {
-    LOGGER.debug(`Emitting "streamStarted_{}" event using socket.io`, streamUsername);
-    io.emit(`streamStarted_${streamUsername}`);
+function emitOnWentLive(io, streamer) {
+    LOGGER.debug(`Emitting "streamStarted_{}" event using socket.io`, streamer);
+    io.emit(`streamStarted_${streamer}`);
 }
 
-function emitOnStreamEnded(io, streamUsername) {
-    LOGGER.debug(`Emitting "streamEnded_{}" event using socket.io`, streamUsername);
-    io.emit(`streamEnded_${streamUsername}`);
+function emitOnStreamEnded(io, streamer) {
+    LOGGER.debug(`Emitting "streamEnded_{}" event using socket.io`, streamer);
+    io.emit(`streamEnded_${streamer}`);
 }
 
 function emitStreamInfoUpdated(io, streamInfo) {
@@ -128,15 +152,15 @@ function emitStreamInfoUpdated(io, streamInfo) {
     io.emit(`streamInfoUpdated_${username}`, streamInfo);
 }
 
-async function incrementViewCount(username) {
-    await incViewCount(username, 1);
+async function incrementUserViewCount(username) {
+    await incUserViewCount(username, 1);
 }
 
-async function decrementViewCount(username) {
-    await incViewCount(username, -1);
+async function decrementUserViewCount(username) {
+    await incUserViewCount(username, -1);
 }
 
-async function incViewCount(username, increment) {
+async function incUserViewCount(username, increment) {
     const $inc = {'streamInfo.viewCount': increment}
     if (increment > 0) {
         $inc['streamInfo.cumulativeViewCount'] = increment;
@@ -151,12 +175,45 @@ async function incViewCount(username, increment) {
             throw new Error(`Could not find user (username: ${username}) to update view count`);
         }
         mainroomEventBus.send('liveStreamViewCount', {
-            streamUsername: username,
+            streamer: username,
             viewCount: user.streamInfo.viewCount
         });
     } catch (err) {
         LOGGER.error(`An error occurred when updating live stream view count for user (username: {}): {}`,
             username, err.stack);
+        await snsErrorPublisher.publish(err);
+    }
+}
+
+async function incrementEventStageViewCount(eventStageId) {
+    await incEventStageViewCount(eventStageId, 1);
+}
+
+async function decrementEventStageViewCount(eventStageId) {
+    await incEventStageViewCount(eventStageId, -1);
+}
+
+async function incEventStageViewCount(eventStageId, increment) {
+    const $inc = {'streamInfo.viewCount': increment}
+    if (increment > 0) {
+        $inc['streamInfo.cumulativeViewCount'] = increment;
+    }
+    const options = {
+        new: true,
+        runValidators: true // run 'min: 0' validators on viewCount and cumulativeViewCount
+    };
+    try {
+        const eventStage = await EventStage.findByIdAndUpdate(eventStageId, {$inc}, options);
+        if (!eventStage) {
+            throw new Error(`Could not find event stage (_id: ${eventStageId}) to update view count`);
+        }
+        mainroomEventBus.send('liveStreamViewCount', {
+            streamer: eventStageId,
+            viewCount: eventStage.streamInfo.viewCount
+        });
+    } catch (err) {
+        LOGGER.error(`An error occurred when updating live stream view count for event stage (_id: ${eventStageId}): {}`,
+            eventStageId, err.stack);
         await snsErrorPublisher.publish(err);
     }
 }
