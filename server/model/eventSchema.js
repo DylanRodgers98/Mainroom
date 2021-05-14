@@ -3,7 +3,7 @@ const {validation: {streamSettings: {tagsMaxAmount}}} = require('../../mainroom.
 const {resolveObjectURL} = require('../aws/s3Utils');
 
 const EventSchema = new Schema({
-    name: String,
+    eventName: String,
     createdBy: {type: Schema.Types.ObjectId, ref: 'User'},
     startTime: Date,
     endTime: Date,

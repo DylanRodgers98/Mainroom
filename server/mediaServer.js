@@ -1,6 +1,6 @@
 const NodeMediaServer = require('node-media-server');
 const config = require('../mainroom.config');
-const {User, RecordedStream} = require('./model/schemas');
+const {User, RecordedStream, EventStage} = require('./model/schemas');
 const mainroomEventBus = require('./mainroomEventBus');
 const {generateStreamThumbnail} = require('../server/aws/s3ThumbnailGenerator');
 const {uploadVideoToS3} = require('../server/aws/s3VideoUploader');
@@ -29,27 +29,13 @@ nms.on('prePublish', async (sessionId, streamPath) => {
 
     let user;
     try {
-        const query = User.findOne({'streamInfo.streamKey': streamKey})
-        let select = 'username streamInfo.viewCount';
-        if (config.email.enabled) {
-            // retrieve fields required for sending email
-            select += ' displayName subscribers profilePic.bucket profilePic.key';
-            query.populate({
-                path: 'subscribers.user',
-                select: 'username displayName email emailSettings'
-            });
-        }
-        user = await query.select(select).exec();
+        user = getUserPrePublish(streamKey);
     } catch (err) {
         LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.stack);
         return await snsErrorPublisher.publish(err);
     }
 
-    if (!user) {
-        nms.getSession(sessionId).reject();
-        LOGGER.info('A stream session (ID: {}) was rejected because no user exists with stream key {}',
-            sessionId, streamKey);
-    } else {
+    if (user) {
         try {
             // reset view counts before starting stream. These counts will be updated in websocketServer
             user.streamInfo.viewCount = 0;
@@ -57,7 +43,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
             user.streamInfo.startTime = new Date();
             await user.save();
         } catch (err) {
-            LOGGER.error('An error occurred when updating cumulative view count for user (username: {}): {}',
+            LOGGER.error('An error occurred when updating view counts and start time for user (username: {}): {}',
                 user.username, err.stack);
             return await snsErrorPublisher.publish(err);
         }
@@ -66,8 +52,61 @@ nms.on('prePublish', async (sessionId, streamPath) => {
         if (config.email.enabled) {
             sesEmailSender.notifySubscribersUserWentLive(user);
         }
+        return;
     }
+
+    let eventStage;
+    try {
+        eventStage = getEventStagePrePublish(streamKey);
+    } catch (err) {
+        LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err.stack);
+        return await snsErrorPublisher.publish(err);
+    }
+
+    if (eventStage) {
+        try {
+            // reset view counts before starting stream. These counts will be updated in websocketServer
+            eventStage.streamInfo.viewCount = 0;
+            eventStage.streamInfo.cumulativeViewCount = 0;
+            eventStage.streamInfo.startTime = new Date();
+            await eventStage.save();
+        } catch (err) {
+            LOGGER.error(`An error occurred when updating view counts and start time for event stage '{} - {}': {}`,
+                eventStage.event.eventName, eventStage.stageName, err.stack);
+            return await snsErrorPublisher.publish(err);
+        }
+
+        return mainroomEventBus.send('eventStageOpened', eventStage._id);
+    }
+
+    nms.getSession(sessionId).reject();
+    LOGGER.info('A stream session (ID: {}) was rejected because no user or event stage exists with stream key {}',
+        sessionId, streamKey);
 });
+
+async function getUserPrePublish(streamKey) {
+    const query = User.findOne({'streamInfo.streamKey': streamKey})
+    let select = 'username';
+    if (config.email.enabled) {
+        // retrieve fields required for sending email
+        select += ' displayName subscribers profilePic.bucket profilePic.key';
+        query.populate({
+            path: 'subscribers.user',
+            select: 'username displayName email emailSettings'
+        });
+    }
+    return await query.select(select).exec();
+}
+
+async function getEventStagePrePublish(streamKey) {
+    return EventStage.findOne({'streamInfo.streamKey': streamKey})
+        .select('event stageName')
+        .populate({
+            path: 'event',
+            select: 'eventName'
+        })
+        .exec();
+}
 
 nms.on('donePublish', async (sessionId, streamPath) => {
     const timestamp = getSessionConnectTime(sessionId);
