@@ -29,7 +29,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
 
     let user;
     try {
-        user = getUserPrePublish(streamKey);
+        user = await getUserPrePublish(streamKey);
     } catch (err) {
         LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.stack);
         return await snsErrorPublisher.publish(err);
@@ -57,7 +57,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
 
     let eventStage;
     try {
-        eventStage = getEventStagePrePublish(streamKey);
+        eventStage = await getEventStagePrePublish(streamKey);
     } catch (err) {
         LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err.stack);
         return await snsErrorPublisher.publish(err);
@@ -99,7 +99,7 @@ async function getUserPrePublish(streamKey) {
 }
 
 async function getEventStagePrePublish(streamKey) {
-    return EventStage.findOne({'streamInfo.streamKey': streamKey})
+    return await EventStage.findOne({'streamInfo.streamKey': streamKey})
         .select('_id event stageName')
         .populate({
             path: 'event',
@@ -114,7 +114,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
 
     let user;
     try {
-        user = getUserDonePublish(streamKey);
+        user = await getUserDonePublish(streamKey);
     } catch (err) {
         LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.stack);
         return await snsErrorPublisher.publish(err);
@@ -135,7 +135,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
 
     let eventStage;
     try {
-        eventStage = getEventStageDonePublish(streamKey);
+        eventStage = await getEventStageDonePublish(streamKey);
     } catch (err) {
         LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err.stack);
         return await snsErrorPublisher.publish(err);
@@ -175,7 +175,7 @@ async function getUserDonePublish(streamKey) {
 }
 
 async function getEventStageDonePublish(streamKey) {
-    return EventStage.findOne({'streamInfo.streamKey': streamKey})
+    return await EventStage.findOne({'streamInfo.streamKey': streamKey})
         .select('_id event streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.cumulativeViewCount')
         .populate({
             path: 'event',
