@@ -20,10 +20,12 @@ const ScheduledStreamSchema = new Schema({
 });
 
 ScheduledStreamSchema.methods.getPrerecordedVideoFileURL = function () {
-    return resolveObjectURL({
-        bucket: this.prerecordedVideoFile.bucket,
-        key: this.prerecordedVideoFile.key
-    });
+    return !this.prerecordedVideoFile || !this.prerecordedVideoFile.bucket || !this.prerecordedVideoFile.key
+        ? undefined
+        : resolveObjectURL({
+            bucket: this.prerecordedVideoFile.bucket,
+            key: this.prerecordedVideoFile.key
+        });
 };
 
 module.exports = ScheduledStreamSchema;
