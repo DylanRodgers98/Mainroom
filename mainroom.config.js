@@ -151,12 +151,12 @@ module.exports = {
         },
         formDataKeys: {
             profilePic: 'profilePic',
-            events: {
+            event: {
                 bannerPic: 'bannerPic',
                 thumbnail: 'eventThumbnail'
             },
-            eventStages: {
-                thumbnailSuffix: 'Thumbnail'
+            eventStage: {
+                thumbnail: 'eventStageThumbnail'
             }
         }
     },

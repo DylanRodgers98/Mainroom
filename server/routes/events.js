@@ -61,15 +61,17 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     }
 
     if (sanitisedInput.eventName > eventNameMaxLength) {
-        return res.status(403).send(`Length of event name '${escape(sanitisedInput.eventName)}' is greater than the maximum allowed length of ${titleMaxLength}`);
+        return res.status(403).send(`Length of event name '${escape(sanitisedInput.eventName)}' is greater than the maximum allowed length of ${eventNameMaxLength}`);
     }
     if (sanitisedInput.tags.length > tagsMaxAmount) {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
     }
-
     if (sanitisedInput.stages && sanitisedInput.stages.length) {
         const stageNameEncountered = [];
         sanitisedInput.stages.forEach(stage => {
+            if (stage.stageName > stageNameMaxLength) {
+                return res.status(403).send(`Length of stage name '${escape(stage.stageName)}' is greater than the maximum allowed length of ${stageNameMaxLength}`);
+            }
             if (stageNameEncountered[stage.stageName]) {
                 return res.status(403).send(`Duplicate stage names found. Names of stages must be unique.`);
             }
@@ -91,35 +93,9 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         next(err);
     }
 
-    if (sanitisedInput.hasBannerPic) {
-        try {
-            event.bannerPic = await uploadPicToS3(event._id, formDataKeys.events.bannerPic, req, res);
-            await event.save();
-        } catch (err) {
-            LOGGER.error('An error occurred when saving banner pic for Event (_id: {}): {}, Error: {}',
-                event._id, err.stack);
-            return next(err);
-        }
-    }
-
-    if (sanitisedInput.hasThumbnail) {
-        try {
-            event.thumbnail = await uploadPicToS3(event._id, formDataKeys.events.thumbnail, req, res);
-            await event.save();
-        } catch (err) {
-            LOGGER.error('An error occurred when saving thumbnail for Event (_id: {}): {}, Error: {}',
-                event._id, err.stack);
-            return next(err);
-        }
-    }
-
     const stageIds = [];
     if (sanitisedInput.stages && sanitisedInput.stages.length) {
         for (const stage of sanitisedInput.stages) {
-            if (stage.stageName > stageNameMaxLength) {
-                return res.status(403).send(`Length of stage name '${escape(stage.stageName)}' is greater than the maximum allowed length of ${titleMaxLength}`);
-            }
-
             const eventStage = new EventStage({
                 event: event._id,
                 stageName: stage.stageName,
@@ -133,18 +109,6 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
                 LOGGER.error('An error occurred when saving new EventStage: {}, Error: {}',
                     JSON.stringify(eventStage), err.stack);
                 next(err);
-            }
-
-            if (stage.hasThumbnail) {
-                try {
-                    const formDataKey = `${stage.stageName}${formDataKeys.eventStages.thumbnailSuffix}`;
-                    eventStage.thumbnail = await uploadPicToS3(event._id, formDataKey, req, res);
-                    await eventStage.save();
-                } catch (err) {
-                    LOGGER.error('An error occurred when saving thumbnail for EventStage (_id: {}): {}, Error: {}',
-                        eventStage._id, err.stack);
-                    return next(err);
-                }
             }
 
             stageIds.push(eventStage._id);
@@ -163,37 +127,165 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     }
 });
 
-function uploadPicToS3(eventId, formDataKey, req, res) {
-    const s3UploadPic = multer({
-        storage: multerS3({
-            s3: S3_V2_TO_V3_BRIDGE,
-            bucket: s3.staticContent.bucketName,
-            contentType: multerS3.AUTO_CONTENT_TYPE,
-            metadata: (req, file, cb) => {
-                cb(null, undefined); // set metadata explicitly to undefined
-            },
-            key: (req, file, cb) => {
-                const path = s3.staticContent.keyPrefixes.eventImages;
-                const extension = mime.extension(file.mimetype);
-                cb(null, `${path}/${eventId}/${formDataKey}-${Date.now()}.${extension}`);
-            }
-        })
-    }).single(formDataKey);
+const s3UploadBannerPic = multer({
+    storage: multerS3({
+        s3: S3_V2_TO_V3_BRIDGE,
+        bucket: s3.staticContent.bucketName,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        metadata: (req, file, cb) => {
+            cb(null, undefined); // set metadata explicitly to undefined
+        },
+        key: (req, file, cb) => {
+            const path = s3.staticContent.keyPrefixes.eventImages;
+            const eventId = sanitise(req.params.eventId);
+            const extension = mime.extension(file.mimetype);
+            cb(null, `${path}/${eventId}/banner-${Date.now()}.${extension}`);
+        }
+    })
+}).single(formDataKeys.event.bannerPic);
 
-    return new Promise((resolve, reject) => {
-        s3UploadPic(req, res, err => {
-            if (err) {
-                LOGGER.error('An error occurred when uploading {} to S3 for Event (_id: {}): {}, Error: {}',
-                    formDataKey, eventId, err.stack);
-                return reject(err);
-            }
-            resolve({
-                bucket: req.file.bucket,
-                key: req.file.key
-            });
-        })
+router.patch('/:eventId/bannerPic', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const eventId = sanitise(req.params.eventId);
+
+    let event;
+    try {
+        event = await Event.findById(eventId).select('_id').exec();
+        if (!event) {
+            return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
+        }
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        return next(err);
+    }
+
+    s3UploadBannerPic(req, res, async err => {
+        if (err) {
+            LOGGER.error('An error occurred when uploading banner pic to S3 for Event (_id: {}): {}, Error: {}',
+                eventId, err.stack);
+            return next(err);
+        }
+
+        event.bannerPic = {
+            bucket: req.file.bucket,
+            key: req.file.key
+        };
+        try {
+            await event.save();
+            res.sendStatus(200);
+        } catch (err) {
+            LOGGER.error('An error occurred when saving Event (_id: {}): {}, Error: {}',
+                event._id, err.stack);
+            next(err);
+        }
     });
-}
+});
+
+const s3UploadEventThumbnail = multer({
+    storage: multerS3({
+        s3: S3_V2_TO_V3_BRIDGE,
+        bucket: s3.staticContent.bucketName,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        metadata: (req, file, cb) => {
+            cb(null, undefined); // set metadata explicitly to undefined
+        },
+        key: (req, file, cb) => {
+            const path = s3.staticContent.keyPrefixes.eventImages;
+            const eventId = sanitise(req.params.eventId);
+            const extension = mime.extension(file.mimetype);
+            cb(null, `${path}/${eventId}/thumbnail-${Date.now()}.${extension}`);
+        }
+    })
+}).single(formDataKeys.event.thumbnail);
+
+router.patch('/:eventId/thumbnailPic', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const eventId = sanitise(req.params.eventId);
+
+    let event;
+    try {
+        event = await Event.findById(eventId).select('_id').exec();
+        if (!event) {
+            return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
+        }
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        return next(err);
+    }
+
+    s3UploadEventThumbnail(req, res, async err => {
+        if (err) {
+            LOGGER.error('An error occurred when uploading thumbnail to S3 for Event (_id: {}): {}, Error: {}',
+                eventId, err.stack);
+            return next(err);
+        }
+
+        event.thumbnail = {
+            bucket: req.file.bucket,
+            key: req.file.key
+        };
+        try {
+            await event.save();
+            res.sendStatus(200);
+        } catch (err) {
+            LOGGER.error('An error occurred when saving Event (_id: {}): {}, Error: {}',
+                event._id, err.stack);
+            next(err);
+        }
+    });
+});
+
+const s3UploadEventStageThumbnail = multer({
+    storage: multerS3({
+        s3: S3_V2_TO_V3_BRIDGE,
+        bucket: s3.staticContent.bucketName,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        metadata: (req, file, cb) => {
+            cb(null, undefined); // set metadata explicitly to undefined
+        },
+        key: (req, file, cb) => {
+            const path = s3.staticContent.keyPrefixes.eventImages;
+            const eventId = sanitise(req.params.eventId);
+            const eventStageId = sanitise(req.params.eventStageId);
+            const extension = mime.extension(file.mimetype);
+            cb(null, `${path}/${eventId}/${eventStageId}-${Date.now()}.${extension}`);
+        }
+    })
+}).single(formDataKeys.eventStage.thumbnail);
+
+router.patch('/:eventId/stage/:eventStageId/thumbnail', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const eventStageId = sanitise(req.params.eventStageId);
+
+    let eventStage;
+    try {
+        eventStage = await EventStage.findById(eventStageId).select('_id').exec();
+        if (!eventStage) {
+            return res.status(404).send(`EventStage (_id: ${escape(eventStageId)}) not found`);
+        }
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        return next(err);
+    }
+
+    s3UploadEventStageThumbnail(req, res, async err => {
+        if (err) {
+            LOGGER.error('An error occurred when uploading thumbnail to S3 for EventStage (_id: {}): {}, Error: {}',
+                eventStageId, err.stack);
+            return next(err);
+        }
+
+        eventStage.thumbnail = {
+            bucket: req.file.bucket,
+            key: req.file.key
+        };
+        try {
+            await eventStage.save();
+            res.sendStatus(200);
+        } catch (err) {
+            LOGGER.error('An error occurred when saving EventStage (_id: {}): {}, Error: {}',
+                eventStageId._id, err.stack);
+            next(err);
+        }
+    });
+});
 
 router.get('/:eventId', async (req, res, next) => {
     const eventId = sanitise(req.params.eventId);
@@ -212,8 +304,8 @@ router.get('/:eventId', async (req, res, next) => {
             })
             .exec();
     } catch (err) {
-        LOGGER.error('An error occurred when finding Event (_id: {}): {}', eventId, err.stack);
-        next(err);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        return next(err);
     }
 
     if (!event) {
@@ -260,8 +352,8 @@ router.get('/:eventId/recorded-streams', async (req, res, next) => {
             .select('stages')
             .exec();
     } catch (err) {
-        LOGGER.error('An error occurred when finding Event (_id: {}): {}', eventId, err.stack);
-        next(err);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        return next(err);
     }
 
     if (!event) {
@@ -319,8 +411,8 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
             })
             .exec();
     } catch (err) {
-        LOGGER.error('An error occurred when finding Event (_id: {}): {}', eventId, err.stack);
-        next(err);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        return next(err);
     }
 
     if (!event.stages || !event.stages.length) {

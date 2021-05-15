@@ -804,7 +804,7 @@ export default class UserProfile extends React.Component {
     saveNewProfilePic() {
         this.setState({showChangeProfilePicSpinner: true}, async () => {
             const data = new FormData();
-            data.append(storage.formDataKeys.profilePic, this.state.uploadedProfilePic);
+            data.set(storage.formDataKeys.profilePic, this.state.uploadedProfilePic);
 
             try {
                 await axios.put(`/api/users/${this.state.loggedInUserId}/profile-pic`, data, {

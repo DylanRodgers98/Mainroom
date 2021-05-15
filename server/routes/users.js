@@ -195,20 +195,27 @@ const s3UploadProfilePic = multer({
     })
 }).single(config.storage.formDataKeys.profilePic);
 
-router.put('/:userId/profile-pic', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
+router.put('/:userId/profile-pic', loginChecker.ensureLoggedIn(), isAuthorised, async (req, res, next) => {
     const userId = sanitise(req.params.userId);
+
     if (userId) {
+        let user;
+        try {
+            user = await User.findById(userId).select('profilePic.bucket profilePic.key').exec();
+            if (!user) {
+                return res.status(404).send(`User (_id: ${escape(userId)}) not found`);
+            }
+        } catch (err) {
+            LOGGER.error(`An error occurred when finding User with id '{}': {}`, userId, err.stack);
+            return next(err);
+        }
+
         s3UploadProfilePic(req, res, async err => {
             if (err) {
                 LOGGER.error('An error occurred when uploading profile pic to S3 for user {}: {}', userId, err.stack);
                 return next(err);
             }
             try {
-                const user = await User.findById(userId).select('profilePic.bucket profilePic.key').exec();
-                if (!user) {
-                    return res.status(404).send(`User (_id: ${escape(userId)}) not found`);
-                }
-
                 const promises = [];
                 // delete old profile pic if not default
                 if (user.profilePic.bucket !== config.storage.s3.defaultProfilePic.bucket
