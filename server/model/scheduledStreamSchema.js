@@ -1,5 +1,6 @@
 const {Schema} = require('mongoose');
 const {validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}} = require('../../mainroom.config');
+const {resolveObjectURL} = require('../aws/s3Utils');
 
 const ScheduledStreamSchema = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},
@@ -17,5 +18,12 @@ const ScheduledStreamSchema = new Schema({
 }, {
     timestamps: true
 });
+
+ScheduledStreamSchema.methods.getPrerecordedVideoFileURL = function () {
+    return resolveObjectURL({
+        bucket: this.prerecordedVideoFile.bucket,
+        key: this.prerecordedVideoFile.key
+    });
+};
 
 module.exports = ScheduledStreamSchema;

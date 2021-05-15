@@ -23,12 +23,14 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
 
     const scheduledStream = new ScheduledStream({
         user: sanitisedInput.userId,
+        eventStage: sanitisedInput.eventStageId,
         startTime: sanitisedInput.startTime,
         endTime: sanitisedInput.endTime,
         title: sanitisedInput.title,
         genre: sanitisedInput.genre,
         category: sanitisedInput.category,
-        tags: sanitisedInput.tags
+        tags: sanitisedInput.tags,
+        prerecordedVideoFile: sanitisedInput.prerecordedVideoFile // {bucket, key}
     });
     try {
         await scheduledStream.save();
