@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const {Event, RecordedStream, ScheduledStream} = require('../model/schemas');
+const {Event, RecordedStream, ScheduledStream, EventStage} = require('../model/schemas');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
 const axios = require('axios');
+const loginChecker = require('connect-ensure-login');
+const {validation: {streamSettings: {tagsMaxAmount}}} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/routes/events.js');
 
 router.get('/', (req, res, next) => {
@@ -40,6 +42,60 @@ router.get('/', (req, res, next) => {
             nextPage: result.nextPage
         });
     });
+});
+
+router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const sanitisedInput = sanitise(req.body);
+
+    if (sanitisedInput.userId !== req.user._id.toString()) {
+        return res.sendStatus(401);
+    }
+
+    if (sanitisedInput.tags.length > tagsMaxAmount) {
+        return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
+    }
+
+    const event = new Event({
+        eventName: sanitisedInput.eventName,
+        createdBy: sanitisedInput.userId,
+        startTime: sanitisedInput.startTime,
+        endTime: sanitisedInput.endTime,
+        tags: sanitisedInput.tags
+    });
+    try {
+        await event.save();
+    } catch (err) {
+        LOGGER.error('An error occurred when saving new Event: {}, Error: {}', JSON.stringify(event), err.stack);
+        next(err);
+    }
+
+    const stageIds = [];
+    for (const stageInfo of sanitisedInput.stages) {
+        const stage = new EventStage({
+            event: event._id,
+            stageName: stageInfo.stageName,
+            streamInfo: {
+                streamKey: EventStage.generateStreamKey()
+            }
+        });
+        try {
+            await stage.save();
+        } catch (err) {
+            LOGGER.error('An error occurred when saving new EventStage: {}, Error: {}', JSON.stringify(stage), err.stack);
+            next(err);
+        }
+
+        stageIds.push(stage._id);
+    }
+
+    try {
+        event.stages = stageIds;
+        await event.save();
+        res.sendStatus(200);
+    } catch (err) {
+        LOGGER.error('An error occurred when saving new Event: {}, Error: {}', JSON.stringify(event), err.stack);
+        next(err);
+    }
 });
 
 router.get('/:eventId', async (req, res, next) => {
