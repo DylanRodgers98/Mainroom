@@ -198,15 +198,18 @@ export default class Event extends React.Component {
             <Container fluid='lg'>
                 {getAlert(this)}
 
-                <Row>
-                    <Col>
-                        <img className='w-100' src={this.state.bannerPicURL}/>
-                    </Col>
-                </Row>
+                {!this.state.bannerPicURL ? undefined : (
+                    <Row>
+                        <Col>
+                            <img className='w-100' height={200}
+                                 src={this.state.bannerPicURL} alt={`${this.state.eventName} Banner Pic`}/>
+                        </Col>
+                    </Row>
+                )}
                 <Row>
                     <Col>
                         <h4>{this.state.eventName}</h4>
-                        <h6>Created by&nbsp;
+                        <h6>Hosted by&nbsp;
                             <Link to={`/user/${this.state.createdBy.username}`}>
                                 {this.state.createdBy.displayName || this.state.createdBy.username}
                             </Link>

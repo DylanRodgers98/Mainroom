@@ -24,10 +24,12 @@ const EventSchema = new Schema({
 });
 
 EventSchema.methods.getBannerPicURL = function () {
-    return resolveObjectURL({
-        bucket: this.bannerPic.bucket,
-        key: this.bannerPic.key
-    });
+    return !this.bannerPic || !this.bannerPic.bucket || !this.bannerPic.bucket
+        ? undefined
+        : resolveObjectURL({
+            bucket: this.bannerPic.bucket,
+            key: this.bannerPic.key
+        });
 };
 
 EventSchema.methods.getThumbnailPicURL = function () {
