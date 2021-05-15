@@ -232,32 +232,37 @@ export default class MainroomNavbar extends React.Component {
                 </NavbarBrand>
                 <NavbarToggler onClick={this.navbarToggle} />
                 <Collapse isOpen={this.state.navbarOpen} navbar className='pl-3'>
-                <Nav className='mr-auto' navbar>
-                    <NavItem>
-                        <input id='searchBox' className='form-control search-box' placeholder='Search...'
-                               onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
-                               value={this.state.searchText}/>
-                    </NavItem>
-                    <NavItem>
-                        <Button id='searchButton' className='form-control search-button' onClick={this.clearSearchBox}
-                                tag={Link} to={searchButtonLink}>
-                            <img src={SearchIcon} alt='Search icon' className='mb-1'/>
-                        </Button>
-                    </NavItem>
-                    <NavItem className='ml-md-2'>
-                        <Dropdown className='navbar-dropdown navbar-menu navbar-dropdown-no-bkg-on-hover text-center' nav inNavbar
-                            isOpen={this.state.genreDropdownOpen} toggle={this.genreDropdownToggle}>
-                            <DropdownToggle caret>Genre</DropdownToggle>
-                            <DropdownMenu>{this.state.genres}</DropdownMenu>
-                        </Dropdown>
-                    </NavItem>
-                    <NavItem>
-                        <Dropdown className='navbar-dropdown navbar-menu navbar-dropdown-no-bkg-on-hover text-center' nav inNavbar
-                                  isOpen={this.state.categoryDropdownOpen} toggle={this.categoryDropdownToggle}>
-                            <DropdownToggle caret>Category</DropdownToggle>
-                            <DropdownMenu>{this.state.categories}</DropdownMenu>
-                        </Dropdown>
-                    </NavItem>
+                    <Nav className='mr-auto' navbar>
+                        <NavItem>
+                            <input id='searchBox' className='form-control search-box' placeholder='Search...'
+                                   onChange={this.onSearchTextChange} onKeyDown={this.searchHandleKeyDown}
+                                   value={this.state.searchText}/>
+                        </NavItem>
+                        <NavItem>
+                            <Button id='searchButton' className='form-control search-button'
+                                    onClick={this.clearSearchBox} tag={Link} to={searchButtonLink}>
+                                <img src={SearchIcon} alt='Search icon' className='mb-1'/>
+                            </Button>
+                        </NavItem>
+                        <NavItem className='ml-md-2'>
+                            <Dropdown className='navbar-dropdown navbar-menu navbar-dropdown-no-bkg-on-hover text-center'
+                                      isOpen={this.state.genreDropdownOpen} toggle={this.genreDropdownToggle}
+                                      nav inNavbar>
+                                <DropdownToggle caret>Genre</DropdownToggle>
+                                <DropdownMenu>{this.state.genres}</DropdownMenu>
+                            </Dropdown>
+                        </NavItem>
+                        <NavItem>
+                            <Dropdown className='navbar-dropdown navbar-menu navbar-dropdown-no-bkg-on-hover text-center'
+                                      isOpen={this.state.categoryDropdownOpen} toggle={this.categoryDropdownToggle}
+                                      nav inNavbar>
+                                <DropdownToggle caret>Category</DropdownToggle>
+                                <DropdownMenu>{this.state.categories}</DropdownMenu>
+                            </Dropdown>
+                        </NavItem>
+                        <NavItem>
+                            <NavLink tag={Link} to={'/events'}>Events</NavLink>
+                        </NavItem>
                     </Nav>
                     {this.renderLogInOrProfileDropdown()}
                 </Collapse>

@@ -10,7 +10,7 @@ router.get('/', (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: 'eventName createdBy startTime endTime thumbnail.bucket thumbnail.key',
+        select: '_id eventName createdBy startTime endTime thumbnail.bucket thumbnail.key',
         populate: {
             path: 'createdBy',
             select: 'displayName username'
@@ -18,7 +18,9 @@ router.get('/', (req, res, next) => {
         sort: 'startTime'
     };
 
-    Event.paginate({endTime: {$gte: Date.now()}}, options, async (err, result) => {
+    const dateNow = Date.now();
+
+    Event.paginate({endTime: {$gte: dateNow}}, options, async (err, result) => {
         if (err) {
             LOGGER.error('An error occurred when finding Events: {}', err.stack);
             return next(err);
@@ -26,10 +28,12 @@ router.get('/', (req, res, next) => {
         res.json({
             events: result.docs.map(event => {
                 return {
+                    _id: event._id,
                     eventName: event.eventName,
                     createdBy: event.createdBy,
                     startTime: event.startTime,
                     endTime: event.endTime,
+                    isHappeningNow: event.startTime >= dateNow && dateNow <= event.endTime,
                     thumbnailURL: event.getThumbnailPicURL()
                 };
             }),
@@ -148,3 +152,5 @@ router.get('/:eventId/recorded-streams', async (req, res, next) => {
         }
     });
 });
+
+module.exports = router;
