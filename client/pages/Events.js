@@ -61,7 +61,7 @@ export default class Events extends React.Component {
                 <table>
                     <tbody>
                     <tr>
-                        <td valign='middle' className='w-100'>
+                        <td className='w-100'>
                             <h5 className='text-break'>
                                 <Link to={`/user/${event.createdBy.username}`}>
                                     {event.createdBy.username || event.createdBy.username}

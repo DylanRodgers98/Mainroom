@@ -92,35 +92,39 @@ export default class Event extends React.Component {
         const stages = this.state.stages.map((stage, index) => (
             <Col className='stream margin-bottom-thick' key={index}>
                 {!stage.isLive ? undefined : <span className='live-label'>LIVE</span>}
-                {!stage.isLive ? undefined :
-                    (<span className='view-count'>
+                {!stage.isLive ? undefined : (
+                    <span className='view-count'>
                         <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Viewers icon'/>
                         {shortenNumber(stage.streamInfo.viewCount)}
-                    </span>)
-                }
+                    </span>
+                )}
                 <Link to={stage.isLive ? `/stage/${stage._id}` : ''}>
                     <img className='w-100' src={stage.thumbnailURL} alt={`${stage.stageName} Stage Thumbnail`}/>
                 </Link>
                 <table>
                     <tbody>
                     <tr>
-                        <td valign='middle' className='w-100'>
+                        <td className='w-100'>
                             <h5>
                                 <Link to={stage.isLive ? `/stage/${stage._id}` : ''}>
                                     {stage.stageName}
                                 </Link>
-                                <span className='black-link'>
-                                    <Link to={stage.isLive ? `/stage/${stage._id}` : ''}>
-                                        {stage.streamInfo.title ? ` - ${stage.streamInfo.title}` : ''}
-                                    </Link>
-                                </span>
+                                {!stage.isLive ? undefined : (
+                                    <span className='black-link'>
+                                        <Link to={stage.isLive ? `/stage/${stage._id}` : ''}>
+                                            {stage.streamInfo.title ? ` - ${stage.streamInfo.title}` : ''}
+                                        </Link>
+                                    </span>
+                                )}
                             </h5>
-                            <h6>
-                                {displayGenreAndCategory({
-                                    genre: stage.streamInfo.genre,
-                                    category: stage.streamInfo.category
-                                })}
-                            </h6>
+                            {!stage.isLive ? undefined : (
+                                <h6>
+                                    {displayGenreAndCategory({
+                                        genre: stage.streamInfo.genre,
+                                        category: stage.streamInfo.category
+                                    })}
+                                </h6>
+                            )}
                         </td>
                     </tr>
                     </tbody>
