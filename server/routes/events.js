@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {Event, RecordedStream} = require('../model/schemas');
+const {Event, RecordedStream, ScheduledStream} = require('../model/schemas');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
 const axios = require('axios');
@@ -150,6 +150,73 @@ router.get('/:eventId/recorded-streams', async (req, res, next) => {
                 nextPage: result.nextPage
             });
         }
+    });
+});
+
+router.get('/:eventId/scheduled-streams', async (req, res, next) => {
+    const eventId = sanitise(req.params.eventId);
+
+    let event;
+    try {
+        event = await Event.findById(eventId)
+            .select('stages')
+            .populate({
+                path: 'stages',
+                select: '_id stageName'
+            })
+            .exec();
+    } catch (err) {
+        LOGGER.error('An error occurred when finding Event (_id: {}): {}', eventId, err.stack);
+        next(err);
+    }
+
+    if (!event.stages || !event.stages.length) {
+        return res.json({
+            scheduleGroups: [],
+            scheduleItems: []
+        });
+    }
+
+    const filter = {
+        eventStage: {$in: event.stages.map(stage => stage._id)},
+        startTime: {$lte: req.query.scheduleEndTime},
+        endTime: {$gte: req.query.scheduleStartTime}
+    };
+
+    let scheduledStreams;
+    try {
+        scheduledStreams = await ScheduledStream.find(filter)
+            .select('eventStage title startTime endTime genre category')
+            .populate({
+                path: 'eventStage',
+                select: '_id stageName'
+            })
+            .sort('startTime')
+            .exec();
+    } catch (err) {
+        LOGGER.error('An error occurred when finding scheduled streams for Event (_id: {}): {}', eventId, err.stack);
+        next(err);
+    }
+
+    res.json({
+        scheduleGroups: event.stages.map(stage => {
+            return {
+                id: stage._id,
+                title: stage.stageName
+            };
+        }),
+        scheduleItems: !scheduledStreams ? [] : scheduledStreams.map((scheduledStream, index) => {
+            return {
+                _id: scheduledStream._id,
+                id: index,
+                group: scheduledStream.eventStage._id,
+                title: scheduledStream.title || scheduledStream.eventStage.stageName,
+                start_time: scheduledStream.startTime,
+                end_time: scheduledStream.endTime,
+                genre: scheduledStream.genre,
+                category: scheduledStream.category
+            };
+        })
     });
 });
 

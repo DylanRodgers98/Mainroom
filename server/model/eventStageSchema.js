@@ -13,7 +13,6 @@ const EventStageSchema = new Schema({
         bucket: {type: String, default: defaultEventStageThumbnail.bucket},
         key: {type: String, default: defaultEventStageThumbnail.key}
     },
-    scheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}],
     streamInfo: {
         streamKey: {type: String, select: false},
         title: {type: String, maxlength: titleMaxLength},
