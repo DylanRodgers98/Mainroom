@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {ScheduledStream, User} = require('../model/schemas');
+const {ScheduledStream, User, EventStage} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
@@ -21,9 +21,23 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
     }
 
+    let eventStageId;
+    if (sanitisedInput.eventStageId) {
+        try {
+            const eventStage = await EventStage.findById(sanitisedInput.eventStageId).select('_id').exec();
+            if (!eventStage) {
+                return res.status(404).send(`Could not find EventStage with _id ${sanitisedInput.eventStageId}`);
+            }
+            eventStageId = eventStage._id;
+        } catch (err) {
+            LOGGER.error('An error occurred when trying to find EventStage (_id: {}): {}', sanitisedInput.eventStageId, err.stack);
+            return next(err);
+        }
+    }
+
     const scheduledStream = new ScheduledStream({
         user: sanitisedInput.userId,
-        eventStage: sanitisedInput.eventStageId,
+        eventStage: eventStageId,
         startTime: sanitisedInput.startTime,
         endTime: sanitisedInput.endTime,
         title: sanitisedInput.title,
