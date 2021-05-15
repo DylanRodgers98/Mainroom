@@ -12,7 +12,7 @@ import {
     Spinner
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
-import {headTitle, pagination, siteName, validation} from '../../mainroom.config';
+import {headTitle, pagination, siteName, validation, storage} from '../../mainroom.config';
 import {formatDateRange, timeSince} from '../utils/dateUtils';
 import {shortenNumber} from '../utils/numberUtils';
 import {
@@ -804,7 +804,7 @@ export default class UserProfile extends React.Component {
     saveNewProfilePic() {
         this.setState({showChangeProfilePicSpinner: true}, async () => {
             const data = new FormData();
-            data.append('profilePic', this.state.uploadedProfilePic);
+            data.append(storage.formDataKeys.profilePic, this.state.uploadedProfilePic);
 
             try {
                 await axios.put(`/api/users/${this.state.loggedInUserId}/profile-pic`, data, {

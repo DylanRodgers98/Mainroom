@@ -193,7 +193,7 @@ const s3UploadProfilePic = multer({
             cb(null, `${path}/${userId}/${Date.now()}.${extension}`);
         }
     })
-}).single('profilePic');
+}).single(config.storage.formDataKeys.profilePic);
 
 router.put('/:userId/profile-pic', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const userId = sanitise(req.params.userId);

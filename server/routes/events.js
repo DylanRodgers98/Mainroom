@@ -6,7 +6,7 @@ const escape = require('escape-html');
 const axios = require('axios');
 const loginChecker = require('connect-ensure-login');
 const {
-    storage,
+    storage: {s3, formDataKeys},
     validation: {
         event: {eventNameMaxLength, tagsMaxAmount},
         eventStage: {stageNameMaxLength}
@@ -17,6 +17,8 @@ const multerS3 = require('multer-s3');
 const S3V2ToV3Bridge = require('../aws/s3-v2-to-v3-bridge');
 const mime = require('mime-types');
 const LOGGER = require('../../logger')('./server/routes/events.js');
+
+const S3_V2_TO_V3_BRIDGE = new S3V2ToV3Bridge();
 
 router.get('/', (req, res, next) => {
     const options = {
@@ -92,7 +94,7 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
 
     if (sanitisedInput.hasBannerPic) {
         try {
-            event.bannerPic = await uploadPicToS3(event._id, 'bannerPic', req, res);
+            event.bannerPic = await uploadPicToS3(event._id, formDataKeys.events.bannerPic, req, res);
             await event.save();
         } catch (err) {
             LOGGER.error('An error occurred when saving banner pic for Event (_id: {}): {}, Error: {}',
@@ -103,7 +105,7 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
 
     if (sanitisedInput.hasThumbnail) {
         try {
-            event.thumbnail = await uploadPicToS3(event._id, 'eventThumbnail', req, res);
+            event.thumbnail = await uploadPicToS3(event._id, formDataKeys.events.thumbnail, req, res);
             await event.save();
         } catch (err) {
             LOGGER.error('An error occurred when saving thumbnail for Event (_id: {}): {}, Error: {}',
@@ -113,37 +115,38 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     }
 
     const stageIds = [];
-    for (const stageInfo of sanitisedInput.stages) {
-        if (stageInfo.stageName > stageNameMaxLength) {
-            return res.status(403).send(`Length of stage name '${escape(stageInfo.stageName)}' is greater than the maximum allowed length of ${titleMaxLength}`);
+    for (const stage of sanitisedInput.stages) {
+        if (stage.stageName > stageNameMaxLength) {
+            return res.status(403).send(`Length of stage name '${escape(stage.stageName)}' is greater than the maximum allowed length of ${titleMaxLength}`);
         }
 
-        const stage = new EventStage({
+        const eventStage = new EventStage({
             event: event._id,
-            stageName: stageInfo.stageName,
+            stageName: stage.stageName,
             streamInfo: {
                 streamKey: EventStage.generateStreamKey()
             }
         });
         try {
-            await stage.save();
+            await eventStage.save();
         } catch (err) {
-            LOGGER.error('An error occurred when saving new EventStage: {}, Error: {}', JSON.stringify(stage), err.stack);
+            LOGGER.error('An error occurred when saving new EventStage: {}, Error: {}', JSON.stringify(eventStage), err.stack);
             next(err);
         }
 
-        if (stageInfo.hasThumbnail) {
+        if (stage.hasThumbnail) {
             try {
-                stage.thumbnail = await uploadPicToS3(event._id, `${stageInfo.stageName}Thumbnail`, req, res);
-                await stage.save();
+                const formDataKey = `${stage.stageName}${formDataKeys.eventStages.thumbnailSuffix}`;
+                eventStage.thumbnail = await uploadPicToS3(event._id, formDataKey, req, res);
+                await eventStage.save();
             } catch (err) {
                 LOGGER.error('An error occurred when saving thumbnail for EventStage (_id: {}): {}, Error: {}',
-                    stage._id, err.stack);
+                    eventStage._id, err.stack);
                 return next(err);
             }
         }
 
-        stageIds.push(stage._id);
+        stageIds.push(eventStage._id);
     }
 
     try {
@@ -159,14 +162,14 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
 function uploadPicToS3(eventId, formDataKey, req, res) {
     const s3UploadPic = multer({
         storage: multerS3({
-            s3: new S3V2ToV3Bridge(),
-            bucket: storage.s3.staticContent.bucketName,
+            s3: S3_V2_TO_V3_BRIDGE,
+            bucket: s3.staticContent.bucketName,
             contentType: multerS3.AUTO_CONTENT_TYPE,
             metadata: (req, file, cb) => {
                 cb(null, undefined); // set metadata explicitly to undefined
             },
             key: (req, file, cb) => {
-                const path = storage.s3.staticContent.keyPrefixes.eventImages;
+                const path = s3.staticContent.keyPrefixes.eventImages;
                 const extension = mime.extension(file.mimetype);
                 cb(null, `${path}/${eventId}/${formDataKey}-${Date.now()}.${extension}`);
             }

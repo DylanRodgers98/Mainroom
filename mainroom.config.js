@@ -147,6 +147,16 @@ module.exports = {
             [RECORDED_STREAMS_BUCKET_NAME]: RECORDED_STREAMS_CLOUDFRONT_DOMAIN,
             recordedStreams: RECORDED_STREAMS_CLOUDFRONT_DOMAIN,
             liveStreams: 'd2367g9b1h656u.cloudfront.net'
+        },
+        formDataKeys: {
+            profilePic: 'profilePic',
+            events: {
+                bannerPic: 'bannerPic',
+                thumbnail: 'eventThumbnail'
+            },
+            eventStages: {
+                thumbnailSuffix: 'Thumbnail'
+            }
         }
     },
     defaultProfilePicURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/${DEFAULT_PROFILE_PIC_KEY}`,
