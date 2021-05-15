@@ -83,7 +83,7 @@ module.exports = {
             tagsMaxAmount: 8
         },
         event: {
-            eventNameMaxLength: 30,
+            eventNameMaxLength: 40,
             tagsMaxAmount: 8
         },
         eventStage: {

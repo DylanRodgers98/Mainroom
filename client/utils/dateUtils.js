@@ -61,3 +61,9 @@ export const formatDateRange = ({start, end}) => {
     const endFormatted = isSameDay(start, end) ? `-${formatTime(end)}` : ` - ${formatDate(end)}`;
     return `${startFormatted}${endFormatted}`;
 }
+
+export const isTimeBetween = ({time, start, end}) => {
+    const startTime = convertUTCToLocal(start);
+    const endTime = convertUTCToLocal(end);
+    return moment(time).isBetween(startTime, endTime, undefined, '[]');
+}

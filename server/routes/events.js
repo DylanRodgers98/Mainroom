@@ -32,9 +32,7 @@ router.get('/', (req, res, next) => {
         sort: 'startTime'
     };
 
-    const dateNow = Date.now();
-
-    Event.paginate({endTime: {$gte: dateNow}}, options, async (err, result) => {
+    Event.paginate({endTime: {$gte: Date.now()}}, options, async (err, result) => {
         if (err) {
             LOGGER.error('An error occurred when finding Events: {}', err.stack);
             return next(err);
@@ -47,7 +45,6 @@ router.get('/', (req, res, next) => {
                     createdBy: event.createdBy,
                     startTime: event.startTime,
                     endTime: event.endTime,
-                    isHappeningNow: event.startTime >= dateNow && dateNow <= event.endTime,
                     thumbnailURL: event.getThumbnailPicURL()
                 };
             }),
@@ -70,13 +67,15 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
     }
 
-    const stageNameEncountered = [];
-    sanitisedInput.stages.forEach(stage => {
-        if (stageNameEncountered[stage.stageName]) {
-            return res.status(403).send(`Duplicate stage names found. Names of stages must be unique.`);
-        }
-        stageNameEncountered[stage.stageName] = true;
-    });
+    if (sanitisedInput.stages && sanitisedInput.stages.length) {
+        const stageNameEncountered = [];
+        sanitisedInput.stages.forEach(stage => {
+            if (stageNameEncountered[stage.stageName]) {
+                return res.status(403).send(`Duplicate stage names found. Names of stages must be unique.`);
+            }
+            stageNameEncountered[stage.stageName] = true;
+        });
+    }
 
     const event = new Event({
         eventName: sanitisedInput.eventName,
@@ -115,44 +114,49 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     }
 
     const stageIds = [];
-    for (const stage of sanitisedInput.stages) {
-        if (stage.stageName > stageNameMaxLength) {
-            return res.status(403).send(`Length of stage name '${escape(stage.stageName)}' is greater than the maximum allowed length of ${titleMaxLength}`);
-        }
-
-        const eventStage = new EventStage({
-            event: event._id,
-            stageName: stage.stageName,
-            streamInfo: {
-                streamKey: EventStage.generateStreamKey()
+    if (sanitisedInput.stages && sanitisedInput.stages.length) {
+        for (const stage of sanitisedInput.stages) {
+            if (stage.stageName > stageNameMaxLength) {
+                return res.status(403).send(`Length of stage name '${escape(stage.stageName)}' is greater than the maximum allowed length of ${titleMaxLength}`);
             }
-        });
-        try {
-            await eventStage.save();
-        } catch (err) {
-            LOGGER.error('An error occurred when saving new EventStage: {}, Error: {}', JSON.stringify(eventStage), err.stack);
-            next(err);
-        }
 
-        if (stage.hasThumbnail) {
+            const eventStage = new EventStage({
+                event: event._id,
+                stageName: stage.stageName,
+                streamInfo: {
+                    streamKey: EventStage.generateStreamKey()
+                }
+            });
             try {
-                const formDataKey = `${stage.stageName}${formDataKeys.eventStages.thumbnailSuffix}`;
-                eventStage.thumbnail = await uploadPicToS3(event._id, formDataKey, req, res);
                 await eventStage.save();
             } catch (err) {
-                LOGGER.error('An error occurred when saving thumbnail for EventStage (_id: {}): {}, Error: {}',
-                    eventStage._id, err.stack);
-                return next(err);
+                LOGGER.error('An error occurred when saving new EventStage: {}, Error: {}',
+                    JSON.stringify(eventStage), err.stack);
+                next(err);
             }
-        }
 
-        stageIds.push(eventStage._id);
+            if (stage.hasThumbnail) {
+                try {
+                    const formDataKey = `${stage.stageName}${formDataKeys.eventStages.thumbnailSuffix}`;
+                    eventStage.thumbnail = await uploadPicToS3(event._id, formDataKey, req, res);
+                    await eventStage.save();
+                } catch (err) {
+                    LOGGER.error('An error occurred when saving thumbnail for EventStage (_id: {}): {}, Error: {}',
+                        eventStage._id, err.stack);
+                    return next(err);
+                }
+            }
+
+            stageIds.push(eventStage._id);
+        }
     }
 
     try {
         event.stages = stageIds;
         await event.save();
-        res.sendStatus(200);
+        res.json({
+            eventId: event._id
+        });
     } catch (err) {
         LOGGER.error('An error occurred when saving new Event: {}, Error: {}', JSON.stringify(event), err.stack);
         next(err);

@@ -210,10 +210,10 @@ export default class Event extends React.Component {
                         </Col>
                     </Row>
                 )}
-                <Row>
+                <Row className='mt-4'>
                     <Col>
                         <h4>{this.state.eventName}</h4>
-                        <h6>Hosted by&nbsp;
+                        <h6>Created by&nbsp;
                             <Link to={`/user/${this.state.createdBy.username}`}>
                                 {this.state.createdBy.displayName || this.state.createdBy.username}
                             </Link>
