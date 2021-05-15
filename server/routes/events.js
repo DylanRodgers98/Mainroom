@@ -10,15 +10,15 @@ router.get('/', (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: 'eventName createdBy thumbnail.bucket thumbnail.key',
+        select: 'eventName createdBy startTime endTime thumbnail.bucket thumbnail.key',
         populate: {
             path: 'createdBy',
             select: 'displayName username'
         },
-        sort: '-startTime'
+        sort: 'startTime'
     };
 
-    Event.paginate({}, options, async (err, result) => {
+    Event.paginate({endTime: {$gte: Date.now()}}, options, async (err, result) => {
         if (err) {
             LOGGER.error('An error occurred when finding Events: {}', err.stack);
             return next(err);
@@ -28,6 +28,8 @@ router.get('/', (req, res, next) => {
                 return {
                     eventName: event.eventName,
                     createdBy: event.createdBy,
+                    startTime: event.startTime,
+                    endTime: event.endTime,
                     thumbnailURL: event.getThumbnailPicURL()
                 };
             }),
