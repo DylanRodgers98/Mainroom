@@ -80,6 +80,13 @@ module.exports = {
         streamSettings: {
             titleMaxLength: 60,
             tagsMaxAmount: 8
+        },
+        event: {
+            eventNameMaxLength: 30,
+            tagsMaxAmount: 8
+        },
+        eventStage: {
+            stageNameMaxLength: 30,
         }
     },
     cronTime: {

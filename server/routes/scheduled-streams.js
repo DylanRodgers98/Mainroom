@@ -3,6 +3,7 @@ const router = express.Router();
 const {ScheduledStream, User} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
+const escape = require('escape-html');
 const {validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/routes/scheduled-streams.js');
 
@@ -14,7 +15,7 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     }
 
     if (sanitisedInput.title > titleMaxLength) {
-        return res.status(403).send(`Length of title was greater than the maximum allowed length of ${titleMaxLength}`);
+        return res.status(403).send(`Length of title '${escape(sanitisedInput.title)}' is greater than the maximum allowed length of ${titleMaxLength}`);
     }
     if (sanitisedInput.tags.length > tagsMaxAmount) {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);

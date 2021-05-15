@@ -5,7 +5,7 @@ const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
 const axios = require('axios');
 const loginChecker = require('connect-ensure-login');
-const {validation: {streamSettings: {tagsMaxAmount}}} = require('../../mainroom.config');
+const {validation: {event: {eventNameMaxLength, tagsMaxAmount}, eventStage: {stageNameMaxLength}}} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/routes/events.js');
 
 router.get('/', (req, res, next) => {
@@ -51,6 +51,9 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         return res.sendStatus(401);
     }
 
+    if (sanitisedInput.eventName > eventNameMaxLength) {
+        return res.status(403).send(`Length of event name '${escape(sanitisedInput.eventName)}' is greater than the maximum allowed length of ${titleMaxLength}`);
+    }
     if (sanitisedInput.tags.length > tagsMaxAmount) {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
     }
@@ -71,6 +74,10 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
 
     const stageIds = [];
     for (const stageInfo of sanitisedInput.stages) {
+        if (stageInfo.stageName > stageNameMaxLength) {
+            return res.status(403).send(`Length of stage name '${escape(stageInfo.stageName)}' is greater than the maximum allowed length of ${titleMaxLength}`);
+        }
+
         const stage = new EventStage({
             event: event._id,
             stageName: stageInfo.stageName,
