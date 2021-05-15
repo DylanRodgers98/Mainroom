@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const loginChecker = require('connect-ensure-login');
-const {siteName, brandingURL, faviconURL} = require('../../mainroom.config');
+const {siteName, brandingURL, faviconURL, validation: {usernameMaxLength, password}} = require('../../mainroom.config');
 
 router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
     res.render('register', {
@@ -10,6 +10,9 @@ router.get('/', loginChecker.ensureLoggedOut(), (req, res) => {
         title: `Register - ${siteName}`,
         brandingURL,
         faviconURL,
+        usernameMaxLength,
+        passwordMinLength: password.minLength,
+        passwordMaxLength: password.maxLength,
         errors: {
             username: req.flash('username'),
             email: req.flash('email'),

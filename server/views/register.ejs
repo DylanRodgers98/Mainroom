@@ -13,7 +13,8 @@
             <form action="/register" method="post">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input id="username" type="text" name="username" class="form-control" required tabindex="1">
+                    <input id="username" type="text" name="username" class="form-control"
+                           maxlength="<%= usernameMaxLength %>" required tabindex="1">
                     <% if (errors.username.length) { %>
                         <small class="form-text text-danger"><%= errors.username %></small>
                     <% } %>
@@ -29,7 +30,8 @@
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input id="password" type="password" name="password" class="form-control" required tabindex="3">
+                    <input id="password" type="password" name="password" class="form-control" required tabindex="3"
+                           minlength="<%= passwordMinLength %>" maxlength="<%= passwordMaxLength %>">
                     <% if (errors.password.length) { %>
                         <% errors.password.forEach(error => { %>
                             <small class="d-block text-danger"><%= error %></small>
@@ -40,6 +42,7 @@
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
                     <input id="confirmPassword" type="password" name="confirmPassword"
+                           minlength="<%= passwordMinLength %>" maxlength="<%= passwordMaxLength %>"
                            class="form-control" required tabindex="4">
                     <% if (errors.confirmPassword.length) { %>
                         <small class="form-text text-danger"><%= errors.confirmPassword %></small>

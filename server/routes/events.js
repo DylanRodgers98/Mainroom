@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {Event, RecordedStream, ScheduledStream, EventStage} = require('../model/schemas');
+const {Event, EventStage, RecordedStream, ScheduledStream} = require('../model/schemas');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
 const axios = require('axios');

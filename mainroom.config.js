@@ -62,6 +62,7 @@ module.exports = {
         }
     },
     validation: {
+        usernameMaxLength: 30,
         password: {
             minLength: 8,
             maxLength: 64,
@@ -201,7 +202,8 @@ module.exports = {
                 'Trance',
                 'Hardcore/Gabber',
                 'Hardtek/Psytrance',
-                'Breakbeat'
+                'Breakbeat',
+                'Multi-genre'
             ].sort(),
             'Other'
         ],

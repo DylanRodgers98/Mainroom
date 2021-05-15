@@ -4,7 +4,7 @@ const {User} = require('../model/schemas');
 const {validatePassword, getInvalidPasswordMessage} = require('./passwordValidator');
 const mongoose = require('mongoose');
 const sanitise = require('mongo-sanitize');
-const {email} = require('../../mainroom.config');
+const {email, validation: {usernameMaxLength}} = require('../../mainroom.config');
 const {sendWelcomeEmail} = require('../aws/sesEmailSender');
 const LOGGER = require('../../logger')('./server/passport.js');
 
@@ -35,6 +35,11 @@ const registerOptions = {
 };
 
 passport.use('localRegister', new Strategy(registerOptions, async (req, emailAddress, password, done) => {
+    if (req.body.username > usernameMaxLength) {
+        req.flash('username', `Username must have a maximum of ${usernameMaxLength} characters`);
+        return done(null, false);
+    }
+
     const username = sanitise(req.body.username).toLowerCase();
     const emailLowerCase = emailAddress.toLowerCase();
 
@@ -66,7 +71,7 @@ passport.use('localRegister', new Strategy(registerOptions, async (req, emailAdd
 
     const newUser = new User({
         _id: new mongoose.Types.ObjectId(),
-        username: username,
+        username,
         email: emailLowerCase,
         password: User.generateHash(password),
         streamInfo: {
@@ -98,7 +103,8 @@ passport.use('localLogin', new Strategy(loginOptions, async (req, usernameOrEmai
             .exec();
 
         if (!(user && user.checkPassword(password))) {
-            return done(null, false, req.flash('login', 'Incorrect username/email or password'));
+            req.flash('login', 'Incorrect username/email or password')
+            return done(null, false);
         }
         done(null, user);
     } catch (err) {
