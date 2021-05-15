@@ -1,10 +1,10 @@
 import React from 'react';
 import {pagination, siteName} from '../../mainroom.config';
 import axios from 'axios';
-import {displayErrorMessage, getAlert, LoadingSpinner} from "../utils/displayUtils";
-import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from "reactstrap";
-import {Link} from "react-router-dom";
-import {formatDateRange} from "../utils/dateUtils";
+import {displayErrorMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
+import {Button, Col, Container, Row, Spinner} from 'reactstrap';
+import {Link} from 'react-router-dom';
+import {formatDateRange} from '../utils/dateUtils';
 
 const STARTING_PAGE = 1;
 

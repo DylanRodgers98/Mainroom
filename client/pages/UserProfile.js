@@ -244,7 +244,7 @@ export default class UserProfile extends React.Component {
         }
     }
 
-    getRecordedStreams() {
+    async getRecordedStreams() {
         this.setState({showLoadMoreSpinner: true}, async () => {
             try {
                 const res = await axios.get(`/api/recorded-streams`, {
@@ -489,7 +489,7 @@ export default class UserProfile extends React.Component {
                     Manage Recorded Streams
                 </Button>
             </div>
-        )
+        );
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>

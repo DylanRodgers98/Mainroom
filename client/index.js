@@ -13,6 +13,7 @@ const Home = lazy(() => import('./pages/Home'));
 const LiveStreamsByGenre = lazy(() => import('./pages/LiveStreamsByGenre'));
 const LiveStreamsByCategory = lazy(() => import('./pages/LiveStreamsByCategory'));
 const Events = lazy(() => import('./pages/Events'));
+const Event = lazy(() => import('./pages/Event'));
 const Search = lazy(() => import('./pages/Search'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const Subscribers = lazy(() => import('./pages/Subscribers'));
@@ -38,6 +39,7 @@ if (document.getElementById('root')) {
                             <Route exact path='/category/:category' render={props => <LiveStreamsByCategory {...props} />}/>
                             <Route exact path='/search/:query' render={props => <Search {...props} />}/>
                             <Route exact path='/events' render={() => <Events />}/>
+                            <Route exact path='/event/:eventId' render={(props) => <Event {...props} />}/>
                             <Route exact path='/user/:username' render={props => <UserProfile {...props} />}/>
                             <Route exact path='/user/:username/subscribers' render={props => <Subscribers {...props} />}/>
                             <Route exact path='/user/:username/subscriptions' render={props => <Subscriptions {...props} />}/>
