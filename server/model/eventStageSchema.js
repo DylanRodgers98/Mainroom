@@ -1,14 +1,15 @@
 const {Schema} = require('mongoose');
 const {
+    defaultEventStageName,
     storage: {s3: {defaultEventStageSplashThumbnail}},
-    validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}
+    validation: {streamSettings: {titleMaxLength, tagsMaxAmount}, eventStage: {stageNameMaxLength}}
 } = require('../../mainroom.config');
 const nanoid = require('nanoid');
 const {resolveObjectURL} = require('../aws/s3Utils');
 
 const EventStageSchema = new Schema({
     event: {type: Schema.Types.ObjectId, ref: 'Event'},
-    stageName: String,
+    stageName: {type: String, default: defaultEventStageName, maxlength: stageNameMaxLength},
     splashThumbnail: {
         bucket: {type: String, default: defaultEventStageSplashThumbnail.bucket},
         key: {type: String, default: defaultEventStageSplashThumbnail.key}

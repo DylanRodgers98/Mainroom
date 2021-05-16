@@ -1,8 +1,9 @@
 import React, {Suspense, lazy} from 'react';
-import {dateFormat, pagination, siteName, storage, validation} from '../../mainroom.config';
+import {dateFormat, pagination, siteName, storage, validation, defaultEventStageName} from '../../mainroom.config';
 import axios from 'axios';
 import {displayErrorMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {
+    Alert,
     Button,
     Col,
     Container,
@@ -52,7 +53,7 @@ export default class Events extends React.Component {
             eventEndTime: moment().add(2, 'hour'),
             eventTags: [],
             stages: [{
-                stageName: 'Main Stage',
+                stageName: defaultEventStageName,
                 uploadedSplashThumbnail: undefined
             }],
             uploadedBannerImage: undefined,
@@ -62,6 +63,7 @@ export default class Events extends React.Component {
             showLoadMoreSpinner: false,
             showCreateEventSpinnerAndProgress: false,
             createEventProgress: 0,
+            createEventErrorMessage: '',
             alertText: '',
             alertColor: ''
         }
@@ -182,11 +184,14 @@ export default class Events extends React.Component {
 
     setStageName(e, index) {
         const stages = this.state.stages;
-        stages[index].title = event.target.value;
+        stages[index].stageName = event.target.value;
         this.setState({stages});
     }
 
     addStage() {
+        if (this.state.stages.length === validation.event.stagesMaxAmount) {
+            return;
+        }
         this.setState({
             stages: [...this.state.stages, {
                 stageName: '',
@@ -210,35 +215,47 @@ export default class Events extends React.Component {
     createEvent() {
         this.setState({
             showCreateEventSpinnerAndProgress: true,
-            createEventProgress: 0
+            createEventProgress: 0,
+            createEventErrorMessage: ''
         }, async () => {
             try {
-                const {data} = await axios.post('/api/events', {
-                    userId: this.state.loggedInUserId,
-                    eventName: this.state.eventName,
-                    startTime: convertLocalToUTC(this.state.eventStartTime),
-                    endTime: convertLocalToUTC(this.state.eventEndTime),
-                    tags: this.state.eventTags,
-                    stages: this.state.stages.map(stage => {
-                        return {stageName: stage.stageName};
-                    })
-                });
+                let res;
+                try {
+                    res = await axios.post('/api/events', {
+                        userId: this.state.loggedInUserId,
+                        eventName: this.state.eventName,
+                        startTime: convertLocalToUTC(this.state.eventStartTime),
+                        endTime: convertLocalToUTC(this.state.eventEndTime),
+                        tags: this.state.eventTags,
+                        stages: this.state.stages.map(stage => {
+                            return {stageName: stage.stageName};
+                        })
+                    });
+                } catch (err) {
+                    if (err.response.status === 403) {
+                        return this.setState({
+                            showCreateEventSpinnerAndProgress: false,
+                            createEventProgress: 0,
+                            createEventErrorMessage: err.response.data
+                        });
+                    }
+                    throw err;
+                }
 
                 if (this.state.uploadedBannerImage && this.state.uploadedEventThumbnail) {
                     this.setState({createEventProgress: 25});
-                } else if (this.state.uploadedBannerImage && !this.state.uploadedEventThumbnail) {
-                    this.setState({createEventProgress: 33});
-                } else if (!this.state.uploadedBannerImage && this.state.uploadedEventThumbnail) {
+                } else if ((this.state.uploadedBannerImage && !this.state.uploadedEventThumbnail)
+                    || (!this.state.uploadedBannerImage && this.state.uploadedEventThumbnail)) {
                     this.setState({createEventProgress: 33});
                 } else {
                     this.setState({createEventProgress: 50});
                 }
 
                 if (this.state.uploadedBannerImage) {
-                    const formData = new FormData();
-                    formData.set(storage.formDataKeys.event.bannerPic, this.state.uploadedBannerImage);
+                    const data = new FormData();
+                    data.set(storage.formDataKeys.event.bannerPic, this.state.uploadedBannerImage);
 
-                    await axios.patch(`/api/events/${data.eventId}/banner-pic`, formData, {
+                    await axios.patch(`/api/events/${res.data.eventId}/banner-pic`, data, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
@@ -250,10 +267,10 @@ export default class Events extends React.Component {
                 }
 
                 if (this.state.uploadedEventThumbnail) {
-                    const formData = new FormData();
-                    formData.set(storage.formDataKeys.event.thumbnail, this.state.uploadedEventThumbnail);
+                    const data = new FormData();
+                    data.set(storage.formDataKeys.event.thumbnail, this.state.uploadedEventThumbnail);
 
-                    await axios.patch(`/api/events/${data.eventId}/thumbnail`, formData, {
+                    await axios.patch(`/api/events/${res.data.eventId}/thumbnail`, data, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
@@ -269,12 +286,12 @@ export default class Events extends React.Component {
                 for (let i = 0; i < this.state.stages.length; i++) {
                     const uploadedStageSplashThumbnail = this.state.stages[i].uploadedSplashThumbnail;
                     if (uploadedStageSplashThumbnail) {
-                        const eventStageId = data.eventStageIds[i];
+                        const eventStageId = res.data.eventStageIds[i];
 
-                        const formData = new FormData();
-                        formData.set(storage.formDataKeys.eventStage.splashThumbnail, uploadedStageSplashThumbnail);
+                        const data = new FormData();
+                        data.set(storage.formDataKeys.eventStage.splashThumbnail, uploadedStageSplashThumbnail);
 
-                        await axios.patch(`/api/events/${data.eventId}/stage/${eventStageId}/splash-thumbnail`, formData, {
+                        await axios.patch(`/api/events/${res.data.eventId}/stage/${eventStageId}/splash-thumbnail`, data, {
                             headers: {
                                 'Content-Type': 'multipart/form-data'
                             }
@@ -284,7 +301,7 @@ export default class Events extends React.Component {
                     this.setState({createEventProgress: this.state.createEventProgress + percentPerStage});
                 }
 
-                window.location.href = `/event/${data.eventId}`;
+                window.location.href = `/event/${res.data.eventId}`;
             } catch (err) {
                 displayErrorMessage(this, `An error occurred when creating event. Please try again later. (${err})`);
                 this.toggleCreateEvent();
@@ -322,7 +339,7 @@ export default class Events extends React.Component {
                                            withPreview={true} singleImage={true} withIcon={false}/>
                         </Suspense>
                     </details>
-                    <hr className='my-2'/>
+                    {index === validation.event.stagesMaxAmount - 1 ? undefined : <hr className='my-2'/>}
                 </Col>
             </Row>
         ));
@@ -401,17 +418,22 @@ export default class Events extends React.Component {
                     <hr/>
                     <Container fluid className='remove-padding-lr'>
                         {this.renderCreateStages()}
-                        <Row className='mt-2'>
-                            <Col xs='12'>
-                                <Button className='btn-dark' size='sm' onClick={this.addStage}>
-                                    <img src={AddIcon} className='mr-1' alt='Add Stage icon'/>
-                                    Add Stage
-                                </Button>
-                            </Col>
-                        </Row>
+                        {this.state.stages.length === validation.event.stagesMaxAmount ? undefined : (
+                            <Row className='mt-2'>
+                                <Col xs='12'>
+                                    <Button className='btn-dark' size='sm' onClick={this.addStage}>
+                                        <img src={AddIcon} className='mr-1' alt='Add Stage icon'/>
+                                        Add Stage
+                                    </Button>
+                                </Col>
+                            </Row>
+                        )}
                     </Container>
                     {!this.state.showCreateEventSpinnerAndProgress ? undefined :
                         <Progress className='mt-2' value={this.state.createEventProgress} />}
+                    <Alert className='mt-4' isOpen={!!this.state.createEventErrorMessage} color='danger'>
+                        {this.state.createEventErrorMessage}
+                    </Alert>
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.createEvent}>

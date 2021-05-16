@@ -10,7 +10,7 @@ const {
     storage: {s3, formDataKeys},
     validation: {
         event: {eventNameMaxLength, tagsMaxAmount},
-        eventStage: {stageNameMaxLength}
+        eventStage: {stageNameMaxLength, stagesMaxAmount}
     }
 } = require('../../mainroom.config');
 const multer = require('multer');
@@ -62,15 +62,24 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         return res.sendStatus(401);
     }
 
+    if (!sanitisedInput.eventName.length) {
+        return res.status(403).send('Event must have a name');
+    }
     if (sanitisedInput.eventName > eventNameMaxLength) {
         return res.status(403).send(`Length of event name '${escape(sanitisedInput.eventName)}' is greater than the maximum allowed length of ${eventNameMaxLength}`);
     }
     if (sanitisedInput.tags.length > tagsMaxAmount) {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
     }
+    if (sanitisedInput.stages.length > stagesMaxAmount) {
+        return res.status(403).send(`Number of stages was greater than the maximum allowed amount of ${stagesMaxAmount}`);
+    }
     if (sanitisedInput.stages && sanitisedInput.stages.length) {
         const stageNameEncountered = [];
-        sanitisedInput.stages.forEach(stage => {
+        for (const stage of sanitisedInput.stages) {
+            if (!stage.stageName) {
+                return res.status(403).send('All stages must have a name');
+            }
             if (stage.stageName > stageNameMaxLength) {
                 return res.status(403).send(`Length of stage name '${escape(stage.stageName)}' is greater than the maximum allowed length of ${stageNameMaxLength}`);
             }
@@ -78,7 +87,7 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
                 return res.status(403).send(`Duplicate stage names found. Names of stages must be unique.`);
             }
             stageNameEncountered[stage.stageName] = true;
-        });
+        }
     }
 
     const event = new Event({

@@ -1,13 +1,13 @@
 const {Schema} = require('mongoose');
 const {
     storage: {s3: {defaultEventThumbnail}},
-    validation: {streamSettings: {tagsMaxAmount}}
+    validation: {event: {eventNameMaxLength, stagesMaxAmount, tagsMaxAmount}}
 } = require('../../mainroom.config');
 const {resolveObjectURL} = require('../aws/s3Utils');
 const mongoosePaginate = require('mongoose-paginate-v2');
 
 const EventSchema = new Schema({
-    eventName: String,
+    eventName: {type: String, maxlength: eventNameMaxLength},
     createdBy: {type: Schema.Types.ObjectId, ref: 'User'},
     startTime: Date,
     endTime: Date,
@@ -19,7 +19,7 @@ const EventSchema = new Schema({
         bucket: {type: String, default: defaultEventThumbnail.bucket},
         key: {type: String, default: defaultEventThumbnail.key}
     },
-    stages: [{type: Schema.Types.ObjectId, ref: 'EventStage'}],
+    stages: {type: [{type: Schema.Types.ObjectId, ref: 'EventStage'}], validate: stages => stages.length <= stagesMaxAmount},
     tags: {type: [String], validate: tags => tags.length <= tagsMaxAmount}
 });
 

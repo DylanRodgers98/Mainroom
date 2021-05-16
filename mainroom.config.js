@@ -84,10 +84,11 @@ module.exports = {
         },
         event: {
             eventNameMaxLength: 40,
-            tagsMaxAmount: 8
+            tagsMaxAmount: 8,
+            stagesMaxAmount: 6
         },
         eventStage: {
-            stageNameMaxLength: 30,
+            stageNameMaxLength: 30
         }
     },
     cronTime: {
@@ -162,6 +163,7 @@ module.exports = {
     },
     defaultProfilePicURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/${DEFAULT_PROFILE_PIC_KEY}`,
     defaultThumbnailURL: `https://${STATIC_CONTENT_CLOUDFRONT_DOMAIN}/${DEFAULT_STREAM_THUMBNAIL_KEY}`,
+    defaultEventStageName: 'Main Stage',
     pagination: {
         small: 6,
         large: 12
