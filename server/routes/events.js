@@ -149,13 +149,23 @@ router.patch('/:eventId/bannerPic', loginChecker.ensureLoggedIn(), async (req, r
 
     let event;
     try {
-        event = await Event.findById(eventId).select('_id').exec();
+        event = await Event.findById(eventId)
+            .select('_id createdBy')
+            .populate({
+                path: 'createdBy',
+                select: '_id'
+            })
+            .exec();
         if (!event) {
             return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
         }
     } catch (err) {
         LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
         return next(err);
+    }
+
+    if (event.createdBy._id !== req.user._id) {
+        return res.sendStatus(401);
     }
 
     s3UploadBannerPic(req, res, async err => {
@@ -202,13 +212,22 @@ router.patch('/:eventId/thumbnailPic', loginChecker.ensureLoggedIn(), async (req
 
     let event;
     try {
-        event = await Event.findById(eventId).select('_id').exec();
+        event = await Event.findById(eventId)
+            .select('_id createdBy')
+            .populate({
+                path: 'createdBy',
+                select: '_id'
+            }).exec();
         if (!event) {
             return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
         }
     } catch (err) {
         LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
         return next(err);
+    }
+
+    if (event.createdBy._id !== req.user._id) {
+        return res.sendStatus(401);
     }
 
     s3UploadEventThumbnail(req, res, async err => {
@@ -256,13 +275,26 @@ router.patch('/:eventId/stage/:eventStageId/thumbnail', loginChecker.ensureLogge
 
     let eventStage;
     try {
-        eventStage = await EventStage.findById(eventStageId).select('_id').exec();
+        eventStage = await EventStage.findById(eventStageId)
+            .select('_id event')
+            .populate({
+                path: 'event',
+                populate: {
+                    path: 'createdBy',
+                    select: '_id'
+                }
+            })
+            .exec();
         if (!eventStage) {
             return res.status(404).send(`EventStage (_id: ${escape(eventStageId)}) not found`);
         }
     } catch (err) {
         LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
         return next(err);
+    }
+
+    if (eventStage.event.createdBy._id !== req.user._id) {
+        return res.sendStatus(401);
     }
 
     s3UploadEventStageThumbnail(req, res, async err => {
