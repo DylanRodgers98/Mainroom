@@ -822,7 +822,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderChangeProfilePic() {
-        return (
+        return !this.state.changeProfilePicOpen ? undefined : (
             <Modal isOpen={this.state.changeProfilePicOpen} toggle={this.changeProfilePicToggle} centered={true}>
                 <ModalHeader toggle={this.changeProfilePicToggle}>Change Profile Picture</ModalHeader>
                 <ModalBody>

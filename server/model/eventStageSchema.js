@@ -1,6 +1,6 @@
 const {Schema} = require('mongoose');
 const {
-    storage: {s3: {defaultEventStageThumbnail}},
+    storage: {s3: {defaultEventStageSplashThumbnail}},
     validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}
 } = require('../../mainroom.config');
 const nanoid = require('nanoid');
@@ -9,9 +9,9 @@ const {resolveObjectURL} = require('../aws/s3Utils');
 const EventStageSchema = new Schema({
     event: {type: Schema.Types.ObjectId, ref: 'Event'},
     stageName: String,
-    thumbnailPic: {
-        bucket: {type: String, default: defaultEventStageThumbnail.bucket},
-        key: {type: String, default: defaultEventStageThumbnail.key}
+    splashThumbnail: {
+        bucket: {type: String, default: defaultEventStageSplashThumbnail.bucket},
+        key: {type: String, default: defaultEventStageSplashThumbnail.key}
     },
     streamInfo: {
         streamKey: {type: String, select: false},
@@ -27,10 +27,10 @@ const EventStageSchema = new Schema({
 
 EventStageSchema.statics.generateStreamKey = nanoid;
 
-EventStageSchema.methods.getThumbnailPicURL = function () {
+EventStageSchema.methods.getSplashThumbnailURL = function () {
     return resolveObjectURL({
-        bucket: this.thumbnailPic.bucket,
-        key: this.thumbnailPic.key
+        bucket: this.splashThumbnail.bucket,
+        key: this.splashThumbnail.key
     });
 };
 

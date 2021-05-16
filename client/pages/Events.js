@@ -1,5 +1,5 @@
-import React from 'react';
-import {dateFormat, pagination, siteName, validation} from '../../mainroom.config';
+import React, {Suspense, lazy} from 'react';
+import {dateFormat, pagination, siteName, storage, validation} from '../../mainroom.config';
 import axios from 'axios';
 import {displayErrorMessage, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {
@@ -20,6 +20,8 @@ import PlusIcon from "../icons/plus-white.svg";
 import DateTimeRangeContainer from "react-advanced-datetimerange-picker";
 import moment from "moment";
 
+const ImageUploader = lazy(() => import('react-images-upload'));
+
 const STARTING_PAGE = 1;
 
 export default class Events extends React.Component {
@@ -27,11 +29,13 @@ export default class Events extends React.Component {
     constructor(props) {
         super(props);
 
-        this.createEventToggle = this.createEventToggle.bind(this);
+        this.toggleCreateEvent = this.toggleCreateEvent.bind(this);
         this.setEventName = this.setEventName.bind(this);
         this.eventApplyDate = this.eventApplyDate.bind(this);
         this.setTags = this.setTags.bind(this);
         this.createEvent = this.createEvent.bind(this);
+        this.onBannerImageUpload = this.onBannerImageUpload.bind(this);
+        this.onEventThumbnailUpload = this.onEventThumbnailUpload.bind(this);
 
         this.state = {
             events: [],
@@ -41,6 +45,8 @@ export default class Events extends React.Component {
             eventStartTime: moment().add(1, 'hour'),
             eventEndTime: moment().add(2, 'hour'),
             eventTags: [],
+            uploadedBannerImage: undefined,
+            uploadedEventThumbnail: undefined,
             nextPage: STARTING_PAGE,
             showLoadMoreButton: false,
             showLoadMoreSpinner: false,
@@ -88,7 +94,7 @@ export default class Events extends React.Component {
         }
     }
 
-    createEventToggle() {
+    toggleCreateEvent() {
         if (!this.state.loggedInUserId) {
             window.location.href = `/login?redirectTo=${window.location.pathname}`;
         } else {
@@ -151,42 +157,77 @@ export default class Events extends React.Component {
         });
     }
 
+    onBannerImageUpload(pictureFiles) {
+        this.setState({
+            uploadedBannerImage: pictureFiles[0]
+        });
+    }
+
+    onEventThumbnailUpload(pictureFiles) {
+        this.setState({
+            uploadedEventThumbnail: pictureFiles[0]
+        });
+    }
+
     createEvent() {
         this.setState({showCreateEventSpinner: true}, async () => {
             try {
-                const res = await axios.post('/api/events', {
+                const {data: {eventId}} = await axios.post('/api/events', {
                     userId: this.state.loggedInUserId,
                     eventName: this.state.eventName,
                     startTime: convertLocalToUTC(this.state.eventStartTime),
                     endTime: convertLocalToUTC(this.state.eventEndTime),
                     tags: this.state.eventTags
                 });
-                window.location.href = `/event/${res.data.eventId}`;
+
+                if (this.state.uploadedBannerImage) {
+                    const data = new FormData();
+                    data.set(storage.formDataKeys.event.bannerPic, this.state.uploadedBannerImage);
+
+                    await axios.patch(`/api/events/${eventId}/banner-pic`, data, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+                }
+
+                if (this.state.uploadedEventThumbnail) {
+                    const data = new FormData();
+                    data.set(storage.formDataKeys.event.thumbnail, this.state.uploadedEventThumbnail);
+
+                    await axios.patch(`/api/events/${eventId}/thumbnail`, data, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+                }
+
+                window.location.href = `/event/${eventId}`;
             } catch (err) {
                 displayErrorMessage(this, `An error occurred when creating event. Please try again later. (${err})`);
-                this.createEventToggle();
+                this.toggleCreateEvent();
                 this.setState({showCreateEventSpinner: false});
             }
         });
     }
 
     renderCreateEvent() {
-        return (
-            <Modal isOpen={this.state.createEventOpen} toggle={this.createEventToggle} centered={true}>
-                <ModalHeader toggle={this.createEventToggle}>
+        return !this.state.createEventOpen ? undefined : (
+            <Modal isOpen={this.state.createEventOpen} toggle={this.toggleCreateEvent} centered={true}>
+                <ModalHeader toggle={this.toggleCreateEvent}>
                     Create an Event
                 </ModalHeader>
                 <ModalBody>
                     <Container fluid className='remove-padding-lr'>
                         <Row>
-                            <Col className='mt-2' xs='12'>
+                            <Col xs='12'>
                                 <h5>Event Name</h5>
                             </Col>
                             <Col xs='12'>
                                 <input className='w-100 rounded-border' type='text' value={this.state.eventName}
                                        onChange={this.setEventName} maxLength={validation.event.eventNameMaxLength} />
                             </Col>
-                            <Col xs='12'>
+                            <Col className='mt-2' xs='12'>
                                 <h5>Date & Time</h5>
                             </Col>
                             <Col xs='12'>
@@ -216,6 +257,26 @@ export default class Events extends React.Component {
                             </Col>
                             <Col xs='12'>
                                 <i>Up to {validation.event.tagsMaxAmount} comma-separated tags, no spaces</i>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <details>
+                                    <summary>Banner Image</summary>
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <ImageUploader buttonText='Choose Banner Image' label='Maximum file size: 2MB'
+                                                       maxFileSize={2 * 1024 * 1024} onChange={this.onBannerImageUpload}
+                                                       withPreview={true} singleImage={true} withIcon={false}/>
+                                    </Suspense>
+                                </details>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <details>
+                                    <summary>Thumbnail</summary>
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <ImageUploader buttonText='Choose Thumbnail' label='Maximum file size: 2MB'
+                                                       maxFileSize={2 * 1024 * 1024} onChange={this.onEventThumbnailUpload}
+                                                       withPreview={true} singleImage={true} withIcon={false}/>
+                                    </Suspense>
+                                </details>
                             </Col>
                         </Row>
                     </Container>
@@ -297,12 +358,12 @@ export default class Events extends React.Component {
 
         return (
             <React.Fragment>
-                <Container fluid='lg' className='mt-5'>
+                <Container fluid='lg' className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                     {getAlert(this)}
 
                     <Row>
                         <Col>
-                            <Button className='btn-dark float-right' onClick={this.createEventToggle}>
+                            <Button className='btn-dark float-right' onClick={this.toggleCreateEvent}>
                                 <img src={PlusIcon} width={22} height={22} className='mr-1'
                                      alt='Schedule a Stream icon'/>
                                 Create an Event

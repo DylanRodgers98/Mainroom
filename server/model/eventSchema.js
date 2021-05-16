@@ -32,7 +32,7 @@ EventSchema.methods.getBannerPicURL = function () {
         });
 };
 
-EventSchema.methods.getThumbnailPicURL = function () {
+EventSchema.methods.getThumbnailURL = function () {
     return resolveObjectURL({
         bucket: this.thumbnail.bucket,
         key: this.thumbnail.key

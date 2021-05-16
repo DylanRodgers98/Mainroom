@@ -16,6 +16,7 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const S3V2ToV3Bridge = require('../aws/s3-v2-to-v3-bridge');
 const mime = require('mime-types');
+const {getThumbnail} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/routes/events.js');
 
 const S3_V2_TO_V3_BRIDGE = new S3V2ToV3Bridge();
@@ -45,7 +46,7 @@ router.get('/', (req, res, next) => {
                     createdBy: event.createdBy,
                     startTime: event.startTime,
                     endTime: event.endTime,
-                    thumbnailURL: event.getThumbnailPicURL()
+                    thumbnailURL: event.getThumbnailURL()
                 };
             }),
             nextPage: result.nextPage
@@ -144,7 +145,7 @@ const s3UploadBannerPic = multer({
     })
 }).single(formDataKeys.event.bannerPic);
 
-router.patch('/:eventId/bannerPic', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+router.patch('/:eventId/banner-pic', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const eventId = sanitise(req.params.eventId);
 
     let event;
@@ -164,7 +165,7 @@ router.patch('/:eventId/bannerPic', loginChecker.ensureLoggedIn(), async (req, r
         return next(err);
     }
 
-    if (event.createdBy._id !== req.user._id) {
+    if (event.createdBy._id.toString() !== req.user._id.toString()) {
         return res.sendStatus(401);
     }
 
@@ -207,7 +208,7 @@ const s3UploadEventThumbnail = multer({
     })
 }).single(formDataKeys.event.thumbnail);
 
-router.patch('/:eventId/thumbnailPic', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+router.patch('/:eventId/thumbnail', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const eventId = sanitise(req.params.eventId);
 
     let event;
@@ -226,7 +227,7 @@ router.patch('/:eventId/thumbnailPic', loginChecker.ensureLoggedIn(), async (req
         return next(err);
     }
 
-    if (event.createdBy._id !== req.user._id) {
+    if (event.createdBy._id.toString() !== req.user._id.toString()) {
         return res.sendStatus(401);
     }
 
@@ -252,7 +253,7 @@ router.patch('/:eventId/thumbnailPic', loginChecker.ensureLoggedIn(), async (req
     });
 });
 
-const s3UploadEventStageThumbnail = multer({
+const s3UploadEventStageSplashThumbnail = multer({
     storage: multerS3({
         s3: S3_V2_TO_V3_BRIDGE,
         bucket: s3.staticContent.bucketName,
@@ -268,9 +269,9 @@ const s3UploadEventStageThumbnail = multer({
             cb(null, `${path}/${eventId}/${eventStageId}-${Date.now()}.${extension}`);
         }
     })
-}).single(formDataKeys.eventStage.thumbnail);
+}).single(formDataKeys.eventStage.splashThumbnail);
 
-router.patch('/:eventId/stage/:eventStageId/thumbnail', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+router.patch('/:eventId/stage/:eventStageId/splash-thumbnail', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const eventStageId = sanitise(req.params.eventStageId);
 
     let eventStage;
@@ -293,18 +294,18 @@ router.patch('/:eventId/stage/:eventStageId/thumbnail', loginChecker.ensureLogge
         return next(err);
     }
 
-    if (eventStage.event.createdBy._id !== req.user._id) {
+    if (eventStage.event.createdBy._id.toString() !== req.user._id.toString()) {
         return res.sendStatus(401);
     }
 
-    s3UploadEventStageThumbnail(req, res, async err => {
+    s3UploadEventStageSplashThumbnail(req, res, async err => {
         if (err) {
-            LOGGER.error('An error occurred when uploading thumbnail to S3 for EventStage (_id: {}): {}, Error: {}',
+            LOGGER.error('An error occurred when uploading splash thumbnail to S3 for EventStage (_id: {}): {}, Error: {}',
                 eventStageId, err.stack);
             return next(err);
         }
 
-        eventStage.thumbnail = {
+        eventStage.splashThumbnail = {
             bucket: req.file.bucket,
             key: req.file.key
         };
@@ -355,7 +356,7 @@ router.get('/:eventId', async (req, res, next) => {
             _id: stage._id,
             isLive,
             stageName: stage.stageName,
-            thumbnailURL: stage.getThumbnailPicURL(),
+            thumbnailURL: isLive ? await getThumbnail(streamKey) : stage.getSplashThumbnailURL(),
             streamInfo: {
                 title: stage.streamInfo.title,
                 genre: stage.streamInfo.genre,

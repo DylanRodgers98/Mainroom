@@ -136,7 +136,7 @@ module.exports = {
                 bucket: STATIC_CONTENT_BUCKET_NAME,
                 key: DEFAULT_STREAM_THUMBNAIL_KEY
             },
-            defaultEventStageThumbnail: {
+            defaultEventStageSplashThumbnail: {
                 // TODO: CHANGE THESE TO MATCH CORRECT DEFAULT THUMBNAIL
                 bucket: STATIC_CONTENT_BUCKET_NAME,
                 key: DEFAULT_STREAM_THUMBNAIL_KEY
@@ -156,7 +156,7 @@ module.exports = {
                 thumbnail: 'eventThumbnail'
             },
             eventStage: {
-                thumbnail: 'eventStageThumbnail'
+                splashThumbnail: 'eventStageSplashThumbnail'
             }
         }
     },
