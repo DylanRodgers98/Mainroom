@@ -221,15 +221,13 @@ export default class Events extends React.Component {
             try {
                 let res;
                 try {
-                    res = await axios.post('/api/events', {
+                    res = await axios.put('/api/events', {
                         userId: this.state.loggedInUserId,
                         eventName: this.state.eventName,
                         startTime: convertLocalToUTC(this.state.eventStartTime),
                         endTime: convertLocalToUTC(this.state.eventEndTime),
                         tags: this.state.eventTags,
-                        stages: this.state.stages.map(stage => {
-                            return {stageName: stage.stageName};
-                        })
+                        stageNames: this.state.stages.map(stage => stage.stageName)
                     });
                 } catch (err) {
                     if (err.response.status === 403) {

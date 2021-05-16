@@ -55,7 +55,7 @@ router.get('/', (req, res, next) => {
     });
 });
 
-router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+router.put('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const sanitisedInput = sanitise(req.body);
 
     if (sanitisedInput.userId !== req.user._id.toString()) {
@@ -71,22 +71,22 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     if (sanitisedInput.tags.length > tagsMaxAmount) {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
     }
-    if (sanitisedInput.stages.length > stagesMaxAmount) {
+    if (sanitisedInput.stageNames.length > stagesMaxAmount) {
         return res.status(403).send(`Number of stages was greater than the maximum allowed amount of ${stagesMaxAmount}`);
     }
-    if (sanitisedInput.stages && sanitisedInput.stages.length) {
+    if (sanitisedInput.stageNames && sanitisedInput.stageNames.length) {
         const stageNameEncountered = [];
-        for (const stage of sanitisedInput.stages) {
-            if (!stage.stageName) {
+        for (const stageName of sanitisedInput.stageNames) {
+            if (!stageName) {
                 return res.status(403).send('All stages must have a name');
             }
-            if (stage.stageName > stageNameMaxLength) {
-                return res.status(403).send(`Length of stage name '${escape(stage.stageName)}' is greater than the maximum allowed length of ${stageNameMaxLength}`);
+            if (stageName > stageNameMaxLength) {
+                return res.status(403).send(`Length of stage name '${escape(stageName)}' is greater than the maximum allowed length of ${stageNameMaxLength}`);
             }
-            if (stageNameEncountered[stage.stageName]) {
+            if (stageNameEncountered[stageName]) {
                 return res.status(403).send(`Duplicate stage names found. Names of stages must be unique.`);
             }
-            stageNameEncountered[stage.stageName] = true;
+            stageNameEncountered[stageName] = true;
         }
     }
 
@@ -105,11 +105,11 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     }
 
     const eventStageIds = [];
-    if (sanitisedInput.stages && sanitisedInput.stages.length) {
-        for (const stage of sanitisedInput.stages) {
+    if (sanitisedInput.stageNames && sanitisedInput.stageNames.length) {
+        for (const stageName of sanitisedInput.stageNames) {
             const eventStage = new EventStage({
                 event: event._id,
-                stageName: stage.stageName,
+                stageName,
                 streamInfo: {
                     streamKey: EventStage.generateStreamKey()
                 }
