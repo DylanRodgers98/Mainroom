@@ -10,7 +10,7 @@ import {
     DropdownToggle,
     Modal,
     ModalBody, ModalFooter,
-    ModalHeader,
+    ModalHeader, Progress,
     Row,
     Spinner
 } from 'reactstrap';
@@ -50,7 +50,8 @@ export default class Events extends React.Component {
             nextPage: STARTING_PAGE,
             showLoadMoreButton: false,
             showLoadMoreSpinner: false,
-            showCreateEventSpinner: false,
+            showCreateEventSpinnerAndProgress: false,
+            createEventProgress: 0,
             alertText: '',
             alertColor: ''
         }
@@ -170,7 +171,10 @@ export default class Events extends React.Component {
     }
 
     createEvent() {
-        this.setState({showCreateEventSpinner: true}, async () => {
+        this.setState({
+            showCreateEventSpinnerAndProgress: true,
+            createEventProgress: 0
+        }, async () => {
             try {
                 const {data: {eventId}} = await axios.post('/api/events', {
                     userId: this.state.loggedInUserId,
@@ -181,6 +185,8 @@ export default class Events extends React.Component {
                 });
 
                 if (this.state.uploadedBannerImage) {
+                    this.setState({createEventProgress: 25});
+
                     const data = new FormData();
                     data.set(storage.formDataKeys.event.bannerPic, this.state.uploadedBannerImage);
 
@@ -192,6 +198,8 @@ export default class Events extends React.Component {
                 }
 
                 if (this.state.uploadedEventThumbnail) {
+                    this.setState({createEventProgress: 50});
+
                     const data = new FormData();
                     data.set(storage.formDataKeys.event.thumbnail, this.state.uploadedEventThumbnail);
 
@@ -202,11 +210,16 @@ export default class Events extends React.Component {
                     });
                 }
 
-                window.location.href = `/event/${eventId}`;
+                this.setState({createEventProgress: 100}, () => {
+                    window.location.href = `/event/${eventId}`
+                });
             } catch (err) {
                 displayErrorMessage(this, `An error occurred when creating event. Please try again later. (${err})`);
                 this.toggleCreateEvent();
-                this.setState({showCreateEventSpinner: false});
+                this.setState({
+                    showCreateEventSpinnerAndProgress: false,
+                    createEventProgress: 0
+                });
             }
         });
     }
@@ -280,11 +293,13 @@ export default class Events extends React.Component {
                             </Col>
                         </Row>
                     </Container>
+                    {!this.state.showCreateEventSpinnerAndProgress ? undefined :
+                        <Progress className='mt-2' value={this.state.createEventProgress} />}
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.createEvent}>
-                        {this.state.showCreateEventSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showCreateEventSpinner ? 'sr-only' : undefined}>
+                        {this.state.showCreateEventSpinnerAndProgress ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showCreateEventSpinnerAndProgress ? 'sr-only' : undefined}>
                             Create Event
                         </span>
                     </Button>
