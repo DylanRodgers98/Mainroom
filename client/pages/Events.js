@@ -16,9 +16,11 @@ import {
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
 import {convertLocalToUTC, formatDateRange, isTimeBetween} from '../utils/dateUtils';
-import PlusIcon from "../icons/plus-white.svg";
-import DateTimeRangeContainer from "react-advanced-datetimerange-picker";
-import moment from "moment";
+import PlusIcon from '../icons/plus-white.svg';
+import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
+import moment from 'moment';
+import AddIcon from '../icons/plus-white-20.svg';
+import RemoveIcon from '../icons/x.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -36,6 +38,10 @@ export default class Events extends React.Component {
         this.createEvent = this.createEvent.bind(this);
         this.onBannerImageUpload = this.onBannerImageUpload.bind(this);
         this.onEventThumbnailUpload = this.onEventThumbnailUpload.bind(this);
+        this.addStage = this.addStage.bind(this);
+        this.setStageName = this.setStageName.bind(this);
+        this.removeStage = this.removeStage.bind(this);
+        this.onStageSplashThumbnailUpload = this.onStageSplashThumbnailUpload.bind(this);
 
         this.state = {
             events: [],
@@ -45,6 +51,10 @@ export default class Events extends React.Component {
             eventStartTime: moment().add(1, 'hour'),
             eventEndTime: moment().add(2, 'hour'),
             eventTags: [],
+            stages: [{
+                stageName: 'Main Stage',
+                uploadedSplashThumbnail: undefined
+            }],
             uploadedBannerImage: undefined,
             uploadedEventThumbnail: undefined,
             nextPage: STARTING_PAGE,
@@ -170,49 +180,111 @@ export default class Events extends React.Component {
         });
     }
 
+    setStageName(e, index) {
+        const stages = this.state.stages;
+        stages[index].title = event.target.value;
+        this.setState({stages});
+    }
+
+    addStage() {
+        this.setState({
+            stages: [...this.state.stages, {
+                stageName: '',
+                uploadedSplashThumbnail: undefined
+            }]
+        });
+    }
+
+    removeStage(index) {
+        const stages = this.state.stages;
+        stages.splice(index, 1);
+        this.setState({stages});
+    }
+
+    onStageSplashThumbnailUpload(pictureFiles, pictureData, index) {
+        const stages = this.state.stages;
+        stages[index].uploadedSplashThumbnail = pictureFiles[0];
+        this.setState({stages});
+    }
+
     createEvent() {
         this.setState({
             showCreateEventSpinnerAndProgress: true,
             createEventProgress: 0
         }, async () => {
             try {
-                const {data: {eventId}} = await axios.post('/api/events', {
+                const {data} = await axios.post('/api/events', {
                     userId: this.state.loggedInUserId,
                     eventName: this.state.eventName,
                     startTime: convertLocalToUTC(this.state.eventStartTime),
                     endTime: convertLocalToUTC(this.state.eventEndTime),
-                    tags: this.state.eventTags
+                    tags: this.state.eventTags,
+                    stages: this.state.stages.map(stage => {
+                        return {stageName: stage.stageName};
+                    })
                 });
 
-                if (this.state.uploadedBannerImage) {
+                if (this.state.uploadedBannerImage && this.state.uploadedEventThumbnail) {
                     this.setState({createEventProgress: 25});
+                } else if (this.state.uploadedBannerImage && !this.state.uploadedEventThumbnail) {
+                    this.setState({createEventProgress: 33});
+                } else if (!this.state.uploadedBannerImage && this.state.uploadedEventThumbnail) {
+                    this.setState({createEventProgress: 33});
+                } else {
+                    this.setState({createEventProgress: 50});
+                }
 
-                    const data = new FormData();
-                    data.set(storage.formDataKeys.event.bannerPic, this.state.uploadedBannerImage);
+                if (this.state.uploadedBannerImage) {
+                    const formData = new FormData();
+                    formData.set(storage.formDataKeys.event.bannerPic, this.state.uploadedBannerImage);
 
-                    await axios.patch(`/api/events/${eventId}/banner-pic`, data, {
+                    await axios.patch(`/api/events/${data.eventId}/banner-pic`, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
+                    });
+
+                    this.setState({
+                        createEventProgress: this.state.createEventProgress + (this.state.uploadedEventThumbnail ? 25 : 33)
                     });
                 }
 
                 if (this.state.uploadedEventThumbnail) {
-                    this.setState({createEventProgress: 50});
+                    const formData = new FormData();
+                    formData.set(storage.formDataKeys.event.thumbnail, this.state.uploadedEventThumbnail);
 
-                    const data = new FormData();
-                    data.set(storage.formDataKeys.event.thumbnail, this.state.uploadedEventThumbnail);
-
-                    await axios.patch(`/api/events/${eventId}/thumbnail`, data, {
+                    await axios.patch(`/api/events/${data.eventId}/thumbnail`, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
                     });
+
+                    this.setState({
+                        createEventProgress: this.state.createEventProgress + (this.state.uploadedBannerImage ? 25 : 33)
+                    });
                 }
 
-                this.setState({createEventProgress: 100}, () => {
-                    window.location.href = `/event/${eventId}`
-                });
+                const percentPerStage = (100 - this.state.createEventProgress) / this.state.stages.length;
+
+                for (let i = 0; i < this.state.stages.length; i++) {
+                    const uploadedStageSplashThumbnail = this.state.stages[i].uploadedSplashThumbnail;
+                    if (uploadedStageSplashThumbnail) {
+                        const eventStageId = data.eventStageIds[i];
+
+                        const formData = new FormData();
+                        formData.set(storage.formDataKeys.eventStage.splashThumbnail, uploadedStageSplashThumbnail);
+
+                        await axios.patch(`/api/events/${data.eventId}/stage/${eventStageId}/splash-thumbnail`, formData, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        });
+                    }
+
+                    this.setState({createEventProgress: this.state.createEventProgress + percentPerStage});
+                }
+
+                window.location.href = `/event/${data.eventId}`;
             } catch (err) {
                 displayErrorMessage(this, `An error occurred when creating event. Please try again later. (${err})`);
                 this.toggleCreateEvent();
@@ -222,6 +294,38 @@ export default class Events extends React.Component {
                 });
             }
         });
+    }
+
+    renderCreateStages() {
+        return this.state.stages.map((stage, index) => (
+            <Row className='mt-1' key={index}>
+                <Col xs='12'>Stage Name</Col>
+                <Col className={index === 0 ? undefined : 'remove-padding-r'} xs={index === 0 ? 12 : 11}>
+                    <input className='rounded-border w-100' type='text' value={stage.stageName}
+                           onChange={e => this.setStageName(e, index)}
+                           maxLength={validation.eventStage.stageNameMaxLength}/>
+                </Col>
+                {index === 0 ? undefined : (
+                    <Col className='remove-padding-l' xs='1'>
+                        <a href='javascript:;' onClick={() => this.removeStage(index)}>
+                            <img src={RemoveIcon} className='ml-2' alt='Remove Link icon'/>
+                        </a>
+                    </Col>
+                )}
+                <Col className='mt-2' xs='12'>
+                    <details>
+                        <summary>Splash Thumbnail</summary>
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <ImageUploader buttonText='Choose Splash Thumbnail' label='Maximum file size: 2MB'
+                                           maxFileSize={2 * 1024 * 1024}
+                                           onChange={(files, pics) => this.onStageSplashThumbnailUpload(files, pics, index)}
+                                           withPreview={true} singleImage={true} withIcon={false}/>
+                        </Suspense>
+                    </details>
+                    <hr className='my-2'/>
+                </Col>
+            </Row>
+        ));
     }
 
     renderCreateEvent() {
@@ -290,6 +394,19 @@ export default class Events extends React.Component {
                                                        withPreview={true} singleImage={true} withIcon={false}/>
                                     </Suspense>
                                 </details>
+                            </Col>
+                        </Row>
+                    </Container>
+                    <h5 className='mt-4'>Stages</h5>
+                    <hr/>
+                    <Container fluid className='remove-padding-lr'>
+                        {this.renderCreateStages()}
+                        <Row className='mt-2'>
+                            <Col xs='12'>
+                                <Button className='btn-dark' size='sm' onClick={this.addStage}>
+                                    <img src={AddIcon} className='mr-1' alt='Add Stage icon'/>
+                                    Add Stage
+                                </Button>
                             </Col>
                         </Row>
                     </Container>

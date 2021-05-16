@@ -6,6 +6,7 @@ const escape = require('escape-html');
 const axios = require('axios');
 const loginChecker = require('connect-ensure-login');
 const {
+    rtmpServer,
     storage: {s3, formDataKeys},
     validation: {
         event: {eventNameMaxLength, tagsMaxAmount},
@@ -94,7 +95,7 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         next(err);
     }
 
-    const stageIds = [];
+    const eventStageIds = [];
     if (sanitisedInput.stages && sanitisedInput.stages.length) {
         for (const stage of sanitisedInput.stages) {
             const eventStage = new EventStage({
@@ -112,15 +113,16 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
                 next(err);
             }
 
-            stageIds.push(eventStage._id);
+            eventStageIds.push(eventStage._id);
         }
     }
 
     try {
-        event.stages = stageIds;
+        event.stages = eventStageIds;
         await event.save();
         res.json({
-            eventId: event._id
+            eventId: event._id,
+            eventStageIds
         });
     } catch (err) {
         LOGGER.error('An error occurred when saving new Event: {}, Error: {}', JSON.stringify(event), err.stack);
@@ -333,7 +335,7 @@ router.get('/:eventId', async (req, res, next) => {
             })
             .populate({
                 path: 'stages',
-                select: '_id stageName thumbnailPic.bucket thumbnailPic.key streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount'
+                select: '_id stageName splashThumbnail.bucket splashThumbnail.key streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount'
             })
             .exec();
     } catch (err) {
@@ -349,7 +351,7 @@ router.get('/:eventId', async (req, res, next) => {
     for (const stage of event.stages) {
         const streamKey = stage.streamInfo.streamKey;
         const {data: {isLive}} = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
-            headers: {Authorization: config.rtmpServer.auth.header}
+            headers: {Authorization: rtmpServer.auth.header}
         });
 
         stages.push({

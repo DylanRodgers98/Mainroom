@@ -98,7 +98,8 @@ export default class Event extends React.Component {
                         {shortenNumber(stage.streamInfo.viewCount)}
                     </span>
                 )}
-                <Link to={stage.isLive ? `/stage/${stage._id}` : ''}>
+                <Link to={stage.isLive ? `/stage/${stage._id}` : window.location.pathname}
+                      title={stage.isLive ? stage.stageName : `${stage.stageName} closed`}>
                     <img className='w-100' src={stage.thumbnailURL} alt={`${stage.stageName} Stage Thumbnail`}/>
                 </Link>
                 <table>
@@ -106,7 +107,8 @@ export default class Event extends React.Component {
                     <tr>
                         <td className='w-100'>
                             <h5>
-                                <Link to={stage.isLive ? `/stage/${stage._id}` : ''}>
+                                <Link to={stage.isLive ? `/stage/${stage._id}` : window.location.pathname}
+                                      title={stage.isLive ? stage.stageName : `${stage.stageName} closed`}>
                                     {stage.stageName}
                                 </Link>
                                 {!stage.isLive ? undefined : (
