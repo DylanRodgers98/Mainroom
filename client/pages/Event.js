@@ -19,14 +19,14 @@ import {Link} from 'react-router-dom';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, timeSince} from '../utils/dateUtils';
 import ViewersIcon from '../icons/eye.svg';
 import {shortenNumber} from '../utils/numberUtils';
-import EditIcon from "../icons/edit.svg";
-import DeleteIcon from "../icons/trash.svg";
-import SubscribedIcon from "../icons/user-check.svg";
-import SubscribeIcon from "../icons/user-plus.svg";
-import RemoveIcon from "../icons/x.svg";
-import DateTimeRangeContainer from "react-advanced-datetimerange-picker";
-import AddIcon from "../icons/plus-white-20.svg";
-import moment from "moment";
+import moment from 'moment';
+import EditIcon from '../icons/edit.svg';
+import DeleteIcon from '../icons/trash.svg';
+import SubscribedIcon from '../icons/user-check.svg';
+import SubscribeIcon from '../icons/user-plus.svg';
+import RemoveIcon from '../icons/x.svg';
+import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
+import AddIcon from '../icons/plus-white-20.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 

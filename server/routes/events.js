@@ -17,7 +17,8 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const S3V2ToV3Bridge = require('../aws/s3-v2-to-v3-bridge');
 const mime = require('mime-types');
-const CompositeError = require("../errors/CompositeError");
+const CompositeError = require('../errors/CompositeError');
+const {deleteObject} = require('../aws/s3Utils');
 const {getThumbnail} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/routes/events.js');
 
@@ -218,7 +219,7 @@ router.patch('/:eventId/banner-pic', loginChecker.ensureLoggedIn(), async (req, 
     let event;
     try {
         event = await Event.findById(eventId)
-            .select('_id createdBy')
+            .select('_id createdBy bannerPic.bucket bannerPic.key')
             .populate({
                 path: 'createdBy',
                 select: '_id'
@@ -242,17 +243,24 @@ router.patch('/:eventId/banner-pic', loginChecker.ensureLoggedIn(), async (req, 
                 eventId, err.stack);
             return next(err);
         }
-
-        event.bannerPic = {
-            bucket: req.file.bucket,
-            key: req.file.key
-        };
         try {
-            await event.save();
+            const promises = [];
+            // delete old banner pic if not empty
+            if (event.bannerPic && event.bannerPic.bucket && event.bannerPic.key) {
+                promises.push(deleteObject({
+                    Bucket: event.bannerPic.bucket,
+                    Key: event.bannerPic.key
+                }));
+            }
+            event.bannerPic = {
+                bucket: req.file.bucket,
+                key: req.file.key
+            };
+            promises.push(event.save());
+            await Promise.all(promises);
             res.sendStatus(200);
         } catch (err) {
-            LOGGER.error('An error occurred when saving Event (_id: {}): {}, Error: {}',
-                event._id, err.stack);
+            LOGGER.error('An error occurred when updating banner pic info for Event (_id: {}): {}', eventId, err.stack);
             next(err);
         }
     });
@@ -281,7 +289,7 @@ router.patch('/:eventId/thumbnail', loginChecker.ensureLoggedIn(), async (req, r
     let event;
     try {
         event = await Event.findById(eventId)
-            .select('_id createdBy')
+            .select('_id createdBy thumbnail.bucket thumbnail.key')
             .populate({
                 path: 'createdBy',
                 select: '_id'
@@ -304,17 +312,25 @@ router.patch('/:eventId/thumbnail', loginChecker.ensureLoggedIn(), async (req, r
                 eventId, err.stack);
             return next(err);
         }
-
-        event.thumbnail = {
-            bucket: req.file.bucket,
-            key: req.file.key
-        };
         try {
-            await event.save();
+            const promises = [];
+            // delete old profile pic if not default
+            if (event.thumbnail.bucket !== s3.defaultEventThumbnail.bucket
+                && event.thumbnail.key !== s3.defaultEventThumbnail.key) {
+                promises.push(deleteObject({
+                    Bucket: event.thumbnail.bucket,
+                    Key: event.thumbnail.key
+                }));
+            }
+            event.thumbnail = {
+                bucket: req.file.bucket,
+                key: req.file.key
+            };
+            promises.push(event.save());
+            await Promise.all(promises);
             res.sendStatus(200);
         } catch (err) {
-            LOGGER.error('An error occurred when saving Event (_id: {}): {}, Error: {}',
-                event._id, err.stack);
+            LOGGER.error('An error occurred when updating thumbnail info for Event (_id: {}): {}', eventId, err.stack);
             next(err);
         }
     });
@@ -344,7 +360,7 @@ router.patch('/:eventId/stage/:eventStageId/splash-thumbnail', loginChecker.ensu
     let eventStage;
     try {
         eventStage = await EventStage.findById(eventStageId)
-            .select('_id event')
+            .select('_id event splashThumbnail.bucket splashThumbnail.key')
             .populate({
                 path: 'event',
                 populate: {
@@ -371,17 +387,25 @@ router.patch('/:eventId/stage/:eventStageId/splash-thumbnail', loginChecker.ensu
                 eventStageId, err.stack);
             return next(err);
         }
-
-        eventStage.splashThumbnail = {
-            bucket: req.file.bucket,
-            key: req.file.key
-        };
         try {
-            await eventStage.save();
+            const promises = [];
+            // delete old profile pic if not default
+            if (eventStage.splashThumbnail.bucket !== s3.defaultEventStageSplashThumbnail.bucket
+                && eventStage.splashThumbnail.key !== s3.defaultEventStageSplashThumbnail.key) {
+                promises.push(deleteObject({
+                    Bucket: eventStage.splashThumbnail.bucket,
+                    Key: eventStage.splashThumbnail.key
+                }));
+            }
+            eventStage.splashThumbnail = {
+                bucket: req.file.bucket,
+                key: req.file.key
+            };
+            promises.push(eventStage.save());
+            await Promise.all(promises);
             res.sendStatus(200);
         } catch (err) {
-            LOGGER.error('An error occurred when saving EventStage (_id: {}): {}, Error: {}',
-                eventStageId._id, err.stack);
+            LOGGER.error('An error occurred when updating splash thumbnail info for EventStage (_id: {}): {}', eventStageId, err.stack);
             next(err);
         }
     });
