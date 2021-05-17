@@ -218,6 +218,11 @@ export default class Events extends React.Component {
             createEventProgress: 0,
             createEventErrorMessage: ''
         }, async () => {
+            let steps = this.state.stages.length + 1;
+            if (this.state.uploadedBannerImage) steps++;
+            if (this.state.uploadedEventThumbnail) steps++;
+            const percentPerStep = (100 - this.state.createEventProgress) / steps;
+
             try {
                 let res;
                 try {
@@ -227,7 +232,11 @@ export default class Events extends React.Component {
                         startTime: convertLocalToUTC(this.state.eventStartTime),
                         endTime: convertLocalToUTC(this.state.eventEndTime),
                         tags: this.state.eventTags,
-                        stageNames: this.state.stages.map(stage => stage.stageName)
+                        stages: this.state.stages.map(stage => {
+                            return {
+                                stageName: stage.stageName
+                            };
+                        })
                     });
                 } catch (err) {
                     if (err.response.status === 403) {
@@ -240,14 +249,7 @@ export default class Events extends React.Component {
                     throw err;
                 }
 
-                if (this.state.uploadedBannerImage && this.state.uploadedEventThumbnail) {
-                    this.setState({createEventProgress: 25});
-                } else if ((this.state.uploadedBannerImage && !this.state.uploadedEventThumbnail)
-                    || (!this.state.uploadedBannerImage && this.state.uploadedEventThumbnail)) {
-                    this.setState({createEventProgress: 33});
-                } else {
-                    this.setState({createEventProgress: 50});
-                }
+                this.setState({createEventProgress: this.state.createEventProgress + percentPerStep});
 
                 if (this.state.uploadedBannerImage) {
                     const data = new FormData();
@@ -259,9 +261,7 @@ export default class Events extends React.Component {
                         }
                     });
 
-                    this.setState({
-                        createEventProgress: this.state.createEventProgress + (this.state.uploadedEventThumbnail ? 25 : 33)
-                    });
+                    this.setState({createEventProgress: this.state.createEventProgress + percentPerStep});
                 }
 
                 if (this.state.uploadedEventThumbnail) {
@@ -274,12 +274,8 @@ export default class Events extends React.Component {
                         }
                     });
 
-                    this.setState({
-                        createEventProgress: this.state.createEventProgress + (this.state.uploadedBannerImage ? 25 : 33)
-                    });
+                    this.setState({createEventProgress: this.state.createEventProgress + percentPerStep});
                 }
-
-                const percentPerStage = (100 - this.state.createEventProgress) / this.state.stages.length;
 
                 for (let i = 0; i < this.state.stages.length; i++) {
                     const uploadedStageSplashThumbnail = this.state.stages[i].uploadedSplashThumbnail;
@@ -296,7 +292,7 @@ export default class Events extends React.Component {
                         });
                     }
 
-                    this.setState({createEventProgress: this.state.createEventProgress + percentPerStage});
+                    this.setState({createEventProgress: this.state.createEventProgress + percentPerStep});
                 }
 
                 window.location.href = `/event/${res.data.eventId}`;

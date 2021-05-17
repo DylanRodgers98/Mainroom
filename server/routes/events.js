@@ -17,6 +17,7 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const S3V2ToV3Bridge = require('../aws/s3-v2-to-v3-bridge');
 const mime = require('mime-types');
+const CompositeError = require("../errors/CompositeError");
 const {getThumbnail} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/routes/events.js');
 
@@ -71,49 +72,85 @@ router.put('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     if (sanitisedInput.tags.length > tagsMaxAmount) {
         return res.status(403).send(`Number of tags was greater than the maximum allowed amount of ${tagsMaxAmount}`);
     }
-    if (sanitisedInput.stageNames.length > stagesMaxAmount) {
+    if (sanitisedInput.stages.length > stagesMaxAmount) {
         return res.status(403).send(`Number of stages was greater than the maximum allowed amount of ${stagesMaxAmount}`);
     }
-    if (sanitisedInput.stageNames && sanitisedInput.stageNames.length) {
+    if (sanitisedInput.stages && sanitisedInput.stages.length) {
         const stageNameEncountered = [];
-        for (const stageName of sanitisedInput.stageNames) {
-            if (!stageName) {
+        for (const stage of sanitisedInput.stages) {
+            if (!stage.stageName) {
                 return res.status(403).send('All stages must have a name');
             }
-            if (stageName > stageNameMaxLength) {
-                return res.status(403).send(`Length of stage name '${escape(stageName)}' is greater than the maximum allowed length of ${stageNameMaxLength}`);
+            if (stage.stageName > stageNameMaxLength) {
+                return res.status(403).send(`Length of stage name '${escape(stage.stageName)}' is greater than the maximum allowed length of ${stageNameMaxLength}`);
             }
-            if (stageNameEncountered[stageName]) {
+            if (stageNameEncountered[stage.stageName]) {
                 return res.status(403).send(`Duplicate stage names found. Names of stages must be unique.`);
             }
-            stageNameEncountered[stageName] = true;
+            stageNameEncountered[stage.stageName] = true;
         }
     }
 
-    const event = new Event({
-        eventName: sanitisedInput.eventName,
-        createdBy: sanitisedInput.userId,
-        startTime: sanitisedInput.startTime,
-        endTime: sanitisedInput.endTime,
-        tags: sanitisedInput.tags
-    });
+    let event;
+    if (sanitisedInput.eventId) {
+        try {
+            event = await Event.findById(sanitisedInput.eventId)
+                .select('_id stages')
+                .populate({
+                    path: 'stages',
+                    select: '_id'
+                })
+                .exec();
+        } catch (err) {
+            LOGGER.error(`An error occurred when finding Event with id '{}': {}`, sanitisedInput.eventId, err.stack);
+            return next(err);
+        }
+        if (!event) {
+            return res.status(404).send(`Event (_id: ${escape(sanitisedInput.eventId)}) not found`);
+        }
+    } else {
+        event = new Event({
+            createdBy: sanitisedInput.userId
+        });
+    }
+
+    event.eventName = sanitisedInput.eventName;
+    event.startTime = sanitisedInput.startTime;
+    event.endTime = sanitisedInput.endTime;
+    event.tags = sanitisedInput.tags;
+
     try {
         await event.save();
     } catch (err) {
-        LOGGER.error('An error occurred when saving new Event: {}, Error: {}', JSON.stringify(event), err.stack);
+        LOGGER.error('An error occurred when saving Event: {}, Error: {}', JSON.stringify(event), err.stack);
         next(err);
     }
 
     const eventStageIds = [];
-    if (sanitisedInput.stageNames && sanitisedInput.stageNames.length) {
-        for (const stageName of sanitisedInput.stageNames) {
-            const eventStage = new EventStage({
-                event: event._id,
-                stageName,
-                streamInfo: {
-                    streamKey: EventStage.generateStreamKey()
+    if (sanitisedInput.stages && sanitisedInput.stages.length) {
+        for (const stage of sanitisedInput.stages) {
+            let eventStage;
+            if (stage._id) {
+                try {
+                    eventStage = await EventStage.findById(stage._id).select('_id').exec();
+                } catch (err) {
+                    LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, stage._id, err.stack);
+                    return next(err);
                 }
-            });
+                if (!eventStage) {
+                    return res.status(404).send(`EventStage (_id: ${escape(stage._id)}) not found`);
+                }
+            } else {
+                eventStage = new EventStage({
+                    event: event._id,
+                    streamInfo: {
+                        streamKey: EventStage.generateStreamKey()
+                    }
+                });
+            }
+
+            eventStage.stageName = stage.stageName;
+
             try {
                 await eventStage.save();
             } catch (err) {
@@ -123,6 +160,25 @@ router.put('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
             }
 
             eventStageIds.push(eventStage._id);
+        }
+    }
+
+    if (event.stages) {
+        const deletePromises = [];
+        const newEventStageIds = eventStageIds.map(eventStageId => eventStageId.toString());
+        const oldEventStageIds = event.stages.map(stage => stage._id.toString());
+
+        for (const eventStageId of oldEventStageIds) {
+            if (!newEventStageIds.includes(eventStageId)) {
+                deletePromises.push(EventStage.findByIdAndDelete(eventStageId));
+            }
+        }
+        if (deletePromises.length) {
+            const promiseResults = await Promise.allSettled(deletePromises);
+            const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+            if (rejectedPromises.length) {
+                return next(new CompositeError(rejectedPromises.map(promise => promise.reason)));
+            }
         }
     }
 
@@ -337,10 +393,10 @@ router.get('/:eventId', async (req, res, next) => {
     let event;
     try {
         event = await Event.findById(eventId)
-            .select('eventName createdBy startTime endTime bannerPic.bucket bannerPic.key stages')
+            .select('_id eventName createdBy startTime endTime bannerPic.bucket bannerPic.key tags stages')
             .populate({
                 path: 'createdBy',
-                select: 'username displayName'
+                select: '_id displayName'
             })
             .populate({
                 path: 'stages',
@@ -378,11 +434,13 @@ router.get('/:eventId', async (req, res, next) => {
     }
 
     res.json({
+        _id: event._id,
         eventName: event.eventName,
         createdBy: event.createdBy,
         startTime: event.startTime,
         endTime: event.endTime,
         bannerPicURL: event.getBannerPicURL(),
+        tags: event.tags,
         stages
     });
 });
