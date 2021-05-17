@@ -15,6 +15,8 @@ export default class Subscribers extends React.Component {
         this.getSubscribers = this.getSubscribers.bind(this);
 
         this.state = {
+            pageTitle: '',
+            eventName: '',
             subscribers: [],
             nextPage: STARTING_PAGE,
             isProfileOfLoggedInUser: false,
@@ -28,7 +30,9 @@ export default class Subscribers extends React.Component {
 
     componentDidMount() {
         document.title = headTitle;
-        this.isProfileOfLoggedInUser();
+        if (this.props.match.params.username) {
+            this.isProfileOfLoggedInUser();
+        }
         this.getSubscribers();
     }
 
@@ -42,13 +46,23 @@ export default class Subscribers extends React.Component {
     getSubscribers() {
         this.setState({showLoadMoreSpinner: true}, async () => {
             try {
-                const res = await axios.get(`/api/users/${this.props.match.params.username.toLowerCase()}/subscribers`, {
+                let url;
+                if (this.props.match.params.username) {
+                    url = `/api/users/${this.props.match.params.username.toLowerCase()}/subscribers`;
+                    this.setPageTitle(`${this.props.match.params.username.toLowerCase()}'s Subscribers`);
+                } else if (this.props.match.params.eventId) {
+                    url = `/api/events/${this.props.match.params.eventId}/subscribers`;
+                    this.getEventName();
+                } else {
+                    window.location.href = '/404';
+                }
+
+                const res = await axios.get(url, {
                     params: {
                         page: this.state.nextPage,
                         limit: pagination.large
                     }
                 });
-                document.title = `${this.props.match.params.username.toLowerCase()}'s Subscribers - ${siteName}`;
                 const subscribers = res.data.subscribers.map((subscriber, index) => (
                     <div key={index}>
                         <Col>
@@ -81,11 +95,29 @@ export default class Subscribers extends React.Component {
         });
     }
 
+    async getEventName() {
+        try {
+            const res = await axios.get(`/api/events/${this.props.match.params.eventId}/event-name`);
+            this.setState({
+                eventName: res.data.eventName
+            }, () => {
+                this.setPageTitle(`${this.state.eventName}'s Subscribers`);
+            });
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when getting event name. Please try again later. (${err})`);
+        }
+    }
+
+    setPageTitle(pageTitle) {
+        this.setState( {pageTitle});
+        document.title = `${pageTitle} - ${siteName}`;
+    }
+
     render() {
         const subscribers = this.state.subscribers.length
             ? <Row xs='1' sm='2' md='2' lg='3' xl='3'>{this.state.subscribers}</Row>
             : <p className='my-4 text-center'>{this.state.isProfileOfLoggedInUser ? 'You have '
-                : this.props.match.params.username.toLowerCase() + ' has'} no subscribers :(</p>;
+                : this.props.match.params.username ? this.props.match.params.username.toLowerCase() : this.state.eventName + ' has'} no subscribers :(</p>;
 
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>
@@ -102,7 +134,7 @@ export default class Subscribers extends React.Component {
 
                 <Row>
                     <Col>
-                        <h4>{this.props.match.params.username.toLowerCase()}'s Subscribers</h4>
+                        <h4>{this.state.pageTitle}</h4>
                     </Col>
                 </Row>
                 <hr className='mt-4'/>

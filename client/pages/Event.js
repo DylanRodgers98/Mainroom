@@ -718,7 +718,7 @@ export default class Event extends React.Component {
                         <Col>
                             <div className='float-right'>
                                 <h5 className='black-link text-right'>
-                                    <Link to={`/`}>
+                                    <Link to={`/event/${this.state.eventId}/subscribers`}>
                                         {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
                                     </Link>
                                 </h5>
