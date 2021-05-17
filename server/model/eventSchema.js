@@ -8,7 +8,7 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const {deleteObject} = require('../aws/s3Utils');
-const {EventStage} = require('./schemas');
+const {EventStage, User} = require('./schemas');
 const LOGGER = require('../../logger')('./server/model/eventSchema.js');
 
 const EventSchema = new Schema({
@@ -53,7 +53,8 @@ EventSchema.pre('findOneAndDelete', async function() {
     if (event) {
         await Promise.all([
             deleteBannerPicAndThumbnail(event),
-            deleteStages(event)
+            deleteStages(event),
+            pullEventFromUserSubscriptions(event)
         ])
         LOGGER.debug('Deleting Event (_id: {})', event._id);
     }
@@ -135,6 +136,21 @@ async function deleteStages(event) {
             LOGGER.debug('Successfully deleted {} EventStage{} for Event (_id: {})',
                 deleted, deleted.length === 1 ? '' : 's', event._id);
         }
+    }
+}
+
+async function pullEventFromUserSubscriptions(event) {
+    try {
+        const res = await User.updateMany(
+            {'subscribedEvents.event': event._id},
+            {$pull: {subscribedEvents: {event: event._id}}}
+        ).exec();
+
+        LOGGER.debug('Successfully removed Event (_id: {}) from {} subscribedEvents lists',
+            event._id, res.nModified);
+    } catch (err) {
+        LOGGER.error(`Failed to remove Event (_id: {}) from subscribedEvents lists. Error: {}`, event._id, err.stack);
+        await snsErrorPublisher.publish(err);
     }
 }
 
