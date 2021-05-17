@@ -417,7 +417,7 @@ router.get('/:eventId', async (req, res, next) => {
     let event;
     try {
         event = await Event.findById(eventId)
-            .select('_id eventName createdBy startTime endTime bannerPic.bucket bannerPic.key tags stages')
+            .select('_id eventName createdBy startTime endTime bannerPic.bucket bannerPic.key tags stages subscribers')
             .populate({
                 path: 'createdBy',
                 select: '_id displayName'
@@ -465,7 +465,8 @@ router.get('/:eventId', async (req, res, next) => {
         endTime: event.endTime,
         bannerPicURL: event.getBannerPicURL(),
         tags: event.tags,
-        stages
+        stages,
+        numOfSubscribers: event.subscribers.length
     });
 });
 

@@ -61,6 +61,7 @@ export default class Event extends React.Component {
             bannerPicURL: '',
             stages: [],
             tags: [],
+            numOfSubscribers: 0,
             recordedStreams: [],
             loggedInUserId: '',
             isLoggedInUserSubscribed: false,
@@ -119,7 +120,8 @@ export default class Event extends React.Component {
             endTime: convertUTCToLocal(res.data.endTime),
             bannerPicURL: res.data.bannerPicURL,
             tags: res.data.tags,
-            stages: res.data.stages
+            stages: res.data.stages,
+            numOfSubscribers: res.data.numOfSubscribers
         });
     }
 
@@ -529,7 +531,10 @@ export default class Event extends React.Component {
     async subscribeToEvent() {
         try {
             await axios.post(`/api/users/${this.state.loggedInUserId}/subscribe-to-event/${this.state.eventId}`);
-            this.setState({isLoggedInUserSubscribed: true});
+            this.setState({
+                isLoggedInUserSubscribed: true,
+                numOfSubscribers: this.state.numOfSubscribers + 1
+            });
         } catch (err) {
             displayErrorMessage(this, `An error occurred when subscribing to event. Please try again later. (${err})`);
         }
@@ -538,7 +543,10 @@ export default class Event extends React.Component {
     async unsubscribeFromEvent() {
         try {
             await axios.post(`/api/users/${this.state.loggedInUserId}/unsubscribe-from-event/${this.state.eventId}`);
-            this.setState({isLoggedInUserSubscribed: false});
+            this.setState({
+                isLoggedInUserSubscribed: false,
+                numOfSubscribers: this.state.numOfSubscribers - 1
+            });
         } catch (err) {
             displayErrorMessage(this, `An error occurred when unsubscribing from event. Please try again later. (${err})`);
         }
@@ -658,7 +666,7 @@ export default class Event extends React.Component {
     renderOptionsOrSubscribeButton() {
         return this.state.loggedInUserId ? (
             this.state.loggedInUserId === this.state.createdBy._id ? (
-                <Dropdown className='float-right options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
+                <Dropdown className='options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
                           toggle={this.toggleOptionsDropdown} size='sm'>
                     <DropdownToggle caret>
                         Options
@@ -677,7 +685,7 @@ export default class Event extends React.Component {
                     </DropdownMenu>
                 </Dropdown>
             ) : (
-                <Button className='float-right btn-dark' onClick={this.onClickSubscribeButton}>
+                <Button className='btn-dark' onClick={this.onClickSubscribeButton}>
                     <img src={this.state.isLoggedInUserSubscribed ? SubscribedIcon : SubscribeIcon}
                          alt={this.state.isLoggedInUserSubscribed ? 'Subscribed icon' : 'Subscribe icon'}
                          className='float-left mr-2'/>
@@ -685,7 +693,7 @@ export default class Event extends React.Component {
                 </Button>
             )
         ) : (
-            <Button className='float-right btn-dark' href={`/login?redirectTo=${window.location.pathname}`}>
+            <Button className='btn-dark' href={`/login?redirectTo=${window.location.pathname}`}>
                 <img src={SubscribeIcon} className='float-left mr-2' alt='Subscribe icon'/>
                 Subscribe
             </Button>
@@ -708,7 +716,14 @@ export default class Event extends React.Component {
                     )}
                     <Row className='mt-4'>
                         <Col>
-                            {this.renderOptionsOrSubscribeButton()}
+                            <div className='float-right'>
+                                <h5 className='black-link text-right'>
+                                    <Link to={`/`}>
+                                        {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
+                                    </Link>
+                                </h5>
+                                {this.renderOptionsOrSubscribeButton()}
+                            </div>
                             <h4>{this.state.eventName}</h4>
                             <h6>
                                 {formatDateRange({
