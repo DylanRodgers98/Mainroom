@@ -441,19 +441,24 @@ export default class Schedule extends React.Component {
                     <table>
                         <tbody>
                             <tr>
-                                <td>
-                                    <Link to={`/user/${scheduledStream.user.username}`}>
-                                        <img className='rounded-circle m-2' src={scheduledStream.user.profilePicURL}
-                                             width='75' height='75'
-                                             alt={`${scheduledStream.user.username} profile picture`}/>
-                                    </Link>
-                                </td>
+                                {!scheduledStream.user ? undefined : (
+                                    <td>
+                                        <Link to={`/user/${scheduledStream.user.username}`}>
+                                            <img className='rounded-circle m-2' src={scheduledStream.user.profilePicURL}
+                                                 width='75' height='75'
+                                                 alt={`${scheduledStream.user.username} profile picture`}/>
+                                        </Link>
+                                    </td>
+                                )}
                                 <td valign='middle' className='w-100'>
                                     <h5>
-                                        <Link to={`/user/${scheduledStream.user.username}`}>
-                                            {scheduledStream.user.displayName || scheduledStream.user.username}
-                                        </Link>
-                                        {scheduledStream.title ? ` - ${scheduledStream.title}` : ''}
+                                        {!scheduledStream.user ? undefined : (
+                                            <Link to={`/user/${scheduledStream.user.username}`}>
+                                                {scheduledStream.user.displayName || scheduledStream.user.username}
+                                            </Link>
+                                        )}
+                                        {!scheduledStream.title ? ''
+                                            : `${scheduledStream.user ? ' - ': ''}${scheduledStream.title}`}
                                     </h5>
                                     <h6>
                                         {displayGenreAndCategory({
@@ -461,16 +466,24 @@ export default class Schedule extends React.Component {
                                             category: scheduledStream.category
                                         })}
                                     </h6>
-                                    {!scheduledStream ? undefined : formatDateRange({
+                                    {formatDateRange({
                                         start: scheduledStream.start_time,
                                         end: scheduledStream.end_time
                                     })}
+                                    {!scheduledStream.event ? undefined : (
+                                        <h6>
+                                            Scheduled as part of&nbsp;
+                                            <Link to={`/event/${scheduledStream.event._id}`}>
+                                                {scheduledStream.event.eventName}
+                                            </Link>
+                                        </h6>
+                                    )}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </ModalBody>
-                {scheduledStream.user._id !== this.state.loggedInUserId ? undefined : (
+                {scheduledStream.user && scheduledStream.user._id !== this.state.loggedInUserId ? undefined : (
                     <ModalFooter>
                         <Button className='btn-danger' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
                             <img src={WhiteDeleteIcon} width={18} height={18} className='mr-1 mb-1'

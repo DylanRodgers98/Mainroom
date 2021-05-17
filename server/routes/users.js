@@ -643,88 +643,137 @@ router.post('/:username/stream-key', loginChecker.ensureLoggedIn(), isAuthorised
     });
 });
 
-router.get('/:username/schedule', (req, res, next) => {
+router.get('/:username/schedule', async (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, 'subscriptions nonSubscribedScheduledStreams', (err, user) => {
-        if (err) {
-            LOGGER.error(`An error occurred when getting finding user {}: {}`, username, err.stack);
-            next(err);
-        } else if (!user) {
-            res.status(404).send(`User (username: ${escape(username)}) not found`);
-        } else {
-            const subscriptionsIds = user.subscriptions.map(sub => sub.user._id);
-            ScheduledStream.find({
-                $or: [
-                    {user: {$in: [user._id, ...subscriptionsIds]}},
-                    {_id: {$in: user.nonSubscribedScheduledStreams}}
-                ],
-                startTime: {$lte: req.query.scheduleEndTime},
-                endTime: {$gte: req.query.scheduleStartTime}
-            })
-            .select('user title startTime endTime genre category')
+
+    let user;
+    try {
+        user = await User.findOne({username: username})
+            .select('subscriptions nonSubscribedScheduledStreams subscribedEvents')
+            .exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when getting finding user {}: {}`, username, err.stack);
+        return next(err);
+    }
+    if (!user) {
+        return res.status(404).send(`User (username: ${escape(username)}) not found`);
+    }
+
+    const eventStageIds = [];
+    const eventIds = user.subscribedEvents.map(sub => sub.event._id);
+    try {
+        const events = await Event.find({_id: {$in: eventIds}})
+            .select('stages')
             .populate({
-                path: 'user',
-                select: '_id username displayName profilePic.bucket profilePic.key'
+                path: 'stages',
+                select: '_id'
             })
-            .exec((err, scheduledStreams) => {
-                if (err) {
-                    LOGGER.error(`An error occurred when getting user {}'s schedule: {}`, username, err.stack);
-                    next(err);
-                } else {
-                    const scheduleGroups = [{
-                        id: 0,
-                        title: 'My Streams'
-                    }];
-                    const scheduleItems = [];
+            .exec()
 
-                    if (scheduledStreams && scheduledStreams.length) {
-                        const usernameToScheduleGroupIds = new Map();
-                        usernameToScheduleGroupIds.set(username, 0);
+        events.forEach(event => {
+            if (event.stages && event.stages.length) {
+                const currentEventStageIds = event.stages.map(eventStage => eventStage._id);
+                eventStageIds.push(...currentEventStageIds);
+            }
+        });
+    } catch (err) {
+        LOGGER.error(`An error occurred when getting finding _id's of EventStages: {}`, err.stack);
+        return next(err);
+    }
 
-                        scheduledStreams.forEach(scheduledStream => {
-                            const scheduledStreamUsername = scheduledStream.user.username;
+    let scheduledStreams;
+    const subscriptionsIds = user.subscriptions.map(sub => sub.user._id);
+    try {
+        scheduledStreams = await ScheduledStream.find({
+            $or: [
+                {user: {$in: [user._id, ...subscriptionsIds]}},
+                {_id: {$in: user.nonSubscribedScheduledStreams}},
+                {eventStage: {$in: eventStageIds}}
+            ],
+            startTime: {$lte: req.query.scheduleEndTime},
+            endTime: {$gte: req.query.scheduleStartTime}
+        })
+        .select('user eventStage title startTime endTime genre category')
+        .populate({
+            path: 'user',
+            select: '_id username displayName profilePic.bucket profilePic.key'
+        })
+        .populate({
+            path: 'eventStage',
+            select: 'event stageName',
+            populate: {
+                path: 'event',
+                select: '_id eventName'
+            }
+        })
+        .exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when getting User's (username :{}) schedule: {}`, username, err.stack);
+        return next(err);
+    }
 
-                            let scheduleGroupId;
-                            if (usernameToScheduleGroupIds.has(scheduledStreamUsername)) {
-                                // if schedule group already exists for user, get its ID
-                                scheduleGroupId = usernameToScheduleGroupIds.get(scheduledStreamUsername);
-                            } else {
-                                // if schedule group does not exist for user, create one
-                                scheduleGroupId = scheduleGroups.length;
-                                usernameToScheduleGroupIds.set(scheduledStreamUsername, scheduleGroupId);
-                                scheduleGroups.push({
-                                    id: scheduleGroupId,
-                                    title: scheduledStreamUsername
-                                });
-                            }
+    const scheduleGroups = [{
+        id: 0,
+        title: 'My Streams'
+    }];
+    const scheduleItems = [];
 
-                            scheduleItems.push({
-                                _id: scheduledStream._id,
-                                id: scheduleItems.length,
-                                group: scheduleGroupId,
-                                title: scheduledStream.title || scheduledStreamUsername,
-                                start_time: scheduledStream.startTime,
-                                end_time: scheduledStream.endTime,
-                                genre: scheduledStream.genre,
-                                category: scheduledStream.category,
-                                user: {
-                                    _id: scheduledStream.user._id,
-                                    username: scheduledStream.user.username,
-                                    displayName: scheduledStream.user.displayName,
-                                    profilePicURL: scheduledStream.user.getProfilePicURL()
-                                },
-                                isNonSubscribed: user.nonSubscribedScheduledStreams.includes(scheduledStream._id)
-                            });
-                        });
-                    }
+    if (scheduledStreams && scheduledStreams.length) {
+        const scheduleGroupTitlesToIds = new Map();
+        scheduleGroupTitlesToIds.set(username, 0);
 
-                    res.json({
-                        scheduleGroups,
-                        scheduleItems
-                    });
-                }
-            });
-        }
+        scheduledStreams.forEach(scheduledStream => {
+            const scheduledGroupTitle = scheduledStream.eventStage
+                ? scheduledStream.eventStage.stageName
+                : scheduledStream.user.username;
+
+            let scheduleGroupId;
+            if (scheduleGroupTitlesToIds.has(scheduledGroupTitle)) {
+                // if schedule group already exists for given title, get its ID
+                scheduleGroupId = scheduleGroupTitlesToIds.get(scheduledGroupTitle);
+            } else {
+                // if schedule group does not exist for given title, create one
+                scheduleGroupId = scheduleGroups.length;
+                scheduleGroupTitlesToIds.set(scheduledGroupTitle, scheduleGroupId);
+                scheduleGroups.push({
+                    id: scheduleGroupId,
+                    title: scheduledGroupTitle
+                });
+            }
+
+            const scheduleItem = {
+                _id: scheduledStream._id,
+                id: scheduleItems.length,
+                group: scheduleGroupId,
+                title: scheduledStream.title || scheduledGroupTitle,
+                start_time: scheduledStream.startTime,
+                end_time: scheduledStream.endTime,
+                genre: scheduledStream.genre,
+                category: scheduledStream.category,
+                isNonSubscribed: user.nonSubscribedScheduledStreams.includes(scheduledStream._id)
+            };
+
+            if (scheduledStream.eventStage) {
+                scheduleItem.event = {
+                    _id: scheduledStream.eventStage.event._id,
+                    eventName: scheduledStream.eventStage.event.eventName
+                };
+            } else {
+                scheduleItem.user = {
+                    _id: scheduledStream.user._id,
+                    username: scheduledStream.user.username,
+                    displayName: scheduledStream.user.displayName,
+                    profilePicURL: scheduledStream.user.getProfilePicURL()
+                };
+            }
+
+            scheduleItems.push(scheduleItem);
+        });
+    }
+
+    res.json({
+        scheduleGroups,
+        scheduleItems
     });
 });
 
