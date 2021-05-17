@@ -724,7 +724,7 @@ router.get('/:username/schedule', async (req, res, next) => {
 
         scheduledStreams.forEach(scheduledStream => {
             const scheduledGroupTitle = scheduledStream.eventStage
-                ? scheduledStream.eventStage.stageName
+                ? `${scheduledStream.eventStage.stageName} (${scheduledStream.eventStage.event.eventName})`
                 : scheduledStream.user.username;
 
             let scheduleGroupId;
@@ -756,7 +756,8 @@ router.get('/:username/schedule', async (req, res, next) => {
             if (scheduledStream.eventStage) {
                 scheduleItem.event = {
                     _id: scheduledStream.eventStage.event._id,
-                    eventName: scheduledStream.eventStage.event.eventName
+                    eventName: scheduledStream.eventStage.event.eventName,
+                    stageName: scheduledStream.eventStage.stageName
                 };
             } else {
                 scheduleItem.user = {

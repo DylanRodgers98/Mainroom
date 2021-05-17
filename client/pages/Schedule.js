@@ -452,13 +452,16 @@ export default class Schedule extends React.Component {
                                 )}
                                 <td valign='middle' className='w-100'>
                                     <h5>
-                                        {!scheduledStream.user ? undefined : (
+                                        {scheduledStream.event ? (
+                                            <Link to={`/event/${scheduledStream.event._id}`}>
+                                                {scheduledStream.event.stageName}
+                                            </Link>
+                                        ) : (
                                             <Link to={`/user/${scheduledStream.user.username}`}>
                                                 {scheduledStream.user.displayName || scheduledStream.user.username}
                                             </Link>
                                         )}
-                                        {!scheduledStream.title ? ''
-                                            : `${scheduledStream.user ? ' - ': ''}${scheduledStream.title}`}
+                                        {scheduledStream.title ? ` - ${scheduledStream.title}` : ''}
                                     </h5>
                                     <h6>
                                         {displayGenreAndCategory({
