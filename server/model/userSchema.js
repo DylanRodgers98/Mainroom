@@ -103,7 +103,7 @@ UserSchema.post('findOneAndDelete', async function() {
 async function deleteProfilePic(user) {
     const profilePic = user.profilePic;
     if (profilePic.bucket !== defaultProfilePic.bucket
-        && profilePic.key !== defaultProfilePic.key) {
+        || profilePic.key !== defaultProfilePic.key) {
         LOGGER.debug('Deleting profile picture in S3 (bucket: {}, key: {}) for User (_id: {})',
             profilePic.bucket, profilePic.key, user._id);
         await deleteObject({

@@ -10,7 +10,7 @@ const CompositeError = require('../errors/CompositeError');
 const {deleteObject} = require('../aws/s3Utils');
 const {resolveObjectURL} = require('../aws/s3Utils');
 const {ScheduledStream, User} = require('./schemas');
-const LOGGER = require('../../logger')('./server/model/eventSchema.js');
+const LOGGER = require('../../logger')('./server/model/eventStageSchema.js');
 
 const EventStageSchema = new Schema({
     event: {type: Schema.Types.ObjectId, ref: 'Event'},
@@ -60,7 +60,7 @@ async function deleteSplashThumbnail(eventStage) {
     const splashThumbnail = eventStage.splashThumbnail;
 
     if (splashThumbnail.bucket !== defaultEventStageSplashThumbnail.bucket
-        && splashThumbnail.key !== defaultEventStageSplashThumbnail.key) {
+        || splashThumbnail.key !== defaultEventStageSplashThumbnail.key) {
 
         LOGGER.debug('Deleting splash thumbnail (bucket: {}, key: {}) in S3 for EventStage (_id: {})',
             splashThumbnail.bucket, splashThumbnail.key, eventStage._id);

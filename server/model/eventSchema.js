@@ -68,8 +68,8 @@ async function deleteBannerPicAndThumbnail(event) {
     const bannerPic = event.bannerPic;
     const thumbnail = event.thumbnail;
 
-    LOGGER.debug('Deleting banner pic (bucket: {}, key: {}) and thumbnail (bucket: {}, key: {}) in S3 for Event (_id: {})',
-        bannerPic.bucket, bannerPic.key, thumbnail.bucket, thumbnail.key, event._id);
+    LOGGER.debug('Deleting banner pic (bucket: {}, key: {}) in S3 for Event (_id: {})',
+        bannerPic.bucket, bannerPic.key, event._id);
 
     const promises = []
 
@@ -80,7 +80,11 @@ async function deleteBannerPicAndThumbnail(event) {
     promises.push(deleteBannerPicPromise);
 
     if (thumbnail.bucket !== defaultEventThumbnail.bucket
-        && thumbnail.key !== defaultEventThumbnail.key) {
+        || thumbnail.key !== defaultEventThumbnail.key) {
+
+        LOGGER.debug('Deleting thumbnail (bucket: {}, key: {}) in S3 for Event (_id: {})',
+            thumbnail.bucket, thumbnail.key, event._id);
+
         const deleteThumbnailPromise = deleteObject({
             Bucket: thumbnail.bucket,
             Key: thumbnail.key
@@ -96,8 +100,6 @@ async function deleteBannerPicAndThumbnail(event) {
         LOGGER.error(`Failed to delete banner pic (bucket: {}, key: {}) and thumbnail (bucket: {}, key: {}) in S3 for Event (_id: {}). Error: {}`,
             bannerPic.bucket, bannerPic.key, thumbnail.bucket, thumbnail.key, event._id, err.stack);
         await snsErrorPublisher.publish(err);
-    } else {
-        LOGGER.debug('Successfully deleted video and thumbnail in S3 for Event (_id: {})', event._id);
     }
 }
 
