@@ -1,7 +1,13 @@
 import React, {Suspense, lazy} from 'react';
 import {dateFormat, pagination, siteName, storage, validation} from '../../mainroom.config';
 import axios from 'axios';
-import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
+import {
+    displayErrorMessage,
+    displayGenreAndCategory,
+    displaySuccessMessage,
+    getAlert,
+    LoadingSpinner
+} from '../utils/displayUtils';
 import {
     Alert,
     Button,
@@ -27,6 +33,7 @@ import SubscribeIcon from '../icons/user-plus.svg';
 import RemoveIcon from '../icons/x.svg';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import AddIcon from '../icons/plus-white-20.svg';
+import WhiteDeleteIcon from '../icons/trash-white-20.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -50,6 +57,7 @@ export default class Event extends React.Component {
         this.onStageSplashThumbnailUpload = this.onStageSplashThumbnailUpload.bind(this);
         this.editEvent = this.editEvent.bind(this);
         this.toggleDeleteEventModal = this.toggleDeleteEventModal.bind(this);
+        this.deleteEvent = this.deleteEvent.bind(this);
         this.onClickSubscribeButton = this.onClickSubscribeButton.bind(this);
 
         this.state = {
@@ -78,6 +86,7 @@ export default class Event extends React.Component {
             editEventProgress: 0,
             editEventErrorMessage: '',
             isDeleteEventModalOpen: false,
+            showDeleteSpinner: false,
             recordedStreamsNextPage: STARTING_PAGE,
             showLoadMoreButton: false,
             showLoadMoreSpinner: false,
@@ -519,9 +528,44 @@ export default class Event extends React.Component {
             isDeleteEventModalOpen: !prevState.isDeleteEventModalOpen
         }));
     }
+
+    deleteEvent() {
+        this.setState({showDeleteSpinner: true}, async () => {
+            try {
+                await axios.delete(`/api/events/${this.state.eventId}`);
+                window.location.href = '/events';
+            } catch (err) {
+                displayErrorMessage(this, `An error occurred when deleting ${this.state.eventName}. Please try again later. (${err})`);
+                this.setState({
+                    showDeleteSpinner: false,
+                    isDeleteEventModalOpen: false
+                });
+            }
+        });
+    }
     
     renderDeleteEventModal() {
-        
+        return (
+            <Modal isOpen={this.state.isDeleteEventModalOpen} toggle={this.toggleDeleteEventModal}
+                   size='md' centered={true}>
+                <ModalHeader toggle={this.toggleDeleteEventModal}>
+                    Delete Event
+                </ModalHeader>
+                <ModalBody>
+                    <p>Are you sure you want to delete '{this.state.eventName}'?</p>
+                </ModalBody>
+                <ModalFooter>
+                    <Button className='btn-danger' onClick={this.deleteEvent}>
+                        {this.state.showDeleteSpinner ? <Spinner size='sm'/> : undefined}
+                        <span className={this.state.showDeleteSpinner ? 'sr-only' : undefined}>
+                            <img src={WhiteDeleteIcon} width={18} height={18} className='mr-2 mb-1'
+                                 alt='Delete Event icon'/>
+                            Delete
+                        </span>
+                    </Button>
+                </ModalFooter>
+            </Modal>
+        );
     }
 
     onClickSubscribeButton() {
@@ -666,7 +710,7 @@ export default class Event extends React.Component {
     renderOptionsOrSubscribeButton() {
         return this.state.loggedInUserId ? (
             this.state.loggedInUserId === this.state.createdBy._id ? (
-                <Dropdown className='options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
+                <Dropdown className='float-right options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
                           toggle={this.toggleOptionsDropdown} size='sm'>
                     <DropdownToggle caret>
                         Options

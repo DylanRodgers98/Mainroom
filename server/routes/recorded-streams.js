@@ -188,10 +188,17 @@ router.patch('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
 
 router.delete('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const id = sanitise(req.params.id);
-    const recordedStream = await RecordedStream.findById(id).select('user').exec();
+
+    let recordedStream;
+    try {
+        recordedStream = await RecordedStream.findById(id).select('user').exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding RecordedStream with id '{}': {}`, id, err.stack);
+        return next(err);
+    }
 
     if (!recordedStream) {
-        res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
+        return res.status(404).send(`Recorded stream (_id: ${escape(id)}) not found`);
     }
     if (recordedStream.user.toString() !== req.user._id.toString()) {
         return res.sendStatus(401);

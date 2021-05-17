@@ -138,7 +138,7 @@ async function deleteScheduledStreams(user, model) {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} ScheduledStream{} failed to delete for User (_id: {}). Error: {}`,
-                errors.length, streams.length, streams.length === 1 ? '' : 's', user._id, err.stack);
+                errors.length, streams.length, errors.length === 1 ? '' : 's', user._id, err.stack);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug('Successfully deleted {} ScheduledStreams for User (_id: {})', deleted, user._id);
@@ -167,7 +167,7 @@ async function deleteRecordedStreams(user) {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} RecordedStream{} failed to delete for User (_id: {}). Error: {}`,
-                errors.length, streams.length, streams.length === 1 ? '' : 's', user._id, err.stack);
+                errors.length, streams.length, errors.length === 1 ? '' : 's', user._id, err.stack);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug('Successfully deleted {} RecordedStreams for User (_id: {})', deleted, user._id);

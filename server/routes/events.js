@@ -487,7 +487,6 @@ router.get('/:eventId/event-name', async (req, res, next) => {
     res.json({eventName: event.eventName});
 });
 
-
 router.get('/:eventId/subscribers', async (req, res, next) => {
     const eventId = sanitise(req.params.eventId);
 
@@ -658,6 +657,39 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
             };
         })
     });
+});
+
+router.delete('/:eventId', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const eventId = sanitise(req.params.eventId);
+
+    let event;
+    try {
+        event = await Event.findById(eventId)
+            .select('createdBy')
+            .populate({
+                path: 'createdBy',
+                select: '_id'
+            })
+            .exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        return next(err);
+    }
+
+    if (!event) {
+        return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
+    }
+    if (event.createdBy._id.toString() !== req.user._id.toString()) {
+        return res.sendStatus(401);
+    }
+
+    try {
+        await Event.findByIdAndDelete(eventId);
+        res.sendStatus(200);
+    } catch (err) {
+        LOGGER.error(`An error occurred when deleting Event (_id: {}) from database: {}`, eventId, err.stack);
+        next(err);
+    }
 });
 
 module.exports = router;
