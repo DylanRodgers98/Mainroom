@@ -20,7 +20,11 @@ const EventSchema = new Schema({
         key: {type: String, default: defaultEventThumbnail.key}
     },
     stages: {type: [{type: Schema.Types.ObjectId, ref: 'EventStage'}], validate: stages => stages.length <= stagesMaxAmount},
-    tags: {type: [String], validate: tags => tags.length <= tagsMaxAmount}
+    tags: {type: [String], validate: tags => tags.length <= tagsMaxAmount},
+    subscribers: [{
+        user: {type: Schema.Types.ObjectId, ref: 'User'},
+        subscribedAt: {type: Date, default: () => new Date()}
+    }]
 });
 
 EventSchema.methods.getBannerPicURL = function () {

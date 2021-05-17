@@ -1,5 +1,5 @@
 import React, {Suspense, lazy} from 'react';
-import {dateFormat, defaultEventStageName, pagination, siteName, storage, validation} from '../../mainroom.config';
+import {dateFormat, pagination, siteName, storage, validation} from '../../mainroom.config';
 import axios from 'axios';
 import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import {
@@ -50,6 +50,7 @@ export default class Event extends React.Component {
         this.onStageSplashThumbnailUpload = this.onStageSplashThumbnailUpload.bind(this);
         this.editEvent = this.editEvent.bind(this);
         this.toggleDeleteEventModal = this.toggleDeleteEventModal.bind(this);
+        this.onClickSubscribeButton = this.onClickSubscribeButton.bind(this);
 
         this.state = {
             eventId: '',
@@ -155,11 +156,10 @@ export default class Event extends React.Component {
 
     async isLoggedInUserSubscribed() {
         if (this.state.loggedInUserId && this.state.loggedInUserId !== this.state.createdBy._id) {
-            // TODO: change URL to match route that checks subscription to Event
-            // const res = await axios.get(`/api/users/${this.state.loggedInUser}/subscribed-to/${this.props.match.params.username.toLowerCase()}`);
-            // this.setState({
-            //     isLoggedInUserSubscribed: res.data
-            // });
+            const res = await axios.get(`/api/users/${this.state.loggedInUserId}/subscribed-to-event/${this.state.eventId}`);
+            this.setState({
+                isLoggedInUserSubscribed: res.data
+            });
         }
     }
 
@@ -520,6 +520,28 @@ export default class Event extends React.Component {
     
     renderDeleteEventModal() {
         
+    }
+
+    onClickSubscribeButton() {
+        this.state.isLoggedInUserSubscribed ? this.unsubscribeFromEvent() : this.subscribeToEvent();
+    }
+
+    async subscribeToEvent() {
+        try {
+            await axios.post(`/api/users/${this.state.loggedInUserId}/subscribe-to-event/${this.state.eventId}`);
+            this.setState({isLoggedInUserSubscribed: true});
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when subscribing to event. Please try again later. (${err})`);
+        }
+    }
+
+    async unsubscribeFromEvent() {
+        try {
+            await axios.post(`/api/users/${this.state.loggedInUserId}/unsubscribe-from-event/${this.state.eventId}`);
+            this.setState({isLoggedInUserSubscribed: false});
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when unsubscribing from event. Please try again later. (${err})`);
+        }
     }
 
     renderStages() {

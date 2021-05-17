@@ -44,6 +44,10 @@ const UserSchema = new Schema({
         subscribedAt: {type: Date, default: () => new Date()}
     }],
     nonSubscribedScheduledStreams: [{type: Schema.Types.ObjectId, ref: 'ScheduledStream'}],
+    subscribedEvents: [{
+        event: {type: Schema.Types.ObjectId, ref: 'Event'},
+        subscribedAt: {type: Date, default: () => new Date()}
+    }],
     emailSettings: {
         newSubscribers: Boolean,
         subscriptionWentLive: Boolean,

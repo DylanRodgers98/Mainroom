@@ -208,22 +208,26 @@ export default class UserProfile extends React.Component {
     }
 
     async subscribeToUser() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username.toLowerCase()}`);
-        if (res.status === 200) {
+        try {
+            await axios.post(`/api/users/${this.state.loggedInUser}/subscribe/${this.props.match.params.username.toLowerCase()}`);
             this.setState({
                 isLoggedInUserSubscribed: true,
                 numOfSubscribers: this.state.numOfSubscribers + 1
             });
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when subscribing to event. Please try again later. (${err})`);
         }
     }
 
     async unsubscribeFromUser() {
-        const res = await axios.post(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username.toLowerCase()}`);
-        if (res.status === 200) {
+        try {
+            await axios.post(`/api/users/${this.state.loggedInUser}/unsubscribe/${this.props.match.params.username.toLowerCase()}`);
             this.setState({
                 isLoggedInUserSubscribed: false,
                 numOfSubscribers: this.state.numOfSubscribers - 1
             });
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when unsubscribing from event. Please try again later. (${err})`);
         }
     }
 

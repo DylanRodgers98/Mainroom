@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const config = require('../../mainroom.config');
-const {User, ScheduledStream} = require('../model/schemas');
+const {User, ScheduledStream, Event} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
@@ -334,9 +334,28 @@ router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
     });
 });
 
+router.get('/:userId/subscribed-to-event/:eventId', async (req, res, next) => {
+    const userId = sanitise(req.params.userId);
+    const eventId = sanitise(req.params.eventId);
+
+    let user;
+    try {
+        user = await User.findById(userId).select('subscribedEvents').exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding User with id '{}': {}`, userId, err.stack);
+        return next(err);
+    }
+    if (!user) {
+        return res.status(404).send(`User (_id: ${escape(userId)}) not found`);
+    }
+
+    const isSubscribed = user.subscribedEvents.some(sub => sub.event.toString() === eventId);
+    res.send(isSubscribed);
+});
+
 router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    User.findOne({username: username}, (err, user) => {
+    User.findOne({username: username}, '_id', (err, user) => {
         if (err) {
             LOGGER.error('An error occurred when finding user {}: {}', username, err.stack);
             next(err);
@@ -379,6 +398,53 @@ router.post('/:username/subscribe/:userToSubscribeTo', loginChecker.ensureLogged
     });
 });
 
+router.post('/:userId/subscribe-to-event/:eventId', async (req, res, next) => {
+    const userId = sanitise(req.params.userId);
+    let user;
+    try {
+        user = await User.findById(userId).select('_id').exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding User with id '{}': {}`, userId, err.stack);
+        return next(err);
+    }
+    if (!user) {
+        return res.status(404).send(`User (_id: ${escape(userId)}) not found`);
+    }
+
+    const eventId = sanitise(req.params.eventId);
+    let event;
+    try {
+        event = await Event.findById(eventId).select('_id subscribers').exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        return next(err);
+    }
+    if (!event) {
+        return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
+    }
+
+
+    const isAlreadySubscribed = event.subscribers.some(sub => _.isEqual(sub.user, user._id));
+    if (!isAlreadySubscribed) {
+        try {
+            await event.updateOne({$push: {subscribers: {user: user._id}}}).exec();
+        } catch (err) {
+            LOGGER.error(`An error occurred when adding User (_id: {}) to Event's (_id: {}) subscribers: {}`,
+                userId, eventId, err.stack);
+            return next(err);
+        }
+        try {
+            await user.updateOne({$push: {subscribedEvents: {event: event._id}}}).exec();
+        } catch (err) {
+            LOGGER.error(`An error occurred when adding Event (_id: {}) to User's (_id: {}) subscriptions: {}`,
+                eventId, userId, err.stack);
+            return next(err);
+        }
+    }
+
+    res.sendStatus(200);
+});
+
 router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensureLoggedIn(), isAuthorised, (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
     User.findOne({username}, (err, user) => {
@@ -400,12 +466,14 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
                     if (isSubscribed) {
                         userToUnsubscribeFrom.updateOne({$pull: {subscribers: {user: user._id}}}, err => {
                             if (err) {
-                                LOGGER.error(`An error occurred when removing user {} to user {}'s subscribers: {}`, username, userToUnsubscribeFrom, err.stack);
+                                LOGGER.error(`An error occurred when removing user {} from user {}'s subscribers: {}`,
+                                    username, userToUnsubscribeFrom, err.stack);
                                 next(err);
                             } else {
                                 user.updateOne({$pull: {subscriptions: {user: userToUnsubscribeFrom._id}}}, err => {
                                     if (err) {
-                                        LOGGER.error(`An error occurred when removing user {} to user {}'s subscriptions: {}`, userToUnsubscribeFrom, username, err.stack);
+                                        LOGGER.error(`An error occurred when removing user {} from user {}'s subscriptions: {}`,
+                                            userToUnsubscribeFrom, username, err.stack);
                                         next(err);
                                     } else {
                                         res.sendStatus(200);
@@ -420,6 +488,53 @@ router.post('/:username/unsubscribe/:userToUnsubscribeFrom', loginChecker.ensure
             });
         }
     });
+});
+
+router.post('/:userId/unsubscribe-from-event/:eventId', async (req, res, next) => {
+    const userId = sanitise(req.params.userId);
+    let user;
+    try {
+        user = await User.findById(userId).select('_id').exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding User with id '{}': {}`, userId, err.stack);
+        return next(err);
+    }
+    if (!user) {
+        return res.status(404).send(`User (_id: ${escape(userId)}) not found`);
+    }
+
+    const eventId = sanitise(req.params.eventId);
+    let event;
+    try {
+        event = await Event.findById(eventId).select('_id subscribers').exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        return next(err);
+    }
+    if (!event) {
+        return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
+    }
+
+
+    const isSubscribed = event.subscribers.some(sub => _.isEqual(sub.user, user._id));
+    if (isSubscribed) {
+        try {
+            await event.updateOne({$pull: {subscribers: {user: user._id}}}).exec();
+        } catch (err) {
+            LOGGER.error(`An error occurred when removing User (_id: {}) from Event's (_id: {}) subscribers: {}`,
+                userId, eventId, err.stack);
+            return next(err);
+        }
+        try {
+            await user.updateOne({$pull: {subscribedEvents: {event: event._id}}}).exec();
+        } catch (err) {
+            LOGGER.error(`An error occurred when removing Event (_id: {}) from User's (_id: {}) subscriptions: {}`,
+                eventId, userId, err.stack);
+            return next(err);
+        }
+    }
+
+    res.sendStatus(200);
 });
 
 router.get('/:username/stream-info', async (req, res, next) => {
