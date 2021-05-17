@@ -712,7 +712,7 @@ export default class Event extends React.Component {
             this.state.loggedInUserId === this.state.createdBy._id ? (
                 <Dropdown className='float-right options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
                           toggle={this.toggleOptionsDropdown} size='sm'>
-                    <DropdownToggle caret>
+                    <DropdownToggle className='pr-0' caret>
                         Options
                     </DropdownToggle>
                     <DropdownMenu right>
@@ -759,15 +759,7 @@ export default class Event extends React.Component {
                         </Row>
                     )}
                     <Row className='mt-4'>
-                        <Col>
-                            <div className='float-right'>
-                                <h5 className='black-link text-right'>
-                                    <Link to={`/event/${this.state.eventId}/subscribers`}>
-                                        {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
-                                    </Link>
-                                </h5>
-                                {this.renderOptionsOrSubscribeButton()}
-                            </div>
+                        <Col xs='8'>
                             <h4>{this.state.eventName}</h4>
                             <h6>
                                 {formatDateRange({
@@ -780,6 +772,16 @@ export default class Event extends React.Component {
                                     {this.state.createdBy.displayName || this.state.createdBy.username}
                                 </Link>
                             </h6>
+                        </Col>
+                        <Col xs='4'>
+                            <div className='float-right'>
+                                <h5 className='black-link text-right'>
+                                    <Link to={`/event/${this.state.eventId}/subscribers`}>
+                                        {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
+                                    </Link>
+                                </h5>
+                                {this.renderOptionsOrSubscribeButton()}
+                            </div>
                         </Col>
                     </Row>
                     <hr className='my-4'/>

@@ -48,7 +48,6 @@ EventSchema.methods.getThumbnailURL = function () {
     });
 };
 
-
 EventSchema.pre('findOneAndDelete', async function() {
     const event = await this.model.findOne(this.getQuery());
     if (event) {
@@ -68,16 +67,18 @@ async function deleteBannerPicAndThumbnail(event) {
     const bannerPic = event.bannerPic;
     const thumbnail = event.thumbnail;
 
-    LOGGER.debug('Deleting banner pic (bucket: {}, key: {}) in S3 for Event (_id: {})',
-        bannerPic.bucket, bannerPic.key, event._id);
-
     const promises = []
 
-    const deleteBannerPicPromise = deleteObject({
-        Bucket: bannerPic.bucket,
-        Key: bannerPic.key
-    });
-    promises.push(deleteBannerPicPromise);
+    if (bannerPic && bannerPic.bucket && bannerPic.key) {
+        LOGGER.debug('Deleting banner pic (bucket: {}, key: {}) in S3 for Event (_id: {})',
+            bannerPic.bucket, bannerPic.key, event._id);
+
+        const deleteBannerPicPromise = deleteObject({
+            Bucket: bannerPic.bucket,
+            Key: bannerPic.key
+        });
+        promises.push(deleteBannerPicPromise);
+    }
 
     if (thumbnail.bucket !== defaultEventThumbnail.bucket
         || thumbnail.key !== defaultEventThumbnail.key) {
@@ -91,6 +92,8 @@ async function deleteBannerPicAndThumbnail(event) {
         });
         promises.push(deleteThumbnailPromise);
     }
+
+    if (!promises.length) return;
 
     const promiseResults = await Promise.allSettled(promises);
     const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');

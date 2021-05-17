@@ -82,7 +82,8 @@ async function deleteSplashThumbnail(eventStage) {
 async function deleteScheduledStreams(eventStage) {
     // deletion must be done in for-each loop so references to ScheduledStreams being deleted
     // can be pulled from other Users' nonSubscribedScheduledStreams array, which can't be done
-    // using mongoose middleware due to the ordering of imports in ./server/model/schemas.js
+    // using mongoose middleware due to the ordering of imports in ./server/model/schemas.js,
+    // and so that prerecorded videos can be deleted from S3
 
     const streams = await ScheduledStream.find({eventStage}).select( '_id').exec();
     if (streams.length) {
