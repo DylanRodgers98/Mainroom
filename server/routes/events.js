@@ -420,7 +420,7 @@ router.get('/:eventId', async (req, res, next) => {
             .select('_id eventName createdBy startTime endTime bannerPic.bucket bannerPic.key tags stages subscribers')
             .populate({
                 path: 'createdBy',
-                select: '_id displayName'
+                select: '_id username displayName'
             })
             .populate({
                 path: 'stages',

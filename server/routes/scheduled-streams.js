@@ -77,7 +77,15 @@ router.get('/', async (req, res, next) => {
     };
     try {
         const scheduledStreams = await ScheduledStream.find(filter)
-            .select('title startTime endTime genre category')
+            .select('eventStage title startTime endTime genre category')
+            .populate( {
+                path: 'eventStage',
+                select: 'event stageName',
+                populate: {
+                    path: 'event',
+                    select: '_id eventName'
+                }
+            })
             .sort('startTime')
             .exec();
         res.json({scheduledStreams});

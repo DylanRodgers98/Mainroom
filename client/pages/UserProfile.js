@@ -363,9 +363,6 @@ export default class UserProfile extends React.Component {
     }
 
     async removeFromSchedule(streamId) {
-        if (this.state.isLoggedInUserSubscribed) {
-            return;
-        }
         try {
             await axios.patch(`/api/users/${this.state.loggedInUser}/schedule/remove-non-subscribed/${streamId}`);
             const arrayWithStreamRemoved = this.state.scheduledStreamsInLoggedInUserSchedule.filter(id => id !== streamId);
@@ -396,8 +393,9 @@ export default class UserProfile extends React.Component {
                 </a>
             ) : (
                 this.state.isLoggedInUserSubscribed || this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
-                    <Button className='float-right btn-dark' size='sm' onClick={() => this.removeFromSchedule(stream._id)}>
-                        <span title={this.state.isLoggedInUserSubscribed ? undefined : `Remove '${stream.title}' from Schedule`}>
+                    <Button className='float-right btn-dark' size='sm'
+                            onClick={this.state.isLoggedInUserSubscribed || stream.eventStage ? undefined : () => this.removeFromSchedule(stream)}>
+                        <span title={this.state.isLoggedInUserSubscribed || stream.eventStage ? undefined : `Remove '${stream.title}' from Schedule`}>
                             <img src={TickIcon} className='mr-1' alt='In Schedule icon'/>
                             In Schedule
                         </span>
@@ -412,7 +410,17 @@ export default class UserProfile extends React.Component {
             return (
                 <Col className='margin-bottom-thick' key={index} md='6'>
                     {button}
-                    <h5>{stream.title}</h5>
+                    <h5>
+                        {!stream.eventStage ? undefined : (
+                            <React.Fragment>
+                                <Link to={`/event/${stream.eventStage.event._id}`}>
+                                    {stream.eventStage.stageName}
+                                </Link>
+                                {' - '}
+                            </React.Fragment>
+                        )}
+                        {stream.title}
+                    </h5>
                     <h6>
                         {displayGenreAndCategory({
                             genre: stream.genre,
@@ -423,6 +431,14 @@ export default class UserProfile extends React.Component {
                         start: stream.startTime,
                         end: stream.endTime
                     })}
+                    {!stream.eventStage ? undefined : (
+                        <h6>
+                            Scheduled as part of&nbsp;
+                            <Link to={`/event/${stream.eventStage.event._id}`}>
+                                {stream.eventStage.event.eventName}
+                            </Link>
+                        </h6>
+                    )}
                 </Col>
             );
         });
