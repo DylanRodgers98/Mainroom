@@ -1027,7 +1027,7 @@ export default class Event extends React.Component {
         });
     }
 
-    renderScheduleStream() {
+    renderScheduleStreamModal() {
         return !this.state.scheduleStreamModalOpen ? undefined : (
             <Modal isOpen={this.state.scheduleStreamModalOpen} toggle={this.toggleScheduleStreamModal} centered={true}>
                 <ModalHeader toggle={this.toggleScheduleStreamModal}>
@@ -1328,7 +1328,7 @@ export default class Event extends React.Component {
                 {this.renderEditEventModal()}
                 {this.renderDeleteEventModal()}
                 {this.renderSelectedScheduledStream()}
-                {this.renderScheduleStream()}
+                {this.renderScheduleStreamModal()}
             </React.Fragment>
         );
     }

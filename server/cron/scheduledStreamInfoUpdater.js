@@ -1,6 +1,6 @@
 const {CronJob} = require('cron');
 const {cronTime} = require('../../mainroom.config');
-const {ScheduledStream, User} = require('../model/schemas');
+const {ScheduledStream, User, EventStage} = require('../model/schemas');
 const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
@@ -28,25 +28,42 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
             LOGGER.info('No streams found starting between {} and {}, so nothing to update',
                 lastTimeTriggered, thisTimeTriggered);
         } else {
-            LOGGER.info('Updating {} user{} stream info from scheduled streams',
-                streams.length, streams.length === 1 ? `'s` : `s'`);
+            const suffix = streams.length === 1 ? `'s` : `s'`;
+            LOGGER.info('Updating {} user{}/stage{} stream info from scheduled streams',
+                streams.length, suffix, suffix);
 
             const errors = [];
             let updated = 0;
 
             for (const stream of streams) {
-                try {
-                    await User.findByIdAndUpdate(stream.user._id, {
-                        'streamInfo.title': stream.title,
-                        'streamInfo.genre': stream.genre,
-                        'streamInfo.category': stream.category,
-                        'streamInfo.tags': stream.tags
-                    });
-                    updated++;
-                } catch (err) {
-                    LOGGER.error('An error occurred when updating stream info for user with _id {}: {}',
-                        stream.user._id, err.stack);
-                    errors.push(err);
+                if (stream.eventStage) {
+                    try {
+                        await EventStage.findByIdAndUpdate(stream.eventStage._id, {
+                            'streamInfo.title': stream.title,
+                            'streamInfo.genre': stream.genre,
+                            'streamInfo.category': stream.category,
+                            'streamInfo.tags': stream.tags
+                        });
+                        updated++;
+                    } catch (err) {
+                        LOGGER.error('An error occurred when updating stream info for EventStage (_id: {}): {}',
+                            stream.eventStage._id, err.stack);
+                        errors.push(err);
+                    }
+                } else {
+                    try {
+                        await User.findByIdAndUpdate(stream.user._id, {
+                            'streamInfo.title': stream.title,
+                            'streamInfo.genre': stream.genre,
+                            'streamInfo.category': stream.category,
+                            'streamInfo.tags': stream.tags
+                        });
+                        updated++;
+                    } catch (err) {
+                        LOGGER.error('An error occurred when updating stream info for User (_id: {}): {}',
+                            stream.user._id, err.stack);
+                        errors.push(err);
+                    }
                 }
             }
 
@@ -57,8 +74,8 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
                 return await snsErrorPublisher.publish(err);
             }
 
-            LOGGER.info(`Successfully updated {}/{} user{} stream info from scheduled streams`,
-                updated, streams.length, streams.length === 1 ? `'s` : `s'`);
+            LOGGER.info(`Successfully updated {}/{} user{}/stage{} stream info from scheduled streams`,
+                updated, streams.length, suffix, suffix);
         }
 
         lastTimeTriggered = thisTimeTriggered;
