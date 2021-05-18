@@ -1153,11 +1153,13 @@ export default class Event extends React.Component {
             <Row className='mt-4'>
                 <Col>
                     <div className='mb-2'>
-                        <Button className='btn-dark' size='sm' onClick={this.toggleScheduleStreamModal}>
-                            <img src={PlusIcon} width={22} height={22} className='mr-1'
-                                 alt='Schedule a Stream icon'/>
-                            Schedule a Stream
-                        </Button>
+                        {this.state.loggedInUserId !== this.state.createdBy._id ? undefined : (
+                            <Button className='btn-dark' size='sm' onClick={this.toggleScheduleStreamModal}>
+                                <img src={PlusIcon} width={22} height={22} className='mr-1'
+                                     alt='Schedule a Stream icon'/>
+                                Schedule a Stream
+                            </Button>
+                        )}
                         <div className='float-right'>
                             <DateTimeRangeContainer ranges={this.scheduleDatePickerRange()} local={this.getDatePickerFormat()}
                                                     start={this.state.datePickerStartTime} end={this.state.datePickerEndTime}
