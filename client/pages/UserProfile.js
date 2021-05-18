@@ -401,10 +401,12 @@ export default class UserProfile extends React.Component {
                         </span>
                     </Button>
                 ) : (
-                    <Button className='float-right btn-dark' size='sm' onClick={() => this.addToSchedule(stream._id)}>
-                        <img src={AddIcon} className='mr-1' alt='Add to Schedule icon'/>
-                        Add to Schedule
-                    </Button>
+                    stream.eventStage ? undefined : (
+                        <Button className='float-right btn-dark' size='sm' onClick={() => this.addToSchedule(stream._id)}>
+                            <img src={AddIcon} className='mr-1' alt='Add to Schedule icon'/>
+                            Add to Schedule
+                        </Button>
+                    )
                 )
             );
             return (
