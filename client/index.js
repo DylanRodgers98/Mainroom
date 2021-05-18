@@ -40,8 +40,8 @@ if (document.getElementById('root')) {
                             <Route exact path='/search/:query' render={props => <Search {...props} />}/>
                             <Route exact path='/events' render={() => <Events />}/>
                             <Route exact path='/event/:eventId' render={(props) => <Event {...props} />}/>
-                            {/*<Route exact path='/event/:eventId/live' render={(props) => <LiveStream {...props} />}/>*/} // TODO
                             <Route exact path='/event/:eventId/subscribers' render={(props) => <Subscribers {...props} />}/>
+                            <Route exact path='/stage/:eventStageId' render={(props) => <LiveStream {...props} />}/>
                             <Route exact path='/user/:username' render={props => <UserProfile {...props} />}/>
                             <Route exact path='/user/:username/subscribers' render={props => <Subscribers {...props} />}/>
                             <Route exact path='/user/:username/subscriptions' render={props => <Subscriptions {...props} />}/>

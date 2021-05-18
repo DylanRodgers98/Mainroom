@@ -7,7 +7,8 @@ const axios = require('axios');
 const loginChecker = require('connect-ensure-login');
 const {
     rtmpServer,
-    storage: {s3, formDataKeys},
+    defaultProfilePicURL,
+    storage: {s3, formDataKeys, cloudfront},
     validation: {
         event: {eventNameMaxLength, tagsMaxAmount},
         eventStage: {stageNameMaxLength, stagesMaxAmount}
@@ -23,6 +24,9 @@ const {getThumbnail} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/routes/events.js');
 
 const S3_V2_TO_V3_BRIDGE = new S3V2ToV3Bridge();
+const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
+const RTMP_SERVER_URL = `rtmp://${process.env.NODE_ENV === 'production' ? process.env.SERVER_HOST : 'localhost'}`
+    + `${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
 
 router.get('/', (req, res, next) => {
     const options = {
@@ -525,7 +529,7 @@ router.get('/:eventId/subscribers', async (req, res, next) => {
                             subscribers: (event.subscribers || []).map(sub => {
                                 return {
                                     username: sub.user.username,
-                                    profilePicURL: sub.user.getProfilePicURL() || config.defaultProfilePicURL
+                                    profilePicURL: sub.user.getProfilePicURL() || defaultProfilePicURL
                                 };
                             }),
                             nextPage: page < pages ? page + 1 : null
@@ -689,6 +693,56 @@ router.delete('/:eventId', loginChecker.ensureLoggedIn(), async (req, res, next)
         LOGGER.error(`An error occurred when deleting Event (_id: {}) from database: {}`, eventId, err.stack);
         next(err);
     }
+});
+
+router.get('/:eventStageId/stream-info', async (req, res, next) => {
+    const eventStageId = sanitise(req.params.eventStageId);
+
+    let eventStage;
+    try {
+        eventStage = await EventStage.findById(eventStageId)
+            .select('event stageName +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.tags streamInfo.viewCount streamInfo.startTime')
+            .populate({
+                path: 'event',
+                select: '_id eventName'
+            })
+            .exec()
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        return next(err);
+    }
+
+    if (!eventStage) {
+        return res.status(404).send(`Event (_id: ${escape(eventStageId)}) not found`);
+    }
+
+    const streamKey = eventStage.streamInfo.streamKey;
+    const {data: {isLive}} = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
+        headers: {Authorization: rtmpServer.auth.header}
+    });
+
+    const liveStreamURL = process.env.NODE_ENV === 'production'
+        ? `https://${cloudfront.liveStreams}/${streamKey}/index.m3u8`
+        : `http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+
+    const socketIOURL = (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+        + `://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?eventStageId=${eventStageId}`;
+
+    res.json({
+        isLive,
+        streamKey,
+        event: eventStage.event,
+        stageName: eventStage.stageName,
+        title: eventStage.streamInfo.title,
+        genre: eventStage.streamInfo.genre,
+        category: eventStage.streamInfo.category,
+        tags: eventStage.streamInfo.tags,
+        viewCount: eventStage.streamInfo.viewCount,
+        startTime: eventStage.streamInfo.startTime,
+        rtmpServerURL: RTMP_SERVER_URL,
+        liveStreamURL,
+        socketIOURL
+    });
 });
 
 module.exports = router;

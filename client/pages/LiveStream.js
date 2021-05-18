@@ -6,7 +6,7 @@ import {Link} from 'react-router-dom';
 import {Button, Col, Container, Row} from 'reactstrap';
 import io from 'socket.io-client';
 import {ReactHeight} from 'react-height/lib/ReactHeight';
-import {displayGenreAndCategory} from '../utils/displayUtils';
+import {displayGenreAndCategory, LoadingSpinner} from '../utils/displayUtils';
 import SocialShareButton from '../components/SocialShareButton';
 import {formatDate} from '../utils/dateUtils';
 
@@ -31,6 +31,7 @@ export default class LiveStream extends React.Component {
             viewerUser: null,
             displayName: '',
             profilePicURL: '',
+            event: undefined,
             streamKey: '',
             streamTitle: '',
             streamGenre: '',
@@ -55,8 +56,17 @@ export default class LiveStream extends React.Component {
     }
 
     async getStreamInfo() {
+        let url;
+        if (this.props.match.params.username) {
+            url = `/api/users/${this.props.match.params.username.toLowerCase()}/stream-info`;
+        } else if (this.props.match.params.eventStageId) {
+            url = `/api/events/${this.props.match.params.eventStageId}/stream-info`;
+        } else {
+            window.location.href = '/404';
+        }
+
         try {
-            const res = await axios.get(`/api/users/${this.props.match.params.username.toLowerCase()}/stream-info`);
+            const res = await axios.get(url);
             this.setState({
                 socketIOURL: res.data.socketIOURL
             }, () => {
@@ -65,6 +75,11 @@ export default class LiveStream extends React.Component {
                 }
                 if (res.data.isLive) {
                     this.populateStreamData(res.data);
+                } else if (this.props.match.params.eventStageId && res.data.event && res.data.stageName) {
+                    this.setState({
+                        event: res.data.event,
+                        eventStageName: res.data.stageName,
+                    });
                 }
             });
         } catch (err) {
@@ -90,6 +105,8 @@ export default class LiveStream extends React.Component {
             },
             displayName: data.displayName,
             profilePicURL: data.profilePicURL,
+            event: data.event,
+            eventStageName: data.stageName,
             streamTitle: data.title,
             streamGenre: data.genre,
             streamCategory: data.category,
@@ -98,7 +115,7 @@ export default class LiveStream extends React.Component {
         }, () => {
             this.player = videojs(this.videoNode, this.state.videoJsOptions);
             document.title = [
-                (this.state.displayName || this.props.match.params.username.toLowerCase()),
+                (this.props.match.params.eventStageId ? this.state.eventStageName : (this.state.displayName || this.props.match.params.username.toLowerCase())),
                 this.state.streamTitle,
                 siteName
             ].filter(Boolean).join(' - ');
@@ -117,12 +134,12 @@ export default class LiveStream extends React.Component {
         this.socket = io(this.state.socketIOURL, {transports: [ 'websocket' ]});
 
         //register listeners
-        const streamUsername = this.props.match.params.username.toLowerCase();
-        this.socket.on(`chatMessage_${streamUsername}`, this.addMessageToChat);
-        this.socket.on(`streamStarted_${streamUsername}`, this.startStreamFromSocket);
-        this.socket.on(`streamEnded_${streamUsername}`, this.endStreamFromSocket);
-        this.socket.on(`streamInfoUpdated_${streamUsername}`, this.updateStreamInfoFromSocket);
-        this.socket.on(`liveStreamViewCount_${streamUsername}`, viewCount => {
+        const streamer = this.props.match.params.username ? this.props.match.params.username.toLowerCase() : this.props.match.params.eventStageId;
+        this.socket.on(`chatMessage_${streamer}`, this.addMessageToChat);
+        this.socket.on(`streamStarted_${streamer}`, this.startStreamFromSocket);
+        this.socket.on(`streamEnded_${streamer}`, this.endStreamFromSocket);
+        this.socket.on(`streamInfoUpdated_${streamer}`, this.updateStreamInfoFromSocket);
+        this.socket.on(`liveStreamViewCount_${streamer}`, viewCount => {
             this.setState({
                 // liveStreamViewCount is the first event emitted from server after it receives a
                 // `connection_${streamUsername}` event, so use this to test for successful connection
@@ -132,7 +149,7 @@ export default class LiveStream extends React.Component {
         });
 
         // emit connection event
-        this.socket.emit(`connection_${streamUsername}`);
+        this.socket.emit(`connection_${streamer}`);
 
         // retry on unsuccessful connection
         setTimeout(() => {
@@ -170,10 +187,10 @@ export default class LiveStream extends React.Component {
 
     startStreamFromSocket() {
         // When a user goes live, their view count is reset to 0 by the server, so this needs to be updated with the
-        // current number of people viewing this page. This is done by emitting the connection_${streamUsername}
+        // current number of people viewing this page. This is done by emitting the connection_${streamer}
         // event for each user on this page, which increments the view count for streamUsername.
-        const streamUsername = this.props.match.params.username.toLowerCase();
-        this.socket.emit(`connection_${streamUsername}`);
+        const streamer = this.props.match.params.eventStageId ? this.props.match.params.eventStageId : this.props.match.params.username.toLowerCase();
+        this.socket.emit(`connection_${streamer}`);
 
         // Stream is not available as soon as user goes live because .m3u8 playlist file needs to populate,
         // so wait a timeout (which needs to be longer than the time of each video segment) before loading.
@@ -297,18 +314,26 @@ export default class LiveStream extends React.Component {
                                 <table>
                                     <tbody>
                                         <tr>
-                                            <td valign='top'>
-                                                <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
-                                                    <img className='rounded-circle m-2' src={this.state.profilePicURL}
-                                                         width='75' height='75'
-                                                         alt={`${this.props.match.params.username.toLowerCase()} profile picture`}/>
-                                                </Link>
-                                            </td>
+                                            {!this.props.match.params.eventStageId ? undefined : (
+                                                <td valign='top'>
+                                                    <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
+                                                        <img className='rounded-circle m-2' src={this.state.profilePicURL}
+                                                             width='75' height='75'
+                                                             alt={`${this.props.match.params.username.toLowerCase()} profile picture`}/>
+                                                    </Link>
+                                                </td>
+                                            )}
                                             <td className='w-100' valign='middle'>
                                                 <h3 className='text-break'>
-                                                    <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
-                                                        {this.state.displayName || this.props.match.params.username.toLowerCase()}
-                                                    </Link>
+                                                    {this.props.match.params.eventStageId ? (
+                                                        <Link to={`/event/${this.state.event._id}`}>
+                                                            {this.state.event.eventName}
+                                                        </Link>
+                                                    ) : (
+                                                        <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
+                                                            {this.state.displayName || this.props.match.params.username.toLowerCase()}
+                                                        </Link>
+                                                    )}
                                                     {this.state.streamTitle ? ` - ${this.state.streamTitle}` : ''}
                                                 </h3>
                                                 <h6>
@@ -340,10 +365,24 @@ export default class LiveStream extends React.Component {
             </Fragment>
         ) : (
             <div className='mt-5 text-center'>
-                <h3>{this.props.match.params.username.toLowerCase()} is not currently live</h3>
-                <Button className='btn-dark mt-2' tag={Link} to={`/user/${this.props.match.params.username.toLowerCase()}`}>
-                    Go To Profile
-                </Button>
+                {this.props.match.params.username ? (
+                    <React.Fragment>
+                        <h3>{this.props.match.params.username.toLowerCase()} is not currently live</h3>
+                        <Button className='btn-dark mt-2' tag={Link} to={`/user/${this.props.match.params.username.toLowerCase()}`}>
+                            Go To Profile
+                        </Button>
+                    </React.Fragment>
+                ) : !this.state.event ? (<LoadingSpinner/>) : (
+                    <React.Fragment>
+                        <h3>
+                            <Link to={`/event/${this.state.event._id}`}>
+                                {this.state.event.eventName}
+                            </Link> - {this.state.eventStageName} is not currently live</h3>
+                        <Button className='btn-dark mt-2' tag={Link} to={`/event/${this.state.event._id}`}>
+                            Go To Event
+                        </Button>
+                    </React.Fragment>
+                )}
             </div>
         );
     }
