@@ -305,3 +305,17 @@ i {
 .pr-40 {
     padding-right: 40px;
 }
+
+.tab-nav-link,
+.active-tab-nav-link {
+    cursor: pointer;
+    background-color: #F9F9F9 !important;
+}
+
+.tab-nav-link {
+    border-bottom-color: #dee2e6 !important;
+}
+
+.active-tab-nav-link {
+    border-bottom-color: #F9F9F9 !important;
+}

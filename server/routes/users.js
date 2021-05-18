@@ -648,7 +648,7 @@ router.get('/:username/schedule', async (req, res, next) => {
 
     let user;
     try {
-        user = await User.findOne({username: username})
+        user = await User.findOne({username})
             .select('subscriptions nonSubscribedScheduledStreams subscribedEvents')
             .exec();
     } catch (err) {
@@ -661,24 +661,26 @@ router.get('/:username/schedule', async (req, res, next) => {
 
     const eventStageIds = [];
     const eventIds = user.subscribedEvents.map(sub => sub.event._id);
-    try {
-        const events = await Event.find({_id: {$in: eventIds}})
-            .select('stages')
-            .populate({
-                path: 'stages',
-                select: '_id'
-            })
-            .exec()
+    if (eventIds.length) {
+        try {
+            const events = await Event.find({_id: {$in: eventIds}})
+                .select('stages')
+                .populate({
+                    path: 'stages',
+                    select: '_id'
+                })
+                .exec()
 
-        events.forEach(event => {
-            if (event.stages && event.stages.length) {
-                const currentEventStageIds = event.stages.map(eventStage => eventStage._id);
-                eventStageIds.push(...currentEventStageIds);
-            }
-        });
-    } catch (err) {
-        LOGGER.error(`An error occurred when getting finding _id's of EventStages: {}`, err.stack);
-        return next(err);
+            events.forEach(event => {
+                if (event.stages && event.stages.length) {
+                    const currentEventStageIds = event.stages.map(eventStage => eventStage._id);
+                    eventStageIds.push(...currentEventStageIds);
+                }
+            });
+        } catch (err) {
+            LOGGER.error(`An error occurred when getting finding _id's of EventStages: {}`, err.stack);
+            return next(err);
+        }
     }
 
     let scheduledStreams;
@@ -690,8 +692,8 @@ router.get('/:username/schedule', async (req, res, next) => {
                 {_id: {$in: user.nonSubscribedScheduledStreams}},
                 {eventStage: {$in: eventStageIds}}
             ],
-            startTime: {$lte: req.query.scheduleEndTime},
-            endTime: {$gte: req.query.scheduleStartTime}
+            startTime: {$lt: req.query.scheduleEndTime},
+            endTime: {$gt: req.query.scheduleStartTime}
         })
         .select('user eventStage title startTime endTime genre category')
         .populate({

@@ -63,8 +63,6 @@ export default class Schedule extends React.Component {
             genres: [],
             categories: [],
             scheduleStreamOpen: false,
-            genreDropdownOpen: false,
-            categoryDropdownOpen: false,
             scheduleStreamStartTime: moment(),
             scheduleStreamEndTime: moment().add(1, 'hour'),
             scheduleStreamTitle: '',
@@ -124,7 +122,7 @@ export default class Schedule extends React.Component {
 
         this.setState({
             scheduleGroups: res.data.scheduleGroups,
-            scheduleItems: scheduleItems,
+            scheduleItems,
             loaded: true
         });
     }

@@ -1,10 +1,9 @@
 import React, {Suspense, lazy} from 'react';
-import {dateFormat, pagination, siteName, storage, validation} from '../../mainroom.config';
+import {dateFormat, filters, pagination, siteName, storage, validation} from '../../mainroom.config';
 import axios from 'axios';
 import {
     displayErrorMessage,
-    displayGenreAndCategory,
-    displaySuccessMessage,
+    displayGenreAndCategory, displaySuccessMessage,
     getAlert,
     LoadingSpinner
 } from '../utils/displayUtils';
@@ -17,9 +16,9 @@ import {
     DropdownItem,
     DropdownMenu,
     DropdownToggle,
-    Modal, ModalBody, ModalFooter, ModalHeader, Progress,
+    Modal, ModalBody, ModalFooter, ModalHeader, Nav, NavItem, NavLink, Progress,
     Row,
-    Spinner
+    Spinner, TabContent, TabPane
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
 import {convertLocalToUTC, convertUTCToLocal, formatDateRange, timeSince} from '../utils/dateUtils';
@@ -34,10 +33,16 @@ import RemoveIcon from '../icons/x.svg';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import AddIcon from '../icons/plus-white-20.svg';
 import WhiteDeleteIcon from '../icons/trash-white-20.svg';
+import CalendarIcon from "../icons/calendar-white-20.svg";
+import Timeline from "react-calendar-timeline";
+import PlusIcon from "../icons/plus-white.svg";
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
 const STARTING_PAGE = 1;
+const STREAMS_TAB_ID = 0;
+const SCHEDULE_TAB_ID = 1
+const CHAT_TAB_ID = 2;
 
 export default class Event extends React.Component {
 
@@ -59,13 +64,30 @@ export default class Event extends React.Component {
         this.toggleDeleteEventModal = this.toggleDeleteEventModal.bind(this);
         this.deleteEvent = this.deleteEvent.bind(this);
         this.onClickSubscribeButton = this.onClickSubscribeButton.bind(this);
+        this.scheduleApplyDate = this.scheduleApplyDate.bind(this);
+        this.toggleScheduleTab = this.toggleScheduleTab.bind(this);
+        this.toggleScheduleStreamModal = this.toggleScheduleStreamModal.bind(this);
+        this.stageDropdownToggle = this.stageDropdownToggle.bind(this);
+        this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
+        this.categoryDropdownToggle = this.categoryDropdownToggle.bind(this);
+        this.setScheduleStage = this.setScheduleStage.bind(this);
+        this.setTitle = this.setTitle.bind(this);
+        this.setGenre = this.setGenre.bind(this);
+        this.clearGenre = this.clearGenre.bind(this);
+        this.setCategory = this.setCategory.bind(this);
+        this.clearCategory = this.clearCategory.bind(this);
+        this.setTags = this.setTags.bind(this);
+        this.scheduleStreamApplyDate = this.scheduleStreamApplyDate.bind(this);
+        this.addToSchedule = this.addToSchedule.bind(this);
+        this.deselectScheduledStream = this.deselectScheduledStream.bind(this);
 
         this.state = {
-            eventId: '',
             eventName: '',
             createdBy: '',
             startTime: 0,
             endTime: 0,
+            datePickerStartTime: 0,
+            datePickerEndTime: 0,
             bannerPicURL: '',
             stages: [],
             tags: [],
@@ -74,6 +96,7 @@ export default class Event extends React.Component {
             loggedInUserId: '',
             isLoggedInUserSubscribed: false,
             isOptionsDropdownOpen: false,
+            activeTab: 0,
             isEditEventModalOpen: false,
             editEventName: '',
             editEventStartTime: undefined,
@@ -87,6 +110,23 @@ export default class Event extends React.Component {
             editEventErrorMessage: '',
             isDeleteEventModalOpen: false,
             showDeleteSpinner: false,
+            isScheduleLoaded: false,
+            scheduleStages: [],
+            genres: [],
+            categories: [],
+            scheduleStreamModalOpen: false,
+            stageDropdownOpen: false,
+            genreDropdownOpen: false,
+            categoryDropdownOpen: false,
+            scheduleStreamStage: undefined,
+            scheduleStreamStartTime: 0,
+            scheduleStreamEndTime: 0,
+            scheduleStreamTitle: '',
+            scheduleStreamGenre: '',
+            scheduleStreamCategory: '',
+            scheduleStreamTags: [],
+            showAddToScheduleSpinner: false,
+            addToScheduleErrorMessage: '',
             recordedStreamsNextPage: STARTING_PAGE,
             showLoadMoreButton: false,
             showLoadMoreSpinner: false,
@@ -101,11 +141,11 @@ export default class Event extends React.Component {
 
     async fillComponent() {
         try {
+            await this.getEventData();
             await Promise.all([
-                this.getEventData(),
-                this.getRecordedStreams()
+                this.getRecordedStreams(),
+                this.getLoggedInUser()
             ]);
-            await this.getLoggedInUser()
             this.setState({
                 loaded: true
             });
@@ -119,19 +159,33 @@ export default class Event extends React.Component {
     }
 
     async getEventData() {
-        const res = await axios.get(`/api/events/${this.props.match.params.eventId}`);
-        document.title = `${res.data.eventName} - ${siteName}`;
-        this.setState({
-            eventId: res.data._id,
-            eventName: res.data.eventName,
-            createdBy: res.data.createdBy,
-            startTime: convertUTCToLocal(res.data.startTime),
-            endTime: convertUTCToLocal(res.data.endTime),
-            bannerPicURL: res.data.bannerPicURL,
-            tags: res.data.tags,
-            stages: res.data.stages,
-            numOfSubscribers: res.data.numOfSubscribers
-        });
+        try {
+            const res = await axios.get(`/api/events/${this.props.match.params.eventId}`);
+            document.title = `${res.data.eventName} - ${siteName}`;
+            const startTime = convertUTCToLocal(res.data.startTime);
+            const endTime = convertUTCToLocal(res.data.endTime);
+            const scheduleStreamEndTime = moment(startTime).add(1, 'hour');
+            this.setState({
+                eventName: res.data.eventName,
+                createdBy: res.data.createdBy,
+                startTime,
+                endTime,
+                datePickerStartTime: startTime,
+                datePickerEndTime: endTime,
+                scheduleStreamStartTime: startTime,
+                scheduleStreamEndTime: scheduleStreamEndTime.isAfter(endTime) ? endTime : scheduleStreamEndTime,
+                bannerPicURL: res.data.bannerPicURL,
+                tags: res.data.tags,
+                stages: res.data.stages,
+                numOfSubscribers: res.data.numOfSubscribers
+            });
+        } catch (err) {
+            if (err.response.status === 404) {
+                window.location.href = '/404';
+            } else {
+                displayErrorMessage(this, `An error occurred when loading event info. Please try again later. (${err})`);
+            }
+        }
     }
 
     async getRecordedStreams() {
@@ -156,6 +210,40 @@ export default class Event extends React.Component {
         });
     }
 
+    getSchedule() {
+        this.setState({isScheduleLoaded: false}, async () => {
+            const res = await axios.get(`/api/events/${this.props.match.params.eventId}/scheduled-streams`, {
+                params: {
+                    scheduleStartTime: convertLocalToUTC(this.state.datePickerStartTime).toDate(),
+                    scheduleEndTime: convertLocalToUTC(this.state.datePickerEndTime).toDate()
+                }
+            });
+
+            const scheduleItems = res.data.scheduleItems.map(scheduleItem => {
+                // JSON serializes dates as strings, so parse start and end times into moment objects
+                scheduleItem.start_time = convertUTCToLocal(scheduleItem.start_time);
+                scheduleItem.end_time = convertUTCToLocal(scheduleItem.end_time);
+
+                // disable movement of schedule item
+                scheduleItem.canMove = false;
+                scheduleItem.canResize = false;
+                scheduleItem.canChangeGroup = false;
+
+                scheduleItem.itemProps = {
+                    onDoubleClick: () => this.selectScheduledStream(scheduleItem.id)
+                };
+
+                return scheduleItem;
+            });
+
+            this.setState({
+                scheduleGroups: res.data.scheduleGroups,
+                scheduleItems,
+                isScheduleLoaded: true
+            });
+        });
+    }
+
     async getLoggedInUser() {
         const res = await axios.get('/api/logged-in-user')
         this.setState({
@@ -167,11 +255,26 @@ export default class Event extends React.Component {
 
     async isLoggedInUserSubscribed() {
         if (this.state.loggedInUserId && this.state.loggedInUserId !== this.state.createdBy._id) {
-            const res = await axios.get(`/api/users/${this.state.loggedInUserId}/subscribed-to-event/${this.state.eventId}`);
+            const res = await axios.get(`/api/users/${this.state.loggedInUserId}/subscribed-to-event/${this.props.match.params.eventId}`);
             this.setState({
                 isLoggedInUserSubscribed: res.data
             });
         }
+    }
+
+    setActiveTab(tab) {
+        if (this.state.activeTab !== tab) {
+            this.setState({
+                activeTab: tab
+            });
+        }
+    }
+
+    toggleScheduleTab() {
+        if (!this.state.scheduleGroups || !this.state.scheduleItems) {
+            this.getSchedule();
+        }
+        this.setActiveTab(SCHEDULE_TAB_ID);
     }
 
     toggleOptionsDropdown() {
@@ -203,7 +306,7 @@ export default class Event extends React.Component {
         });
     }
 
-    getDatePickerRange() {
+    editEventDatePickerRange() {
         return {
             'Next 6 Hours': [moment(), moment().add(6, 'hours')],
             'Next 12 Hours': [moment(), moment().add(12, 'hours')],
@@ -307,7 +410,7 @@ export default class Event extends React.Component {
                 let res;
                 try {
                     res = await axios.put('/api/events', {
-                        eventId: this.state.eventId,
+                        eventId: this.props.match.params.eventId,
                         userId: this.state.loggedInUserId,
                         eventName: this.state.editEventName,
                         startTime: convertLocalToUTC(this.state.editEventStartTime),
@@ -443,7 +546,7 @@ export default class Event extends React.Component {
                             <Col xs='12'>
                                 <DateTimeRangeContainer start={this.state.editEventStartTime}
                                                         end={this.state.editEventEndTime}
-                                                        ranges={this.getDatePickerRange()}
+                                                        ranges={this.editEventDatePickerRange()}
                                                         local={this.getDatePickerFormat()}
                                                         noMobileMode={this.isNoMobileMode()}
                                                         applyCallback={this.editEventApplyDate} autoApply
@@ -532,7 +635,7 @@ export default class Event extends React.Component {
     deleteEvent() {
         this.setState({showDeleteSpinner: true}, async () => {
             try {
-                await axios.delete(`/api/events/${this.state.eventId}`);
+                await axios.delete(`/api/events/${this.props.match.params.eventId}`);
                 window.location.href = '/events';
             } catch (err) {
                 displayErrorMessage(this, `An error occurred when deleting ${this.state.eventName}. Please try again later. (${err})`);
@@ -545,7 +648,7 @@ export default class Event extends React.Component {
     }
     
     renderDeleteEventModal() {
-        return (
+        return !this.state.isDeleteEventModalOpen ? undefined : (
             <Modal isOpen={this.state.isDeleteEventModalOpen} toggle={this.toggleDeleteEventModal}
                    size='md' centered={true}>
                 <ModalHeader toggle={this.toggleDeleteEventModal}>
@@ -574,7 +677,7 @@ export default class Event extends React.Component {
 
     async subscribeToEvent() {
         try {
-            await axios.post(`/api/users/${this.state.loggedInUserId}/subscribe-to-event/${this.state.eventId}`);
+            await axios.post(`/api/users/${this.state.loggedInUserId}/subscribe-to-event/${this.props.match.params.eventId}`);
             this.setState({
                 isLoggedInUserSubscribed: true,
                 numOfSubscribers: this.state.numOfSubscribers + 1
@@ -586,7 +689,7 @@ export default class Event extends React.Component {
 
     async unsubscribeFromEvent() {
         try {
-            await axios.post(`/api/users/${this.state.loggedInUserId}/unsubscribe-from-event/${this.state.eventId}`);
+            await axios.post(`/api/users/${this.state.loggedInUserId}/unsubscribe-from-event/${this.props.match.params.eventId}`);
             this.setState({
                 isLoggedInUserSubscribed: false,
                 numOfSubscribers: this.state.numOfSubscribers - 1
@@ -594,6 +697,43 @@ export default class Event extends React.Component {
         } catch (err) {
             displayErrorMessage(this, `An error occurred when unsubscribing from event. Please try again later. (${err})`);
         }
+    }
+
+    renderOptionsOrSubscribeButton() {
+        return this.state.loggedInUserId ? (
+            this.state.loggedInUserId === this.state.createdBy._id ? (
+                <Dropdown className='float-right options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
+                          toggle={this.toggleOptionsDropdown} size='sm'>
+                    <DropdownToggle className='pr-0' caret>
+                        Options
+                    </DropdownToggle>
+                    <DropdownMenu right>
+                        <DropdownItem onClick={this.toggleEditEventModal}>
+                            <img src={EditIcon} width={22} height={22} className='mr-3'
+                                 alt='Edit Event icon'/>
+                            Edit
+                        </DropdownItem>
+                        <DropdownItem onClick={this.toggleDeleteEventModal}>
+                            <img src={DeleteIcon} width={22} height={22} className='mr-3'
+                                 alt='Delete Event icon'/>
+                            Delete
+                        </DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            ) : (
+                <Button className='btn-dark' onClick={this.onClickSubscribeButton}>
+                    <img src={this.state.isLoggedInUserSubscribed ? SubscribedIcon : SubscribeIcon}
+                         alt={this.state.isLoggedInUserSubscribed ? 'Subscribed icon' : 'Subscribe icon'}
+                         className='float-left mr-2'/>
+                    {this.state.isLoggedInUserSubscribed ? 'Subscribed' : 'Subscribe'}
+                </Button>
+            )
+        ) : (
+            <Button className='btn-dark' href={`/login?redirectTo=${window.location.pathname}`}>
+                <img src={SubscribeIcon} className='float-left mr-2' alt='Subscribe icon'/>
+                Subscribe
+            </Button>
+        );
     }
 
     renderStages() {
@@ -707,49 +847,411 @@ export default class Event extends React.Component {
         );
     }
 
-    renderOptionsOrSubscribeButton() {
-        return this.state.loggedInUserId ? (
-            this.state.loggedInUserId === this.state.createdBy._id ? (
-                <Dropdown className='float-right options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
-                          toggle={this.toggleOptionsDropdown} size='sm'>
-                    <DropdownToggle className='pr-0' caret>
-                        Options
-                    </DropdownToggle>
-                    <DropdownMenu right>
-                        <DropdownItem onClick={this.toggleEditEventModal}>
-                            <img src={EditIcon} width={22} height={22} className='mr-3'
-                                 alt='Edit Event icon'/>
-                            Edit
-                        </DropdownItem>
-                        <DropdownItem onClick={this.toggleDeleteEventModal}>
-                            <img src={DeleteIcon} width={22} height={22} className='mr-3'
-                                 alt='Delete Event icon'/>
-                            Delete
-                        </DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-            ) : (
-                <Button className='btn-dark' onClick={this.onClickSubscribeButton}>
-                    <img src={this.state.isLoggedInUserSubscribed ? SubscribedIcon : SubscribeIcon}
-                         alt={this.state.isLoggedInUserSubscribed ? 'Subscribed icon' : 'Subscribe icon'}
-                         className='float-left mr-2'/>
-                    {this.state.isLoggedInUserSubscribed ? 'Subscribed' : 'Subscribe'}
-                </Button>
-            )
-        ) : (
-            <Button className='btn-dark' href={`/login?redirectTo=${window.location.pathname}`}>
-                <img src={SubscribeIcon} className='float-left mr-2' alt='Subscribe icon'/>
-                Subscribe
-            </Button>
+    scheduleDatePickerRange() {
+        return {
+            'Full Event': [this.state.startTime, this.state.endTime]
+        };
+    }
+
+    scheduleApplyDate(startTime, endTime) {
+        this.setState({
+            datePickerStartTime: moment(startTime).isBefore(this.state.startTime) ? this.state.startTime : startTime,
+            datePickerEndTime: moment(endTime).isAfter(this.state.endTime) ? this.state.endTime : endTime
+        }, () => {
+            this.getSchedule();
+        });
+    }
+
+    toggleScheduleStreamModal() {
+        this.setState(prevState => ({
+            scheduleStreamModalOpen: !prevState.scheduleStreamModalOpen
+        }), () => {
+            this.getStagesForScheduleDropdown()
+            if (this.state.scheduleStreamModalOpen && !(this.state.genres.length || this.state.categories.length)) {
+                this.getFilters();
+            }
+        });
+    }
+
+    getFilters() {
+        const genres = filters.genres.map((genre, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setGenre}>{genre}</DropdownItem>
+            </div>
+        ));
+
+        const categories = filters.categories.map((category, index) => (
+            <div key={index}>
+                <DropdownItem onClick={this.setCategory}>{category}</DropdownItem>
+            </div>
+        ));
+
+        this.setState({
+            genres,
+            categories
+        });
+    }
+
+    getStagesForScheduleDropdown() {
+        const stages = this.state.stages.map((stage, index) => (
+            <div key={index}>
+                <DropdownItem onClick={() => this.setScheduleStage(stage)}>{stage.stageName}</DropdownItem>
+            </div>
+        ));
+
+        this.setState( {
+            scheduleStages: stages
+        });
+    }
+
+    stageDropdownToggle() {
+        this.setState(prevState => ({
+            stageDropdownOpen: !prevState.stageDropdownOpen
+        }));
+    }
+    genreDropdownToggle() {
+        this.setState(prevState => ({
+            genreDropdownOpen: !prevState.genreDropdownOpen
+        }));
+    }
+
+    categoryDropdownToggle() {
+        this.setState(prevState => ({
+            categoryDropdownOpen: !prevState.categoryDropdownOpen
+        }));
+    }
+
+    setTitle(event) {
+        this.setState({
+            scheduleStreamTitle: event.target.value
+        });
+    }
+
+    setScheduleStage({_id, stageName}) {
+        this.setState({
+            scheduleStreamStage: {_id, stageName}
+        });
+    }
+
+    setGenre(event) {
+        this.setState({
+            scheduleStreamGenre: event.currentTarget.textContent
+        });
+    }
+
+    clearGenre() {
+        this.setState({
+            scheduleStreamGenre: ''
+        });
+    }
+
+    setCategory(event) {
+        this.setState({
+            scheduleStreamCategory: event.currentTarget.textContent,
+        });
+    }
+
+    clearCategory() {
+        this.setState({
+            scheduleStreamCategory: ''
+        });
+    }
+
+    setTags(event) {
+        const tags = event.target.value.replace(/\s/g, '').split(',');
+        if (tags.length > validation.streamSettings.tagsMaxAmount) {
+            return;
+        }
+        this.setState({
+            scheduleStreamTags: tags
+        });
+    }
+
+    scheduleStreamApplyDate(startTime, endTime) {
+        this.setState({
+            scheduleStreamStartTime: startTime,
+            scheduleStreamEndTime: endTime
+        });
+    }
+
+    addToSchedule() {
+        if (!this.state.scheduleStreamStage) {
+            return this.setState({
+                addToScheduleErrorMessage: 'Please select a stage'
+            });
+        }
+
+        this.setState({
+            addToScheduleErrorMessage: '',
+            showAddToScheduleSpinner: true
+        }, async () => {
+            try {
+                await axios.post('/api/scheduled-streams', {
+                    userId: this.state.loggedInUserId,
+                    eventStageId: this.state.scheduleStreamStage._id,
+                    startTime: convertLocalToUTC(this.state.scheduleStreamStartTime),
+                    endTime: convertLocalToUTC(this.state.scheduleStreamEndTime),
+                    title: this.state.scheduleStreamTitle,
+                    genre: this.state.scheduleStreamGenre,
+                    category: this.state.scheduleStreamCategory,
+                    tags: this.state.scheduleStreamTags
+                });
+
+                const dateRange = formatDateRange({
+                    start: this.state.scheduleStreamStartTime,
+                    end: this.state.scheduleStreamEndTime
+                });
+                const alertText = `Successfully scheduled ${this.state.scheduleStreamTitle ?
+                    `'${this.state.scheduleStreamTitle}'` : 'stream'} for ${dateRange}`;
+
+                const scheduleStreamEndTime = moment(this.state.endTime).add(1, 'hour');
+                this.setState({
+                    scheduleStreamStage: undefined,
+                    scheduleStreamStartTime: this.state.startTime,
+                    scheduleStreamEndTime: scheduleStreamEndTime.isAfter(this.state.endTime) ? this.state.endTime : scheduleStreamEndTime,
+                    scheduleStreamTitle: '',
+                    scheduleStreamGenre: '',
+                    scheduleStreamCategory: '',
+                    scheduleStreamTags: [],
+                    isScheduleLoaded: false,
+                    activeTab: SCHEDULE_TAB_ID
+                }, () => {
+                    displaySuccessMessage(this, alertText);
+                    this.getSchedule();
+                });
+            } catch (err) {
+                displayErrorMessage(this, `An error occurred when creating scheduled stream. Please try again later. (${err})`);
+            }
+            this.toggleScheduleStreamModal();
+            this.setState({showAddToScheduleSpinner: false});
+        });
+    }
+
+    renderScheduleStream() {
+        return !this.state.scheduleStreamModalOpen ? undefined : (
+            <Modal isOpen={this.state.scheduleStreamModalOpen} toggle={this.toggleScheduleStreamModal} centered={true}>
+                <ModalHeader toggle={this.toggleScheduleStreamModal}>
+                    Schedule a Stream
+                </ModalHeader>
+                <ModalBody>
+                    <Container fluid className='remove-padding-lr'>
+                        <Row>
+                            <Col xs='12'>
+                                <h5>Stage</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.stageDropdownOpen}
+                                          toggle={this.stageDropdownToggle} size='sm'>
+                                    <DropdownToggle caret>
+                                        {this.state.scheduleStreamStage ? this.state.scheduleStreamStage.stageName : 'Select a stage...'}
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        {this.state.scheduleStages}
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Date & Time</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <DateTimeRangeContainer start={this.state.scheduleStreamStartTime}
+                                                        end={this.state.scheduleStreamEndTime}
+                                                        ranges={this.scheduleDatePickerRange()}
+                                                        local={this.getDatePickerFormat()}
+                                                        noMobileMode={this.isNoMobileMode()}
+                                                        applyCallback={this.scheduleStreamApplyDate} autoApply
+                                                        style={{standaloneLayout: {display: 'flex', maxWidth: 'fit-content'}}}>
+                                    <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
+                                        <DropdownToggle caret>
+                                            {formatDateRange({
+                                                start: this.state.scheduleStreamStartTime,
+                                                end: this.state.scheduleStreamEndTime
+                                            })}
+                                        </DropdownToggle>
+                                    </Dropdown>
+                                </DateTimeRangeContainer>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Title</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='w-100 rounded-border' type='text' value={this.state.scheduleStreamTitle}
+                                       onChange={this.setTitle} maxLength={validation.streamSettings.titleMaxLength} />
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Genre</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.genreDropdownOpen}
+                                          toggle={this.genreDropdownToggle} size='sm'>
+                                    <DropdownToggle caret>
+                                        {this.state.scheduleStreamGenre || 'Select a genre...'}
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        <DropdownItem onClick={this.clearGenre}
+                                                      disabled={!this.state.scheduleStreamGenre}>
+                                            Clear Genre
+                                        </DropdownItem>
+                                        <DropdownItem divider/>
+                                        {this.state.genres}
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Category</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <Dropdown className='dropdown-hover-darkred' isOpen={this.state.categoryDropdownOpen}
+                                          toggle={this.categoryDropdownToggle} size='sm'>
+                                    <DropdownToggle caret>
+                                        {this.state.scheduleStreamCategory || 'Select a category...'}
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        <DropdownItem onClick={this.clearCategory}
+                                                      disabled={!this.state.scheduleStreamCategory}>
+                                            Clear Category
+                                        </DropdownItem>
+                                        <DropdownItem divider/>
+                                        {this.state.categories}
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </Col>
+                            <Col className='mt-2' xs='12'>
+                                <h5>Tags</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <input className='rounded-border w-100' type='text'
+                                       value={this.state.scheduleStreamTags} onChange={this.setTags}/>
+                            </Col>
+                            <Col xs='12'>
+                                <i>Up to {validation.streamSettings.tagsMaxAmount} comma-separated tags, no spaces</i>
+                            </Col>
+                        </Row>
+                    </Container>
+                    <Alert className='mt-4' isOpen={!!this.state.addToScheduleErrorMessage} color='danger'>
+                        {this.state.addToScheduleErrorMessage}
+                    </Alert>
+                </ModalBody>
+                <ModalFooter>
+                    <Button className='btn-dark' onClick={this.addToSchedule}>
+                        {this.state.showAddToScheduleSpinner ? <Spinner size='sm' /> : undefined}
+                        <span className={this.state.showAddToScheduleSpinner ? 'sr-only' : undefined}>
+                            Add to Schedule
+                        </span>
+                    </Button>
+                </ModalFooter>
+            </Modal>
         );
+    }
+
+    renderSchedule() {
+        return !this.state.isScheduleLoaded ? (
+            <div className='mt-5'>
+                <LoadingSpinner />
+            </div>
+        ) : (
+            <Row className='mt-4'>
+                <Col>
+                    <div className='mb-2'>
+                        <Button className='btn-dark' size='sm' onClick={this.toggleScheduleStreamModal}>
+                            <img src={PlusIcon} width={22} height={22} className='mr-1'
+                                 alt='Schedule a Stream icon'/>
+                            Schedule a Stream
+                        </Button>
+                        <div className='float-right'>
+                            <DateTimeRangeContainer ranges={this.scheduleDatePickerRange()} local={this.getDatePickerFormat()}
+                                                    start={this.state.datePickerStartTime} end={this.state.datePickerEndTime}
+                                                    applyCallback={this.scheduleApplyDate} leftMode={true}
+                                                    noMobileMode={this.isNoMobileMode()}>
+                                <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
+                                    <DropdownToggle caret>
+                                        <img src={CalendarIcon} width={18} height={18} className='mr-2 mb-1'
+                                             alt='Select Time Period icon'/>
+                                        Select Time Period
+                                    </DropdownToggle>
+                                </Dropdown>
+                            </DateTimeRangeContainer>
+                        </div>
+                    </div>
+                    <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
+                              onItemSelect={this.selectScheduledStream} onItemClick={this.selectScheduledStream}
+                              visibleTimeStart={this.state.datePickerStartTime.valueOf()}
+                              visibleTimeEnd={this.state.datePickerEndTime.valueOf()}/>
+                </Col>
+            </Row>
+        )
+    }
+
+    selectScheduledStream(itemId, e, time) {
+        this.setState({
+            selectedScheduleItem: this.state.scheduleItems[itemId]
+        });
+    }
+
+    deselectScheduledStream() {
+        this.setState({
+            selectedScheduleItem: undefined
+        });
+    }
+
+    async cancelStream(streamId) {
+        try {
+            await axios.delete(`/api/scheduled-streams/${streamId}`);
+            this.setState({selectedScheduleItem: undefined}, () => {
+                displaySuccessMessage(this, 'Successfully cancelled scheduled stream');
+                this.getSchedule();
+            });
+        } catch (err) {
+            displayErrorMessage(this, `An error occurred when cancelling scheduled stream. Please try again later. (${err})`);
+        }
+    }
+
+    renderSelectedScheduledStream() {
+        const scheduledStream = this.state.selectedScheduleItem;
+        return !scheduledStream ? undefined : (
+            <Modal isOpen={true} toggle={this.deselectScheduledStream} centered={true}>
+                <ModalBody>
+                    <table>
+                        <tbody>
+                        <tr>
+                            <td valign='middle' className='w-100'>
+                                <h5>{scheduledStream.title}</h5>
+                                <h6>
+                                    {displayGenreAndCategory({
+                                        genre: scheduledStream.genre,
+                                        category: scheduledStream.category
+                                    })}
+                                </h6>
+                                {formatDateRange({
+                                    start: scheduledStream.start_time,
+                                    end: scheduledStream.end_time
+                                })}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </ModalBody>
+                {this.state.loggedInUserId !== this.state.createdBy._id ? undefined : (
+                    <ModalFooter>
+                        <Button className='btn-danger' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
+                            <img src={WhiteDeleteIcon} width={18} height={18} className='mr-1 mb-1'
+                                 alt='Cancel Stream icon'/>
+                            Cancel Stream
+                        </Button>
+                    </ModalFooter>
+                )}
+            </Modal>
+        );
+    }
+
+    renderChat() {
+
     }
 
     render() {
         return !this.state.loaded ? <LoadingSpinner /> : (
             <React.Fragment>
                 <Container fluid='lg'>
-                    {getAlert(this)}
-    
                     {!this.state.bannerPicURL ? undefined : (
                         <Row>
                             <Col>
@@ -758,7 +1260,8 @@ export default class Event extends React.Component {
                             </Col>
                         </Row>
                     )}
-                    <Row className='mt-4'>
+                    {getAlert(this)}
+                    <Row className='mt-3'>
                         <Col xs='8'>
                             <h4>{this.state.eventName}</h4>
                             <h6>
@@ -776,7 +1279,7 @@ export default class Event extends React.Component {
                         <Col xs='4'>
                             <div className='float-right'>
                                 <h5 className='black-link text-right'>
-                                    <Link to={`/event/${this.state.eventId}/subscribers`}>
+                                    <Link to={`/event/${this.props.match.params.eventId}/subscribers`}>
                                         {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
                                     </Link>
                                 </h5>
@@ -784,13 +1287,46 @@ export default class Event extends React.Component {
                             </div>
                         </Col>
                     </Row>
-                    <hr className='my-4'/>
-                    {this.renderStages()}
-                    {this.renderPastStreams()}
+                    <Nav className='mt-3' tabs>
+                        <NavItem>
+                            <NavLink className={this.state.activeTab === STREAMS_TAB_ID ? 'active active-tab-nav-link' : 'tab-nav-link'}
+                                     onClick={() => this.setActiveTab(STREAMS_TAB_ID)}>
+                                Stages
+                            </NavLink>
+                        </NavItem>
+                        <NavItem>
+                            <NavLink className={this.state.activeTab === SCHEDULE_TAB_ID ? 'active active-tab-nav-link' : 'tab-nav-link'}
+                                     onClick={this.toggleScheduleTab}>
+                                Schedule
+                            </NavLink>
+                        </NavItem>
+                        <NavItem>
+                            <NavLink className={this.state.activeTab === CHAT_TAB_ID ? 'active active-tab-nav-link' : 'tab-nav-link'}
+                                     onClick={() => this.setActiveTab(CHAT_TAB_ID)}>
+                                Chat
+                            </NavLink>
+                        </NavItem>
+                    </Nav>
+                    <TabContent activeTab={this.state.activeTab}>
+                        <TabPane tabId={STREAMS_TAB_ID}>
+                            <div className='mt-4'>
+                                {this.renderStages()}
+                                {this.renderPastStreams()}
+                            </div>
+                        </TabPane>
+                        <TabPane tabId={SCHEDULE_TAB_ID}>
+                            {this.renderSchedule()}
+                        </TabPane>
+                        <TabPane tabId={CHAT_TAB_ID}>
+                            {this.renderChat()}
+                        </TabPane>
+                    </TabContent>
                 </Container>
                 
                 {this.renderEditEventModal()}
                 {this.renderDeleteEventModal()}
+                {this.renderSelectedScheduledStream()}
+                {this.renderScheduleStream()}
             </React.Fragment>
         );
     }

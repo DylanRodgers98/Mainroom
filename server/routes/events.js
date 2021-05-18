@@ -458,7 +458,6 @@ router.get('/:eventId', async (req, res, next) => {
     }
 
     res.json({
-        _id: event._id,
         eventName: event.eventName,
         createdBy: event.createdBy,
         startTime: event.startTime,
@@ -618,8 +617,8 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
 
     const filter = {
         eventStage: {$in: event.stages.map(stage => stage._id)},
-        startTime: {$lte: req.query.scheduleEndTime},
-        endTime: {$gte: req.query.scheduleStartTime}
+        startTime: {$lt: req.query.scheduleEndTime},
+        endTime: {$gt: req.query.scheduleStartTime}
     };
 
     let scheduledStreams;

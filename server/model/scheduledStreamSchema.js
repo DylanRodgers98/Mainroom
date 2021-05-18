@@ -35,7 +35,7 @@ ScheduledStreamSchema.pre('findOneAndDelete', async function() {
     const scheduledStream = await this.model.findOne(this.getQuery());
     if (scheduledStream) {
         await deletePrerecordedVideo(scheduledStream)
-        LOGGER.debug('Deleting ScheduledStream (_id: {})', event._id);
+        LOGGER.debug('Deleting ScheduledStream (_id: {})', scheduledStream._id);
     }
 });
 
