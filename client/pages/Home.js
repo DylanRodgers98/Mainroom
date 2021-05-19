@@ -59,20 +59,43 @@ export default class Home extends React.Component {
     }
 
     async getFeaturedLiveStreams(params) {
+        const eventStagesCount = await this.getEventStagesReturningCount({
+            page: params.page,
+            limit: pagination.small
+        });
+
         const res = await axios.get('/api/livestreams', {
             params: {
                 page: params.page,
-                limit: params.limit
+                limit: params.limit + (params.limit - eventStagesCount)
             }
         });
+
+        const featuredLiveStreams = [...this.state.featuredLiveStreams, ...(res.data.streams || [])];
+        if (res.data.streams && res.data.streams.length) {
+            featuredLiveStreams.sort((a, b) => b.viewCount - a.viewCount);
+        }
+
         this.setState({
-            featuredLiveStreams: [...this.state.featuredLiveStreams, ...(res.data.streams || [])],
-            featuredLiveStreamsPage: res.data.nextPage,
-            showLoadMoreFeaturedButton: !!res.data.nextPage
+            featuredLiveStreams,
+            featuredLiveStreamsPage: this.state.featuredLiveStreamsPage || res.data.nextPage,
+            showLoadMoreSubscriptionsButton: !!(this.state.showLoadMoreSubscriptionsButton || res.data.nextPage)
         });
     }
 
+    async getEventStagesReturningCount(params) {
+        const eventStagesRes = await axios.get(`/api/livestreams/event-stages`, {params});
+        this.setState({
+            featuredLiveStreams: [...this.state.featuredLiveStreams, ...(eventStagesRes.data.streams || [])],
+            featuredLiveStreamsPage: eventStagesRes.data.nextPage,
+            showLoadMoreSubscriptionsButton: !!eventStagesRes.data.nextPage
+        });
+        return eventStagesRes.data.streams ? eventStagesRes.data.streams.length : 0;
+    }
+
     async getSubscriptionLiveStreams(params) {
+        const subbedEventStagesCount = await this.getSubscribedEventStagesReturningCount(params);
+
         const subsRes = await axios.get(`/api/users/${this.state.loggedInUser}/subscriptions`);
         if (subsRes.data.subscriptions && subsRes.data.subscriptions.length) {
             const subscriptionUsernames = subsRes.data.subscriptions.map(sub => sub.username);
@@ -80,15 +103,41 @@ export default class Home extends React.Component {
                 params: {
                     usernames: subscriptionUsernames,
                     page: params.page,
+                    limit: params.limit + (params.limit - subbedEventStagesCount)
+                }
+            });
+
+            const subscriptionLiveStreams = [...this.state.subscriptionLiveStreams, ...(streamsRes.data.streams || [])];
+            if (streamsRes.data.streams && streamsRes.data.streams.length) {
+                subscriptionLiveStreams.sort((a, b) => b.viewCount - a.viewCount);
+            }
+
+            this.setState({
+                subscriptionLiveStreams,
+                subscriptionLiveStreamsPage: this.state.subscriptionLiveStreamsPage || streamsRes.data.nextPage,
+                showLoadMoreSubscriptionsButton: !!(this.state.showLoadMoreSubscriptionsButton || streamsRes.data.nextPage)
+            });
+        }
+    }
+
+    async getSubscribedEventStagesReturningCount(params) {
+        const subbedEventsRes = await axios.get(`/api/users/${this.state.loggedInUser}/subscribed-events`);
+        if (subbedEventsRes.data.subscribedEventIds && subbedEventsRes.data.subscribedEventIds.length) {
+            const eventStagesRes = await axios.get(`/api/livestreams/event-stages`, {
+                params: {
+                    eventIds: subbedEventsRes.data.subscribedEventIds,
+                    page: params.page,
                     limit: params.limit
                 }
             });
             this.setState({
-                subscriptionLiveStreams: [...this.state.subscriptionLiveStreams, ...(streamsRes.data.streams || [])],
-                subscriptionLiveStreamsPage: streamsRes.data.nextPage,
-                showLoadMoreSubscriptionsButton: !!streamsRes.data.nextPage
+                subscriptionLiveStreams: [...this.state.subscriptionLiveStreams, ...(eventStagesRes.data.streams || [])],
+                subscriptionLiveStreamsPage: eventStagesRes.data.nextPage,
+                showLoadMoreSubscriptionsButton: !!eventStagesRes.data.nextPage
             });
+            return eventStagesRes.data.streams ? eventStagesRes.data.streams.length : 0;
         }
+        return 0;
     }
 
     renderFeaturedLiveStreams() {

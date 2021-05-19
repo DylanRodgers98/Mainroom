@@ -268,46 +268,90 @@ const getSubscribersOrSubscriptions = key => (req, res, next) => {
         }
     ], (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when counting number of {} for user {}: {}', key, username, err.stack);
-            next(err);
-        } else {
-            // populate subscribers/subscriptions, paginated
-            const limit = req.query.limit
-            const page = req.query.page;
-            const pages = Math.ceil(result.count / limit);
-            const skip = (page - 1) * limit;
-            User.findOne({username}, key)
-                .populate({
-                    path: `${key}.user`,
-                    select: 'username profilePic.bucket profilePic.key',
-                    skip,
-                    limit
-                })
-                .exec((err, user) => {
-                    if (err) {
-                        LOGGER.error('An error occurred when getting {} for user {}: {}', key, username, err.stack);
-                        next(err);
-                    } else if (!user) {
-                        res.status(404).send(`User (username: ${escape(username)}) not found`);
-                    } else {
-                        res.json({
-                            [key]: (user[key] || []).map(sub => {
-                                return {
-                                    username: sub.user.username,
-                                    profilePicURL: sub.user.getProfilePicURL() || config.defaultProfilePicURL
-                                };
-                            }),
-                            nextPage: page < pages ? page + 1 : null
-                        });
-                    }
-                });
+            LOGGER.error(`An error occurred when counting number of {} for user with username '{}': {}`, key, username, err.stack);
+            return next(err);
         }
+        // populate subscribers/subscriptions, paginated
+        const limit = req.query.limit
+        const page = req.query.page;
+        const pages = Math.ceil(result.count / limit);
+        const skip = (page - 1) * limit;
+        User.findOne({username})
+            .select(key)
+            .populate({
+                path: `${key}.user`,
+                select: 'username profilePic.bucket profilePic.key',
+                skip,
+                limit
+            })
+            .exec((err, user) => {
+                if (err) {
+                    LOGGER.error(`An error occurred when getting {} for user with username '{}': {}`, key, username, err.stack);
+                    return next(err);
+                }
+                if (!user) {
+                    return res.status(404).send(`User (username: ${escape(username)}) not found`);
+                }
+                res.json({
+                    [key]: (user[key] || []).map(sub => {
+                        return {
+                            username: sub.user.username,
+                            profilePicURL: sub.user.getProfilePicURL() || config.defaultProfilePicURL
+                        };
+                    }),
+                    nextPage: page < pages ? page + 1 : null
+                });
+            });
     });
 }
 
 router.get('/:username/subscribers', getSubscribersOrSubscriptions('subscribers'));
 
 router.get('/:username/subscriptions', getSubscribersOrSubscriptions('subscriptions'));
+
+router.get('/:username/subscribed-events', (req, res, next) => {
+    const username = sanitise(req.params.username.toLowerCase());
+    // count number of subscribedEvents for calculating 'nextPage' pagination property on result JSON
+    User.aggregate([
+        {
+            $match: {username}
+        },
+        {
+            $project: {count: {$size: '$subscribedEvents'}}
+        }
+    ], (err, result) => {
+        if (err) {
+            LOGGER.error(`An error occurred when counting number of subscribed events for user with username '{}': {}`, username, err.stack);
+            return next(err);
+        }
+        // populate subscribedEvents, paginated
+        const limit = req.query.limit
+        const page = req.query.page;
+        const pages = Math.ceil(result.count / limit);
+        const skip = (page - 1) * limit;
+        User.findOne({username})
+            .select('subscribedEvents')
+            .populate({
+                path: `subscribedEvents.event`,
+                select: '_id',
+                skip,
+                limit
+            })
+            .exec((err, user) => {
+                if (err) {
+                    LOGGER.error('An error occurred when getting subscribed events for user {}: {}', username, err.stack);
+                    return next(err);
+                }
+                if (!user) {
+                    return res.status(404).send(`User (username: ${escape(username)}) not found`);
+                }
+                res.json({
+                    subscribedEventIds: (user.subscribedEvents || []).map(sub => sub.event._id),
+                    nextPage: page < pages ? page + 1 : null
+                });
+            });
+    });
+});
 
 router.get('/:username/subscribed-to/:otherUsername', (req, res, next) => {
     const otherUsername = sanitise(req.params.otherUsername.toLowerCase());
