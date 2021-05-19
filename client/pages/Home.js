@@ -59,10 +59,7 @@ export default class Home extends React.Component {
     }
 
     async getFeaturedLiveStreams(params) {
-        const eventStagesCount = await this.getEventStagesReturningCount({
-            page: params.page,
-            limit: pagination.small
-        });
+        const eventStagesCount = await this.getEventStagesReturningCount(params);
 
         const res = await axios.get('/api/livestreams', {
             params: {
@@ -98,10 +95,9 @@ export default class Home extends React.Component {
 
         const subsRes = await axios.get(`/api/users/${this.state.loggedInUser}/subscriptions`);
         if (subsRes.data.subscriptions && subsRes.data.subscriptions.length) {
-            const subscriptionUsernames = subsRes.data.subscriptions.map(sub => sub.username);
             const streamsRes = await axios.get(`/api/livestreams/`, {
                 params: {
-                    usernames: subscriptionUsernames,
+                    usernames: subsRes.data.subscriptions,
                     page: params.page,
                     limit: params.limit + (params.limit - subbedEventStagesCount)
                 }
@@ -274,6 +270,7 @@ export default class Home extends React.Component {
         );
     }
 
+    // TODO: RENDER LIVE EVENT STAGES DIFFERENTLY (i.e. remove profile pic, displayName, etc.)
     render() {
         return !this.state.loaded ? <LoadingSpinner /> : (
             <Container fluid='lg'>

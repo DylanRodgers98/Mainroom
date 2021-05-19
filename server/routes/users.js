@@ -256,27 +256,65 @@ router.get('/:userId/profile-pic', (req, res, next) => {
     })
 });
 
-const getSubscribersOrSubscriptions = key => (req, res, next) => {
+const getSubscribersOrSubscriptions = key => async (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    // count number of subscribers for calculating 'nextPage' pagination property on result JSON
-    User.aggregate([
-        {
-            $match: {username}
-        },
-        {
-            $project: {count: {$size: '$' + key}}
-        }
-    ], (err, result) => {
-        if (err) {
-            LOGGER.error(`An error occurred when counting number of {} for user with username '{}': {}`, key, username, err.stack);
+
+    if (!req.query.limit && !req.query.page) {
+        let user;
+        try {
+            user = await User.findOne({username})
+                .select(key)
+                .populate({
+                    path: `${key}.user`,
+                    select: 'username'
+                })
+                .exec();
+        } catch (err) {
+            LOGGER.error(`An error occurred when getting {} for user with username '{}': {}`, key, username, err.stack);
             return next(err);
         }
-        // populate subscribers/subscriptions, paginated
-        const limit = req.query.limit
-        const page = req.query.page;
-        const pages = Math.ceil(result.count / limit);
-        const skip = (page - 1) * limit;
-        User.findOne({username})
+
+        if (!user) {
+            return res.status(404).send(`User (username: ${escape(username)}) not found`);
+        }
+
+        return res.json({
+            [key]: (user[key] || []).map(sub => sub.user.username)
+        });
+    }
+
+    // count number of subscribers for calculating 'nextPage' pagination property on result JSON
+    let result;
+    try {
+        result = await User.aggregate([
+            {
+                $match: {username}
+            },
+            {
+                $project: {count: {$size: '$' + key}}
+            }
+        ]).exec()
+    } catch (err) {
+        LOGGER.error(`An error occurred when counting number of {} for user with username '{}': {}`, key, username, err.stack);
+        return next(err);
+    }
+
+    if (!result || !result.count) {
+        return res.json({
+            [key]: [],
+            nextPage: null
+        });
+    }
+
+    // populate subscribers/subscriptions, paginated
+    const limit = req.query.limit
+    const page = req.query.page;
+    const pages = Math.ceil(result.count / limit);
+    const skip = (page - 1) * limit;
+
+    let user;
+    try {
+        user = await User.findOne({username})
             .select(key)
             .populate({
                 path: `${key}.user`,
@@ -284,24 +322,24 @@ const getSubscribersOrSubscriptions = key => (req, res, next) => {
                 skip,
                 limit
             })
-            .exec((err, user) => {
-                if (err) {
-                    LOGGER.error(`An error occurred when getting {} for user with username '{}': {}`, key, username, err.stack);
-                    return next(err);
-                }
-                if (!user) {
-                    return res.status(404).send(`User (username: ${escape(username)}) not found`);
-                }
-                res.json({
-                    [key]: (user[key] || []).map(sub => {
-                        return {
-                            username: sub.user.username,
-                            profilePicURL: sub.user.getProfilePicURL() || config.defaultProfilePicURL
-                        };
-                    }),
-                    nextPage: page < pages ? page + 1 : null
-                });
-            });
+            .exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when getting {} for user with username '{}': {}`, key, username, err.stack);
+        return next(err);
+    }
+
+    if (!user) {
+        return res.status(404).send(`User (username: ${escape(username)}) not found`);
+    }
+
+    res.json({
+        [key]: (user[key] || []).map(sub => {
+            return {
+                username: sub.user.username,
+                profilePicURL: sub.user.getProfilePicURL() || config.defaultProfilePicURL
+            };
+        }),
+        nextPage: page < pages ? page + 1 : null
     });
 }
 
@@ -309,47 +347,29 @@ router.get('/:username/subscribers', getSubscribersOrSubscriptions('subscribers'
 
 router.get('/:username/subscriptions', getSubscribersOrSubscriptions('subscriptions'));
 
-router.get('/:username/subscribed-events', (req, res, next) => {
+router.get('/:username/subscribed-events', async (req, res, next) => {
     const username = sanitise(req.params.username.toLowerCase());
-    // count number of subscribedEvents for calculating 'nextPage' pagination property on result JSON
-    User.aggregate([
-        {
-            $match: {username}
-        },
-        {
-            $project: {count: {$size: '$subscribedEvents'}}
-        }
-    ], (err, result) => {
-        if (err) {
-            LOGGER.error(`An error occurred when counting number of subscribed events for user with username '{}': {}`, username, err.stack);
-            return next(err);
-        }
-        // populate subscribedEvents, paginated
-        const limit = req.query.limit
-        const page = req.query.page;
-        const pages = Math.ceil(result.count / limit);
-        const skip = (page - 1) * limit;
-        User.findOne({username})
+
+    let user;
+    try {
+        user = await User.findOne({username})
             .select('subscribedEvents')
             .populate({
                 path: `subscribedEvents.event`,
-                select: '_id',
-                skip,
-                limit
+                select: '_id'
             })
-            .exec((err, user) => {
-                if (err) {
-                    LOGGER.error('An error occurred when getting subscribed events for user {}: {}', username, err.stack);
-                    return next(err);
-                }
-                if (!user) {
-                    return res.status(404).send(`User (username: ${escape(username)}) not found`);
-                }
-                res.json({
-                    subscribedEventIds: (user.subscribedEvents || []).map(sub => sub.event._id),
-                    nextPage: page < pages ? page + 1 : null
-                });
-            });
+            .exec();
+    } catch (err) {
+        LOGGER.error(`An error occurred when getting subscribed events for user with username '{}': {}`, username, err.stack);
+        return next(err);
+    }
+
+    if (!user) {
+        return res.status(404).send(`User (username: ${escape(username)}) not found`);
+    }
+
+    res.json({
+        subscribedEventIds: (user.subscribedEvents || []).map(sub => sub.event._id)
     });
 });
 
