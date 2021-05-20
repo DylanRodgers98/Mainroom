@@ -137,6 +137,7 @@ export default class Event extends React.Component {
             addToScheduleErrorMessage: '',
             socketIOURL: '',
             chat: [],
+            unreadChatMessages: 0,
             msg: '',
             chatHeight: 0,
             chatHeightOffset: 0,
@@ -310,8 +311,18 @@ export default class Event extends React.Component {
                 <span>{msg}</span>
             </div>
         );
+
+        let unreadChatMessages = this.state.unreadChatMessages;
+        if (this.state.activeTab !== CHAT_TAB_ID && unreadChatMessages !== '99+') {
+            unreadChatMessages++;
+            if (unreadChatMessages > 99) {
+                unreadChatMessages = '99+';
+            }
+        }
+
         this.setState({
-            chat: [...this.state.chat, chatMessage]
+            chat: [...this.state.chat, chatMessage],
+            unreadChatMessages
         });
     }
 
@@ -333,6 +344,7 @@ export default class Event extends React.Component {
     toggleChatTab() {
         this.setActiveTab(CHAT_TAB_ID);
         window.scrollTo(0, document.body.scrollHeight);
+        this.setState({unreadChatMessages: 0});
     }
 
     toggleOptionsDropdown() {
@@ -1435,7 +1447,7 @@ export default class Event extends React.Component {
                         <NavItem>
                             <NavLink className={this.state.activeTab === CHAT_TAB_ID ? 'active active-tab-nav-link' : 'tab-nav-link'}
                                      onClick={this.toggleChatTab}>
-                                Chat
+                                Chat {this.state.unreadChatMessages ? <i>({this.state.unreadChatMessages} unread)</i> : undefined}
                             </NavLink>
                         </NavItem>
                     </Nav>
