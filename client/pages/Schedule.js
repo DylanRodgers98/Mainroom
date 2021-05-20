@@ -450,15 +450,9 @@ export default class Schedule extends React.Component {
                                 )}
                                 <td valign='middle' className='w-100'>
                                     <h5>
-                                        {scheduledStream.event ? (
-                                            <Link to={`/event/${scheduledStream.event._id}`}>
-                                                {scheduledStream.event.stageName}
-                                            </Link>
-                                        ) : (
-                                            <Link to={`/user/${scheduledStream.user.username}`}>
-                                                {scheduledStream.user.displayName || scheduledStream.user.username}
-                                            </Link>
-                                        )}
+                                        <Link to={scheduledStream.event ? `/event/${scheduledStream.event._id}` : `/user/${scheduledStream.user.username}`}>
+                                            {scheduledStream.event ? scheduledStream.event.stageName : (scheduledStream.user.displayName || scheduledStream.user.username)}
+                                        </Link>
                                         {scheduledStream.title ? ` - ${scheduledStream.title}` : ''}
                                     </h5>
                                     <h6>
@@ -493,7 +487,7 @@ export default class Schedule extends React.Component {
                         </Button>
                     </ModalFooter>
                 )}
-                {!scheduledStream.isNonSubscribed ? undefined : (
+                {!scheduledStream.isNonSubscribed || scheduledStream.event ? undefined : (
                     <ModalFooter>
                         <i>You are not subscribed to {scheduledStream.user.displayName || scheduledStream.user.username}</i>
                         <Button className='btn-dark' size='sm' onClick={() => this.removeFromSchedule(scheduledStream._id)}>
