@@ -60,13 +60,9 @@ export default class Home extends React.Component {
 
     async getFeaturedLiveStreams(params) {
         const eventStagesCount = await this.getEventStagesReturningCount(params);
+        params.limit = params.limit + (params.limit - eventStagesCount);
 
-        const res = await axios.get('/api/livestreams', {
-            params: {
-                page: params.page,
-                limit: params.limit + (params.limit - eventStagesCount)
-            }
-        });
+        const res = await axios.get('/api/livestreams', {params});
 
         const featuredLiveStreams = [...this.state.featuredLiveStreams, ...(res.data.streams || [])];
         if (res.data.streams && res.data.streams.length) {

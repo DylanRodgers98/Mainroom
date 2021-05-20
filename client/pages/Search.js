@@ -103,28 +103,35 @@ export default class LiveStreams extends React.Component {
     }
 
     getLiveStreams() {
-        const queryParams = {
-            params: {
-                searchQuery: this.props.match.params.query,
-                page: this.state.livestreamsNextPage,
-                limit: pagination.large
-            }
+        const params = {
+            searchQuery: this.props.match.params.query,
+            page: this.state.livestreamsNextPage,
+            limit: pagination.large
         };
 
         if (this.state.genreFilter) {
-            queryParams.params.genre = this.state.genreFilter;
+            params.genre = this.state.genreFilter;
         }
         if (this.state.categoryFilter) {
-            queryParams.params.category = this.state.categoryFilter;
+            params.category = this.state.categoryFilter;
         }
 
         this.setState({showLoadMoreLivestreamsSpinner: true}, async () => {
             try {
-                const res = await axios.get('/api/livestreams', queryParams);
+                const eventStagesCount = await this.getEventStagesReturningCount(params);
+                params.limit = params.limit + (params.limit - eventStagesCount);
+
+                const res = await axios.get('/api/livestreams', {params});
+
+                const liveStreams = [...this.state.liveStreams, ...(res.data.streams || [])];
+                if (res.data.streams && res.data.streams.length) {
+                    liveStreams.sort((a, b) => b.viewCount - a.viewCount);
+                }
+
                 this.setState({
-                    liveStreams: [...this.state.liveStreams, ...(res.data.streams || [])],
-                    livestreamsNextPage: res.data.nextPage,
-                    showLoadMoreLivestreamsButton: !!res.data.nextPage,
+                    liveStreams,
+                    livestreamsNextPage: this.state.livestreamsNextPage || res.data.nextPage,
+                    showLoadMoreLivestreamsButton: !!(this.state.showLoadMoreLivestreamsButton || res.data.nextPage),
                     showLoadMoreLivestreamsSpinner: false
                 });
             } catch (err) {
@@ -132,6 +139,16 @@ export default class LiveStreams extends React.Component {
                 displayErrorMessage(this, `An error occurred when loading more livestreams. Please try again later. (${err})`);
             }
         });
+    }
+
+    async getEventStagesReturningCount(params) {
+        const eventStagesRes = await axios.get(`/api/livestreams/event-stages`, {params});
+        this.setState({
+            liveStreams: [...this.state.liveStreams, ...(eventStagesRes.data.streams || [])],
+            livestreamsNextPage: eventStagesRes.data.nextPage,
+            showLoadMoreLivestreamsButton: !!eventStagesRes.data.nextPage
+        });
+        return eventStagesRes.data.streams ? eventStagesRes.data.streams.length : 0;
     }
 
     getPastStreams() {
@@ -235,13 +252,14 @@ export default class LiveStreams extends React.Component {
                     <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Viewers icon'/>
                     {shortenNumber(liveStream.viewCount)}
                 </span>
-                <Link to={`/user/${liveStream.username}/live`}>
+                <Link to={liveStream.eventStageId ?`/stage/${liveStream.eventStageId}` : `/user/${liveStream.username}/live`}>
                     <img className='w-100' src={liveStream.thumbnailURL}
-                         alt={`${liveStream.username} Stream Thumbnail`}/>
+                         alt={`${liveStream.eventStageId ? `${liveStream.stageName} Stage` : `${liveStream.username} Stream`} Thumbnail`}/>
                 </Link>
                 <table>
                     <tbody>
-                        <tr>
+                    <tr>
+                        {liveStream.eventStageId ? undefined : (
                             <td valign='top'>
                                 <Link to={`/user/${liveStream.username}`}>
                                     <img className='rounded-circle m-2' src={liveStream.profilePicURL}
@@ -249,26 +267,35 @@ export default class LiveStreams extends React.Component {
                                          alt={`${liveStream.username} profile picture`}/>
                                 </Link>
                             </td>
-                            <td valign='middle' className='w-100'>
-                                <h5>
-                                    <Link to={`/user/${liveStream.username}`}>
-                                        {liveStream.displayName || liveStream.username}
-                                    </Link>
-                                    <span className='black-link'>
-                                        <Link to={`/user/${liveStream.username}/live`}>
+                        )}
+                        <td valign='middle' className='w-100'>
+                            <h5>
+                                <Link to={liveStream.eventStageId ? `/stage/${liveStream.eventStageId}` : `/user/${liveStream.username}`}>
+                                    {liveStream.eventStageId ? liveStream.stageName : (liveStream.displayName || liveStream.username)}
+                                </Link>
+                                <span className='black-link'>
+                                        <Link to={liveStream.eventStageId ? `/stage/${liveStream.eventStageId}` : `/user/${liveStream.username}/live`}>
                                             {liveStream.title ? ` - ${liveStream.title}` : ''}
                                         </Link>
                                     </span>
-                                </h5>
-                                <h6>
-                                    {displayGenreAndCategory({
-                                        genre: liveStream.genre,
-                                        category: liveStream.category
-                                    })}
-                                </h6>
-                                <h6>Started {timeSince(liveStream.startTime)}</h6>
-                            </td>
-                        </tr>
+                            </h5>
+                            <h6>
+                                {displayGenreAndCategory({
+                                    genre: liveStream.genre,
+                                    category: liveStream.category
+                                })}
+                            </h6>
+                            <h6>
+                                Started {timeSince(liveStream.startTime)}
+                                {!liveStream.eventStageId ? '' : ' as part of '}
+                                {!liveStream.eventStageId ? undefined : (
+                                    <Link to={`/event/${liveStream.event._id}`}>
+                                        {liveStream.event.eventName}
+                                    </Link>
+                                )}
+                            </h6>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </Col>
