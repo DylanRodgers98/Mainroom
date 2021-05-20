@@ -10,6 +10,7 @@ const CompositeError = require('../errors/CompositeError');
 const {deleteObject} = require('../aws/s3Utils');
 const {resolveObjectURL} = require('../aws/s3Utils');
 const {ScheduledStream, User} = require('./schemas');
+const mongoosePaginate = require('mongoose-paginate-v2');
 const LOGGER = require('../../logger')('./server/model/eventStageSchema.js');
 
 const EventStageSchema = new Schema({
@@ -30,6 +31,8 @@ const EventStageSchema = new Schema({
         startTime: Date
     }
 });
+
+EventStageSchema.plugin(mongoosePaginate);
 
 EventStageSchema.statics.generateStreamKey = nanoid;
 

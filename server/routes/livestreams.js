@@ -43,7 +43,7 @@ router.get('/', async (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: 'username displayName profilePic.bucket profilePic.key streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
+        select: 'username displayName profilePic.bucket profilePic.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
         sort: '-streamInfo.viewCount'
     };
 
@@ -118,14 +118,10 @@ router.get('/event-stages', async (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: 'event stageName streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
+        select: '_id event stageName +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
         populate: {
             path: 'event',
-            select: '_id eventName createdBy',
-            populate: {
-                path: 'createdBy',
-                select: 'username displayName'
-            }
+            select: '_id eventName'
         },
         sort: '-streamInfo.viewCount'
     };
@@ -147,6 +143,7 @@ router.get('/event-stages', async (req, res, next) => {
                 thumbnailURL = config.defaultThumbnailURL;
             }
             streams.push({
+                eventStageId: eventStage._id,
                 stageName: eventStage.stageName,
                 event: eventStage.event,
                 title: eventStage.streamInfo.title,

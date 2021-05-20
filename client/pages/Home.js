@@ -198,27 +198,29 @@ export default class Home extends React.Component {
                     <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Viewers icon'/>
                     {shortenNumber(liveStream.viewCount)}
                 </span>
-                <Link to={`/user/${liveStream.username}/live`}>
+                <Link to={liveStream.eventStageId ?`/stage/${liveStream.eventStageId}` : `/user/${liveStream.username}/live`}>
                     <img className='w-100' src={liveStream.thumbnailURL}
-                         alt={`${liveStream.username} Stream Thumbnail`}/>
+                         alt={`${liveStream.eventStageId ? `${liveStream.stageName} Stage` : `${liveStream.username} Stream`} Thumbnail`}/>
                 </Link>
                 <table>
                     <tbody>
                         <tr>
-                            <td valign='top'>
-                                <Link to={`/user/${liveStream.username}`}>
-                                    <img className='rounded-circle m-2' src={liveStream.profilePicURL}
-                                         width='50' height='50'
-                                         alt={`${liveStream.username} profile picture`}/>
-                                </Link>
-                            </td>
-                            <td valign='middle' className='w-100'>
-                                <h5 className='text-break'>
+                            {liveStream.eventStageId ? undefined : (
+                                <td valign='top'>
                                     <Link to={`/user/${liveStream.username}`}>
-                                        {liveStream.displayName || liveStream.username}
+                                        <img className='rounded-circle m-2' src={liveStream.profilePicURL}
+                                             width='50' height='50'
+                                             alt={`${liveStream.username} profile picture`}/>
+                                    </Link>
+                                </td>
+                            )}
+                            <td valign='middle' className='w-100'>
+                                <h5>
+                                    <Link to={liveStream.eventStageId ? `/stage/${liveStream.eventStageId}` : `/user/${liveStream.username}`}>
+                                        {liveStream.eventStageId ? liveStream.stageName : (liveStream.displayName || liveStream.username)}
                                     </Link>
                                     <span className='black-link'>
-                                        <Link to={`/user/${liveStream.username}/live`}>
+                                        <Link to={liveStream.eventStageId ? `/stage/${liveStream.eventStageId}` : `/user/${liveStream.username}/live`}>
                                             {liveStream.title ? ` - ${liveStream.title}` : ''}
                                         </Link>
                                     </span>
@@ -229,7 +231,15 @@ export default class Home extends React.Component {
                                         category: liveStream.category
                                     })}
                                 </h6>
-                                <h6>Started {timeSince(liveStream.startTime)}</h6>
+                                <h6>
+                                    Started {timeSince(liveStream.startTime)}
+                                    {!liveStream.eventStageId ? '' : ' as part of '}
+                                    {!liveStream.eventStageId ? undefined : (
+                                        <Link to={`/event/${liveStream.event._id}`}>
+                                            {liveStream.event.eventName}
+                                        </Link>
+                                    )}
+                                </h6>
                             </td>
                         </tr>
                     </tbody>
@@ -270,7 +280,6 @@ export default class Home extends React.Component {
         );
     }
 
-    // TODO: RENDER LIVE EVENT STAGES DIFFERENTLY (i.e. remove profile pic, displayName, etc.)
     render() {
         return !this.state.loaded ? <LoadingSpinner /> : (
             <Container fluid='lg'>
