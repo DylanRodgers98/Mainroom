@@ -19,7 +19,7 @@ const multerS3 = require('multer-s3');
 const S3V2ToV3Bridge = require('../aws/s3-v2-to-v3-bridge');
 const mime = require('mime-types');
 const CompositeError = require('../errors/CompositeError');
-const {deleteObject} = require('../aws/s3Utils');
+const {deleteObject, createMultipartUpload, getUploadPartSignedURLs, completeMultipartUpload} = require('../aws/s3Utils');
 const {getThumbnail} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/routes/events.js');
 
@@ -747,6 +747,98 @@ router.get('/:eventStageId/stream-info', async (req, res, next) => {
         liveStreamURL,
         socketIOURL
     });
+});
+
+router.get('/:eventStageId/init-stream-upload', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const eventStageId = sanitise(req.params.eventStageId);
+    const sanitisedInput = sanitise(req.query);
+
+    let eventStage;
+    try {
+        eventStage = await EventStage.findById(eventStageId)
+            .select('event')
+            .populate({
+                path: 'event',
+                select: 'createdBy',
+                populate: {
+                    path: 'createdBy',
+                    select: '_id'
+                }
+            })
+            .exec()
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        return next(err);
+    }
+
+    if (!eventStage) {
+        return res.status(404).send(`Event (_id: ${escape(eventStageId)}) not found`);
+    }
+
+    if (eventStage.event.createdBy._id.toString() !== req.user._id.toString()) {
+        return res.sendStatus(401);
+    }
+
+    try {
+        const s3Params = {
+            Bucket: s3.streams.bucketName,
+            Key: `${s3.streams.keyPrefixes.prerecorded}/${eventStageId}/${Date.now()}.${sanitisedInput.fileExtension}`,
+        };
+        s3Params.UploadId = await createMultipartUpload(s3Params);
+        s3Params.NumberOfParts = sanitisedInput.numberOfParts;
+        const signedURLs = await getUploadPartSignedURLs(s3Params);
+
+        res.json({
+            bucket: s3Params.Bucket,
+            key: s3Params.Key,
+            uploadId: s3Params.UploadId,
+            signedURLs
+        });
+    } catch (err) {
+        LOGGER.error(`An error occurred when getting signed URLs for stream upload for EventStage with id '{}': {}`,
+            eventStageId, err.stack);
+        next(err);
+    }
+});
+
+router.get('/:eventStageId/complete-stream-upload', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const eventStageId = sanitise(req.params.eventStageId);
+    const sanitisedInput = sanitise(req.query);
+
+    let eventStage;
+    try {
+        eventStage = await EventStage.findById(eventStageId)
+            .select('event')
+            .populate({
+                path: 'event',
+                select: 'createdBy',
+                populate: {
+                    path: 'createdBy',
+                    select: '_id'
+                }
+            })
+            .exec()
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        return next(err);
+    }
+
+    if (!eventStage) {
+        return res.status(404).send(`Event (_id: ${escape(eventStageId)}) not found`);
+    }
+
+    if (eventStage.event.createdBy._id.toString() !== req.user._id.toString()) {
+        return res.sendStatus(401);
+    }
+    
+    await completeMultipartUpload({
+        Bucket: sanitisedInput.bucket,
+        Key: sanitisedInput.key,
+        UploadId: sanitisedInput.uploadId,
+        Parts: sanitisedInput.uploadedParts
+    });
+
+    res.sendStatus(201);
 });
 
 module.exports = router;

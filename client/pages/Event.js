@@ -46,6 +46,8 @@ const STREAMS_TAB_ID = 0;
 const SCHEDULE_TAB_ID = 1
 const CHAT_TAB_ID = 2;
 const SCROLL_MARGIN_HEIGHT = 30;
+const CHAT_HEIGHT_NAVBAR_OFFSET = 56;
+const S3_PART_SIZE = 1024 * 1024 * 5;
 
 export default class Event extends React.Component {
 
@@ -88,6 +90,7 @@ export default class Event extends React.Component {
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.onMessageSubmit = this.onMessageSubmit.bind(this);
         this.addMessageToChat = this.addMessageToChat.bind(this);
+        this.onVideoFileSelected = this.onVideoFileSelected.bind(this);
 
         this.state = {
             eventName: '',
@@ -133,6 +136,7 @@ export default class Event extends React.Component {
             scheduleStreamGenre: '',
             scheduleStreamCategory: '',
             scheduleStreamTags: [],
+            selectedVideoFileSize: 0,
             showAddToScheduleSpinner: false,
             addToScheduleErrorMessage: '',
             socketIOURL: '',
@@ -1044,6 +1048,15 @@ export default class Event extends React.Component {
         });
     }
 
+    onVideoFileSelected() {
+        const videoFileInput = document.getElementById('videoFileInput');
+        if (videoFileInput.files && videoFileInput.files.length === 1) {
+            this.setState({
+                selectedVideoFileSize: videoFileInput.files[0].size
+            });
+        }
+    }
+
     addToSchedule() {
         if (!this.state.scheduleStreamStage) {
             return this.setState({
@@ -1056,6 +1069,11 @@ export default class Event extends React.Component {
             showAddToScheduleSpinner: true
         }, async () => {
             try {
+                let prerecordedVideoFile;
+                if (this.state.selectedVideoFileSize) {
+                    prerecordedVideoFile = await this.uploadVideoFile();
+                }
+
                 await axios.post('/api/scheduled-streams', {
                     userId: this.state.loggedInUser._id,
                     eventStageId: this.state.scheduleStreamStage._id,
@@ -1064,7 +1082,8 @@ export default class Event extends React.Component {
                     title: this.state.scheduleStreamTitle,
                     genre: this.state.scheduleStreamGenre,
                     category: this.state.scheduleStreamCategory,
-                    tags: this.state.scheduleStreamTags
+                    tags: this.state.scheduleStreamTags,
+                    prerecordedVideoFile
                 });
 
                 const dateRange = formatDateRange({
@@ -1095,6 +1114,50 @@ export default class Event extends React.Component {
             this.toggleScheduleStreamModal();
             this.setState({showAddToScheduleSpinner: false});
         });
+    }
+    
+    async uploadVideoFile() {
+        const videoFileInput = document.getElementById('videoFileInput');
+        if (videoFileInput.files && videoFileInput.files.length === 1) {
+            const videoFile = videoFileInput.files[0];
+            const fileExtension = videoFile.name.substring(videoFile.name.lastIndexOf('.') + 1);
+            const numberOfParts = Math.ceil(this.state.selectedVideoFileSize / S3_PART_SIZE);
+
+            const {data} = await axios.get(`/api/events/${this.state.scheduleStreamStage._id}/init-stream-upload`, {
+                params: {fileExtension, numberOfParts}
+            });
+
+            const axiosForUpload = axios.create();
+            delete axiosForUpload.defaults.headers.put['Content-Type']
+
+            const uploadPromises = data.signedURLs.map((signedURL, index) => {
+                const start = index * S3_PART_SIZE;
+                const end = (index + 1) * S3_PART_SIZE
+                const videoFilePart = index < data.signedURLs.length
+                    ? videoFile.slice(start, end)
+                    : videoFile.slice(start)
+
+                return axios.put(signedURL, videoFilePart);
+            });
+
+            const uploadResult = await Promise.all(uploadPromises);
+            const uploadedParts = uploadResult.map((upload, index) => ({
+                ETag: upload.headers.etag,
+                PartNumber: index + 1
+            }));
+
+            await axios.post(`/api/events/${this.state.scheduleStreamStage._id}/complete-stream-upload`, {
+                bucket: data.bucket,
+                key: data.key,
+                uploadId: data.uploadId,
+                uploadedParts
+            });
+
+            return {
+                bucket: data.bucket,
+                key: data.key
+            };
+        }
     }
 
     renderScheduleStreamModal() {
@@ -1141,7 +1204,14 @@ export default class Event extends React.Component {
                                     </Dropdown>
                                 </DateTimeRangeContainer>
                             </Col>
-                            <Col className='mt-2' xs='12'>
+                            <Col className='mt-3' xs='12'>
+                                <details>
+                                    <summary>Upload Prerecorded Stream <i>(optional)</i></summary>
+                                    <input id='videoFileInput' className='mt-1' type='file' accept='video/*'
+                                           onChange={this.onVideoFileSelected}/>
+                                </details>
+                            </Col>
+                            <Col className='mt-3' xs='12'>
                                 <h5>Title</h5>
                             </Col>
                             <Col xs='12'>
@@ -1371,7 +1441,7 @@ export default class Event extends React.Component {
             <Row className='h-100'>
                 <Col>
                     <div id='messages' className='chat-messages'
-                         style={{height: (this.state.chatHeight - this.state.chatHeightOffset + 56) + 'px'}}>
+                         style={{height: (this.state.chatHeight - this.state.chatHeightOffset + CHAT_HEIGHT_NAVBAR_OFFSET) + 'px'}}>
                         {this.state.chat}
                     </div>
                     {!(this.state.loggedInUser && this.state.loggedInUser.username) ? (

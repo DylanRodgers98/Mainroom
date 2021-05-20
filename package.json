@@ -22,6 +22,7 @@
     "@aws-sdk/client-ses": "^3.4.1",
     "@aws-sdk/client-sns": "^3.8.1",
     "@aws-sdk/lib-storage": "^3.4.1",
+    "@aws-sdk/s3-request-presigner": "^3.16.0",
     "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",

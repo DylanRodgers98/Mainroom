@@ -1,4 +1,5 @@
-const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, DeleteObjectCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const {storage: {cloudfront}} = require('../../mainroom.config');
 const snsErrorPublisher = require('./snsErrorPublisher');
 const LOGGER = require('../../logger')('./server/aws/s3Utils.js');
@@ -25,7 +26,51 @@ function resolveObjectURL({bucket, key}) {
     return `https://${bucket}.s3.amazonaws.com/${key}`;
 }
 
+async function createMultipartUpload({Bucket, Key}) {
+    try {
+        const createMultipartUploadCommand = new CreateMultipartUploadCommand({Bucket, Key});
+        const response = await S3_CLIENT.send(createMultipartUploadCommand);
+        return response.UploadId;
+    } catch (err) {
+        LOGGER.error('An error occurred when creating multipart upload in S3 (bucket: {}, key: {}): {}',
+            Bucket, Key, err.stack);
+        await snsErrorPublisher.publish(err);
+    }
+}
+
+async function getUploadPartSignedURLs({Bucket, Key, UploadId, NumberOfParts}) {
+    try {
+        const promises = [];
+        for (let PartNumber = 1; PartNumber <= NumberOfParts; PartNumber++)
+        {
+            const uploadPartCommand = new UploadPartCommand({Bucket, Key, UploadId, PartNumber});
+            promises.push(getSignedUrl(S3_CLIENT, uploadPartCommand, { expiresIn: 3600 }));
+        }
+        return await Promise.all(promises);
+    } catch (err) {
+        LOGGER.error('An error occurred when signing URLs for UploadPartCommands to S3 (bucket: {}, key: {}): {}',
+            Bucket, Key, err.stack);
+        await snsErrorPublisher.publish(err);
+    }
+}
+
+async function completeMultipartUpload({Bucket, Key, UploadId, Parts}) {
+    try {
+        const completeMultipartUploadCommand = new CompleteMultipartUploadCommand({
+            Bucket, Key, UploadId, MultipartUpload: { Parts }
+        });
+        await S3_CLIENT.send(completeMultipartUploadCommand);
+    } catch (err) {
+        LOGGER.error('An error occurred when completing multipart upload in S3 (Bucket: {}, Key: {}, UploadId: {}): {}',
+            Bucket, Key, UploadId, err.stack);
+        await snsErrorPublisher.publish(err);
+    }
+}
+
 module.exports = {
     deleteObject,
-    resolveObjectURL
+    resolveObjectURL,
+    createMultipartUpload,
+    getUploadPartSignedURLs,
+    completeMultipartUpload
 }
