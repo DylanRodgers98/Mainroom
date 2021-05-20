@@ -461,6 +461,9 @@ router.get('/:eventId', async (req, res, next) => {
         });
     }
 
+    const socketIOURL = (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+        + `://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?eventId=${eventId}`;
+
     res.json({
         eventName: event.eventName,
         createdBy: event.createdBy,
@@ -469,7 +472,8 @@ router.get('/:eventId', async (req, res, next) => {
         bannerPicURL: event.getBannerPicURL(),
         tags: event.tags,
         stages,
-        numOfSubscribers: event.subscribers.length
+        numOfSubscribers: event.subscribers.length,
+        socketIOURL
     });
 });
 

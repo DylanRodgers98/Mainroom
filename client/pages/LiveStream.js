@@ -162,18 +162,18 @@ export default class LiveStream extends React.Component {
         }, socketIOConnectionTimeout);
     }
 
-    addMessageToChat({viewerUser, msg}) {
-        const displayName = viewerUser.username === this.state.viewerUser.username
+    addMessageToChat({sender, msg}) {
+        const displayName = this.state.viewerUser && sender.username === this.state.viewerUser.username
             ? <b>You:</b>
-            : (viewerUser.displayName || viewerUser.username) + ':';
+            : (sender.displayName || sender.username) + ':';
 
         const chatMessage = (
             <div className='ml-1' key={this.state.chat.length}>
-                <span className='black-link' title={`Go to ${viewerUser.displayName || viewerUser.username}'s profile`}>
-                    <Link to={`/user/${viewerUser.username}`}>
-                        <img src={viewerUser.profilePicURL} width='25' height='25'
-                             alt={`${viewerUser.username} profile picture`} className='rounded-circle'/>
-                        <span className='ml-1' style={{color: viewerUser.chatColour}}>{displayName}</span>
+                <span className='black-link' title={`Go to ${sender.displayName || sender.username}'s profile`}>
+                    <Link to={`/user/${sender.username}`}>
+                        <img src={sender.profilePicURL} width='25' height='25'
+                             alt={`${sender.username} profile picture`} className='rounded-circle'/>
+                        <span className='ml-1' style={{color: sender.chatColour}}>{displayName}</span>
                     </Link>
                 </span>
                 &nbsp;
@@ -232,8 +232,10 @@ export default class LiveStream extends React.Component {
     }
 
     disconnectFromSocketIO() {
-        this.socket.disconnect();
-        this.socket = null;
+        if (this.socket) {
+            this.socket.disconnect();
+            this.socket = null;
+        }
     }
 
     onMessageTextChange(e) {
@@ -251,9 +253,9 @@ export default class LiveStream extends React.Component {
 
     onMessageSubmit() {
         if (this.state.msg) {
-            const viewerUser = this.state.viewerUser;
+            const sender = this.state.viewerUser;
             const msg = this.state.msg;
-            this.socket.emit('chatMessage', {viewerUser, msg});
+            this.socket.emit('chatMessage', {sender, msg});
             this.setState({
                 msg: ''
             });

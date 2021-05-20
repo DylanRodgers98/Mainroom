@@ -33,9 +33,11 @@ import RemoveIcon from '../icons/x.svg';
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker';
 import AddIcon from '../icons/plus-white-20.svg';
 import WhiteDeleteIcon from '../icons/trash-white-20.svg';
-import CalendarIcon from "../icons/calendar-white-20.svg";
-import Timeline from "react-calendar-timeline";
-import PlusIcon from "../icons/plus-white.svg";
+import CalendarIcon from '../icons/calendar-white-20.svg';
+import Timeline from 'react-calendar-timeline';
+import PlusIcon from '../icons/plus-white.svg';
+import io from 'socket.io-client';
+import {ReactHeight} from 'react-height/lib/ReactHeight';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -43,6 +45,7 @@ const STARTING_PAGE = 1;
 const STREAMS_TAB_ID = 0;
 const SCHEDULE_TAB_ID = 1
 const CHAT_TAB_ID = 2;
+const SCROLL_MARGIN_HEIGHT = 30;
 
 export default class Event extends React.Component {
 
@@ -66,6 +69,7 @@ export default class Event extends React.Component {
         this.onClickSubscribeButton = this.onClickSubscribeButton.bind(this);
         this.scheduleApplyDate = this.scheduleApplyDate.bind(this);
         this.toggleScheduleTab = this.toggleScheduleTab.bind(this);
+        this.toggleChatTab = this.toggleChatTab.bind(this);
         this.toggleScheduleStreamModal = this.toggleScheduleStreamModal.bind(this);
         this.stageDropdownToggle = this.stageDropdownToggle.bind(this);
         this.genreDropdownToggle = this.genreDropdownToggle.bind(this);
@@ -80,6 +84,10 @@ export default class Event extends React.Component {
         this.scheduleStreamApplyDate = this.scheduleStreamApplyDate.bind(this);
         this.addToSchedule = this.addToSchedule.bind(this);
         this.deselectScheduledStream = this.deselectScheduledStream.bind(this);
+        this.onMessageTextChange = this.onMessageTextChange.bind(this);
+        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.onMessageSubmit = this.onMessageSubmit.bind(this);
+        this.addMessageToChat = this.addMessageToChat.bind(this);
 
         this.state = {
             eventName: '',
@@ -93,7 +101,7 @@ export default class Event extends React.Component {
             tags: [],
             numOfSubscribers: 0,
             recordedStreams: [],
-            loggedInUserId: '',
+            loggedInUser: undefined,
             isLoggedInUserSubscribed: false,
             isOptionsDropdownOpen: false,
             activeTab: 0,
@@ -127,6 +135,11 @@ export default class Event extends React.Component {
             scheduleStreamTags: [],
             showAddToScheduleSpinner: false,
             addToScheduleErrorMessage: '',
+            socketIOURL: '',
+            chat: [],
+            msg: '',
+            chatHeight: 0,
+            chatHeightOffset: 0,
             recordedStreamsNextPage: STARTING_PAGE,
             showLoadMoreButton: false,
             showLoadMoreSpinner: false,
@@ -177,7 +190,12 @@ export default class Event extends React.Component {
                 bannerPicURL: res.data.bannerPicURL,
                 tags: res.data.tags,
                 stages: res.data.stages,
-                numOfSubscribers: res.data.numOfSubscribers
+                numOfSubscribers: res.data.numOfSubscribers,
+                socketIOURL: res.data.socketIOURL
+            }, () => {
+                if (!this.socket) {
+                    this.connectToSocketIO();
+                }
             });
         } catch (err) {
             if (err.response.status === 404) {
@@ -247,19 +265,54 @@ export default class Event extends React.Component {
     async getLoggedInUser() {
         const res = await axios.get('/api/logged-in-user')
         this.setState({
-            loggedInUserId: res.data._id
+            loggedInUser: res.data
         }, () => {
-            this.isLoggedInUserSubscribed()
+            this.isLoggedInUserSubscribed();
         });
     }
 
     async isLoggedInUserSubscribed() {
-        if (this.state.loggedInUserId && this.state.loggedInUserId !== this.state.createdBy._id) {
-            const res = await axios.get(`/api/users/${this.state.loggedInUserId}/subscribed-to-event/${this.props.match.params.eventId}`);
+        if (this.state.loggedInUser && this.state.loggedInUser._id && this.state.loggedInUser._id !== this.state.createdBy._id) {
+            const res = await axios.get(`/api/users/${this.state.loggedInUser._id}/subscribed-to-event/${this.props.match.params.eventId}`);
             this.setState({
                 isLoggedInUserSubscribed: res.data
             });
         }
+    }
+
+    connectToSocketIO() {
+        this.socket = io(this.state.socketIOURL, {transports: [ 'websocket' ]});
+        this.socket.on(`chatMessage_${this.props.match.params.eventId}`, this.addMessageToChat);
+    }
+
+    componentWillUnmount() {
+        if (this.socket) {
+            this.socket.disconnect();
+            this.socket = null;
+        }
+    }
+
+    addMessageToChat({sender, msg}) {
+        const displayName = this.state.loggedInUser && sender.username === this.state.loggedInUser.username
+            ? <b>You:</b>
+            : (sender.displayName || sender.username) + ':';
+
+        const chatMessage = (
+            <div className='ml-1' key={this.state.chat.length}>
+                <span className='black-link' title={`Go to ${sender.displayName || sender.username}'s profile`}>
+                    <Link to={`/user/${sender.username}`}>
+                        <img src={sender.profilePicURL} width='25' height='25'
+                             alt={`${sender.username} profile picture`} className='rounded-circle'/>
+                        <span className='ml-1' style={{color: sender.chatColour}}>{displayName}</span>
+                    </Link>
+                </span>
+                &nbsp;
+                <span>{msg}</span>
+            </div>
+        );
+        this.setState({
+            chat: [...this.state.chat, chatMessage]
+        });
     }
 
     setActiveTab(tab) {
@@ -275,6 +328,11 @@ export default class Event extends React.Component {
             this.getSchedule();
         }
         this.setActiveTab(SCHEDULE_TAB_ID);
+    }
+
+    toggleChatTab() {
+        this.setActiveTab(CHAT_TAB_ID);
+        window.scrollTo(0, document.body.scrollHeight);
     }
 
     toggleOptionsDropdown() {
@@ -411,7 +469,7 @@ export default class Event extends React.Component {
                 try {
                     res = await axios.put('/api/events', {
                         eventId: this.props.match.params.eventId,
-                        userId: this.state.loggedInUserId,
+                        userId: this.state.loggedInUser._id,
                         eventName: this.state.editEventName,
                         startTime: convertLocalToUTC(this.state.editEventStartTime),
                         endTime: convertLocalToUTC(this.state.editEventEndTime),
@@ -677,7 +735,7 @@ export default class Event extends React.Component {
 
     async subscribeToEvent() {
         try {
-            await axios.post(`/api/users/${this.state.loggedInUserId}/subscribe-to-event/${this.props.match.params.eventId}`);
+            await axios.post(`/api/users/${this.state.loggedInUser._id}/subscribe-to-event/${this.props.match.params.eventId}`);
             this.setState({
                 isLoggedInUserSubscribed: true,
                 numOfSubscribers: this.state.numOfSubscribers + 1
@@ -689,7 +747,7 @@ export default class Event extends React.Component {
 
     async unsubscribeFromEvent() {
         try {
-            await axios.post(`/api/users/${this.state.loggedInUserId}/unsubscribe-from-event/${this.props.match.params.eventId}`);
+            await axios.post(`/api/users/${this.state.loggedInUser._id}/unsubscribe-from-event/${this.props.match.params.eventId}`);
             this.setState({
                 isLoggedInUserSubscribed: false,
                 numOfSubscribers: this.state.numOfSubscribers - 1
@@ -700,8 +758,8 @@ export default class Event extends React.Component {
     }
 
     renderOptionsOrSubscribeButton() {
-        return this.state.loggedInUserId ? (
-            this.state.loggedInUserId === this.state.createdBy._id ? (
+        return this.state.loggedInUser ? (
+            this.state.loggedInUser._id === this.state.createdBy._id ? (
                 <Dropdown className='float-right options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
                           toggle={this.toggleOptionsDropdown} size='sm'>
                     <DropdownToggle className='pr-0' caret>
@@ -987,7 +1045,7 @@ export default class Event extends React.Component {
         }, async () => {
             try {
                 await axios.post('/api/scheduled-streams', {
-                    userId: this.state.loggedInUserId,
+                    userId: this.state.loggedInUser._id,
                     eventStageId: this.state.scheduleStreamStage._id,
                     startTime: convertLocalToUTC(this.state.scheduleStreamStartTime),
                     endTime: convertLocalToUTC(this.state.scheduleStreamEndTime),
@@ -1153,7 +1211,7 @@ export default class Event extends React.Component {
             <Row className='mt-4'>
                 <Col>
                     <div className='mb-2'>
-                        {this.state.loggedInUserId !== this.state.createdBy._id ? undefined : (
+                        {!this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
                             <Button className='btn-dark' size='sm' onClick={this.toggleScheduleStreamModal}>
                                 <img src={PlusIcon} width={22} height={22} className='mr-1'
                                      alt='Schedule a Stream icon'/>
@@ -1233,7 +1291,7 @@ export default class Event extends React.Component {
                         </tbody>
                     </table>
                 </ModalBody>
-                {this.state.loggedInUserId !== this.state.createdBy._id ? undefined : (
+                {!this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
                     <ModalFooter>
                         <Button className='btn-danger' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
                             <img src={WhiteDeleteIcon} width={18} height={18} className='mr-1 mb-1'
@@ -1246,49 +1304,121 @@ export default class Event extends React.Component {
         );
     }
 
-    renderChat() {
+    onMessageTextChange(e) {
+        this.setState({
+            msg: e.target.value
+        });
+    }
 
+    handleKeyDown(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.onMessageSubmit();
+        }
+    }
+
+    onMessageSubmit() {
+        if (this.state.msg) {
+            const sender = this.state.loggedInUser;
+            const msg = this.state.msg;
+            this.socket.emit('chatMessage', {sender, msg});
+            this.setState({
+                msg: ''
+            });
+        }
+    }
+
+    componentDidUpdate() {
+        const messages = document.getElementById('messages');
+        if (messages) {
+            const isScrolledToBottom = messages.scrollHeight - messages.clientHeight <= messages.scrollTop + SCROLL_MARGIN_HEIGHT;
+            if (isScrolledToBottom) {
+                messages.scrollTop = messages.scrollHeight - messages.clientHeight;
+            }
+        }
+    }
+
+    setChatHeight(height) {
+        if (height !== this.state.chatHeight) {
+            this.setState({
+                chatHeight: height
+            });
+        }
+    }
+
+    setChatHeightOffset(height) {
+        if (height !== this.state.chatHeightOffset) {
+            this.setState({
+                chatHeightOffset: height
+            });
+        }
+    }
+
+    renderChat() {
+        return (
+            <Row className='h-100'>
+                <Col>
+                    <div id='messages' className='chat-messages'
+                         style={{height: (this.state.chatHeight - this.state.chatHeightOffset + 56) + 'px'}}>
+                        {this.state.chat}
+                    </div>
+                    {!(this.state.loggedInUser && this.state.loggedInUser.username) ? (
+                        <div className='text-center mt-1'>
+                            To participate in the chat, please <a href={`/login?redirectTo=${window.location.pathname}`}>log in</a>
+                        </div>
+                    ) : (
+                        <div className='chat-input' style={{height: '34px', paddingRight: '30px'}}>
+                            <textarea onChange={this.onMessageTextChange} onKeyDown={this.handleKeyDown}
+                                      value={this.state.msg}/>
+                            <button onClick={this.onMessageSubmit}>Send</button>
+                        </div>
+                    )}
+                </Col>
+            </Row>
+        );
     }
 
     render() {
         return !this.state.loaded ? <LoadingSpinner /> : (
             <React.Fragment>
-                <Container fluid='lg'>
-                    {!this.state.bannerPicURL ? undefined : (
-                        <Row>
-                            <Col>
-                                <img className='w-100' height={200}
-                                     src={this.state.bannerPicURL} alt={`${this.state.eventName} Banner Pic`}/>
+                <Container className='h-100' fluid='lg'>
+                    <ReactHeight onHeightReady={height => this.setChatHeightOffset(height)}>
+                        {!this.state.bannerPicURL ? undefined : (
+                            <Row>
+                                <Col>
+                                    <img className='w-100' height={200}
+                                         src={this.state.bannerPicURL} alt={`${this.state.eventName} Banner Pic`}/>
+                                </Col>
+                            </Row>
+                        )}
+                        {getAlert(this)}
+                        <Row className='mt-3'>
+                            <Col xs='8'>
+                                <h4>{this.state.eventName}</h4>
+                                <h6>
+                                    {formatDateRange({
+                                        start: this.state.startTime,
+                                        end: this.state.endTime
+                                    })}
+                                </h6>
+                                <h6>Created by&nbsp;
+                                    <Link to={`/user/${this.state.createdBy.username}`}>
+                                        {this.state.createdBy.displayName || this.state.createdBy.username}
+                                    </Link>
+                                </h6>
+                            </Col>
+                            <Col xs='4'>
+                                <div className='float-right'>
+                                    <h5 className='black-link text-right'>
+                                        <Link to={`/event/${this.props.match.params.eventId}/subscribers`}>
+                                            {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
+                                        </Link>
+                                    </h5>
+                                    {this.renderOptionsOrSubscribeButton()}
+                                </div>
                             </Col>
                         </Row>
-                    )}
-                    {getAlert(this)}
-                    <Row className='mt-3'>
-                        <Col xs='8'>
-                            <h4>{this.state.eventName}</h4>
-                            <h6>
-                                {formatDateRange({
-                                    start: this.state.startTime,
-                                    end: this.state.endTime
-                                })}
-                            </h6>
-                            <h6>Created by&nbsp;
-                                <Link to={`/user/${this.state.createdBy.username}`}>
-                                    {this.state.createdBy.displayName || this.state.createdBy.username}
-                                </Link>
-                            </h6>
-                        </Col>
-                        <Col xs='4'>
-                            <div className='float-right'>
-                                <h5 className='black-link text-right'>
-                                    <Link to={`/event/${this.props.match.params.eventId}/subscribers`}>
-                                        {shortenNumber(this.state.numOfSubscribers)} Subscriber{this.state.numOfSubscribers === 1 ? '' : 's'}
-                                    </Link>
-                                </h5>
-                                {this.renderOptionsOrSubscribeButton()}
-                            </div>
-                        </Col>
-                    </Row>
+                    </ReactHeight>
                     <Nav className='mt-3' tabs>
                         <NavItem>
                             <NavLink className={this.state.activeTab === STREAMS_TAB_ID ? 'active active-tab-nav-link' : 'tab-nav-link'}
@@ -1304,25 +1434,27 @@ export default class Event extends React.Component {
                         </NavItem>
                         <NavItem>
                             <NavLink className={this.state.activeTab === CHAT_TAB_ID ? 'active active-tab-nav-link' : 'tab-nav-link'}
-                                     onClick={() => this.setActiveTab(CHAT_TAB_ID)}>
+                                     onClick={this.toggleChatTab}>
                                 Chat
                             </NavLink>
                         </NavItem>
                     </Nav>
-                    <TabContent activeTab={this.state.activeTab}>
-                        <TabPane tabId={STREAMS_TAB_ID}>
-                            <div className='mt-4'>
-                                {this.renderStages()}
-                                {this.renderPastStreams()}
-                            </div>
-                        </TabPane>
-                        <TabPane tabId={SCHEDULE_TAB_ID}>
-                            {this.renderSchedule()}
-                        </TabPane>
-                        <TabPane tabId={CHAT_TAB_ID}>
-                            {this.renderChat()}
-                        </TabPane>
-                    </TabContent>
+                    <ReactHeight className='h-100' onHeightReady={height => this.setChatHeight(height)}>
+                        <TabContent activeTab={this.state.activeTab} className='h-100'>
+                            <TabPane tabId={STREAMS_TAB_ID}>
+                                <div className='mt-4'>
+                                    {this.renderStages()}
+                                    {this.renderPastStreams()}
+                                </div>
+                            </TabPane>
+                            <TabPane tabId={SCHEDULE_TAB_ID}>
+                                {this.renderSchedule()}
+                            </TabPane>
+                            <TabPane tabId={CHAT_TAB_ID} className='h-100'>
+                                {this.renderChat()}
+                            </TabPane>
+                        </TabContent>
+                    </ReactHeight>
                 </Container>
                 
                 {this.renderEditEventModal()}

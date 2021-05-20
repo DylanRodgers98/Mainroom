@@ -79,8 +79,8 @@ class WebSocketServer {
                 });
 
                 // emit livestream chat message to correct channel
-                socket.on('chatMessage', ({viewerUser, msg}) => {
-                    mainroomEventBus.send('chatMessage', {streamer: streamUsername, viewerUser, msg});
+                socket.on('chatMessage', ({sender, msg}) => {
+                    mainroomEventBus.send('chatMessage', {recipient: streamUsername, sender, msg});
                 });
             }
             // or register listeners if connection is from event stage stream page
@@ -103,8 +103,17 @@ class WebSocketServer {
                 });
 
                 // emit livestream chat message to correct channel
-                socket.on('chatMessage', ({viewerUser, msg}) => {
-                    mainroomEventBus.send('chatMessage', {streamer: eventStageId, viewerUser, msg});
+                socket.on('chatMessage', ({sender, msg}) => {
+                    mainroomEventBus.send('chatMessage', {recipient: eventStageId, sender, msg});
+                });
+            }
+            // or register listeners if connection is from event page
+            else if (socket.handshake.query.eventId) {
+                const eventId = socket.handshake.query.eventId;
+
+                // emit livestream chat message to correct channel
+                socket.on('chatMessage', ({sender, msg}) => {
+                    mainroomEventBus.send('chatMessage', {recipient: eventId, sender, msg});
                 });
             }
         });
@@ -129,10 +138,10 @@ function emitLiveStreamViewCount(io, {streamer, viewCount}) {
     io.emit(`liveStreamViewCount_${streamer}`, viewCount);
 }
 
-function emitOnChatMessage(io, {streamer, viewerUser, msg}) {
-    const args = {viewerUser, msg};
-    LOGGER.debug(`Emitting "chatMessage_{}" event with args "{}" using socket.io`, streamer, JSON.stringify(args));
-    io.emit(`chatMessage_${streamer}`, args);
+function emitOnChatMessage(io, {recipient, sender, msg}) {
+    const args = {sender, msg};
+    LOGGER.debug(`Emitting "chatMessage_{}" event with args "{}" using socket.io`, recipient, JSON.stringify(args));
+    io.emit(`chatMessage_${recipient}`, args);
 }
 
 function emitOnWentLive(io, streamer) {
