@@ -1210,28 +1210,28 @@ export default class Event extends React.Component {
         ) : (
             <Row className='mt-4'>
                 <Col>
-                    <div className='mb-2'>
-                        {!this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
+                    {!this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
+                        <div className='float-left mb-2'>
                             <Button className='btn-dark' size='sm' onClick={this.toggleScheduleStreamModal}>
                                 <img src={PlusIcon} width={22} height={22} className='mr-1'
                                      alt='Schedule a Stream icon'/>
                                 Schedule a Stream
                             </Button>
-                        )}
-                        <div className='float-right'>
-                            <DateTimeRangeContainer ranges={this.scheduleDatePickerRange()} local={this.getDatePickerFormat()}
-                                                    start={this.state.datePickerStartTime} end={this.state.datePickerEndTime}
-                                                    applyCallback={this.scheduleApplyDate} leftMode={true}
-                                                    noMobileMode={this.isNoMobileMode()}>
-                                <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
-                                    <DropdownToggle caret>
-                                        <img src={CalendarIcon} width={18} height={18} className='mr-2 mb-1'
-                                             alt='Select Time Period icon'/>
-                                        Select Time Period
-                                    </DropdownToggle>
-                                </Dropdown>
-                            </DateTimeRangeContainer>
                         </div>
+                    )}
+                    <div className='float-right mb-2'>
+                        <DateTimeRangeContainer ranges={this.scheduleDatePickerRange()} local={this.getDatePickerFormat()}
+                                                start={this.state.datePickerStartTime} end={this.state.datePickerEndTime}
+                                                applyCallback={this.scheduleApplyDate} leftMode={true}
+                                                noMobileMode={this.isNoMobileMode()}>
+                            <Dropdown className='dropdown-hover-darkred' size='sm' toggle={() => {}}>
+                                <DropdownToggle caret>
+                                    <img src={CalendarIcon} width={18} height={18} className='mr-2 mb-1'
+                                         alt='Select Time Period icon'/>
+                                    Select Time Period
+                                </DropdownToggle>
+                            </Dropdown>
+                        </DateTimeRangeContainer>
                     </div>
                     <Timeline groups={this.state.scheduleGroups} items={this.state.scheduleItems}
                               onItemSelect={this.selectScheduledStream} onItemClick={this.selectScheduledStream}
@@ -1367,7 +1367,7 @@ export default class Event extends React.Component {
                             To participate in the chat, please <a href={`/login?redirectTo=${window.location.pathname}`}>log in</a>
                         </div>
                     ) : (
-                        <div className='chat-input' style={{height: '34px', paddingRight: '30px'}}>
+                        <div className='chat-input' style={{height: '34px', paddingRight: '30px', backgroundColor: '#F9F9F9'}}>
                             <textarea onChange={this.onMessageTextChange} onKeyDown={this.handleKeyDown}
                                       value={this.state.msg}/>
                             <button onClick={this.onMessageSubmit}>Send</button>
