@@ -1104,10 +1104,14 @@ export default class Event extends React.Component {
         const videoFileInput = document.getElementById('videoFileInput');
         if (videoFileInput.files && videoFileInput.files.length === 1) {
             const {size, duration} = await this.getVideoFileSizeAndDuration(videoFileInput.files[0]);
+            const scheduleStreamStartTime = moment(this.state.scheduleStreamStartTime).startOf('minute');
+            const scheduleStreamEndTime = moment(scheduleStreamStartTime).add(Math.ceil(duration / 60), 'minutes');
+
             this.setState({
                 selectedVideoFileSize: size,
                 selectedVideoFileDuration: duration,
-                scheduleStreamEndTime: moment(this.state.scheduleStreamStartTime).add(Math.ceil(duration / 60), 'minutes')
+                scheduleStreamStartTime,
+                scheduleStreamEndTime
             });
         }
     }

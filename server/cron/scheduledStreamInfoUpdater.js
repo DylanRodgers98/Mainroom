@@ -42,7 +42,9 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
             for (const stream of streams) {
                 if (stream.eventStage) {
                     try {
-                        const eventStage = await EventStage.findById(stream.eventStage._id);
+                        const eventStage = await EventStage.findById(stream.eventStage._id)
+                            .select('+streamInfo.streamKey')
+                            .exec();
 
                         const prerecordedVideoFileURL = stream.getPrerecordedVideoFileURL();
                         if (prerecordedVideoFileURL) {
@@ -97,6 +99,7 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
 });
 
 function startStreamFromPrerecordedVideo(prerecordedVideoFileURL, streamKey) {
+    LOGGER.debug('Starting stream from prerecorded video at {} (stream key: {})', decodeURIComponent(prerecordedVideoFileURL), streamKey);
     const args = ['-re', '-y', '-i', prerecordedVideoFileURL, '-c:v', 'copy', '-c:a', 'copy', '-f', 'tee', '-map', '0:a?', '-map', '0:v?', '-f', 'flv', `${RTMP_SERVER_URL}/${streamKey}`];
     spawn(process.env.FFMPEG_PATH, args, {detached: true, stdio: 'ignore'}).unref();
 }
