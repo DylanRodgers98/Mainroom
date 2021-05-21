@@ -3,6 +3,7 @@ const router = express.Router();
 const {Event, EventStage, RecordedStream, ScheduledStream} = require('../model/schemas');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
+const _ = require('lodash');
 const axios = require('axios');
 const loginChecker = require('connect-ensure-login');
 const {
@@ -29,6 +30,22 @@ const RTMP_SERVER_URL = `rtmp://${process.env.NODE_ENV === 'production' ? proces
     + `${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
 
 router.get('/', (req, res, next) => {
+    const query = {
+        endTime: {$gte: Date.now()}
+    };
+
+    if (req.query.searchQuery) {
+        const sanitisedQuery = sanitise(req.query.searchQuery);
+        const escapedQuery = _.escapeRegExp(sanitisedQuery)
+        const searchQuery = new RegExp(`^${escapedQuery}$`, 'i');
+        query.$or = [
+            {eventName: searchQuery},
+            {tags: searchQuery},
+            {'createdBy.username': searchQuery},
+            {'createdBy.displayName': searchQuery}
+        ];
+    }
+
     const options = {
         page: req.query.page,
         limit: req.query.limit,
@@ -40,7 +57,7 @@ router.get('/', (req, res, next) => {
         sort: 'startTime'
     };
 
-    Event.paginate({endTime: {$gte: Date.now()}}, options, async (err, result) => {
+    Event.paginate(query, options, async (err, result) => {
         if (err) {
             LOGGER.error('An error occurred when finding Events: {}', err.stack);
             return next(err);

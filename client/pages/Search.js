@@ -4,9 +4,10 @@ import {pagination, filters, siteName} from '../../mainroom.config';
 import {Link} from 'react-router-dom';
 import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner} from 'reactstrap';
 import {shortenNumber} from '../utils/numberUtils';
-import {timeSince} from '../utils/dateUtils';
+import {formatDateRange, isTimeBetween, timeSince} from '../utils/dateUtils';
 import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
 import ViewersIcon from "../icons/eye.svg";
+import moment from "moment";
 
 const STARTING_PAGE = 1;
 
@@ -24,6 +25,7 @@ export default class LiveStreams extends React.Component {
         this.getLiveStreams = this.getLiveStreams.bind(this);
         this.getPastStreams = this.getPastStreams.bind(this);
         this.getUsers = this.getUsers.bind(this);
+        this.getEvents = this.getEvents.bind(this);
 
         this.state = {
             loaded: false,
@@ -36,6 +38,10 @@ export default class LiveStreams extends React.Component {
             users: [],
             usersNextPage: STARTING_PAGE,
             showLoadMoreUsersButton: false,
+            events: [],
+            eventsNextPage: STARTING_PAGE,
+            showLoadMoreEventsButton: false,
+            showLoadMoreEventsSpinner: false,
             genreDropdownOpen: false,
             genreFilter: '',
             categoryDropdownOpen: false,
@@ -55,6 +61,7 @@ export default class LiveStreams extends React.Component {
     async fillComponent() {
         await Promise.all([
             this.getStreams(),
+            this.getEvents(),
             this.getUsers()
         ]);
         this.setState({
@@ -179,6 +186,31 @@ export default class LiveStreams extends React.Component {
             } catch (err) {
                 this.setState({showLoadMorePastStreamsSpinner: false});
                 displayErrorMessage(this, `An error occurred when loading more past streams. Please try again later. (${err})`);
+            }
+        });
+    }
+
+    getEvents() {
+        const queryParams = {
+            params: {
+                searchQuery: this.props.match.params.query,
+                page: this.state.eventsNextPage,
+                limit: pagination.small
+            }
+        };
+
+        this.setState({showLoadMoreEventsSpinner: true}, async () => {
+            try {
+                const res = await axios.get('/api/events', queryParams);
+                this.setState({
+                    events: [...this.state.events, ...(res.data.events || [])],
+                    eventsNextPage: res.data.nextPage,
+                    showLoadMoreEventsButton: !!res.data.nextPage,
+                    showLoadMoreEventsSpinner: false
+                });
+            } catch (err) {
+                this.setState({showLoadMoreEventsSpinner: false});
+                displayErrorMessage(this, `An error occurred when loading more events. Please try again later. (${err})`);
             }
         });
     }
@@ -392,6 +424,71 @@ export default class LiveStreams extends React.Component {
         );
     }
 
+    renderEvents() {
+        const timeNow = moment();
+
+        const events = this.state.events.map((event, index) => {
+            const isEventHappeningNow = isTimeBetween({
+                time: timeNow,
+                start: event.startTime,
+                end: event.endTime
+            });
+
+            return (
+                <Col className='stream margin-bottom-thick' key={index}>
+                    {isEventHappeningNow ? <span className='live-label'>LIVE</span> : undefined}
+                    <Link to={`/event/${event._id}`}>
+                        <img className='w-100' src={event.thumbnailURL} alt={`${event.eventName} Event Thumbnail`}/>
+                    </Link>
+                    <table>
+                        <tbody>
+                        <tr>
+                            <td className='w-100'>
+                                <h5 className='text-break'>
+                                    <Link to={`/user/${event.createdBy.username}`}>
+                                        {event.createdBy.displayName || event.createdBy.username}
+                                    </Link>
+                                    <span className='black-link'>
+                                        <Link to={`/event/${event._id}`}>
+                                            {` - ${event.eventName}`}
+                                        </Link>
+                                    </span>
+                                </h5>
+                                <h6>
+                                    {formatDateRange({
+                                        start: event.startTime,
+                                        end: event.endTime
+                                    })}
+                                </h6>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </Col>
+            );
+        });
+
+        const loadMoreEventsButton = !this.state.showLoadMoreEventsButton ? undefined : (
+            <div className='text-center my-4'>
+                <Button className='btn-dark' onClick={this.getEvents}>
+                    {this.state.showLoadMoreEventsSpinner ? <Spinner size='sm' /> : undefined}
+                    {this.state.showLoadMoreEventsSpinner ? undefined : 'Load More Events'}
+                </Button>
+            </div>
+        );
+
+        return !events.length ? undefined : (
+            <React.Fragment>
+                <h5>Events</h5>
+                <hr className='my-4'/>
+                <Row xs='1' sm='1' md='2' lg='3' xl='3'>
+                    {events}
+                </Row>
+                {loadMoreEventsButton}
+            </React.Fragment>
+        );
+    }
+
     renderUsers() {
         const users = this.state.users.map((user, index) => (
             <Col className='mb-4' key={index}>
@@ -443,7 +540,7 @@ export default class LiveStreams extends React.Component {
         ));
 
         return (
-            <Container fluid='lg' className='mt-5'>
+            <Container fluid='lg' className={this.state.alertText ? 'mt-4' : 'mt-5'}>
                 {getAlert(this)}
 
                 <Row>
@@ -490,6 +587,7 @@ export default class LiveStreams extends React.Component {
                     <React.Fragment>
                         {this.renderLiveStreams()}
                         {this.renderPastStreams()}
+                        {this.renderEvents()}
                         {this.renderUsers()}
                     </React.Fragment>
                 )}
