@@ -9,7 +9,7 @@ const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater
 const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
 const RTMP_SERVER_URL = `rtmp://localhost${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
 
-const jobName = 'Scheduled Stream Info Updater';
+const jobName = 'Stream Scheduler';
 
 let lastTimeTriggered = Date.now();
 

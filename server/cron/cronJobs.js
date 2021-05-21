@@ -1,7 +1,7 @@
 const LOGGER = require('../../logger')('./server/cron/cronJobs.js');
 
 const cronJobs = [
-    require('./scheduledStreamInfoUpdater'),
+    require('./streamScheduler'),
     require('./upcomingScheduledStreamEmailer'),
     require('./createdScheduledStreamsEmailer'),
     require('./newSubscribersEmailer'),

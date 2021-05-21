@@ -40,9 +40,9 @@ jest.mock('../../../server/model/schemas', () => {
     };
 });
 
-const {job} = require('../../../server/cron/scheduledStreamInfoUpdater');
+const {job} = require('../../../server/cron/streamScheduler');
 
-describe('scheduledStreamInfoUpdater', () => {
+describe('streamScheduler', () => {
     it('should send update query to MongoDB when cron job triggers', async () => {
         // given
         job.setTime(new CronTime('* * * * * *'));
