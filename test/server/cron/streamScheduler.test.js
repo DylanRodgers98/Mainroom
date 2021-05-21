@@ -19,12 +19,28 @@ const mockEventStream = {
     title: 'Test Event Stream',
     genre: 'Techno',
     category: 'Live Set',
-    tags: ['event', 'stream']
+    tags: ['event', 'stream'],
+    getPrerecordedVideoFileURL: () => undefined
+};
+
+const mockEventStageSave = jest.fn();
+
+const mockEventStage = {
+    streamInfo: {},
+    save: mockEventStageSave
 };
 
 const mockUserFindByIdAndUpdate = jest.fn();
 
-const mockEventFindByIdAndUpdate = jest.fn();
+const mockEventFindById = jest.fn(() => {
+    return {
+        select: () => {
+            return {
+                exec: () => mockEventStage
+            };
+        }
+    };
+});
 
 jest.mock('../../../server/model/schemas', () => {
     return {
@@ -35,7 +51,7 @@ jest.mock('../../../server/model/schemas', () => {
             findByIdAndUpdate: mockUserFindByIdAndUpdate
         },
         EventStage: {
-            findByIdAndUpdate: mockEventFindByIdAndUpdate
+            findById: mockEventFindById
         }
     };
 });
@@ -63,12 +79,7 @@ describe('streamScheduler', () => {
             'streamInfo.tags': mockUserStream.tags
         });
 
-        expect(mockEventFindByIdAndUpdate.mock.calls[0][0]).toEqual(mockEventStream.eventStage._id);
-        expect(mockEventFindByIdAndUpdate.mock.calls[0][1]).toEqual({
-            'streamInfo.title': mockEventStream.title,
-            'streamInfo.genre': mockEventStream.genre,
-            'streamInfo.category': mockEventStream.category,
-            'streamInfo.tags': mockEventStream.tags
-        });
+        expect(mockEventFindById).toHaveBeenCalledWith(mockEventStream.eventStage._id);
+        expect(mockEventStageSave).toHaveBeenCalledTimes(1);
     });
 });
