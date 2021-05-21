@@ -1662,7 +1662,7 @@ export default class Event extends React.Component {
             <Row className='h-100'>
                 <Col>
                     <div id='messages' className='chat-messages'
-                         style={{height: (this.state.chatHeight - this.state.chatHeightOffset + CHAT_HEIGHT_NAVBAR_OFFSET) + 'px'}}>
+                         style={{height: (this.state.chatHeight - this.state.chatHeightOffset + CHAT_HEIGHT_NAVBAR_OFFSET + (this.state.bannerPicURL ? 215 : 0)) + 'px'}}>
                         {this.state.chat}
                     </div>
                     {!(this.state.loggedInUser && this.state.loggedInUser.username) ? (
