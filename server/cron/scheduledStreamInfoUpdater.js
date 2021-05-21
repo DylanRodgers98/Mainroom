@@ -3,7 +3,11 @@ const {cronTime} = require('../../mainroom.config');
 const {ScheduledStream, User, EventStage} = require('../model/schemas');
 const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
+const {spawn} = require('child_process');
 const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
+
+const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
+const RTMP_SERVER_URL = `rtmp://localhost${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
 
 const jobName = 'Scheduled Stream Info Updater';
 
@@ -38,12 +42,20 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
             for (const stream of streams) {
                 if (stream.eventStage) {
                     try {
-                        await EventStage.findByIdAndUpdate(stream.eventStage._id, {
-                            'streamInfo.title': stream.title,
-                            'streamInfo.genre': stream.genre,
-                            'streamInfo.category': stream.category,
-                            'streamInfo.tags': stream.tags
-                        });
+                        const eventStage = await EventStage.findById(stream.eventStage._id);
+
+                        const prerecordedVideoFileURL = stream.getPrerecordedVideoFileURL();
+                        if (prerecordedVideoFileURL) {
+                            startStreamFromPrerecordedVideo(prerecordedVideoFileURL, eventStage.streamInfo.streamKey);
+                        }
+
+                        eventStage.streamInfo.title = stream.title;
+                        eventStage.streamInfo.title = stream.title;
+                        eventStage.streamInfo.genre = stream.genre;
+                        eventStage.streamInfo.category = stream.category;
+                        eventStage.streamInfo.tags = stream.tags;
+                        await eventStage.save();
+
                         updated++;
                     } catch (err) {
                         LOGGER.error('An error occurred when updating stream info for EventStage (_id: {}): {}',
@@ -83,5 +95,10 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
 
     LOGGER.debug(`${jobName} finished`);
 });
+
+function startStreamFromPrerecordedVideo(prerecordedVideoFileURL, streamKey) {
+    const args = ['-re', '-y', '-i', prerecordedVideoFileURL, '-c:v', 'copy', '-c:a', 'copy', '-f', 'tee', '-map', '0:a?', '-map', '0:v?', '-f', 'flv', `${RTMP_SERVER_URL}/${streamKey}`];
+    spawn(process.env.FFMPEG_PATH, args, {detached: true, stdio: 'ignore'}).unref();
+}
 
 module.exports = {jobName, job};
