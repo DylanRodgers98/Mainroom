@@ -392,7 +392,7 @@ export default class Events extends React.Component {
                                     <summary>Banner Image <i>(optional)</i></summary>
                                     <Suspense fallback={<LoadingSpinner />}>
                                         <ImageUploader buttonText='Choose Banner Image'
-                                                       label='Maximum file size: 2MB | Recommended image size: 1280x200'
+                                                       label='Maximum file size: 2MB | Recommended image size: 1110x200'
                                                        maxFileSize={2 * 1024 * 1024} onChange={this.onBannerImageUpload}
                                                        withPreview={true} singleImage={true} withIcon={false}/>
                                     </Suspense>
