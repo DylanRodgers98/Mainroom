@@ -325,9 +325,10 @@ export default class Events extends React.Component {
                 )}
                 <Col className='mt-2' xs='12'>
                     <details>
-                        <summary>Splash Thumbnail</summary>
+                        <summary>Splash Thumbnail <i>(optional)</i></summary>
                         <Suspense fallback={<LoadingSpinner />}>
-                            <ImageUploader buttonText='Choose Splash Thumbnail' label='Maximum file size: 2MB'
+                            <ImageUploader buttonText='Choose Splash Thumbnail'
+                                           label='Maximum file size: 2MB | Recommended image size: 1280x720'
                                            maxFileSize={2 * 1024 * 1024}
                                            onChange={(files, pics) => this.onStageSplashThumbnailUpload(files, pics, index)}
                                            withPreview={true} singleImage={true} withIcon={false}/>
@@ -388,9 +389,10 @@ export default class Events extends React.Component {
                             </Col>
                             <Col className='mt-2' xs='12'>
                                 <details>
-                                    <summary>Banner Image</summary>
+                                    <summary>Banner Image <i>(optional)</i></summary>
                                     <Suspense fallback={<LoadingSpinner />}>
-                                        <ImageUploader buttonText='Choose Banner Image' label='Maximum file size: 2MB'
+                                        <ImageUploader buttonText='Choose Banner Image'
+                                                       label='Maximum file size: 2MB | Recommended image size: 1280x200'
                                                        maxFileSize={2 * 1024 * 1024} onChange={this.onBannerImageUpload}
                                                        withPreview={true} singleImage={true} withIcon={false}/>
                                     </Suspense>
@@ -398,9 +400,10 @@ export default class Events extends React.Component {
                             </Col>
                             <Col className='mt-2' xs='12'>
                                 <details>
-                                    <summary>Thumbnail</summary>
+                                    <summary>Thumbnail <i>(optional)</i></summary>
                                     <Suspense fallback={<LoadingSpinner />}>
-                                        <ImageUploader buttonText='Choose Thumbnail' label='Maximum file size: 2MB'
+                                        <ImageUploader buttonText='Choose Thumbnail'
+                                                       label='Maximum file size: 2MB | Recommended image size: 1280x720'
                                                        maxFileSize={2 * 1024 * 1024} onChange={this.onEventThumbnailUpload}
                                                        withPreview={true} singleImage={true} withIcon={false}/>
                                     </Suspense>
