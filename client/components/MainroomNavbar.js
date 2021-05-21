@@ -261,7 +261,9 @@ export default class MainroomNavbar extends React.Component {
                             </Dropdown>
                         </NavItem>
                         <NavItem>
-                            <NavLink tag={Link} to={'/events'}>Events</NavLink>
+                            <NavLink className='text-center' onClick={this.closeNavbar} tag={Link} to={'/events'}>
+                                Events
+                            </NavLink>
                         </NavItem>
                     </Nav>
                     {this.renderLogInOrProfileDropdown()}

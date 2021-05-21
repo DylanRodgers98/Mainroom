@@ -882,7 +882,7 @@ export default class Event extends React.Component {
             <Row>
                 <Col>
                     <div className='float-right'>
-                        <Button className='btn-dark' onClick={this.toggleStageInfoModal} size='sm'>
+                        <Button className='btn-dark mb-2' onClick={this.toggleStageInfoModal} size='sm'>
                             <img src={GoLiveIcon} className='mr-1' alt='Stage Info and Stream Keys icon'/>
                             Stage Stream Keys
                         </Button>
