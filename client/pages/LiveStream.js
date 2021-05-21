@@ -316,7 +316,7 @@ export default class LiveStream extends React.Component {
                                 <table>
                                     <tbody>
                                         <tr>
-                                            {!this.props.match.params.eventStageId ? undefined : (
+                                            {this.props.match.params.eventStageId ? undefined : (
                                                 <td valign='top'>
                                                     <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
                                                         <img className='rounded-circle m-2' src={this.state.profilePicURL}
