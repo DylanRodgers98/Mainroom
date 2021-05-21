@@ -67,3 +67,14 @@ export const isTimeBetween = ({time, start, end}) => {
     const endTime = convertUTCToLocal(end);
     return moment(time).isBetween(startTime, endTime, undefined, '[]');
 }
+
+export const getDurationTimestamp = seconds => {
+    seconds = Math.ceil(seconds);
+    let minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    minutes = minutes % 60;
+    minutes = ('0' + minutes).slice(-2);
+    seconds = seconds % 60;
+    seconds = ('0' + seconds).slice(-2);
+    return `${hours}:${minutes}:${seconds}`;
+}

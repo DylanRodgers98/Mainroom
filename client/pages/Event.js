@@ -21,9 +21,15 @@ import {
     Spinner, TabContent, TabPane
 } from 'reactstrap';
 import {Link} from 'react-router-dom';
-import {convertLocalToUTC, convertUTCToLocal, formatDateRange, timeSince} from '../utils/dateUtils';
+import {
+    convertLocalToUTC,
+    convertUTCToLocal,
+    formatDateRange,
+    getDurationTimestamp,
+    timeSince
+} from '../utils/dateUtils';
 import ViewersIcon from '../icons/eye.svg';
-import {shortenNumber} from '../utils/numberUtils';
+import {shortenFileSize, shortenNumber} from '../utils/numberUtils';
 import moment from 'moment';
 import EditIcon from '../icons/edit.svg';
 import DeleteIcon from '../icons/trash.svg';
@@ -91,6 +97,7 @@ export default class Event extends React.Component {
         this.onMessageSubmit = this.onMessageSubmit.bind(this);
         this.addMessageToChat = this.addMessageToChat.bind(this);
         this.onVideoFileSelected = this.onVideoFileSelected.bind(this);
+        this.cancelVideoUpload = this.cancelVideoUpload.bind(this);
 
         this.state = {
             eventName: '',
@@ -137,6 +144,12 @@ export default class Event extends React.Component {
             scheduleStreamCategory: '',
             scheduleStreamTags: [],
             selectedVideoFileSize: 0,
+            selectedVideoFileDuration: 0,
+            showVideoUploadProgress: false,
+            videoUploadProgress: 0,
+            videoUploadBucket: '',
+            videoUploadKey: '',
+            videoUploadId: '',
             showAddToScheduleSpinner: false,
             addToScheduleErrorMessage: '',
             socketIOURL: '',
@@ -943,6 +956,8 @@ export default class Event extends React.Component {
             this.getStagesForScheduleDropdown()
             if (this.state.scheduleStreamModalOpen && !(this.state.genres.length || this.state.categories.length)) {
                 this.getFilters();
+            } else if (!this.state.scheduleStreamModalOpen) {
+                this.cancelVideoUpload();
             }
         });
     }
@@ -1044,17 +1059,37 @@ export default class Event extends React.Component {
     scheduleStreamApplyDate(startTime, endTime) {
         this.setState({
             scheduleStreamStartTime: startTime,
-            scheduleStreamEndTime: endTime
+            scheduleStreamEndTime: this.state.selectedVideoFileDuration
+                ? moment(startTime).add(Math.ceil(this.state.selectedVideoFileDuration / 60), 'minutes')
+                : endTime
         });
     }
 
-    onVideoFileSelected() {
+    async onVideoFileSelected() {
         const videoFileInput = document.getElementById('videoFileInput');
         if (videoFileInput.files && videoFileInput.files.length === 1) {
+            const {size, duration} = await this.getVideoFileSizeAndDuration(videoFileInput.files[0]);
             this.setState({
-                selectedVideoFileSize: videoFileInput.files[0].size
+                selectedVideoFileSize: size,
+                selectedVideoFileDuration: duration,
+                scheduleStreamEndTime: moment(this.state.scheduleStreamStartTime).add(Math.ceil(duration / 60), 'minutes')
             });
         }
+    }
+
+    getVideoFileSizeAndDuration(videoFile) {
+        return new Promise(resolve => {
+            const videoElement = document.createElement('video');
+            videoElement.preload = 'metadata';
+            videoElement.onloadedmetadata = function () {
+                window.URL.revokeObjectURL(videoElement.src);
+                resolve({
+                    size: videoFile.size,
+                    duration: videoElement.duration
+                });
+            };
+            videoElement.src = URL.createObjectURL(videoFile);
+        });
     }
 
     addToSchedule() {
@@ -1066,11 +1101,13 @@ export default class Event extends React.Component {
 
         this.setState({
             addToScheduleErrorMessage: '',
-            showAddToScheduleSpinner: true
+            showAddToScheduleSpinner: true,
+            videoUploadProgress: 0
         }, async () => {
             try {
                 let prerecordedVideoFile;
-                if (this.state.selectedVideoFileSize) {
+                if (this.state.selectedVideoFileSize && this.state.selectedVideoFileDuration) {
+                    this.setState({showVideoUploadProgress: true});
                     prerecordedVideoFile = await this.uploadVideoFile();
                 }
 
@@ -1107,11 +1144,14 @@ export default class Event extends React.Component {
                 }, () => {
                     displaySuccessMessage(this, alertText);
                     this.getSchedule();
+                    this.toggleScheduleStreamModal();
                 });
             } catch (err) {
-                displayErrorMessage(this, `An error occurred when creating scheduled stream. Please try again later. (${err})`);
+                if (err.toString() !== 'Cancel') {
+                    displayErrorMessage(this, `An error occurred when creating scheduled stream. Please try again later. (${err})`);
+                    this.toggleScheduleStreamModal();
+                }
             }
-            this.toggleScheduleStreamModal();
             this.setState({showAddToScheduleSpinner: false});
         });
     }
@@ -1122,25 +1162,40 @@ export default class Event extends React.Component {
             const videoFile = videoFileInput.files[0];
             const fileExtension = videoFile.name.substring(videoFile.name.lastIndexOf('.') + 1);
             const numberOfParts = Math.ceil(this.state.selectedVideoFileSize / S3_PART_SIZE);
+            const percentPerPart = 100 / numberOfParts;
 
             const {data} = await axios.get(`/api/events/${this.state.scheduleStreamStage._id}/init-stream-upload`, {
                 params: {fileExtension, numberOfParts}
             });
 
+            this.setState({
+                videoUploadBucket: data.bucket,
+                videoUploadKey: data.key,
+                videoUploadId: data.uploadId
+            }, () => {
+                this.cancelTokenSource = axios.CancelToken.source();
+            });
+
             const axiosForUpload = axios.create();
             delete axiosForUpload.defaults.headers.put['Content-Type']
 
-            const uploadPromises = data.signedURLs.map((signedURL, index) => {
-                const start = index * S3_PART_SIZE;
-                const end = (index + 1) * S3_PART_SIZE
-                const videoFilePart = index < data.signedURLs.length
+            const uploadPromises = [];
+            for (let i = 0; i < data.signedURLs.length; i++) {
+                const start = i * S3_PART_SIZE;
+                const end = (i + 1) * S3_PART_SIZE
+                const videoFilePart = i + 1 < data.signedURLs.length
                     ? videoFile.slice(start, end)
                     : videoFile.slice(start)
 
-                return axios.put(signedURL, videoFilePart);
-            });
-
+                uploadPromises.push(this.uploadVideoFilePart({
+                    signedURL: data.signedURLs[i],
+                    videoFilePart,
+                    percentPerPart
+                }));
+            }
             const uploadResult = await Promise.all(uploadPromises);
+
+            this.cancelTokenSource = null;
             const uploadedParts = uploadResult.map((upload, index) => ({
                 ETag: upload.headers.etag,
                 PartNumber: index + 1
@@ -1157,6 +1212,44 @@ export default class Event extends React.Component {
                 bucket: data.bucket,
                 key: data.key
             };
+        }
+    }
+
+    async uploadVideoFilePart({signedURL, videoFilePart, percentPerPart}) {
+        const res = await axios.put(signedURL, videoFilePart, {
+            cancelToken: this.cancelTokenSource.token
+        });
+        this.setState({
+            videoUploadProgress: this.state.videoUploadProgress + percentPerPart
+        });
+        return res;
+    }
+
+    async cancelVideoUpload() {
+        if (this.cancelTokenSource) {
+            this.cancelTokenSource.cancel();
+            this.cancelTokenSource = null;
+
+            this.setState({
+                addToScheduleErrorMessage: 'Upload of prerecorded stream cancelled',
+                showAddToScheduleSpinner: false,
+                showVideoUploadProgress: false,
+                videoUploadProgress: 0
+            });
+
+            await axios.delete(`/api/events/${this.state.scheduleStreamStage._id}/cancel-stream-upload`, {
+                params: {
+                    bucket: this.state.videoUploadBucket,
+                    key: this.state.videoUploadKey,
+                    uploadId: this.state.videoUploadId
+                }
+            });
+
+            this.setState({
+                videoUploadBucket: '',
+                videoUploadKey: '',
+                videoUploadId: ''
+            });
         }
     }
 
@@ -1209,6 +1302,12 @@ export default class Event extends React.Component {
                                     <summary>Upload Prerecorded Stream <i>(optional)</i></summary>
                                     <input id='videoFileInput' className='mt-1' type='file' accept='video/*'
                                            onChange={this.onVideoFileSelected}/>
+                                    {!this.state.selectedVideoFileDuration ? undefined : (
+                                        <div><i>Duration: {getDurationTimestamp(this.state.selectedVideoFileDuration)}</i></div>
+                                    )}
+                                    {!this.state.selectedVideoFileSize ? undefined : (
+                                        <div><i>File Size: {shortenFileSize(this.state.selectedVideoFileSize)}</i></div>
+                                    )}
                                 </details>
                             </Col>
                             <Col className='mt-3' xs='12'>
@@ -1266,6 +1365,18 @@ export default class Event extends React.Component {
                             <Col xs='12'>
                                 <i>Up to {validation.streamSettings.tagsMaxAmount} comma-separated tags, no spaces</i>
                             </Col>
+                            {!this.state.showVideoUploadProgress && !this.cancelTokenSource ? undefined : (
+                                <Col className='text-center mt-2' xs='12'>
+                                    {!this.state.showVideoUploadProgress ? undefined : (
+                                        <Progress value={this.state.videoUploadProgress} />
+                                    )}
+                                    {!this.cancelTokenSource ? undefined : (
+                                        <Button className='btn-danger mt-2' size='sm' onClick={this.cancelVideoUpload}>
+                                            Cancel Upload
+                                        </Button>
+                                    )}
+                                </Col>
+                            )}
                         </Row>
                     </Container>
                     <Alert className='mt-4' isOpen={!!this.state.addToScheduleErrorMessage} color='danger'>

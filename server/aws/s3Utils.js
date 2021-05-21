@@ -1,4 +1,11 @@
-const { S3Client, DeleteObjectCommand, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand } = require('@aws-sdk/client-s3');
+const {
+    S3Client,
+    DeleteObjectCommand,
+    CreateMultipartUploadCommand,
+    UploadPartCommand,
+    CompleteMultipartUploadCommand,
+    AbortMultipartUploadCommand
+} = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const {storage: {cloudfront}} = require('../../mainroom.config');
 const snsErrorPublisher = require('./snsErrorPublisher');
@@ -67,10 +74,22 @@ async function completeMultipartUpload({Bucket, Key, UploadId, Parts}) {
     }
 }
 
+async function abortMultipartUpload({Bucket, Key, UploadId}) {
+    try {
+        const abortMultipartUploadCommand = new AbortMultipartUploadCommand({Bucket, Key, UploadId});
+        await S3_CLIENT.send(abortMultipartUploadCommand);
+    } catch (err) {
+        LOGGER.error('An error occurred when aborting multipart upload in S3 (Bucket: {}, Key: {}, UploadId: {}): {}',
+            Bucket, Key, UploadId, err.stack);
+        await snsErrorPublisher.publish(err);
+    }
+}
+
 module.exports = {
     deleteObject,
     resolveObjectURL,
     createMultipartUpload,
     getUploadPartSignedURLs,
-    completeMultipartUpload
+    completeMultipartUpload,
+    abortMultipartUpload
 }

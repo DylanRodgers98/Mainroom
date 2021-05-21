@@ -19,7 +19,7 @@ const multerS3 = require('multer-s3');
 const S3V2ToV3Bridge = require('../aws/s3-v2-to-v3-bridge');
 const mime = require('mime-types');
 const CompositeError = require('../errors/CompositeError');
-const {deleteObject, createMultipartUpload, getUploadPartSignedURLs, completeMultipartUpload} = require('../aws/s3Utils');
+const {deleteObject, createMultipartUpload, getUploadPartSignedURLs, completeMultipartUpload, abortMultipartUpload} = require('../aws/s3Utils');
 const {getThumbnail} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/routes/events.js');
 
@@ -801,9 +801,9 @@ router.get('/:eventStageId/init-stream-upload', loginChecker.ensureLoggedIn(), a
     }
 });
 
-router.get('/:eventStageId/complete-stream-upload', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+router.post('/:eventStageId/complete-stream-upload', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     const eventStageId = sanitise(req.params.eventStageId);
-    const sanitisedInput = sanitise(req.query);
+    const sanitisedInput = sanitise(req.body);
 
     let eventStage;
     try {
@@ -839,6 +839,50 @@ router.get('/:eventStageId/complete-stream-upload', loginChecker.ensureLoggedIn(
     });
 
     res.sendStatus(201);
+});
+
+router.delete('/:eventStageId/cancel-stream-upload', loginChecker.ensureLoggedIn(), async (req, res, next) => {
+    const eventStageId = sanitise(req.params.eventStageId);
+    const sanitisedInput = sanitise(req.query);
+
+    let eventStage;
+    try {
+        eventStage = await EventStage.findById(eventStageId)
+            .select('event')
+            .populate({
+                path: 'event',
+                select: 'createdBy',
+                populate: {
+                    path: 'createdBy',
+                    select: '_id'
+                }
+            })
+            .exec()
+    } catch (err) {
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        return next(err);
+    }
+
+    if (!eventStage) {
+        return res.status(404).send(`Event (_id: ${escape(eventStageId)}) not found`);
+    }
+
+    if (eventStage.event.createdBy._id.toString() !== req.user._id.toString()) {
+        return res.sendStatus(401);
+    }
+
+    try {
+        await abortMultipartUpload({
+            Bucket: sanitisedInput.bucket,
+            Key: sanitisedInput.key,
+            UploadId: sanitisedInput.uploadId,
+        });
+        res.sendStatus(200);
+    } catch (err) {
+        LOGGER.error(`An error occurred when getting cancelling stream upload for EventStage with id '{}': {}`,
+            eventStageId, err.stack);
+        next(err);
+    }
 });
 
 module.exports = router;
