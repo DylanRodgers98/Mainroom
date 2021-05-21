@@ -428,7 +428,7 @@ router.get('/:eventId', async (req, res, next) => {
             })
             .populate({
                 path: 'stages',
-                select: '_id stageName splashThumbnail.bucket splashThumbnail.key streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount'
+                select: '_id stageName splashThumbnail.bucket splashThumbnail.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount'
             })
             .exec();
     } catch (err) {
@@ -453,6 +453,7 @@ router.get('/:eventId', async (req, res, next) => {
             stageName: stage.stageName,
             thumbnailURL: isLive ? await getThumbnail(streamKey) : stage.getSplashThumbnailURL(),
             streamInfo: {
+                streamKey: stage.streamInfo.streamKey,
                 title: stage.streamInfo.title,
                 genre: stage.streamInfo.genre,
                 category: stage.streamInfo.category,
@@ -473,6 +474,7 @@ router.get('/:eventId', async (req, res, next) => {
         tags: event.tags,
         stages,
         numOfSubscribers: event.subscribers.length,
+        rtmpServerURL: RTMP_SERVER_URL,
         socketIOURL
     });
 });
@@ -632,7 +634,7 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
     let scheduledStreams;
     try {
         scheduledStreams = await ScheduledStream.find(filter)
-            .select('eventStage title startTime endTime genre category')
+            .select('eventStage title startTime endTime genre category prerecordedVideoFile')
             .populate({
                 path: 'eventStage',
                 select: '_id stageName'
@@ -660,7 +662,8 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
                 start_time: scheduledStream.startTime,
                 end_time: scheduledStream.endTime,
                 genre: scheduledStream.genre,
-                category: scheduledStream.category
+                category: scheduledStream.category,
+                hasPrerecordedVideo: !!scheduledStream.prerecordedVideoFile
             };
         })
     });

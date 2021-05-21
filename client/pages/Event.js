@@ -23,7 +23,7 @@ import {
 import {Link} from 'react-router-dom';
 import {
     convertLocalToUTC,
-    convertUTCToLocal,
+    convertUTCToLocal, formatDate,
     formatDateRange,
     getDurationTimestamp,
     timeSince
@@ -31,6 +31,8 @@ import {
 import ViewersIcon from '../icons/eye.svg';
 import {shortenFileSize, shortenNumber} from '../utils/numberUtils';
 import moment from 'moment';
+import io from 'socket.io-client';
+import {ReactHeight} from 'react-height/lib/ReactHeight';
 import EditIcon from '../icons/edit.svg';
 import DeleteIcon from '../icons/trash.svg';
 import SubscribedIcon from '../icons/user-check.svg';
@@ -42,8 +44,8 @@ import WhiteDeleteIcon from '../icons/trash-white-20.svg';
 import CalendarIcon from '../icons/calendar-white-20.svg';
 import Timeline from 'react-calendar-timeline';
 import PlusIcon from '../icons/plus-white.svg';
-import io from 'socket.io-client';
-import {ReactHeight} from 'react-height/lib/ReactHeight';
+import RecordedStreamsIcon from '../icons/film-white-20.svg';
+import GoLiveIcon from '../icons/video-white-20.svg';
 
 const ImageUploader = lazy(() => import('react-images-upload'));
 
@@ -98,6 +100,7 @@ export default class Event extends React.Component {
         this.addMessageToChat = this.addMessageToChat.bind(this);
         this.onVideoFileSelected = this.onVideoFileSelected.bind(this);
         this.cancelVideoUpload = this.cancelVideoUpload.bind(this);
+        this.toggleStageInfoModal = this.toggleStageInfoModal.bind(this);
 
         this.state = {
             eventName: '',
@@ -152,12 +155,14 @@ export default class Event extends React.Component {
             videoUploadId: '',
             showAddToScheduleSpinner: false,
             addToScheduleErrorMessage: '',
+            rtmpServerURL: '',
             socketIOURL: '',
             chat: [],
             unreadChatMessages: 0,
             msg: '',
             chatHeight: 0,
             chatHeightOffset: 0,
+            stageInfoModalOpen: false,
             recordedStreamsNextPage: STARTING_PAGE,
             showLoadMoreButton: false,
             showLoadMoreSpinner: false,
@@ -209,6 +214,7 @@ export default class Event extends React.Component {
                 tags: res.data.tags,
                 stages: res.data.stages,
                 numOfSubscribers: res.data.numOfSubscribers,
+                rtmpServerURL: res.data.rtmpServerURL,
                 socketIOURL: res.data.socketIOURL
             }, () => {
                 if (!this.socket) {
@@ -733,7 +739,7 @@ export default class Event extends React.Component {
             }
         });
     }
-    
+
     renderDeleteEventModal() {
         return !this.state.isDeleteEventModalOpen ? undefined : (
             <Modal isOpen={this.state.isDeleteEventModalOpen} toggle={this.toggleDeleteEventModal}
@@ -869,8 +875,22 @@ export default class Event extends React.Component {
             </Col>
         ));
 
+        const stageInfoButton = !this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
+            <Row>
+                <Col>
+                    <div className='float-right'>
+                        <Button className='btn-dark' onClick={this.toggleStageInfoModal} size='sm'>
+                            <img src={GoLiveIcon} className='mr-1' alt='Stage Info and Stream Keys icon'/>
+                            Stage Stream Keys
+                        </Button>
+                    </div>
+                </Col>
+            </Row>
+        );
+
         return (
             <React.Fragment>
+                {stageInfoButton}
                 <Row xs='1' sm='1' md='2' lg='3' xl='3'>
                     {stages}
                 </Row>
@@ -913,6 +933,15 @@ export default class Event extends React.Component {
             </Row>
         ));
 
+        const manageRecordedStreamsButton = !this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
+            <div className='float-right'>
+                <Button className='btn-dark' tag={Link} to={'/manage-recorded-streams'} size='sm'>
+                    <img src={RecordedStreamsIcon} className='mr-1' alt='Recorded Streams icon'/>
+                    Manage Recorded Streams
+                </Button>
+            </div>
+        );
+
         const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={this.getRecordedStreams}>
@@ -924,8 +953,13 @@ export default class Event extends React.Component {
 
         return (
             <React.Fragment>
-                <h5>Past Streams</h5>
                 <hr className='my-4'/>
+                <Row className='mb-2'>
+                    <Col>
+                        {manageRecordedStreamsButton}
+                        <h3>Past Streams</h3>
+                    </Col>
+                </Row>
                 <Row xs='1' sm='1' md='2' lg='3' xl='3'>
                     {pastStreams}
                 </Row>
@@ -998,6 +1032,7 @@ export default class Event extends React.Component {
             stageDropdownOpen: !prevState.stageDropdownOpen
         }));
     }
+
     genreDropdownToggle() {
         this.setState(prevState => ({
             genreDropdownOpen: !prevState.genreDropdownOpen
@@ -1155,7 +1190,7 @@ export default class Event extends React.Component {
             this.setState({showAddToScheduleSpinner: false});
         });
     }
-    
+
     async uploadVideoFile() {
         const videoFileInput = document.getElementById('videoFileInput');
         if (videoFileInput.files && videoFileInput.files.length === 1) {
@@ -1251,6 +1286,71 @@ export default class Event extends React.Component {
                 videoUploadId: ''
             });
         }
+    }
+
+    toggleStageInfoModal() {
+        this.setState(prevState => ({
+            stageInfoModalOpen: !prevState.stageInfoModalOpen
+        }));
+    }
+
+    copyFrom(elementId) {
+        document.getElementById(elementId).select();
+        document.execCommand('copy');
+        displaySuccessMessage(this, 'Copied to clipboard');
+    }
+
+    renderStageInfoModal() {
+        if (!this.state.stageInfoModalOpen) {
+            return undefined;
+        }
+
+        const stages = this.state.stages.map((stage, index) => (
+            <React.Fragment key={index}>
+                <Col className='mt-2' xs='12'>
+                    <h5>{stage.stageName} Stream Key</h5>
+                </Col>
+                <Col xs='12'>
+                    <input id={`streamKeyInput${index}`} className='rounded-border w-50 obfuscate-text' type='text'
+                           value={stage.streamInfo.streamKey} readOnly={true}/>
+                    <Button className='btn-dark ml-1' size='sm'
+                            onClick={() => this.copyFrom(`streamKeyInput${index}`)}>
+                        Copy
+                    </Button>
+                </Col>
+            </React.Fragment>
+        ));
+
+        return (
+            <Modal isOpen={this.state.stageInfoModalOpen} toggle={this.toggleStageInfoModal} centered={true}>
+                <ModalHeader toggle={this.toggleStageInfoModal}>
+                    Stage Stream Keys
+                </ModalHeader>
+                <ModalBody>
+                    <Container fluid className='remove-padding-lr'>
+                        <Row>
+                            <Col xs='12'>
+                                <i>Copy and paste the Server URL and the Stream Key for the stage you wish to stream to into your streaming software.</i>
+                            </Col>
+                        </Row>
+                        <Row className='mt-3'>
+                            <Col xs='12'>
+                                <h5>Server URL</h5>
+                            </Col>
+                            <Col xs='12'>
+                                <input id='serverUrlInput' className='rounded-border w-50' type='text'
+                                       value={this.state.rtmpServerURL} readOnly={true}/>
+                                <Button className='btn-dark ml-1' size='sm'
+                                        onClick={() => this.copyFrom('serverUrlInput')}>
+                                    Copy
+                                </Button>
+                            </Col>
+                            {stages}
+                        </Row>
+                    </Container>
+                </ModalBody>
+            </Modal>
+        );
     }
 
     renderScheduleStreamModal() {
@@ -1479,6 +1579,9 @@ export default class Event extends React.Component {
                                     start: scheduledStream.start_time,
                                     end: scheduledStream.end_time
                                 })}
+                                {!this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id || !scheduledStream.hasPrerecordedVideo ?  undefined : (
+                                    <p><i>A prerecording of this stream has been scheduled to start at {formatDate(scheduledStream.start_time)}</i></p>
+                                )}
                             </td>
                         </tr>
                         </tbody>
@@ -1649,11 +1752,12 @@ export default class Event extends React.Component {
                         </TabContent>
                     </ReactHeight>
                 </Container>
-                
+
                 {this.renderEditEventModal()}
                 {this.renderDeleteEventModal()}
                 {this.renderSelectedScheduledStream()}
                 {this.renderScheduleStreamModal()}
+                {this.renderStageInfoModal()}
             </React.Fragment>
         );
     }
