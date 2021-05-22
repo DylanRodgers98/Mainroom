@@ -464,11 +464,23 @@ router.get('/:eventId', async (req, res, next) => {
             headers: {Authorization: rtmpServer.auth.header}
         });
 
+        let thumbnailURL;
+        if (isLive) {
+            try {
+                thumbnailURL = await getThumbnail(streamKey);
+            } catch (err) {
+                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning splash thumbnail. Error: {}', streamKey, err.stack);
+                thumbnailURL = stage.getSplashThumbnailURL();
+            }
+        } else {
+            thumbnailURL = stage.getSplashThumbnailURL();
+        }
+
         stages.push({
             _id: stage._id,
             isLive,
             stageName: stage.stageName,
-            thumbnailURL: isLive ? await getThumbnail(streamKey) : stage.getSplashThumbnailURL(),
+            thumbnailURL,
             streamInfo: {
                 streamKey: stage.streamInfo.streamKey,
                 title: stage.streamInfo.title,

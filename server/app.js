@@ -16,7 +16,7 @@ const nodeMediaServer = require('./mediaServer');
 const cronJobs = require('./cron/cronJobs');
 const csrf = require('csurf');
 const rateLimit = require('express-rate-limit');
-const {User, RecordedStream} = require('./model/schemas');
+const {User, RecordedStream, Event, EventStage} = require('./model/schemas');
 const sanitise = require('mongo-sanitize');
 const {getThumbnail} = require('./aws/s3ThumbnailGenerator');
 const axios = require('axios');
@@ -152,6 +152,117 @@ app.get('/search/:query', setXSRFTokenCookie, (req, res) => {
     });
 });
 
+app.get('/events', setXSRFTokenCookie, (req, res) => {
+    res.render('index', {
+        siteName: config.siteName,
+        title: `Events - ${config.siteName}`,
+        brandingURL: config.brandingURL,
+        faviconURL: config.faviconURL
+    })
+});
+
+app.get('/event/:eventId', setXSRFTokenCookie, async (req, res) => {
+    const siteName = config.siteName;
+    const brandingURL = config.brandingURL;
+    const faviconURL = config.faviconURL;
+    let title;
+    let imageURL;
+    let imageAlt;
+
+    try {
+        const eventId = sanitise(req.params.eventId);
+        const event = await Event.findById(eventId).select('eventName thumbnail.bucket thumbnail.key').exec();
+        title = `${event.eventName} - ${siteName}`;
+        imageURL = event.getThumbnailURL();
+        imageAlt = `${event.eventName} Event Thumbnail`;
+    } catch (err) {
+        title = config.headTitle;
+    }
+
+    const params = {
+        siteName, brandingURL, faviconURL, title, imageURL, imageAlt
+    };
+    if (imageURL && imageURL.startsWith('https')) {
+        Object.assign(params, {secureImageURL: imageURL});
+    }
+    res.render('index', params);
+});
+
+app.get('/event/:eventId/subscribers', setXSRFTokenCookie, async (req, res) => {
+    const siteName = config.siteName;
+    const brandingURL = config.brandingURL;
+    const faviconURL = config.faviconURL;
+    let title;
+    try {
+        const eventId = sanitise(req.params.eventId);
+        const event = await Event.findById(eventId).select('eventName').exec();
+        title = `${event.eventName}'s Subscribers - ${siteName}`;
+    } catch (err) {
+        title = config.headTitle;
+    }
+    res.render('index', {siteName, brandingURL, faviconURL, title});
+});
+
+app.get('/stage/:eventStageId', setXSRFTokenCookie, async (req, res) => {
+    const siteName = config.siteName;
+    const brandingURL = config.brandingURL;
+    const faviconURL = config.faviconURL;
+    let title;
+    let description;
+    let imageURL;
+    let imageAlt;
+    let videoURL;
+    let videoMimeType;
+    let twitterCard;
+
+    try {
+        const eventStageId = sanitise(req.params.eventStageId);
+        const eventStage = await EventStage.findById(eventStageId)
+            .select( 'event stageName splashThumbnail.bucket splashThumbnail.key streamInfo.title +streamInfo.streamKey streamInfo.genre streamInfo.category')
+            .populate({
+                path: 'event',
+                select: 'eventName'
+            })
+            .exec();
+        const streamKey = eventStage.streamInfo.streamKey;
+        const {data} = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
+            headers: { Authorization: config.rtmpServer.auth.header }
+        });
+        if (data.isLive) {
+            title = [eventStage.event.eventName, eventStage.stageName, eventStage.streamInfo.title, siteName].filter(Boolean).join(' - ');
+            description = `${eventStage.streamInfo.genre ? `${eventStage.streamInfo.genre} ` : ''}${eventStage.streamInfo.category || ''}`;
+            try {
+                imageURL = await getThumbnail(streamKey);
+            } catch (err) {
+                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning splash thumbnail. Error: {}', streamKey, err.stack);
+                imageURL = eventStage.getSplashThumbnailURL();
+            }
+            videoURL = process.env.NODE_ENV === 'production'
+                ? `https://${config.storage.cloudfront.liveStreams}/${streamKey}/index.m3u8`
+                : `http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/${process.env.RTMP_SERVER_APP_NAME}/${streamKey}/index.m3u8`;
+            videoMimeType = 'application/x-mpegURL';
+            twitterCard = 'player';
+        } else {
+            title = `${eventStage.event.eventName} - ${eventStage.stageName}`;
+            imageURL = eventStage.getSplashThumbnailURL();
+        }
+        imageAlt = `${eventStage.stageName} Stage Thumbnail`;
+    } catch (err) {
+        title = config.headTitle;
+    }
+
+    const params = {
+        siteName, brandingURL, faviconURL, title, description, imageURL, imageAlt, videoURL, videoMimeType, twitterCard
+    };
+    if (imageURL && imageURL.startsWith('https')) {
+        Object.assign(params, {secureImageURL: imageURL});
+    }
+    if (videoURL && videoURL.startsWith('https')) {
+        Object.assign(params, {secureVideoURL: videoURL});
+    }
+    res.render('index', params);
+});
+
 app.get('/user/:username', setXSRFTokenCookie, async (req, res) => {
     const siteName = config.siteName;
     const brandingURL = config.brandingURL;
@@ -161,7 +272,7 @@ app.get('/user/:username', setXSRFTokenCookie, async (req, res) => {
     try {
         const username = sanitise(req.params.username.toLowerCase());
         const user = await User.findOne({username: username}).select('displayName bio').exec();
-        title = `${user.displayName || username} - ${config.siteName}`
+        title = `${user.displayName || username} - ${siteName}`
         description = user.bio;
     } catch (err) {
         title = config.headTitle;
@@ -177,7 +288,7 @@ app.get('/user/:username/subscribers', setXSRFTokenCookie, async (req, res) => {
     try {
         const username = sanitise(req.params.username.toLowerCase());
         const user = await User.findOne({username: username}).select('displayName').exec();
-        title = `${user.displayName || username}'s Subscribers - ${config.siteName}`
+        title = `${user.displayName || username}'s Subscribers - ${siteName}`
     } catch (err) {
         title = config.headTitle;
     }
@@ -192,7 +303,7 @@ app.get('/user/:username/subscriptions', setXSRFTokenCookie, async (req, res) =>
     try {
         const username = sanitise(req.params.username.toLowerCase());
         const user = await User.findOne({username: username}).select( 'displayName').exec();
-        title = `${user.displayName || username}'s Subscriptions - ${config.siteName}`
+        title = `${user.displayName || username}'s Subscriptions - ${siteName}`
     } catch (err) {
         title = config.headTitle;
     }
@@ -222,7 +333,7 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
             headers: { Authorization: config.rtmpServer.auth.header }
         });
         if (data.isLive) {
-            title = [(user.displayName || username), user.streamInfo.title, config.siteName].filter(Boolean).join(' - ');
+            title = [(user.displayName || username), user.streamInfo.title, siteName].filter(Boolean).join(' - ');
             description = `${user.streamInfo.genre ? `${user.streamInfo.genre} ` : ''}${user.streamInfo.category || ''}`;
             try {
                 imageURL = await getThumbnail(streamKey);
@@ -276,7 +387,7 @@ app.get('/stream/:streamId', setXSRFTokenCookie, async (req, res) => {
                 select: 'username displayName'
             })
             .exec();
-        title = [(stream.user.displayName || stream.user.username), stream.title, config.siteName].filter(Boolean).join(' - ');
+        title = [(stream.user.displayName || stream.user.username), stream.title, siteName].filter(Boolean).join(' - ');
         description = `${stream.genre ? `${stream.genre} ` : ''}${stream.category || ''}`;
         imageURL = stream.getThumbnailURL() || config.defaultThumbnailURL;
         imageAlt = `${stream.user.username} Stream Thumbnail`;
