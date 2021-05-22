@@ -1233,7 +1233,9 @@ export default class Event extends React.Component {
             const axiosForUpload = axios.create();
             delete axiosForUpload.defaults.headers.put['Content-Type']
 
-            const uploadPromises = [];
+            let uploadPromises = [];
+            const uploadResult = [];
+
             for (let i = 0; i < data.signedURLs.length; i++) {
                 const start = i * partSize;
                 const end = (i + 1) * partSize
@@ -1246,12 +1248,15 @@ export default class Event extends React.Component {
                     videoFilePart,
                     percentPerPart
                 }));
+
+                if (uploadPromises.length === UPLOAD_CHUNK_SIZE) {
+                    uploadResult.push(...await Promise.all(uploadPromises));
+                    uploadPromises = [];
+                }
             }
 
-            const uploadResult = [];
-            for (let j = 0; j < uploadPromises.length; j += UPLOAD_CHUNK_SIZE) {
-                const currentUploadPromises = uploadPromises.slice(j, j + UPLOAD_CHUNK_SIZE);
-                uploadResult.push(...await Promise.all(currentUploadPromises));
+            if (uploadPromises.length) {
+                uploadResult.push(...await Promise.all(uploadPromises));
             }
 
             this.cancelTokenSource = null;
