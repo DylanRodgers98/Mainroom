@@ -1696,7 +1696,7 @@ export default class Event extends React.Component {
                         )}
                         {getAlert(this)}
                         <Row className='mt-3'>
-                            <Col xs='8'>
+                            <Col xs='6'>
                                 <h4>{this.state.eventName}</h4>
                                 <h6>
                                     {formatDateRange({
@@ -1710,7 +1710,7 @@ export default class Event extends React.Component {
                                     </Link>
                                 </h6>
                             </Col>
-                            <Col xs='4'>
+                            <Col xs='6'>
                                 <div className='float-right'>
                                     <h5 className='black-link text-right'>
                                         <Link to={`/event/${this.props.match.params.eventId}/subscribers`}>
