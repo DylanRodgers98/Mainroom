@@ -394,7 +394,7 @@ export default class UserProfile extends React.Component {
             ) : (
                 this.state.isLoggedInUserSubscribed || this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
                     <Button className='float-right btn-dark' size='sm'
-                            onClick={this.state.isLoggedInUserSubscribed || stream.eventStage ? undefined : () => this.removeFromSchedule(stream)}>
+                            onClick={this.state.isLoggedInUserSubscribed || stream.eventStage ? undefined : () => this.removeFromSchedule(stream._id)}>
                         <span title={this.state.isLoggedInUserSubscribed || stream.eventStage ? undefined : `Remove '${stream.title}' from Schedule`}>
                             <img src={TickIcon} className='mr-1' alt='In Schedule icon'/>
                             In Schedule
