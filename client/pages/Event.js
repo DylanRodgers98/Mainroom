@@ -57,6 +57,7 @@ const SCROLL_MARGIN_HEIGHT = 30;
 const CHAT_HEIGHT_NAVBAR_OFFSET = 56;
 const S3_MIN_PART_SIZE = 1024 * 1024 * 5;
 const S3_MAX_NUMBER_OF_PARTS = 10000;
+const UPLOAD_CHUNK_SIZE = 5;
 
 export default class Event extends React.Component {
 
@@ -1238,7 +1239,12 @@ export default class Event extends React.Component {
                     percentPerPart
                 }));
             }
-            const uploadResult = await Promise.all(uploadPromises);
+
+            const uploadResult = [];
+            for (let j = 0; j < uploadPromises.length; j += UPLOAD_CHUNK_SIZE) {
+                const currentUploadPromises = uploadPromises.slice(j, j + UPLOAD_CHUNK_SIZE);
+                uploadResult.push(...await Promise.all(currentUploadPromises));
+            }
 
             this.cancelTokenSource = null;
             const uploadedParts = uploadResult.map((upload, index) => ({
