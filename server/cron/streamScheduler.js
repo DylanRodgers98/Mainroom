@@ -4,7 +4,7 @@ const {ScheduledStream, User, EventStage} = require('../model/schemas');
 const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const {spawn} = require('child_process');
-const LOGGER = require('../../logger')('./server/cron/scheduledStreamInfoUpdater.js');
+const LOGGER = require('../../logger')('./server/cron/streamScheduler.js');
 
 const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:${process.env.RTMP_SERVER_RTMP_PORT}` : '';
 const RTMP_SERVER_URL = `rtmp://localhost${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;

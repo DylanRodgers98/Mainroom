@@ -39,7 +39,7 @@ const job = new CronJob(cronTime.createdScheduledStreamsEmailer, async () => {
                     lastTimeTriggered, thisTimeTriggered);
             } else {
                 const userIds = scheduledStreams.map(stream => stream.user._id);
-                const users = await User.find({subscriptions: {user: {$in: userIds}}})
+                const users = await User.find({'subscriptions.user': {$in: userIds}})
                     .select('username displayName email subscriptions')
                     .exec()
 
