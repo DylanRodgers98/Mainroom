@@ -644,8 +644,8 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
 
     const filter = {
         eventStage: {$in: event.stages.map(stage => stage._id)},
-        startTime: {$lt: req.query.scheduleEndTime},
-        endTime: {$gt: req.query.scheduleStartTime}
+        startTime: {$lte: req.query.scheduleEndTime},
+        endTime: {$gte: req.query.scheduleStartTime}
     };
 
     let scheduledStreams;

@@ -756,8 +756,8 @@ router.get('/:username/schedule', async (req, res, next) => {
                 {_id: {$in: user.nonSubscribedScheduledStreams}},
                 {eventStage: {$in: eventStageIds}}
             ],
-            startTime: {$lt: req.query.scheduleEndTime},
-            endTime: {$gt: req.query.scheduleStartTime}
+            startTime: {$lte: req.query.scheduleEndTime},
+            endTime: {$gte: req.query.scheduleStartTime}
         })
         .select('user eventStage title startTime endTime genre category')
         .populate({
