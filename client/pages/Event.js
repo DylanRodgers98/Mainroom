@@ -965,7 +965,7 @@ export default class Event extends React.Component {
                         <h3>Past Streams</h3>
                     </Col>
                 </Row>
-                <Row xs='1' sm='1' md='2' lg='3' xl='3'>
+                <Row xs='1' sm='1' md='2' className='mx-0'>
                     {pastStreams}
                 </Row>
                 {loadMoreButton}
@@ -1711,7 +1711,7 @@ export default class Event extends React.Component {
                         {!this.state.bannerPicURL ? undefined : (
                             <Row>
                                 <Col>
-                                    <img className='w-100' height={200}
+                                    <img className='event-banner'
                                          src={this.state.bannerPicURL} alt={`${this.state.eventName} Banner Pic`}/>
                                 </Col>
                             </Row>
