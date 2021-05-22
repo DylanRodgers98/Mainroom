@@ -55,7 +55,8 @@ const SCHEDULE_TAB_ID = 1
 const CHAT_TAB_ID = 2;
 const SCROLL_MARGIN_HEIGHT = 30;
 const CHAT_HEIGHT_NAVBAR_OFFSET = 56;
-const S3_PART_SIZE = 1024 * 1024 * 5;
+const S3_MIN_PART_SIZE = 1024 * 1024 * 5;
+const S3_MAX_NUMBER_OF_PARTS = 10000;
 
 export default class Event extends React.Component {
 
@@ -1203,7 +1204,9 @@ export default class Event extends React.Component {
         if (videoFileInput.files && videoFileInput.files.length === 1) {
             const videoFile = videoFileInput.files[0];
             const fileExtension = videoFile.name.substring(videoFile.name.lastIndexOf('.') + 1);
-            const numberOfParts = Math.ceil(this.state.selectedVideoFileSize / S3_PART_SIZE);
+            const minPartSize = this.state.selectedVideoFileSize / S3_MAX_NUMBER_OF_PARTS;
+            const partSize = minPartSize <= S3_MIN_PART_SIZE ? S3_MIN_PART_SIZE : minPartSize;
+            const numberOfParts = Math.ceil(this.state.selectedVideoFileSize / partSize);
             const percentPerPart = 100 / numberOfParts;
 
             const {data} = await axios.get(`/api/events/${this.state.scheduleStreamStage._id}/init-stream-upload`, {
@@ -1223,8 +1226,8 @@ export default class Event extends React.Component {
 
             const uploadPromises = [];
             for (let i = 0; i < data.signedURLs.length; i++) {
-                const start = i * S3_PART_SIZE;
-                const end = (i + 1) * S3_PART_SIZE
+                const start = i * partSize;
+                const end = (i + 1) * partSize
                 const videoFilePart = i + 1 < data.signedURLs.length
                     ? videoFile.slice(start, end)
                     : videoFile.slice(start)
