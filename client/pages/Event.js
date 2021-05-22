@@ -1184,7 +1184,9 @@ export default class Event extends React.Component {
                     scheduleStreamCategory: '',
                     scheduleStreamTags: [],
                     isScheduleLoaded: false,
-                    activeTab: SCHEDULE_TAB_ID
+                    activeTab: SCHEDULE_TAB_ID,
+                    selectedVideoFileSize: 0,
+                    selectedVideoFileDuration: 0
                 }, () => {
                     displaySuccessMessage(this, alertText);
                     this.getSchedule();
@@ -1196,7 +1198,13 @@ export default class Event extends React.Component {
                     this.toggleScheduleStreamModal();
                 }
             }
-            this.setState({showAddToScheduleSpinner: false});
+            this.setState({
+                showAddToScheduleSpinner: false,
+                videoUploadBucket: '',
+                videoUploadKey: '',
+                videoUploadId: '',
+                videoUploadProgress: 0
+            });
         });
     }
 
