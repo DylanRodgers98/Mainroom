@@ -327,10 +327,8 @@ export default class LiveStream extends React.Component {
                                             )}
                                             <td className='w-100' valign='middle'>
                                                 <h3 className='text-break'>
-                                                    {this.props.match.params.eventStageId ? (
-                                                        <Link to={`/event/${this.state.event._id}`}>
-                                                            {this.state.event.eventName}
-                                                        </Link>
+                                                    {this.props.match.params.eventStageId && this.state.eventStageName ? (
+                                                        this.state.eventStageName
                                                     ) : (
                                                         <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
                                                             {this.state.displayName || this.props.match.params.username.toLowerCase()}
@@ -346,6 +344,12 @@ export default class LiveStream extends React.Component {
                                                 </h6>
                                                 <h6>
                                                     {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'} · Started {this.state.streamStartTime}
+                                                    {!this.props.match.params.eventStageId ? '' : ' as part of '}
+                                                    {!this.props.match.params.eventStageId ? undefined : (
+                                                        <Link to={`/event/${this.state.event._id}`}>
+                                                            {this.state.event.eventName}
+                                                        </Link>
+                                                    )}
                                                 </h6>
                                             </td>
                                             <td className='w-100' valign='top'>
