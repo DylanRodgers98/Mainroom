@@ -540,49 +540,63 @@ router.get('/:eventId/subscribers', async (req, res, next) => {
     const eventId = sanitise(req.params.eventId);
 
     // count number of subscribers for calculating 'nextPage' pagination property on result JSON
-    Event.aggregate([
-        {
-            $match: {_id: eventId}
-        },
-        {
-            $project: {count: {$size: '$subscribers'}}
-        }
-    ], (err, result) => {
-        if (err) {
-            LOGGER.error('An error occurred when counting number of subscribers for Event (_id: {}): {}', eventId, err.stack);
-            next(err);
-        } else {
-            // populate subscribers, paginated
-            const limit = req.query.limit
-            const page = req.query.page;
-            const pages = Math.ceil(result.count / limit);
-            const skip = (page - 1) * limit;
-            Event.findById(eventId, 'subscribers')
-                .populate({
-                    path: `subscribers.user`,
-                    select: 'username profilePic.bucket profilePic.key',
-                    skip,
-                    limit
-                })
-                .exec((err, event) => {
-                    if (err) {
-                        LOGGER.error('An error occurred when getting subscribers for Event (_id: {}): {}', eventId, err.stack);
-                        next(err);
-                    } else if (!event) {
-                        res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
-                    } else {
-                        res.json({
-                            subscribers: (event.subscribers || []).map(sub => {
-                                return {
-                                    username: sub.user.username,
-                                    profilePicURL: sub.user.getProfilePicURL() || defaultProfilePicURL
-                                };
-                            }),
-                            nextPage: page < pages ? page + 1 : null
-                        });
-                    }
-                });
-        }
+    let result;
+    try {
+        result = await Event.aggregate([
+            {
+                $match: {_id: eventId}
+            },
+            {
+                $project: {count: {$size: '$subscribers'}}
+            }
+        ]).exec();
+    } catch (err) {
+        LOGGER.error('An error occurred when counting number of subscribers for Event (_id: {}): {}', eventId, err.stack);
+        return next(err);
+    }
+
+    if (result && result.length === 1) {
+        result = result[0];
+    }
+
+    if (!result || !result.count) {
+        return res.json({
+            subscribers: [],
+            nextPage: null
+        });
+    }
+
+    // populate subscribers, paginated
+    const limit = req.query.limit
+    const page = req.query.page;
+    const pages = Math.ceil(result.count / limit);
+    const skip = (page - 1) * limit;
+
+    let event;
+    try {
+        event = await Event.findById(eventId, 'subscribers')
+            .populate({
+                path: `subscribers.user`,
+                select: 'username profilePic.bucket profilePic.key',
+                skip,
+                limit
+            })
+            .exec();
+    } catch (err) {
+        LOGGER.error('An error occurred when getting subscribers for Event (_id: {}): {}', eventId, err.stack);
+        return next(err);
+    }
+
+    if (!event) {
+        return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
+    }
+
+    res.json({
+        subscribers: (event.subscribers || []).map(sub => ({
+            username: sub.user.username,
+            profilePicURL: sub.user.getProfilePicURL() || defaultProfilePicURL
+        })),
+        nextPage: page < pages ? page + 1 : null
     });
 });
 

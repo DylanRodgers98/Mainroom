@@ -337,12 +337,10 @@ const getSubscribersOrSubscriptions = key => async (req, res, next) => {
     }
 
     res.json({
-        [key]: (user[key] || []).map(sub => {
-            return {
-                username: sub.user.username,
-                profilePicURL: sub.user.getProfilePicURL() || config.defaultProfilePicURL
-            };
-        }),
+        [key]: (user[key] || []).map(sub => ({
+            username: sub.user.username,
+            profilePicURL: sub.user.getProfilePicURL() || config.defaultProfilePicURL
+        })),
         nextPage: page < pages ? page + 1 : null
     });
 }
