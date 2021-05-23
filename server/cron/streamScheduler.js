@@ -14,7 +14,7 @@ const jobName = 'Stream Scheduler';
 let lastTimeTriggered = Date.now();
 let isFirstTimeTriggered = true;
 
-const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
+const job = new CronJob(cronTime.scheduledStreamInfoUpdater, async () => {
     LOGGER.debug(`${jobName} triggered`);
 
     const thisTimeTriggered = job.lastDate().valueOf();
@@ -42,85 +42,85 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
         }
     }
 
-    ScheduledStream.find(query, async (err, streams) => {
-        if (err) {
-            LOGGER.error('An error occurred when finding scheduled streams starting between {} and {}: {}',
-                lastTimeTriggered, thisTimeTriggered, err.stack);
-            return await snsErrorPublisher.publish(err);
-        } else if (!streams.length) {
-            LOGGER.info('No streams found starting between {} and {}, so nothing to update',
-                lastTimeTriggered, thisTimeTriggered);
-        } else {
-            const suffix = streams.length === 1 ? `'s` : `s'`;
-            LOGGER.info('Updating {} user{}/stage{} stream info from scheduled streams',
-                streams.length, suffix, suffix);
-
-            const errors = [];
-            let updated = 0;
-
-            for (const stream of streams) {
-                if (stream.eventStage) {
-                    try {
-                        const eventStage = await EventStage.findById(stream.eventStage._id)
-                            .select('+streamInfo.streamKey')
-                            .exec();
-
-                        const promises = [];
-
-                        const prerecordedVideoFileURL = stream.getPrerecordedVideoFileURL();
-                        if (prerecordedVideoFileURL) {
-                            const startStreamPromise = startStreamFromPrerecordedVideo({
-                                startTime: thisTimeTriggered - stream.startTime.valueOf(),
-                                inputURL: prerecordedVideoFileURL,
-                                streamKey: eventStage.streamInfo.streamKey
-                            });
-                            promises.push(startStreamPromise);
-                        }
-
-                        eventStage.streamInfo.title = stream.title;
-                        eventStage.streamInfo.title = stream.title;
-                        eventStage.streamInfo.genre = stream.genre;
-                        eventStage.streamInfo.category = stream.category;
-                        eventStage.streamInfo.tags = stream.tags;
-                        promises.push(eventStage.save());
-
-                        await Promise.all(promises);
-                        updated++;
-                    } catch (err) {
-                        LOGGER.error('An error occurred when updating stream info for EventStage (_id: {}): {}',
-                            stream.eventStage._id, err.stack);
-                        errors.push(err);
-                    }
-                } else {
-                    try {
-                        await User.findByIdAndUpdate(stream.user._id, {
-                            'streamInfo.title': stream.title,
-                            'streamInfo.genre': stream.genre,
-                            'streamInfo.category': stream.category,
-                            'streamInfo.tags': stream.tags
-                        });
-                        updated++;
-                    } catch (err) {
-                        LOGGER.error('An error occurred when updating stream info for User (_id: {}): {}',
-                            stream.user._id, err.stack);
-                        errors.push(err);
-                    }
-                }
-            }
-
-            if (errors.length) {
-                const err = new CompositeError(errors);
-                LOGGER.error('{} error{} occurred when updating user stream info from scheduled streams. Error: {}',
-                    errors.length, errors.length === 1 ? '' : 's', err.stack);
-                return await snsErrorPublisher.publish(err);
-            }
-
-            LOGGER.info(`Successfully updated {}/{} user{}/stage{} stream info from scheduled streams`,
-                updated, streams.length, suffix, suffix);
-        }
+    let streams;
+    try {
+        streams = await ScheduledStream.find(query)
+            .select('user eventStage startTime title genre category tags')
+            .populate({
+                path: 'user',
+                select: '_id'
+            })
+            .populate({
+                path: 'eventStage',
+                select: '_id'
+            })
+            .exec();
+    } catch (err) {
+        LOGGER.error('An error occurred when finding scheduled streams starting between {} and {}: {}',
+            lastTimeTriggered, thisTimeTriggered, err.stack);
 
         lastTimeTriggered = thisTimeTriggered;
-    });
+        return await snsErrorPublisher.publish(err);
+    }
+
+    if (!streams.length) {
+        LOGGER.info('No streams found starting between {} and {}, so nothing to update',
+            lastTimeTriggered, thisTimeTriggered);
+    } else {
+        const possessionSuffix = streams.length === 1 ? `'s` : `s'`;
+        LOGGER.info('Updating {} user{}/stage{} stream info from scheduled streams',
+            streams.length, possessionSuffix, possessionSuffix);
+
+        const promises = [];
+
+        for (const stream of streams) {
+            if (stream.eventStage) {
+                const eventStage = await EventStage.findById(stream.eventStage._id)
+                    .select('+streamInfo.streamKey')
+                    .exec();
+
+                const prerecordedVideoFileURL = stream.getPrerecordedVideoFileURL();
+                if (prerecordedVideoFileURL) {
+                    const startStreamPromise = startStreamFromPrerecordedVideo({
+                        startTime: thisTimeTriggered - stream.startTime.valueOf(),
+                        inputURL: prerecordedVideoFileURL,
+                        streamKey: eventStage.streamInfo.streamKey
+                    });
+                    promises.push(startStreamPromise);
+                }
+
+                eventStage.streamInfo.title = stream.title;
+                eventStage.streamInfo.genre = stream.genre;
+                eventStage.streamInfo.category = stream.category;
+                eventStage.streamInfo.tags = stream.tags;
+                promises.push(eventStage.save());
+            } else {
+                const updateUserPromise = User.findByIdAndUpdate(stream.user._id, {
+                    'streamInfo.title': stream.title,
+                    'streamInfo.genre': stream.genre,
+                    'streamInfo.category': stream.category,
+                    'streamInfo.tags': stream.tags
+                });
+                promises.push(updateUserPromise);
+            }
+        }
+
+        const promiseResults = await Promise.allSettled(promises);
+        const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+
+        if (rejectedPromises.length) {
+            const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
+            LOGGER.error('{} error{} occurred when updating user/stage stream info from scheduled streams. Error: {}',
+                rejectedPromises.length, rejectedPromises.length === 1 ? '' : 's', err.stack);
+            lastTimeTriggered = thisTimeTriggered;
+            return await snsErrorPublisher.publish(err);
+        }
+
+        LOGGER.info(`Successfully updated {}/{} user{}/stage{} stream info from scheduled streams`,
+            promiseResults.length, streams.length, possessionSuffix, possessionSuffix);
+    }
+
+    lastTimeTriggered = thisTimeTriggered;
 
     LOGGER.debug(`${jobName} finished`);
 });

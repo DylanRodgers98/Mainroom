@@ -32,29 +32,31 @@ const mockEventStage = {
 
 const mockUserFindByIdAndUpdate = jest.fn();
 
-const mockEventFindById = jest.fn(() => {
-    return {
-        select: () => {
-            return {
-                exec: () => mockEventStage
-            };
-        }
-    };
-});
+const mockEventFindById = jest.fn(() => ({
+    select: () => ({
+        exec: () => mockEventStage
+    })
+}));
 
-jest.mock('../../../server/model/schemas', () => {
-    return {
-        ScheduledStream: {
-            find: (query, callback) => callback(null, [mockUserStream, mockEventStream])
-        },
-        User: {
-            findByIdAndUpdate: mockUserFindByIdAndUpdate
-        },
-        EventStage: {
-            findById: mockEventFindById
-        }
-    };
-});
+jest.mock('../../../server/model/schemas', () => ({
+    ScheduledStream: {
+        find: () => ({
+            select: () => ({
+                populate: () => ({
+                    populate: () => ({
+                        exec: () => [mockUserStream, mockEventStream]
+                    })
+                })
+            })
+        })
+    },
+    User: {
+        findByIdAndUpdate: mockUserFindByIdAndUpdate
+    },
+    EventStage: {
+        findById: mockEventFindById
+    }
+}));
 
 const {job} = require('../../../server/cron/streamScheduler');
 
