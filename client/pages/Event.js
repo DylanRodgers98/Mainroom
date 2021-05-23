@@ -798,7 +798,7 @@ export default class Event extends React.Component {
     }
 
     renderOptionsOrSubscribeButton() {
-        return this.state.loggedInUser ? (
+        return this.state.loggedInUser && this.state.loggedInUser._id ? (
             this.state.loggedInUser._id === this.state.createdBy._id ? (
                 <Dropdown className='float-right options-dropdown' isOpen={this.state.isOptionsDropdownOpen}
                           toggle={this.toggleOptionsDropdown} size='sm'>
