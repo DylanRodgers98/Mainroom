@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {Event, EventStage, RecordedStream, ScheduledStream} = require('../model/schemas');
+const mongoose = require('mongoose');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
 const _ = require('lodash');
@@ -544,7 +545,7 @@ router.get('/:eventId/subscribers', async (req, res, next) => {
     try {
         result = await Event.aggregate([
             {
-                $match: {_id: eventId}
+                $match: {_id: mongoose.Types.ObjectId(eventId)}
             },
             {
                 $project: {count: {$size: '$subscribers'}}
