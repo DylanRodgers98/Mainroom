@@ -20,7 +20,7 @@ router.get('/', async (req, res, next) => {
     if (req.query.searchQuery) {
         const sanitisedQuery = sanitise(req.query.searchQuery);
         const escapedQuery = _.escapeRegExp(sanitisedQuery)
-        const searchQuery = new RegExp(`^${escapedQuery}$`, 'i');
+        const searchQuery = new RegExp(escapedQuery, 'i');
         query.$or = [
             {'streamInfo.title': searchQuery},
             {'streamInfo.genre': searchQuery},
@@ -95,7 +95,7 @@ router.get('/event-stages', async (req, res, next) => {
     if (req.query.searchQuery) {
         const sanitisedQuery = sanitise(req.query.searchQuery);
         const escapedQuery = _.escapeRegExp(sanitisedQuery)
-        const searchQuery = new RegExp(`^${escapedQuery}$`, 'i');
+        const searchQuery = new RegExp(escapedQuery, 'i');
         query.$or = [
             {'streamInfo.title': searchQuery},
             {'streamInfo.genre': searchQuery},

@@ -37,13 +37,24 @@ router.get('/', (req, res, next) => {
     if (req.query.searchQuery) {
         const sanitisedQuery = sanitise(req.query.searchQuery);
         const escapedQuery = _.escapeRegExp(sanitisedQuery)
-        const searchQuery = new RegExp(`^${escapedQuery}$`, 'i');
+        const searchQuery = new RegExp(escapedQuery, 'i');
         query.$or = [
             {eventName: searchQuery},
             {tags: searchQuery},
             {'createdBy.username': searchQuery},
-            {'createdBy.displayName': searchQuery}
+            {'createdBy.displayName': searchQuery},
+            {'stages.stageName': searchQuery},
+            {'stages.streamInfo.title': searchQuery},
+            {'stages.streamInfo.genre': searchQuery},
+            {'stages.streamInfo.category': searchQuery},
+            {'stages.streamInfo.tags': searchQuery},
         ];
+    }
+    if (req.query.genre) {
+        query['stages.streamInfo.genre'] = sanitise(req.query.genre);
+    }
+    if (req.query.category) {
+        query['stages.streamInfo.category'] = sanitise(req.query.category);
     }
 
     const options = {

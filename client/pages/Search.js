@@ -80,6 +80,8 @@ export default class LiveStreams extends React.Component {
                 recordedStreamsNextPage: STARTING_PAGE,
                 users: [],
                 usersNextPage: STARTING_PAGE,
+                events: [],
+                eventsNextPage: STARTING_PAGE,
                 genreFilter: '',
                 categoryFilter: ''
             }, () => {
@@ -93,8 +95,13 @@ export default class LiveStreams extends React.Component {
                 livestreamsNextPage: STARTING_PAGE,
                 recordedStreams: [],
                 recordedStreamsNextPage: STARTING_PAGE,
+                events: [],
+                eventsNextPage: STARTING_PAGE
             }, async () => {
-                await this.getStreams();
+                await Promise.all([
+                    this.getStreams(),
+                    this.getEvents()
+                ]);
                 this.setState({
                     loaded: true
                 });
@@ -198,6 +205,13 @@ export default class LiveStreams extends React.Component {
                 limit: pagination.small
             }
         };
+
+        if (this.state.genreFilter) {
+            queryParams.params.genre = this.state.genreFilter;
+        }
+        if (this.state.categoryFilter) {
+            queryParams.params.category = this.state.categoryFilter;
+        }
 
         this.setState({showLoadMoreEventsSpinner: true}, async () => {
             try {

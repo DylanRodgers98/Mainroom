@@ -25,7 +25,7 @@ const RTMP_SERVER_URL = `rtmp://${process.env.NODE_ENV === 'production' ? proces
 router.get('/', (req, res, next) => {
     const sanitisedQuery = sanitise(req.query.searchQuery);
     const escapedQuery = _.escapeRegExp(sanitisedQuery)
-    const searchQuery = new RegExp(`^${escapedQuery}$`, 'i');
+    const searchQuery = new RegExp(escapedQuery, 'i');
 
     const query = {
         $or: [
