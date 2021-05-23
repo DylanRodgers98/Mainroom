@@ -293,10 +293,14 @@ const getSubscribersOrSubscriptions = key => async (req, res, next) => {
             {
                 $project: {count: {$size: '$' + key}}
             }
-        ]).exec()
+        ]).exec();
     } catch (err) {
         LOGGER.error(`An error occurred when counting number of {} for user with username '{}': {}`, key, username, err.stack);
         return next(err);
+    }
+
+    if (result && result.length === 1) {
+        result = result[0];
     }
 
     if (!result || !result.count) {
