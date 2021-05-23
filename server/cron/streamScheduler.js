@@ -65,10 +65,16 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
                             .select('+streamInfo.streamKey')
                             .exec();
 
+                        const promises = [];
+
                         const prerecordedVideoFileURL = stream.getPrerecordedVideoFileURL();
                         if (prerecordedVideoFileURL) {
-                            const startTime = thisTimeTriggered - stream.startTime.valueOf();
-                            startStreamFromPrerecordedVideo(startTime, prerecordedVideoFileURL, eventStage.streamInfo.streamKey);
+                            const startStreamPromise = startStreamFromPrerecordedVideo({
+                                startTime: thisTimeTriggered - stream.startTime.valueOf(),
+                                inputURL: prerecordedVideoFileURL,
+                                streamKey: eventStage.streamInfo.streamKey
+                            });
+                            promises.push(startStreamPromise);
                         }
 
                         eventStage.streamInfo.title = stream.title;
@@ -76,8 +82,9 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
                         eventStage.streamInfo.genre = stream.genre;
                         eventStage.streamInfo.category = stream.category;
                         eventStage.streamInfo.tags = stream.tags;
-                        await eventStage.save();
+                        promises.push(eventStage.save());
 
+                        await Promise.all(promises);
                         updated++;
                     } catch (err) {
                         LOGGER.error('An error occurred when updating stream info for EventStage (_id: {}): {}',
@@ -118,16 +125,21 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
     LOGGER.debug(`${jobName} finished`);
 });
 
-function startStreamFromPrerecordedVideo(startTime, prerecordedVideoFileURL, streamKey) {
-    LOGGER.debug('Starting stream from prerecorded video at {} (stream key: {})', prerecordedVideoFileURL, streamKey);
+function startStreamFromPrerecordedVideo({startTime, inputURL, streamKey}) {
+    LOGGER.debug('Starting stream from prerecorded video at {} (stream key: {})', inputURL, streamKey);
 
     const args = ['-re', '-y'];
     if (startTime > 0) {
         args.push('-ss', `${startTime}ms`);
     }
-    args.push('-i', prerecordedVideoFileURL, '-c:v', 'copy', '-c:a', 'copy', '-f', 'tee', '-map', '0:a?', '-map', '0:v?', '-f', 'flv', `${RTMP_SERVER_URL}/${streamKey}`);
+    args.push('-i', inputURL, '-c:v', 'copy', '-c:a', 'copy', '-f', 'tee', '-map', '0:a?', '-map', '0:v?', '-f', 'flv', `${RTMP_SERVER_URL}/${streamKey}`);
 
-    spawn(process.env.FFMPEG_PATH, args, {detached: true, stdio: 'ignore'}).unref();
+    return new Promise((resolve, reject) => {
+        spawn(process.env.FFMPEG_PATH, args, {detached: true, stdio: 'ignore'})
+            .on('spawn', resolve)
+            .on('error', reject)
+            .unref();
+    });
 }
 
 module.exports = {jobName, job};
