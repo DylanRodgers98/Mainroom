@@ -439,7 +439,7 @@ export default class Schedule extends React.Component {
                     <table>
                         <tbody>
                             <tr>
-                                {!scheduledStream.user ? undefined : (
+                                {scheduledStream.event ? undefined : (
                                     <td>
                                         <Link to={`/user/${scheduledStream.user.username}`}>
                                             <img className='rounded-circle m-2' src={scheduledStream.user.profilePicURL}
@@ -478,7 +478,7 @@ export default class Schedule extends React.Component {
                         </tbody>
                     </table>
                 </ModalBody>
-                {scheduledStream.user && scheduledStream.user._id !== this.state.loggedInUserId ? undefined : (
+                {scheduledStream.user._id !== this.state.loggedInUserId ? undefined : (
                     <ModalFooter>
                         <Button className='btn-danger' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
                             <img src={WhiteDeleteIcon} width={18} height={18} className='mr-1 mb-1'

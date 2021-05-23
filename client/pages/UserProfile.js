@@ -418,7 +418,7 @@ export default class UserProfile extends React.Component {
                                 <Link to={`/event/${stream.eventStage.event._id}`}>
                                     {stream.eventStage.stageName}
                                 </Link>
-                                {' - '}
+                                {stream.title && ' - '}
                             </React.Fragment>
                         )}
                         {stream.title}

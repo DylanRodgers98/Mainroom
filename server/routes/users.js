@@ -818,7 +818,10 @@ router.get('/:username/schedule', async (req, res, next) => {
                 end_time: scheduledStream.endTime,
                 genre: scheduledStream.genre,
                 category: scheduledStream.category,
-                isNonSubscribed: user.nonSubscribedScheduledStreams.includes(scheduledStream._id)
+                isNonSubscribed: user.nonSubscribedScheduledStreams.includes(scheduledStream._id),
+                user: {
+                    _id: scheduledStream.user._id
+                }
             };
 
             if (scheduledStream.eventStage) {
@@ -828,12 +831,9 @@ router.get('/:username/schedule', async (req, res, next) => {
                     stageName: scheduledStream.eventStage.stageName
                 };
             } else {
-                scheduleItem.user = {
-                    _id: scheduledStream.user._id,
-                    username: scheduledStream.user.username,
-                    displayName: scheduledStream.user.displayName,
-                    profilePicURL: scheduledStream.user.getProfilePicURL()
-                };
+                scheduleItem.user.username = scheduledStream.user.username;
+                scheduleItem.user.displayName = scheduledStream.user.displayName;
+                scheduleItem.user.profilePicURL = scheduledStream.user.getProfilePicURL();
             }
 
             scheduleItems.push(scheduleItem);
