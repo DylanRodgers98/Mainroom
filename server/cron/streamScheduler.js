@@ -12,18 +12,37 @@ const RTMP_SERVER_URL = `rtmp://localhost${RTMP_SERVER_RTMP_PORT}/${process.env.
 const jobName = 'Stream Scheduler';
 
 let lastTimeTriggered = Date.now();
+let isFirstTimeTriggered = true;
 
 const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
     LOGGER.debug(`${jobName} triggered`);
 
     const thisTimeTriggered = job.lastDate().valueOf();
 
-    ScheduledStream.find({
+    let query = {
         $and: [
             {startTime: {$gt: lastTimeTriggered}},
             {startTime: {$lte: thisTimeTriggered}}
         ]
-    }, async (err, streams) => {
+    };
+
+    if (isFirstTimeTriggered) {
+        isFirstTimeTriggered = false;
+        query = {
+            $or: [query, {
+                // Find scheduled streams that should have started before now and are due to finish after now.
+                // This is to ensure streams that are meant to be live now are actually live, e.g., in the case
+                // of a server restart, scheduled streams with a prerecorded video can be started again from the
+                // correct position corresponding to the current time
+                $and: [
+                    {startTime: {$lte: thisTimeTriggered}},
+                    {endTime: {$gt: thisTimeTriggered}}
+                ]
+            }]
+        }
+    }
+
+    ScheduledStream.find(query, async (err, streams) => {
         if (err) {
             LOGGER.error('An error occurred when finding scheduled streams starting between {} and {}: {}',
                 lastTimeTriggered, thisTimeTriggered, err.stack);
@@ -48,7 +67,8 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
 
                         const prerecordedVideoFileURL = stream.getPrerecordedVideoFileURL();
                         if (prerecordedVideoFileURL) {
-                            startStreamFromPrerecordedVideo(prerecordedVideoFileURL, eventStage.streamInfo.streamKey);
+                            const startTime = thisTimeTriggered - stream.startTime.valueOf();
+                            startStreamFromPrerecordedVideo(startTime, prerecordedVideoFileURL, eventStage.streamInfo.streamKey);
                         }
 
                         eventStage.streamInfo.title = stream.title;
@@ -98,9 +118,15 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, () => {
     LOGGER.debug(`${jobName} finished`);
 });
 
-function startStreamFromPrerecordedVideo(prerecordedVideoFileURL, streamKey) {
-    LOGGER.debug('Starting stream from prerecorded video at {} (stream key: {})', decodeURIComponent(prerecordedVideoFileURL), streamKey);
-    const args = ['-re', '-y', '-i', prerecordedVideoFileURL, '-c:v', 'copy', '-c:a', 'copy', '-f', 'tee', '-map', '0:a?', '-map', '0:v?', '-f', 'flv', `${RTMP_SERVER_URL}/${streamKey}`];
+function startStreamFromPrerecordedVideo(startTime, prerecordedVideoFileURL, streamKey) {
+    LOGGER.debug('Starting stream from prerecorded video at {} (stream key: {})', prerecordedVideoFileURL, streamKey);
+
+    const args = ['-re', '-y'];
+    if (startTime > 0) {
+        args.push('-ss', `${startTime}ms`);
+    }
+    args.push('-i', prerecordedVideoFileURL, '-c:v', 'copy', '-c:a', 'copy', '-f', 'tee', '-map', '0:a?', '-map', '0:v?', '-f', 'flv', `${RTMP_SERVER_URL}/${streamKey}`);
+
     spawn(process.env.FFMPEG_PATH, args, {detached: true, stdio: 'ignore'}).unref();
 }
 
