@@ -7,11 +7,9 @@ const ARGS = {
 
 const mockSendDataToProcessId = jest.fn((id, packet, cb) => {});
 
-jest.mock('pm2', () => {
-    return {
-        sendDataToProcessId: mockSendDataToProcessId
-    };
-});
+jest.mock('pm2', () => ({
+    sendDataToProcessId: mockSendDataToProcessId
+}));
 
 beforeEach(() => {
     jest.clearAllMocks();

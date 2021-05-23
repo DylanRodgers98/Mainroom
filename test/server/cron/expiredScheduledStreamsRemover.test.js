@@ -7,25 +7,19 @@ const MOCK_STREAM = {_id: MOCK_STREAM_ID};
 const mockFindByIdAndDelete = jest.fn();
 const mockUpdateMany = jest.fn();
 
-jest.mock('../../../server/model/schemas', () => {
-    return {
-        ScheduledStream: {
-            find: () => {
-                return {
-                    select: () => {
-                        return {
-                            exec: () => [MOCK_STREAM]
-                        };
-                    }
-                };
-            },
-            findByIdAndDelete: mockFindByIdAndDelete
-        },
-        User: {
-            updateMany: mockUpdateMany
-        }
-    };
-});
+jest.mock('../../../server/model/schemas', () => ({
+    ScheduledStream: {
+        find: () => ({
+            select: () => ({
+                exec: () => [MOCK_STREAM]
+            })
+        }),
+        findByIdAndDelete: mockFindByIdAndDelete
+    },
+    User: {
+        updateMany: mockUpdateMany
+    }
+}));
 
 const {job} = require('../../../server/cron/expiredScheduledStreamsRemover');
 

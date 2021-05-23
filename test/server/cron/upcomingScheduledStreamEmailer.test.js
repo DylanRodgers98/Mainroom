@@ -48,48 +48,32 @@ const expectedUserData = {
 
 const expectedStreams = [mockSubscribedStream, mockNonSubscribedStream];
 
-jest.mock('../../../server/model/schemas', () => {
-    return {
-        User: {
-            find: () => {
-                return {
-                    select: () => {
-                        return {
-                            populate: () => {
-                                return {
-                                    exec: () => [mockUser]
-                                };
-                            }
-                        };
-                    }
-                };
-            }
-        },
-        ScheduledStream: {
-            find: () => {
-                return {
-                    select: () => {
-                        return {
-                            populate: () => {
-                                return {
-                                    exec: () => [mockSubscribedStream]
-                                };
-                            }
-                        };
-                    }
-                };
-            }
-        }
-    };
-});
+jest.mock('../../../server/model/schemas', () => ({
+    User: {
+        find: () => ({
+            select: () => ({
+                populate: () => ({
+                    exec: () => [mockUser]
+                })
+            })
+        })
+    },
+    ScheduledStream: {
+        find: () => ({
+            select: () => ({
+                populate: () => ({
+                        exec: () => [mockSubscribedStream]
+                })
+            })
+        })
+    }
+}));
 
 const mockNotifyUserOfSubscriptionsStreamsStartingSoon = jest.fn();
 
-jest.mock('../../../server/aws/sesEmailSender', () => {
-    return {
-        notifyUserOfSubscriptionsStreamsStartingSoon: mockNotifyUserOfSubscriptionsStreamsStartingSoon
-    };
-});
+jest.mock('../../../server/aws/sesEmailSender', () => ({
+    notifyUserOfSubscriptionsStreamsStartingSoon: mockNotifyUserOfSubscriptionsStreamsStartingSoon
+}));
 
 const originalEmailEnabled = config.email.enabled;
 let job;

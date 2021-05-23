@@ -58,36 +58,24 @@ const mockUser2 = {
 
 const mockUser2ExpectedStreams = [mockStream3];
 
-jest.mock('../../../server/model/schemas', () => {
-    return {
-        ScheduledStream: {
-            find: () => {
-                return {
-                    select: () => {
-                        return {
-                            populate: () => {
-                                return {
-                                    exec: () => [mockStream1, mockStream2, mockStream3]
-                                };
-                            }
-                        };
-                    }
-                };
-            }
-        },
-        User: {
-            find: () => {
-                return {
-                    select: () => {
-                        return {
-                            exec: () => [mockUser1, mockUser2]
-                        };
-                    }
-                };
-            }
-        }
-    };
-});
+jest.mock('../../../server/model/schemas', () => ({
+    ScheduledStream: {
+        find: () => ({
+            select: () => ({
+                populate: () => ({
+                    exec: () => [mockStream1, mockStream2, mockStream3]
+                })
+            })
+        })
+    },
+    User: {
+        find: () => ({
+            select: () => ({
+                exec: () => [mockUser1, mockUser2]
+            })
+        })
+    }
+}));
 
 const mockNotifyUserSubscriptionsCreatedScheduledStreams = jest.fn();
 

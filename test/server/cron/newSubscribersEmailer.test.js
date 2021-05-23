@@ -49,33 +49,23 @@ const mockUser2 = {
 
 const mockUser2ExpectedSubscribers = [mockSubscriber3.user];
 
-jest.mock('../../../server/model/schemas', () => {
-    return {
-        User: {
-            find: () => {
-                return {
-                    select: () => {
-                        return {
-                            populate: () => {
-                                return {
-                                    exec: () => [mockUser1, mockUser2]
-                                };
-                            }
-                        };
-                    }
-                };
-            }
-        }
-    };
-});
+jest.mock('../../../server/model/schemas', () => ({
+    User: {
+        find: () => ({
+            select: () => ({
+                populate: () => ({
+                    exec: () => [mockUser1, mockUser2]
+                })
+            })
+        })
+    }
+}));
 
 const mockNotifyUserOfNewSubscribers = jest.fn();
 
-jest.mock('../../../server/aws/sesEmailSender', () => {
-    return {
-        notifyUserOfNewSubscribers: mockNotifyUserOfNewSubscribers
-    };
-});
+jest.mock('../../../server/aws/sesEmailSender', () => ({
+    notifyUserOfNewSubscribers: mockNotifyUserOfNewSubscribers
+}));
 
 const originalEmailEnabled = config.email.enabled;
 let job;

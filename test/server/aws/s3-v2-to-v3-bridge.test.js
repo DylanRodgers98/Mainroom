@@ -10,35 +10,27 @@ let mockShouldUploadError;
 
 const mockUploadOn = jest.fn();
 
-jest.mock('@aws-sdk/lib-storage', () => {
-    return {
-        Upload: jest.fn(() => {
-            return {
-                done: () => {
-                    if (mockShouldUploadError){
-                        throw mockError;
-                    }
-                    return mockResult;
-                },
-                on: mockUploadOn
-            };
-        })
-    };
-});
+jest.mock('@aws-sdk/lib-storage', () => ({
+    Upload: jest.fn(() => ({
+        done: () => {
+            if (mockShouldUploadError){
+                throw mockError;
+            }
+            return mockResult;
+        },
+        on: mockUploadOn
+    }))
+}));
 
 const mockSend = jest.fn();
 const mockDeleteObjectCommand = jest.fn();
 
-jest.mock('@aws-sdk/client-s3', () => {
-    return {
-        S3Client: jest.fn(() => {
-            return {
-                send: mockSend
-            };
-        }),
-        DeleteObjectCommand: jest.fn(() => mockDeleteObjectCommand)
-    };
-});
+jest.mock('@aws-sdk/client-s3', () => ({
+    S3Client: jest.fn(() => ({
+        send: mockSend
+    })),
+    DeleteObjectCommand: jest.fn(() => mockDeleteObjectCommand)
+}));
 
 beforeEach(() => mockShouldUploadError = false);
 
