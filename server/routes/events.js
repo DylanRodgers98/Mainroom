@@ -30,9 +30,7 @@ const RTMP_SERVER_URL = `rtmp://${process.env.NODE_ENV === 'production' ? proces
     + `${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
 
 router.get('/', (req, res, next) => {
-    const query = {
-        endTime: {$gte: Date.now()}
-    };
+    const query = {};
 
     if (req.query.searchQuery) {
         const sanitisedQuery = sanitise(req.query.searchQuery);
@@ -49,6 +47,8 @@ router.get('/', (req, res, next) => {
             {'stages.streamInfo.category': searchQuery},
             {'stages.streamInfo.tags': searchQuery},
         ];
+    } else {
+        query.endTime = {$gte: Date.now()};
     }
     if (req.query.genre) {
         query['stages.streamInfo.genre'] = sanitise(req.query.genre);

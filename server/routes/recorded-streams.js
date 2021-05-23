@@ -48,23 +48,15 @@ router.get('/', async (req, res, next) => {
             const searchQuery = new RegExp(escapedQuery, 'i');
             query.$or = [
                 {title: searchQuery},
-                {tags: searchQuery}
+                {genre: searchQuery},
+                {category: searchQuery},
+                {tags: searchQuery},
+                {'user.username': searchQuery},
+                {'user.displayName': searchQuery},
+                {'eventStage.stageName': searchQuery},
+                {'eventStage.event.eventName': searchQuery},
+                {'eventStage.event.tags': searchQuery}
             ];
-            try {
-                const users = await User.find({
-                    $or: [
-                        {username: searchQuery},
-                        {displayName: searchQuery}
-                    ]
-                }, '_id');
-                if (users.length) {
-                    const userIds = users.map(user => user._id);
-                    query.$or.push({user: {$in: userIds}});
-                }
-            } catch (err) {
-                LOGGER.error(`An error occurred when finding users using search query '{}': {}`, searchQuery, err.stack);
-                next(err);
-            }
         }
         if (req.query.genre) {
             query.genre = sanitise(req.query.genre);
