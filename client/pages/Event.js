@@ -911,10 +911,8 @@ export default class Event extends React.Component {
         const pastStreams = this.state.recordedStreams.map((stream, index) => (
             <Row key={index} className='margin-bottom-thick'>
                 <Col className='stream' md='6' lg='4'>
-                    <span className='video-duration'>{stream.videoDuration}</span>
-                    <span className='view-count'>
-                        <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Views icon'/>
-                        {shortenNumber(stream.viewCount)}
+                    <span className='video-duration'>
+                        {stream.videoDuration}
                     </span>
                     <Link to={`/stream/${stream._id}`}>
                         <img className='w-100' src={stream.thumbnailURL}
@@ -933,7 +931,9 @@ export default class Event extends React.Component {
                             category: stream.category
                         })}
                     </h6>
-                    <h6>{timeSince(stream.timestamp)}</h6>
+                    <h6>
+                        {shortenNumber(stream.viewCount)} view{stream.viewCount === 1 ? '' : 's'} · {timeSince(stream.timestamp)}
+                    </h6>
                 </Col>
             </Row>
         ));
