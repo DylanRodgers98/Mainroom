@@ -5,8 +5,8 @@ import {Alert, Spinner} from 'reactstrap';
 
 export const displayGenreAndCategory = ({genre, category}) => (
     <React.Fragment>
-        {!genre ? undefined : <span><Link to={`/genre/${genre}`}>{genre}</Link>&nbsp;</span>}
-        {!category ? undefined : <Link to={`/category/${category}`}>{category}</Link>}
+        {genre && <span><Link to={`/genre/${genre}`}>{genre}</Link>&nbsp;</span>}
+        {category && <Link to={`/category/${category}`}>{category}</Link>}
     </React.Fragment>
 );
 
@@ -37,7 +37,7 @@ const displayAlert = (component, alertText, alertColor, timeoutCallback, timeout
 export const getAlert = component => (
     <Alert className='mt-3' isOpen={!!component.state.alertText} color={component.state.alertColor}>
         {component.state.alertText}
-        {component.state.alertColor !== 'danger' ? undefined : (
+        {component.state.alertColor === 'danger' && (
             <div>
                 Help us improve Mainroom and&nbsp;
                 <a href={bugReportURL} target='_blank' rel='noopener noreferrer' className='alert-link'>

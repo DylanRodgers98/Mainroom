@@ -21,13 +21,11 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
                 displayName: user.displayName || user.username,
                 username: user.username
             },
-            newSubscribers: subscribers.map(subscriber => {
-                return {
-                    displayName: subscriber.displayName || subscriber.username,
-                    username: subscriber.username,
-                    profilePicURL: subscriber.getProfilePicURL()
-                };
-            })
+            newSubscribers: subscribers.map(subscriber => ({
+                displayName: subscriber.displayName || subscriber.username,
+                username: subscriber.username,
+                profilePicURL: subscriber.getProfilePicURL()
+            }))
         })
     });
     try {
@@ -126,24 +124,22 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
             user: {
                 displayName: user.displayName || user.username
             },
-            streams: streams.map(stream => {
-                return {
-                    user: {
-                        displayName: stream.user.displayName || stream.user.username,
-                        username: stream.user.username,
-                        profilePicURL: stream.user.getProfilePicURL()
-                    },
-                    stream: {
-                        title: stream.title,
-                        genre: stream.genre,
-                        category: stream.category,
-                        timeRange: formatDateRange({
-                            start: stream.startTime,
-                            end: stream.endTime
-                        })
-                    },
+            streams: streams.map(stream => ({
+                user: {
+                    displayName: stream.user.displayName || stream.user.username,
+                    username: stream.user.username,
+                    profilePicURL: stream.user.getProfilePicURL()
+                },
+                stream: {
+                    title: stream.title,
+                    genre: stream.genre,
+                    category: stream.category,
+                    timeRange: formatDateRange({
+                        start: stream.startTime,
+                        end: stream.endTime
+                    })
                 }
-            })
+            }))
         })
     });
     try {
@@ -170,24 +166,22 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
             user: {
                 displayName: user.displayName || user.username
             },
-            streams: streams.map(stream => {
-                return {
-                    user: {
-                        displayName: stream.user.displayName || stream.user.username,
-                        username: stream.user.username,
-                        profilePicURL: stream.user.getProfilePicURL()
-                    },
-                    stream: {
-                        title: stream.title,
-                        genre: stream.genre,
-                        category: stream.category,
-                        timeRange: formatDateRange({
-                            start: stream.startTime,
-                            end: stream.endTime
-                        })
-                    },
+            streams: streams.map(stream => ({
+                user: {
+                    displayName: stream.user.displayName || stream.user.username,
+                    username: stream.user.username,
+                    profilePicURL: stream.user.getProfilePicURL()
+                },
+                stream: {
+                    title: stream.title,
+                    genre: stream.genre,
+                    category: stream.category,
+                    timeRange: formatDateRange({
+                        start: stream.startTime,
+                        end: stream.endTime
+                    })
                 }
-            })
+            }))
         })
     });
     try {

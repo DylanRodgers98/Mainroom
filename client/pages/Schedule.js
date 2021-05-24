@@ -421,8 +421,8 @@ export default class Schedule extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.addToSchedule}>
-                        {this.state.showAddToScheduleSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showAddToScheduleSpinner ? 'sr-only' : undefined}>
+                        {this.state.showAddToScheduleSpinner && <Spinner size='sm' />}
+                        <span className={this.state.showAddToScheduleSpinner && 'sr-only'}>
                             Add to Schedule
                         </span>
                     </Button>
@@ -433,13 +433,13 @@ export default class Schedule extends React.Component {
 
     renderSelectedScheduledStream() {
         const scheduledStream = this.state.selectedScheduleItem;
-        return !scheduledStream ? undefined : (
+        return scheduledStream && (
             <Modal isOpen={true} toggle={this.deselectScheduledStream} centered={true}>
                 <ModalBody>
                     <table>
                         <tbody>
                             <tr>
-                                {scheduledStream.event ? undefined : (
+                                {!scheduledStream.event && (
                                     <td>
                                         <Link to={`/user/${scheduledStream.user.username}`}>
                                             <img className='rounded-circle m-2' src={scheduledStream.user.profilePicURL}
@@ -465,7 +465,7 @@ export default class Schedule extends React.Component {
                                         start: scheduledStream.start_time,
                                         end: scheduledStream.end_time
                                     })}
-                                    {!scheduledStream.event ? undefined : (
+                                    {scheduledStream.event && (
                                         <h6>
                                             Scheduled as part of&nbsp;
                                             <Link to={`/event/${scheduledStream.event._id}`}>
@@ -478,7 +478,7 @@ export default class Schedule extends React.Component {
                         </tbody>
                     </table>
                 </ModalBody>
-                {scheduledStream.user._id !== this.state.loggedInUserId ? undefined : (
+                {scheduledStream.user._id === this.state.loggedInUserId && (
                     <ModalFooter>
                         <Button className='btn-danger' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
                             <img src={WhiteDeleteIcon} width={18} height={18} className='mr-1 mb-1'
@@ -487,7 +487,7 @@ export default class Schedule extends React.Component {
                         </Button>
                     </ModalFooter>
                 )}
-                {!scheduledStream.isNonSubscribed || scheduledStream.event ? undefined : (
+                {scheduledStream.isNonSubscribed && !scheduledStream.event && (
                     <ModalFooter>
                         <i>You are not subscribed to {scheduledStream.user.displayName || scheduledStream.user.username}</i>
                         <Button className='btn-dark' size='sm' onClick={() => this.removeFromSchedule(scheduledStream._id)}>
@@ -500,7 +500,7 @@ export default class Schedule extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (<LoadingSpinner />) : (
+        return !this.state.loaded ? <LoadingSpinner /> : (
             <React.Fragment>
                 <Container fluid>
                     {getAlert(this)}

@@ -417,8 +417,8 @@ export default class ManageRecordedStreams extends React.Component {
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.editRecordedStream}
                             disabled={!this.state.unsavedChanges}>
-                        {this.state.showSaveChangesSpinner ? <Spinner size='sm'/> : undefined}
-                        <span className={this.state.showSaveChangesSpinner ? 'sr-only' : undefined}>
+                        {this.state.showSaveChangesSpinner && <Spinner size='sm'/>}
+                        <span className={this.state.showSaveChangesSpinner && 'sr-only'}>
                             Save Changes
                         </span>
                     </Button>
@@ -438,8 +438,8 @@ export default class ManageRecordedStreams extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-danger' onClick={this.deleteRecordedStream}>
-                        {this.state.showDeleteSpinner ? <Spinner size='sm'/> : undefined}
-                        <span className={this.state.showDeleteSpinner ? 'sr-only' : undefined}>
+                        {this.state.showDeleteSpinner && <Spinner size='sm'/>}
+                        <span className={this.state.showDeleteSpinner && 'sr-only'}>
                             <img src={WhiteDeleteIcon} width={18} height={18} className='mr-2 mb-1'
                                  alt='Delete Recorded Stream icon'/>
                             Delete
@@ -478,14 +478,14 @@ export default class ManageRecordedStreams extends React.Component {
                 </Dropdown>
             );
 
-            const alert = this.state.alertIndex === index ? getAlert(this) : undefined;
+            const alert = this.state.alertIndex === index && getAlert(this);
             const nextHasAlert = this.state.alertIndex === index + 1;
             const requiresMargin = !(nextHasAlert && this.state.alertText);
 
             return (
                 <React.Fragment key={index}>
                     {alert}
-                    <Row className={requiresMargin ? 'margin-bottom-thick' : undefined}>
+                    <Row className={requiresMargin && 'margin-bottom-thick'}>
                         <Col className='stream' md='6' lg='4'>
                             <span className='video-duration'>{stream.videoDuration}</span>
                             <span className='view-count'>
@@ -517,11 +517,10 @@ export default class ManageRecordedStreams extends React.Component {
             );
         });
 
-        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+        const loadMoreButton = this.state.showLoadMoreButton && (
             <div className='text-center mt-4'>
                 <Button className='btn-dark' onClick={this.getRecordedStreams}>
-                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : 'Load More'}
                 </Button>
             </div>
         );
@@ -541,10 +540,10 @@ export default class ManageRecordedStreams extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (<LoadingSpinner />) : (
+        return !this.state.loaded ? <LoadingSpinner /> : (
             <React.Fragment>
                 <Container fluid='lg' className='my-5'>
-                    {this.state.isGlobalAlert ? getAlert(this) : undefined}
+                    {this.state.isGlobalAlert && getAlert(this)}
 
                     <Row>
                         <Col>

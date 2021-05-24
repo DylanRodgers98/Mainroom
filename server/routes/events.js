@@ -75,16 +75,14 @@ router.get('/', (req, res, next) => {
             return next(err);
         }
         res.json({
-            events: result.docs.map(event => {
-                return {
-                    _id: event._id,
-                    eventName: event.eventName,
-                    createdBy: event.createdBy,
-                    startTime: event.startTime,
-                    endTime: event.endTime,
-                    thumbnailURL: event.getThumbnailURL()
-                };
-            }),
+            events: result.docs.map(event => ({
+                _id: event._id,
+                eventName: event.eventName,
+                createdBy: event.createdBy,
+                startTime: event.startTime,
+                endTime: event.endTime,
+                thumbnailURL: event.getThumbnailURL()
+            })),
             nextPage: result.nextPage
         });
     });
@@ -638,18 +636,16 @@ router.get('/:eventId/recorded-streams', async (req, res, next) => {
             next(err);
         } else {
             res.json({
-                recordedStreams: result.docs.map(stream => {
-                    return {
-                        _id: stream._id,
-                        timestamp: stream.timestamp,
-                        title: stream.title,
-                        genre: stream.genre,
-                        category: stream.category,
-                        viewCount: stream.viewCount,
-                        videoDuration: stream.videoDuration,
-                        thumbnailURL: stream.getThumbnailURL()
-                    };
-                }),
+                recordedStreams: result.docs.map(stream => ({
+                    _id: stream._id,
+                    timestamp: stream.timestamp,
+                    title: stream.title,
+                    genre: stream.genre,
+                    category: stream.category,
+                    viewCount: stream.viewCount,
+                    videoDuration: stream.videoDuration,
+                    thumbnailURL: stream.getThumbnailURL()
+                })),
                 nextPage: result.nextPage
             });
         }
@@ -702,25 +698,21 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
     }
 
     res.json({
-        scheduleGroups: event.stages.map(stage => {
-            return {
-                id: stage._id,
-                title: stage.stageName
-            };
-        }),
-        scheduleItems: !scheduledStreams ? [] : scheduledStreams.map((scheduledStream, index) => {
-            return {
-                _id: scheduledStream._id,
-                id: index,
-                group: scheduledStream.eventStage._id,
-                title: scheduledStream.title || scheduledStream.eventStage.stageName,
-                start_time: scheduledStream.startTime,
-                end_time: scheduledStream.endTime,
-                genre: scheduledStream.genre,
-                category: scheduledStream.category,
-                hasPrerecordedVideo: !!scheduledStream.prerecordedVideoFile
-            };
-        })
+        scheduleGroups: event.stages.map(stage => ({
+            id: stage._id,
+            title: stage.stageName
+        })),
+        scheduleItems: !scheduledStreams ? [] : scheduledStreams.map((scheduledStream, index) => ({
+            _id: scheduledStream._id,
+            id: index,
+            group: scheduledStream.eventStage._id,
+            title: scheduledStream.title || scheduledStream.eventStage.stageName,
+            start_time: scheduledStream.startTime,
+            end_time: scheduledStream.endTime,
+            genre: scheduledStream.genre,
+            category: scheduledStream.category,
+            hasPrerecordedVideo: !!scheduledStream.prerecordedVideoFile
+        }))
     });
 });
 

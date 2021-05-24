@@ -310,7 +310,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderLiveStream() {
-        return !this.state.streamKey ?  undefined : (
+        return this.state.streamKey && (
             <React.Fragment>
                 <Row className='mb-2'>
                     <Col>
@@ -394,14 +394,14 @@ export default class UserProfile extends React.Component {
             ) : (
                 this.state.isLoggedInUserSubscribed || this.state.scheduledStreamsInLoggedInUserSchedule.some(id => id === stream._id) ? (
                     <Button className='float-right btn-dark' size='sm'
-                            onClick={this.state.isLoggedInUserSubscribed || stream.eventStage ? undefined : () => this.removeFromSchedule(stream._id)}>
-                        <span title={this.state.isLoggedInUserSubscribed || stream.eventStage ? undefined : `Remove '${stream.title}' from Schedule`}>
+                            onClick={!this.state.isLoggedInUserSubscribed && !stream.eventStage && (() => this.removeFromSchedule(stream._id))}>
+                        <span title={!this.state.isLoggedInUserSubscribed && !stream.eventStage && `Remove '${stream.title}' from Schedule`}>
                             <img src={TickIcon} className='mr-1' alt='In Schedule icon'/>
                             In Schedule
                         </span>
                     </Button>
                 ) : (
-                    stream.eventStage ? undefined : (
+                    !stream.eventStage && (
                         <Button className='float-right btn-dark' size='sm' onClick={() => this.addToSchedule(stream._id)}>
                             <img src={AddIcon} className='mr-1' alt='Add to Schedule icon'/>
                             Add to Schedule
@@ -413,7 +413,7 @@ export default class UserProfile extends React.Component {
                 <Col className='margin-bottom-thick' key={index} md='6'>
                     {button}
                     <h5>
-                        {!stream.eventStage ? undefined : (
+                        {stream.eventStage && (
                             <React.Fragment>
                                 <Link to={`/event/${stream.eventStage.event._id}`}>
                                     {stream.eventStage.stageName}
@@ -433,7 +433,7 @@ export default class UserProfile extends React.Component {
                         start: stream.startTime,
                         end: stream.endTime
                     })}
-                    {!stream.eventStage ? undefined : (
+                    {stream.eventStage && (
                         <h6>
                             Scheduled as part of&nbsp;
                             <Link to={`/event/${stream.eventStage.event._id}`}>
@@ -445,7 +445,7 @@ export default class UserProfile extends React.Component {
             );
         });
 
-        const goToScheduleButton = this.state.loggedInUser !== this.props.match.params.username.toLowerCase() ? undefined : (
+        const goToScheduleButton = this.state.loggedInUser === this.props.match.params.username.toLowerCase() && (
             <div className='float-right'>
                 <Button className='btn-dark' tag={Link} to={'/schedule'} size='sm'>
                     <img src={ScheduleIcon} className='mr-1' alt='Schedule icon'/>
@@ -504,7 +504,7 @@ export default class UserProfile extends React.Component {
             </Row>
         ));
 
-        const manageRecordedStreamsButton = this.state.loggedInUser !== this.props.match.params.username.toLowerCase() ? undefined : (
+        const manageRecordedStreamsButton = this.state.loggedInUser === this.props.match.params.username.toLowerCase() && (
             <div className='float-right'>
                 <Button className='btn-dark' tag={Link} to={'/manage-recorded-streams'} size='sm'>
                     <img src={RecordedStreamsIcon} className='mr-1' alt='Recorded Streams icon'/>
@@ -513,11 +513,10 @@ export default class UserProfile extends React.Component {
             </div>
         );
 
-        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+        const loadMoreButton = this.state.showLoadMoreButton && (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={this.getRecordedStreams}>
-                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : 'Load More'}
                 </Button>
             </div>
         );
@@ -685,7 +684,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderEditLinks() {
-        const headers = !this.state.editLinks.length ? undefined : (
+        const headers = this.state.editLinks.length && (
             <Row>
                 <Col className='remove-padding-r' xs='4' lg='4'>Title:</Col>
                 <Col className='remove-padding-l ml-1' xs='6' lg='7'>URL:</Col>
@@ -709,8 +708,7 @@ export default class UserProfile extends React.Component {
                     </a>
                 </Col>
                 <Col xs='12'>
-                    {!this.state.indexesOfInvalidLinks.includes(index) ? undefined
-                        : <small className='text-danger'>Invalid URL</small>}
+                    {this.state.indexesOfInvalidLinks.includes(index) && <small className='text-danger'>Invalid URL</small>}
                 </Col>
             </Row>
         ));
@@ -789,8 +787,8 @@ export default class UserProfile extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' disabled={!this.state.unsavedChanges} onClick={this.saveProfile}>
-                        {this.state.showEditProfileSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showEditProfileSpinner ? 'sr-only' : undefined}>
+                        {this.state.showEditProfileSpinner && <Spinner size='sm' />}
+                        <span className={this.state.showEditProfileSpinner && 'sr-only'}>
                             Save Changes
                         </span>
                     </Button>
@@ -844,7 +842,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderChangeProfilePic() {
-        return !this.state.changeProfilePicOpen ? undefined : (
+        return this.state.changeProfilePicOpen && (
             <Modal isOpen={this.state.changeProfilePicOpen} toggle={this.changeProfilePicToggle} centered={true}>
                 <ModalHeader toggle={this.changeProfilePicToggle}>Change Profile Picture</ModalHeader>
                 <ModalBody>
@@ -857,8 +855,8 @@ export default class UserProfile extends React.Component {
                 <ModalFooter>
                     <Button className='btn-dark' disabled={!this.state.uploadedProfilePic}
                             onClick={this.saveNewProfilePic}>
-                        {this.state.showChangeProfilePicSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showChangeProfilePicSpinner ? 'sr-only' : undefined}>
+                        {this.state.showChangeProfilePicSpinner && <Spinner size='sm' />}
+                        <span className={this.state.showChangeProfilePicSpinner && 'sr-only'}>
                             Upload
                         </span>
                     </Button>
@@ -881,7 +879,7 @@ export default class UserProfile extends React.Component {
             <div className='profile-pic'
                  onMouseEnter={this.mouseEnterProfilePic} onMouseLeave={this.mouseLeaveProfilePic}>
                 {profilePic}
-                {this.state.showChangeProfilePicButton ? changeProfilePicButton : undefined}
+                {this.state.showChangeProfilePicButton && changeProfilePicButton}
             </div>
         ) : (
             <div className='profile-pic'>
@@ -902,7 +900,7 @@ export default class UserProfile extends React.Component {
                             <h1 className='text-break' title={this.state.displayName || this.props.match.params.username.toLowerCase()}>
                                 {this.state.displayName || this.props.match.params.username.toLowerCase()}
                             </h1>
-                            {!this.state.location ? undefined :
+                            {this.state.location &&
                                 <h5 className='text-break'>
                                     <img src={LocationIcon} className='mr-1 mb-1' alt='Location icon'/>
                                     {this.state.location}

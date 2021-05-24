@@ -149,7 +149,7 @@ export default class RecordedStream extends React.Component {
 
     renderRecordedStreams() {
         const recordedStreams = this.state.recordedStreams.map((stream, index) => {
-            return stream._id === this.props.match.params.streamId ? undefined : (
+            return stream._id !== this.props.match.params.streamId && (
                 <Row key={index} className='mt-2 pl-2'>
                     <Col className='stream' xs='6'>
                         <span className='video-duration'>
@@ -180,11 +180,10 @@ export default class RecordedStream extends React.Component {
             );
         });
 
-        const loadMoreButton = !this.state.showLoadMoreButton || !recordedStreams.length ? undefined : (
+        const loadMoreButton = this.state.showLoadMoreButton && recordedStreams.length && (
             <div className='text-center my-2'>
                 <Button className='btn-dark' onClick={this.getRecordedStreams}>
-                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : 'Load More'}
                 </Button>
             </div>
         );
@@ -199,7 +198,7 @@ export default class RecordedStream extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (<LoadingSpinner />) : (
+        return !this.state.loaded ? <LoadingSpinner /> : (
             <Fragment>
                 <Container fluid className='remove-padding-lr'>
                     {getAlert(this)}

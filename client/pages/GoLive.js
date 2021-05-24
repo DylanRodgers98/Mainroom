@@ -301,7 +301,7 @@ export default class GoLive extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (<LoadingSpinner />) : (
+        return !this.state.loaded ? <LoadingSpinner /> : (
             <Container fluid='lg'>
                 {getAlert(this)}
 
@@ -405,8 +405,8 @@ export default class GoLive extends React.Component {
                 <div className='float-right mb-4'>
                     <Button className='btn-dark' size='lg' disabled={!this.state.unsavedChanges}
                             onClick={this.saveSettings}>
-                        {this.state.showSpinner ? <Spinner /> : undefined}
-                        <span className={this.state.showSpinner ? 'sr-only' : undefined}>
+                        {this.state.showSpinner && <Spinner />}
+                        <span className={this.state.showSpinner && 'sr-only'}>
                             Save Settings
                         </span>
                     </Button>

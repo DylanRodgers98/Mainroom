@@ -73,25 +73,23 @@ router.get('/', async (req, res, next) => {
             next(err);
         } else {
             res.json({
-                recordedStreams: result.docs.map(stream => {
-                    return {
-                        _id: stream._id,
-                        user: {
-                            username: stream.user.username,
-                            displayName: stream.user.displayName,
-                            profilePicURL: stream.user.getProfilePicURL()
-                        },
-                        timestamp: stream.timestamp,
-                        title: stream.title,
-                        genre: stream.genre,
-                        category: stream.category,
-                        tags: stream.tags,
-                        viewCount: stream.viewCount,
-                        videoDuration: stream.videoDuration,
-                        thumbnailURL: stream.getThumbnailURL(),
-                        videoURL: stream.getVideoURL()
-                    };
-                }),
+                recordedStreams: result.docs.map(stream => ({
+                    _id: stream._id,
+                    user: {
+                        username: stream.user.username,
+                        displayName: stream.user.displayName,
+                        profilePicURL: stream.user.getProfilePicURL()
+                    },
+                    timestamp: stream.timestamp,
+                    title: stream.title,
+                    genre: stream.genre,
+                    category: stream.category,
+                    tags: stream.tags,
+                    viewCount: stream.viewCount,
+                    videoDuration: stream.videoDuration,
+                    thumbnailURL: stream.getThumbnailURL(),
+                    videoURL: stream.getVideoURL()
+                })),
                 nextPage: result.nextPage
             });
         }

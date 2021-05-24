@@ -385,13 +385,11 @@ export default class Event extends React.Component {
             editEventStartTime: this.state.startTime,
             editEventEndTime: this.state.endTime,
             editEventTags: [...this.state.tags],
-            editEventStages: this.state.stages.map(stage => {
-                return {
-                    _id: stage._id,
-                    stageName: stage.stageName,
-                    uploadedSplashThumbnail: undefined
-                };
-            })
+            editEventStages: this.state.stages.map(stage => ({
+                _id: stage._id,
+                stageName: stage.stageName,
+                uploadedSplashThumbnail: undefined
+            }))
         }));
     }
 
@@ -511,12 +509,10 @@ export default class Event extends React.Component {
                         startTime: convertLocalToUTC(this.state.editEventStartTime),
                         endTime: convertLocalToUTC(this.state.editEventEndTime),
                         tags: this.state.editEventTags,
-                        stages: this.state.editEventStages.map(stage => {
-                            return {
-                                _id: stage._id,
-                                stageName: stage.stageName
-                            };
-                        })
+                        stages: this.state.editEventStages.map(stage => ({
+                            _id: stage._id,
+                            stageName: stage.stageName
+                        }))
                     });
                 } catch (err) {
                     if (err.response.status === 403) {
@@ -591,12 +587,12 @@ export default class Event extends React.Component {
         return this.state.editEventStages.map((stage, index) => (
             <Row className='mt-1' key={index}>
                 <Col xs='12'>Stage Name</Col>
-                <Col className={index === 0 ? undefined : 'remove-padding-r'} xs={index === 0 ? 12 : 11}>
+                <Col className={index !== 0 && 'remove-padding-r'} xs={index === 0 ? 12 : 11}>
                     <input className='rounded-border w-100' type='text' value={stage.stageName}
                            onChange={e => this.setEditStageName(e, index)}
                            maxLength={validation.eventStage.stageNameMaxLength}/>
                 </Col>
-                {index === 0 ? undefined : (
+                {index !== 0 && (
                     <Col className='remove-padding-l' xs='1'>
                         <a href='javascript:;' onClick={() => this.removeStage(index)}>
                             <img src={RemoveIcon} className='ml-2' alt='Remove Link icon'/>
@@ -614,14 +610,14 @@ export default class Event extends React.Component {
                                            withPreview={true} singleImage={true} withIcon={false}/>
                         </Suspense>
                     </details>
-                    {index === validation.event.stagesMaxAmount - 1 ? undefined : <hr className='my-2'/>}
+                    {index < validation.event.stagesMaxAmount - 1 && <hr className='my-2'/>}
                 </Col>
             </Row>
         ));
     }
 
     renderEditEventModal() {
-        return !this.state.isEditEventModalOpen ? undefined : (
+        return this.state.isEditEventModalOpen && (
             <Modal isOpen={this.state.isEditEventModalOpen} toggle={this.toggleEditEventModal} centered={true}>
                 <ModalHeader toggle={this.toggleEditEventModal}>
                     Edit Event
@@ -695,7 +691,7 @@ export default class Event extends React.Component {
                     <hr/>
                     <Container fluid className='remove-padding-lr'>
                         {this.renderEditStages()}
-                        {this.state.editEventStages.length === validation.event.stagesMaxAmount ? undefined : (
+                        {this.state.editEventStages.length < validation.event.stagesMaxAmount && (
                             <Row className='mt-2'>
                                 <Col xs='12'>
                                     <Button className='btn-dark' size='sm' onClick={this.addStage}>
@@ -706,16 +702,15 @@ export default class Event extends React.Component {
                             </Row>
                         )}
                     </Container>
-                    {!this.state.showEditEventSpinnerAndProgress ? undefined :
-                        <Progress className='mt-2' value={this.state.editEventProgress} />}
+                    {this.state.showEditEventSpinnerAndProgress && <Progress className='mt-2' value={this.state.editEventProgress} />}
                     <Alert className='mt-4' isOpen={!!this.state.editEventErrorMessage} color='danger'>
                         {this.state.editEventErrorMessage}
                     </Alert>
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.editEvent}>
-                        {this.state.showEditEventSpinnerAndProgress ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showEditEventSpinnerAndProgress ? 'sr-only' : undefined}>
+                        {this.state.showEditEventSpinnerAndProgress && <Spinner size='sm' />}
+                        <span className={this.state.showEditEventSpinnerAndProgress && 'sr-only'}>
                             Edit Event
                         </span>
                     </Button>
@@ -746,7 +741,7 @@ export default class Event extends React.Component {
     }
 
     renderDeleteEventModal() {
-        return !this.state.isDeleteEventModalOpen ? undefined : (
+        return this.state.isDeleteEventModalOpen && (
             <Modal isOpen={this.state.isDeleteEventModalOpen} toggle={this.toggleDeleteEventModal}
                    size='md' centered={true}>
                 <ModalHeader toggle={this.toggleDeleteEventModal}>
@@ -757,8 +752,8 @@ export default class Event extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-danger' onClick={this.deleteEvent}>
-                        {this.state.showDeleteSpinner ? <Spinner size='sm'/> : undefined}
-                        <span className={this.state.showDeleteSpinner ? 'sr-only' : undefined}>
+                        {this.state.showDeleteSpinner && <Spinner size='sm'/>}
+                        <span className={this.state.showDeleteSpinner && 'sr-only'}>
                             <img src={WhiteDeleteIcon} width={18} height={18} className='mr-2 mb-1'
                                  alt='Delete Event icon'/>
                             Delete
@@ -837,8 +832,8 @@ export default class Event extends React.Component {
     renderStages() {
         const stages = this.state.stages.map((stage, index) => (
             <Col className='stream margin-bottom-thick' key={index}>
-                {!stage.isLive ? undefined : <span className='live-label'>LIVE</span>}
-                {!stage.isLive ? undefined : (
+                {stage.isLive && <span className='live-label'>LIVE</span>}
+                {stage.isLive && (
                     <span className='view-count'>
                         <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Viewers icon'/>
                         {shortenNumber(stage.streamInfo.viewCount)}
@@ -857,7 +852,7 @@ export default class Event extends React.Component {
                                       title={stage.isLive ? stage.stageName : `${stage.stageName} closed`}>
                                     {stage.stageName}
                                 </Link>
-                                {!stage.isLive ? undefined : (
+                                {stage.isLive && (
                                     <span className='black-link'>
                                         <Link to={stage.isLive ? `/stage/${stage._id}` : ''}>
                                             {stage.streamInfo.title ? ` - ${stage.streamInfo.title}` : ''}
@@ -865,7 +860,7 @@ export default class Event extends React.Component {
                                     </span>
                                 )}
                             </h5>
-                            {!stage.isLive ? undefined : (
+                            {stage.isLive && (
                                 <h6>
                                     {displayGenreAndCategory({
                                         genre: stage.streamInfo.genre,
@@ -880,7 +875,7 @@ export default class Event extends React.Component {
             </Col>
         ));
 
-        const stageInfoButton = !this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
+        const stageInfoButton = this.state.loggedInUser && this.state.loggedInUser._id && this.state.loggedInUser._id === this.state.createdBy._id && (
             <Row>
                 <Col>
                     <div className='float-right'>
@@ -938,7 +933,7 @@ export default class Event extends React.Component {
             </Row>
         ));
 
-        const manageRecordedStreamsButton = !this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
+        const manageRecordedStreamsButton = this.state.loggedInUser && this.state.loggedInUser._id && this.state.loggedInUser._id === this.state.createdBy._id && (
             <div className='float-right'>
                 <Button className='btn-dark' tag={Link} to={'/manage-recorded-streams'} size='sm'>
                     <img src={RecordedStreamsIcon} className='mr-1' alt='Recorded Streams icon'/>
@@ -947,11 +942,10 @@ export default class Event extends React.Component {
             </div>
         );
 
-        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+        const loadMoreButton = this.state.showLoadMoreButton && (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={this.getRecordedStreams}>
-                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : 'Load More'}
                 </Button>
             </div>
         );
@@ -1383,7 +1377,7 @@ export default class Event extends React.Component {
     }
 
     renderScheduleStreamModal() {
-        return !this.state.scheduleStreamModalOpen ? undefined : (
+        return this.state.scheduleStreamModalOpen && (
             <Modal isOpen={this.state.scheduleStreamModalOpen} toggle={this.toggleScheduleStreamModal} centered={true}>
                 <ModalHeader toggle={this.toggleScheduleStreamModal}>
                     Schedule a Stream
@@ -1431,10 +1425,10 @@ export default class Event extends React.Component {
                                     <summary>Upload Prerecorded Stream <i>(optional)</i></summary>
                                     <input id='videoFileInput' className='mt-1' type='file' accept='video/*'
                                            onChange={this.onVideoFileSelected}/>
-                                    {!this.state.selectedVideoFileDuration ? undefined : (
+                                    {this.state.selectedVideoFileDuration && (
                                         <div><i>Duration: {getDurationTimestamp(this.state.selectedVideoFileDuration)}</i></div>
                                     )}
-                                    {!this.state.selectedVideoFileSize ? undefined : (
+                                    {this.state.selectedVideoFileSize && (
                                         <div><i>File Size: {shortenFileSize(this.state.selectedVideoFileSize)}</i></div>
                                     )}
                                 </details>
@@ -1494,12 +1488,10 @@ export default class Event extends React.Component {
                             <Col xs='12'>
                                 <i>Up to {validation.streamSettings.tagsMaxAmount} comma-separated tags, no spaces</i>
                             </Col>
-                            {!this.state.showVideoUploadProgress && !this.cancelTokenSource ? undefined : (
+                            {(this.state.showVideoUploadProgress || this.cancelTokenSource) && (
                                 <Col className='text-center mt-2' xs='12'>
-                                    {!this.state.showVideoUploadProgress ? undefined : (
-                                        <Progress value={this.state.videoUploadProgress} />
-                                    )}
-                                    {!this.cancelTokenSource ? undefined : (
+                                    {this.state.showVideoUploadProgress && <Progress value={this.state.videoUploadProgress} />}
+                                    {this.cancelTokenSource && (
                                         <Button className='btn-danger mt-2' size='sm' onClick={this.cancelVideoUpload}>
                                             Cancel Upload
                                         </Button>
@@ -1514,8 +1506,8 @@ export default class Event extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.addToSchedule}>
-                        {this.state.showAddToScheduleSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showAddToScheduleSpinner ? 'sr-only' : undefined}>
+                        {this.state.showAddToScheduleSpinner && <Spinner size='sm' />}
+                        <span className={this.state.showAddToScheduleSpinner && 'sr-only'}>
                             Add to Schedule
                         </span>
                     </Button>
@@ -1532,7 +1524,7 @@ export default class Event extends React.Component {
         ) : (
             <Row className='mt-4'>
                 <Col>
-                    {!this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
+                    {this.state.loggedInUser && this.state.loggedInUser._id && this.state.loggedInUser._id === this.state.createdBy._id && (
                         <div className='float-left mb-2'>
                             <Button className='btn-dark' size='sm' onClick={this.toggleScheduleStreamModal}>
                                 <img src={PlusIcon} width={22} height={22} className='mr-1'
@@ -1590,7 +1582,7 @@ export default class Event extends React.Component {
 
     renderSelectedScheduledStream() {
         const scheduledStream = this.state.selectedScheduleItem;
-        return !scheduledStream ? undefined : (
+        return scheduledStream && (
             <Modal isOpen={true} toggle={this.deselectScheduledStream} centered={true}>
                 <ModalBody>
                     <table>
@@ -1608,7 +1600,7 @@ export default class Event extends React.Component {
                                     start: scheduledStream.start_time,
                                     end: scheduledStream.end_time
                                 })}
-                                {!this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id || !scheduledStream.hasPrerecordedVideo ?  undefined : (
+                                {this.state.loggedInUser && this.state.loggedInUser._id && this.state.loggedInUser._id === this.state.createdBy._id && scheduledStream.hasPrerecordedVideo && (
                                     <p><i>A prerecording of this stream has been scheduled to start at {formatDate(scheduledStream.start_time)}</i></p>
                                 )}
                             </td>
@@ -1616,7 +1608,7 @@ export default class Event extends React.Component {
                         </tbody>
                     </table>
                 </ModalBody>
-                {!this.state.loggedInUser || this.state.loggedInUser._id !== this.state.createdBy._id ? undefined : (
+                {this.state.loggedInUser && this.state.loggedInUser._id && this.state.loggedInUser._id === this.state.createdBy._id && (
                     <ModalFooter>
                         <Button className='btn-danger' size='sm' onClick={() => this.cancelStream(scheduledStream._id)}>
                             <img src={WhiteDeleteIcon} width={18} height={18} className='mr-1 mb-1'
@@ -1708,7 +1700,7 @@ export default class Event extends React.Component {
             <React.Fragment>
                 <Container className='h-100' fluid='lg'>
                     <ReactHeight onHeightReady={height => this.setChatHeightOffset(height)}>
-                        {!this.state.bannerPicURL ? undefined : (
+                        {this.state.bannerPicURL && (
                             <Row>
                                 <Col>
                                     <img className='event-banner'

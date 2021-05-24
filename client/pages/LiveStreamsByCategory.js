@@ -152,7 +152,7 @@ export default class LiveStreamsByCategory extends React.Component {
                 <table>
                     <tbody>
                     <tr>
-                        {liveStream.eventStageId ? undefined : (
+                        {!liveStream.eventStageId && (
                             <td valign='top'>
                                 <Link to={`/user/${liveStream.username}`}>
                                     <img className='rounded-circle m-2' src={liveStream.profilePicURL}
@@ -180,8 +180,8 @@ export default class LiveStreamsByCategory extends React.Component {
                             </h6>
                             <h6>
                                 Started {timeSince(liveStream.startTime)}
-                                {!liveStream.eventStageId ? '' : ' as part of '}
-                                {!liveStream.eventStageId ? undefined : (
+                                {liveStream.eventStageId && ' as part of '}
+                                {liveStream.eventStageId && (
                                     <Link to={`/event/${liveStream.event._id}`}>
                                         {liveStream.event.eventName}
                                     </Link>
@@ -212,11 +212,10 @@ export default class LiveStreamsByCategory extends React.Component {
             </div>
         ));
 
-        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+        const loadMoreButton = this.state.showLoadMoreButton && (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={this.getLiveStreams}>
-                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : 'Load More'}
                 </Button>
             </div>
         );
@@ -242,7 +241,7 @@ export default class LiveStreamsByCategory extends React.Component {
                     </Col>
                 </Row>
                 <hr className='my-4'/>
-                {!this.state.loaded ? (<LoadingSpinner />) : (
+                {!this.state.loaded ? <LoadingSpinner /> : (
                     <React.Fragment>
                         {streamBoxes}
                         {loadMoreButton}

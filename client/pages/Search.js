@@ -6,8 +6,8 @@ import {Button, Col, Container, Dropdown, DropdownItem, DropdownMenu, DropdownTo
 import {shortenNumber} from '../utils/numberUtils';
 import {formatDateRange, isTimeBetween, timeSince} from '../utils/dateUtils';
 import {displayErrorMessage, displayGenreAndCategory, getAlert, LoadingSpinner} from '../utils/displayUtils';
-import ViewersIcon from "../icons/eye.svg";
-import moment from "moment";
+import ViewersIcon from '../icons/eye.svg';
+import moment from 'moment';
 
 const STARTING_PAGE = 1;
 
@@ -116,7 +116,7 @@ export default class LiveStreams extends React.Component {
         ]);
     }
 
-    getLiveStreams() {
+    async getLiveStreams() {
         const params = {
             searchQuery: this.props.match.params.query,
             page: this.state.livestreamsNextPage,
@@ -165,7 +165,7 @@ export default class LiveStreams extends React.Component {
         return eventStagesRes.data.streams ? eventStagesRes.data.streams.length : 0;
     }
 
-    getPastStreams() {
+    async getPastStreams() {
         const queryParams = {
             params: {
                 searchQuery: this.props.match.params.query,
@@ -197,7 +197,7 @@ export default class LiveStreams extends React.Component {
         });
     }
 
-    getEvents() {
+    async getEvents() {
         const queryParams = {
             params: {
                 searchQuery: this.props.match.params.query,
@@ -229,7 +229,7 @@ export default class LiveStreams extends React.Component {
         });
     }
 
-    getUsers() {
+    async getUsers() {
         const queryParams = {
             params: {
                 searchQuery: this.props.match.params.query,
@@ -305,7 +305,7 @@ export default class LiveStreams extends React.Component {
                 <table>
                     <tbody>
                     <tr>
-                        {liveStream.eventStageId ? undefined : (
+                        {!liveStream.eventStageId && (
                             <td valign='top'>
                                 <Link to={`/user/${liveStream.username}`}>
                                     <img className='rounded-circle m-2' src={liveStream.profilePicURL}
@@ -333,8 +333,8 @@ export default class LiveStreams extends React.Component {
                             </h6>
                             <h6>
                                 Started {timeSince(liveStream.startTime)}
-                                {!liveStream.eventStageId ? '' : ' as part of '}
-                                {!liveStream.eventStageId ? undefined : (
+                                {liveStream.eventStageId && ' as part of '}
+                                {liveStream.eventStageId && (
                                     <Link to={`/event/${liveStream.event._id}`}>
                                         {liveStream.event.eventName}
                                     </Link>
@@ -347,11 +347,10 @@ export default class LiveStreams extends React.Component {
             </Col>
         ));
 
-        const loadMoreLiveStreamsButton = !this.state.showLoadMoreLivestreamsButton ? undefined : (
+        const loadMoreLiveStreamsButton = this.state.showLoadMoreLivestreamsButton && (
             <div className='text-center mb-4'>
                 <Button className='btn-dark' onClick={this.getLiveStreams}>
-                    {this.state.showLoadMoreLivestreamsSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreLivestreamsSpinner ? undefined : 'Load More Livestreams'}
+                    {this.state.showLoadMoreLivestreamsSpinner ? <Spinner size='sm' /> : 'Load More Livestreams'}
                 </Button>
             </div>
         );
@@ -417,16 +416,15 @@ export default class LiveStreams extends React.Component {
             </Col>
         ));
 
-        const loadMorePastStreamsButton = !this.state.showLoadMorePastStreamsButton ? undefined : (
+        const loadMorePastStreamsButton = this.state.showLoadMorePastStreamsButton && (
             <div className='text-center mb-4'>
                 <Button className='btn-dark' onClick={this.getPastStreams}>
-                    {this.state.showLoadMorePastStreamsSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMorePastStreamsSpinner ? undefined : 'Load More Past Streams'}
+                    {this.state.showLoadMorePastStreamsSpinner ? <Spinner size='sm' /> : 'Load More Past Streams'}
                 </Button>
             </div>
         );
 
-        return !pastStreams.length ? undefined : (
+        return pastStreams.length && (
             <React.Fragment>
                 <h5>Past Streams</h5>
                 <hr className='my-4'/>
@@ -450,7 +448,7 @@ export default class LiveStreams extends React.Component {
 
             return (
                 <Col className='stream margin-bottom-thick' key={index}>
-                    {isEventHappeningNow ? <span className='live-label'>LIVE</span> : undefined}
+                    {isEventHappeningNow && <span className='live-label'>LIVE</span>}
                     <Link to={`/event/${event._id}`}>
                         <img className='w-100' src={event.thumbnailURL} alt={`${event.eventName} Event Thumbnail`}/>
                     </Link>
@@ -482,16 +480,15 @@ export default class LiveStreams extends React.Component {
             );
         });
 
-        const loadMoreEventsButton = !this.state.showLoadMoreEventsButton ? undefined : (
+        const loadMoreEventsButton = this.state.showLoadMoreEventsButton && (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={this.getEvents}>
-                    {this.state.showLoadMoreEventsSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreEventsSpinner ? undefined : 'Load More Events'}
+                    {this.state.showLoadMoreEventsSpinner ? <Spinner size='sm' /> : 'Load More Events'}
                 </Button>
             </div>
         );
 
-        return !events.length ? undefined : (
+        return events.length && (
             <React.Fragment>
                 <h5>Events</h5>
                 <hr className='my-4'/>
@@ -516,16 +513,15 @@ export default class LiveStreams extends React.Component {
             </Col>
         ));
 
-        const loadMoreUsersButton = !this.state.showLoadMoreUsersButton ? undefined : (
+        const loadMoreUsersButton = this.state.showLoadMoreUsersButton && (
             <div className='text-center mb-4'>
                 <Button className='btn-dark' onClick={this.getUsers}>
-                    {this.state.showLoadMoreUsersSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreUsersSpinner ? undefined : 'Load More Users'}
+                    {this.state.showLoadMoreUsersSpinner ? <Spinner size='sm' /> : 'Load More Users'}
                 </Button>
             </div>
         );
 
-        return !users.length ? undefined : (
+        return users.length && (
             <React.Fragment>
                 <h5>Users</h5>
                 <hr className='my-4'/>
@@ -597,7 +593,7 @@ export default class LiveStreams extends React.Component {
                     </Col>
                 </Row>
                 <hr className='my-4'/>
-                {!this.state.loaded ? (<LoadingSpinner />) : (
+                {!this.state.loaded ? <LoadingSpinner /> : (
                     <React.Fragment>
                         {this.renderLiveStreams()}
                         {this.renderPastStreams()}

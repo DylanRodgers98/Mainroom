@@ -140,10 +140,10 @@ export default class Home extends React.Component {
             });
         });
 
-        return !this.state.featuredLiveStreams.length ? undefined : (
+        return this.state.featuredLiveStreams.length && (
             <React.Fragment>
                 {this.renderLiveStreams('Featured', this.state.featuredLiveStreams)}
-                {this.state.showLoadMoreFeaturedButton ? loadMoreButton : undefined}
+                {this.state.showLoadMoreFeaturedButton && loadMoreButton}
             </React.Fragment>
         );
     }
@@ -156,10 +156,10 @@ export default class Home extends React.Component {
             });
         });
 
-        return !this.state.subscriptionLiveStreams.length ? undefined : (
+        return this.state.subscriptionLiveStreams.length && (
             <React.Fragment>
                 {this.renderLiveStreams('Subscriptions', this.state.subscriptionLiveStreams)}
-                {this.state.showLoadMoreSubscriptionsButton ? loadMoreButton : undefined}
+                {this.state.showLoadMoreSubscriptionsButton && loadMoreButton}
                 <hr className='my-4'/>
             </React.Fragment>
         );
@@ -179,8 +179,7 @@ export default class Home extends React.Component {
         return (
             <div className='text-center'>
                 <Button className='btn-dark' onClick={onClick}>
-                    {this.state[spinnerStateKey] ? <Spinner size='sm' /> : undefined}
-                    {this.state[spinnerStateKey] ? undefined : 'Load More'}
+                    {this.state[spinnerStateKey] ? <Spinner size='sm' /> : 'Load More'}
                 </Button>
             </div>
         );
@@ -201,7 +200,7 @@ export default class Home extends React.Component {
                 <table>
                     <tbody>
                         <tr>
-                            {liveStream.eventStageId ? undefined : (
+                            {!liveStream.eventStageId && (
                                 <td valign='top'>
                                     <Link to={`/user/${liveStream.username}`}>
                                         <img className='rounded-circle m-2' src={liveStream.profilePicURL}
@@ -229,8 +228,8 @@ export default class Home extends React.Component {
                                 </h6>
                                 <h6>
                                     Started {timeSince(liveStream.startTime)}
-                                    {!liveStream.eventStageId ? '' : ' as part of '}
-                                    {!liveStream.eventStageId ? undefined : (
+                                    {liveStream.eventStageId && ' as part of '}
+                                    {liveStream.eventStageId && (
                                         <Link to={`/event/${liveStream.event._id}`}>
                                             {liveStream.event.eventName}
                                         </Link>
@@ -243,7 +242,7 @@ export default class Home extends React.Component {
             </Col>
         ));
 
-        return !streamBoxes.length ? undefined : (
+        return streamBoxes.length && (
             <React.Fragment>
                 <Row>
                     <Col>

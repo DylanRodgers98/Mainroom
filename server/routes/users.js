@@ -46,13 +46,11 @@ router.get('/', (req, res, next) => {
             next(err);
         } else {
             res.json({
-                users: result.docs.map(user => {
-                    return {
-                        username: user.username,
-                        displayName: user.displayName,
-                        profilePicURL: user.getProfilePicURL()
-                    };
-                }),
+                users: result.docs.map(user => ({
+                    username: user.username,
+                    displayName: user.displayName,
+                    profilePicURL: user.getProfilePicURL()
+                })),
                 nextPage: result.nextPage
             });
         }

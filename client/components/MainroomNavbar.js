@@ -169,8 +169,7 @@ export default class MainroomNavbar extends React.Component {
                         <DropdownToggle caret={this.isSmallBreakpoint()}>
                             <img className='rounded-circle' src={this.state.profilePicURL}
                                  width='25' height='25' alt='Menu'/>
-                            {!this.isSmallBreakpoint() ? undefined
-                                : <span className='ml-1'>{this.state.loggedInDisplayName || this.state.loggedInUsername}</span>}
+                            {this.isSmallBreakpoint() && <span className='ml-1'>{this.state.loggedInDisplayName || this.state.loggedInUsername}</span>}
                         </DropdownToggle>
                         <DropdownMenu right>
                             <DropdownItem tag={Link} to={`/user/${this.state.loggedInUsername}`} onClick={this.closeNavbar}>

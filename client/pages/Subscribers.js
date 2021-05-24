@@ -119,16 +119,15 @@ export default class Subscribers extends React.Component {
             : <p className='my-4 text-center'>{this.state.isProfileOfLoggedInUser ? 'You have '
                 : this.props.match.params.username ? this.props.match.params.username.toLowerCase() : this.state.eventName + ' has'} no subscribers :(</p>;
 
-        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+        const loadMoreButton = this.state.showLoadMoreButton && (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={this.getSubscribers}>
-                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : 'Load More'}
                 </Button>
             </div>
         );
 
-        return !this.state.loaded ? (<LoadingSpinner />) : (
+        return !this.state.loaded ? <LoadingSpinner /> : (
             <Container fluid='lg' className='my-5'>
                 {getAlert(this)}
 

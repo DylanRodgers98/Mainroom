@@ -281,7 +281,7 @@ export default class Settings extends React.Component {
                                 <input className='w-100 rounded-border' type='password' value={this.state.currentPassword}
                                        onChange={this.setCurrentPassword} onKeyDown={this.changePasswordHandleKeyDown} />
                             </Col>
-                            {!this.state.currentPasswordInvalidReason ? undefined : (
+                            {this.state.currentPasswordInvalidReason && (
                                 <Col xs='12'>
                                     <small className='text-danger'>
                                         {this.state.currentPasswordInvalidReason}
@@ -295,7 +295,7 @@ export default class Settings extends React.Component {
                                 <input className='w-100 rounded-border' type='password' value={this.state.newPassword}
                                        onChange={this.setNewPassword} onKeyDown={this.changePasswordHandleKeyDown} />
                             </Col>
-                            {!newPasswordInvalidReason ? undefined : (
+                            {newPasswordInvalidReason && (
                                 <Col xs='12'>
                                     <small className='text-danger'>
                                         {newPasswordInvalidReason}
@@ -309,7 +309,7 @@ export default class Settings extends React.Component {
                                 <input className='w-100 rounded-border' type='password' value={this.state.confirmNewPassword}
                                        onChange={this.setConfirmNewPassword} onKeyDown={this.changePasswordHandleKeyDown} />
                             </Col>
-                            {!this.state.confirmNewPasswordInvalidReason ? undefined : (
+                            {this.state.confirmNewPasswordInvalidReason && (
                                 <Col xs='12'>
                                     <small className='text-danger'>
                                         {this.state.confirmNewPasswordInvalidReason}
@@ -322,8 +322,8 @@ export default class Settings extends React.Component {
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.changePassword}
                             disabled={!this.enableChangePasswordButton()}>
-                        {this.state.showChangePasswordSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showChangePasswordSpinner ? 'sr-only' : undefined}>
+                        {this.state.showChangePasswordSpinner && <Spinner size='sm' />}
+                        <span className={this.state.showChangePasswordSpinner && 'sr-only'}>
                             Change Password
                         </span>
                     </Button>
@@ -343,8 +343,8 @@ export default class Settings extends React.Component {
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-danger' onClick={this.deleteAccount}>
-                        {this.state.showDeleteAccountSpinner ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showDeleteAccountSpinner ? 'sr-only' : undefined}>
+                        {this.state.showDeleteAccountSpinner && <Spinner size='sm' />}
+                        <span className={this.state.showDeleteAccountSpinner && 'sr-only'}>
                             <img src={WhiteDeleteIcon} className='mr-2 mb-1' alt='Permanently Delete Account icon'/>
                             Delete Account
                         </span>
@@ -355,7 +355,7 @@ export default class Settings extends React.Component {
     }
 
     render() {
-        return !this.state.loaded ? (<LoadingSpinner />) : (
+        return !this.state.loaded ? <LoadingSpinner /> : (
             <React.Fragment>
                 <Container fluid='lg'>
                     {getAlert(this)}
@@ -457,8 +457,8 @@ export default class Settings extends React.Component {
                     <div className='float-right mb-4'>
                         <Button className='btn-dark' size='lg' disabled={!this.enableSaveButton()}
                                 onClick={this.saveSettings}>
-                            {this.state.showSaveSettingsSpinner ? <Spinner /> : undefined}
-                            <span className={this.state.showSaveSettingsSpinner ? 'sr-only' : undefined}>
+                            {this.state.showSaveSettingsSpinner && <Spinner />}
+                            <span className={this.state.showSaveSettingsSpinner && 'sr-only'}>
                                 Save Settings
                             </span>
                         </Button>

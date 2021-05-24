@@ -2,7 +2,7 @@ const {Schema} = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
 const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
-const {deleteObject} = require("../aws/s3Utils");
+const {deleteObject} = require('../aws/s3Utils');
 const {
     storage: {s3: {streams, defaultStreamThumbnail}},
     validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}

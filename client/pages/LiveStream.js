@@ -316,7 +316,7 @@ export default class LiveStream extends React.Component {
                                 <table>
                                     <tbody>
                                         <tr>
-                                            {this.props.match.params.eventStageId ? undefined : (
+                                            {!this.props.match.params.eventStageId && (
                                                 <td valign='top'>
                                                     <Link to={`/user/${this.props.match.params.username.toLowerCase()}`}>
                                                         <img className='rounded-circle m-2' src={this.state.profilePicURL}
@@ -344,8 +344,8 @@ export default class LiveStream extends React.Component {
                                                 </h6>
                                                 <h6>
                                                     {this.state.viewCount} viewer{this.state.viewCount === 1 ? '' : 's'} · Started {this.state.streamStartTime}
-                                                    {!this.props.match.params.eventStageId ? '' : ' as part of '}
-                                                    {!this.props.match.params.eventStageId ? undefined : (
+                                                    {this.props.match.params.eventStageId && ' as part of '}
+                                                    {this.props.match.params.eventStageId && (
                                                         <Link to={`/event/${this.state.event._id}`}>
                                                             {this.state.event.eventName}
                                                         </Link>

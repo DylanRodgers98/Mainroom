@@ -232,11 +232,9 @@ export default class Events extends React.Component {
                         startTime: convertLocalToUTC(this.state.eventStartTime),
                         endTime: convertLocalToUTC(this.state.eventEndTime),
                         tags: this.state.eventTags,
-                        stages: this.state.stages.map(stage => {
-                            return {
-                                stageName: stage.stageName
-                            };
-                        })
+                        stages: this.state.stages.map(stage => ({
+                            stageName: stage.stageName
+                        }))
                     });
                 } catch (err) {
                     if (err.response.status === 403) {
@@ -311,12 +309,12 @@ export default class Events extends React.Component {
         return this.state.stages.map((stage, index) => (
             <Row className='mt-1' key={index}>
                 <Col xs='12'>Stage Name</Col>
-                <Col className={index === 0 ? undefined : 'remove-padding-r'} xs={index === 0 ? 12 : 11}>
+                <Col className={index !== 0 && 'remove-padding-r'} xs={index === 0 ? 12 : 11}>
                     <input className='rounded-border w-100' type='text' value={stage.stageName}
                            onChange={e => this.setStageName(e, index)}
                            maxLength={validation.eventStage.stageNameMaxLength}/>
                 </Col>
-                {index === 0 ? undefined : (
+                {index !== 0 && (
                     <Col className='remove-padding-l' xs='1'>
                         <a href='javascript:;' onClick={() => this.removeStage(index)}>
                             <img src={RemoveIcon} className='ml-2' alt='Remove Link icon'/>
@@ -334,14 +332,14 @@ export default class Events extends React.Component {
                                            withPreview={true} singleImage={true} withIcon={false}/>
                         </Suspense>
                     </details>
-                    {index === validation.event.stagesMaxAmount - 1 ? undefined : <hr className='my-2'/>}
+                    {index < validation.event.stagesMaxAmount - 1 && <hr className='my-2'/>}
                 </Col>
             </Row>
         ));
     }
 
     renderCreateEvent() {
-        return !this.state.createEventOpen ? undefined : (
+        return this.state.createEventOpen && (
             <Modal isOpen={this.state.createEventOpen} toggle={this.toggleCreateEvent} centered={true}>
                 <ModalHeader toggle={this.toggleCreateEvent}>
                     Create an Event
@@ -415,7 +413,7 @@ export default class Events extends React.Component {
                     <hr/>
                     <Container fluid className='remove-padding-lr'>
                         {this.renderCreateStages()}
-                        {this.state.stages.length === validation.event.stagesMaxAmount ? undefined : (
+                        {this.state.stages.length < validation.event.stagesMaxAmount && (
                             <Row className='mt-2'>
                                 <Col xs='12'>
                                     <Button className='btn-dark' size='sm' onClick={this.addStage}>
@@ -426,16 +424,15 @@ export default class Events extends React.Component {
                             </Row>
                         )}
                     </Container>
-                    {!this.state.showCreateEventSpinnerAndProgress ? undefined :
-                        <Progress className='mt-2' value={this.state.createEventProgress} />}
+                    {this.state.showCreateEventSpinnerAndProgress && <Progress className='mt-2' value={this.state.createEventProgress} />}
                     <Alert className='mt-4' isOpen={!!this.state.createEventErrorMessage} color='danger'>
                         {this.state.createEventErrorMessage}
                     </Alert>
                 </ModalBody>
                 <ModalFooter>
                     <Button className='btn-dark' onClick={this.createEvent}>
-                        {this.state.showCreateEventSpinnerAndProgress ? <Spinner size='sm' /> : undefined}
-                        <span className={this.state.showCreateEventSpinnerAndProgress ? 'sr-only' : undefined}>
+                        {this.state.showCreateEventSpinnerAndProgress && <Spinner size='sm' />}
+                        <span className={this.state.showCreateEventSpinnerAndProgress && 'sr-only'}>
                             Create Event
                         </span>
                     </Button>
@@ -456,7 +453,7 @@ export default class Events extends React.Component {
 
             return (
                 <Col className='stream margin-bottom-thick' key={index}>
-                    {isEventHappeningNow ? <span className='live-label'>LIVE</span> : undefined}
+                    {isEventHappeningNow && <span className='live-label'>LIVE</span>}
                     <Link to={`/event/${event._id}`}>
                         <img className='w-100' src={event.thumbnailURL} alt={`${event.eventName} Event Thumbnail`}/>
                     </Link>
@@ -498,11 +495,10 @@ export default class Events extends React.Component {
             </p>
         );
 
-        const loadMoreButton = !this.state.showLoadMoreButton ? undefined : (
+        const loadMoreButton = this.state.showLoadMoreButton && (
             <div className='text-center my-4'>
                 <Button className='btn-dark' onClick={this.getEvents}>
-                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : undefined}
-                    {this.state.showLoadMoreSpinner ? undefined : 'Load More'}
+                    {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : 'Load More'}
                 </Button>
             </div>
         );
@@ -523,7 +519,7 @@ export default class Events extends React.Component {
                         </Col>
                     </Row>
                     <hr className='my-4'/>
-                    {!this.state.loaded ? (<LoadingSpinner />) : (
+                    {!this.state.loaded ? <LoadingSpinner /> : (
                         <React.Fragment>
                             {eventBoxes}
                             {loadMoreButton}
