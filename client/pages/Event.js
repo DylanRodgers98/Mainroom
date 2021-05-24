@@ -102,7 +102,7 @@ export default class Event extends React.Component {
         this.addMessageToChat = this.addMessageToChat.bind(this);
         this.onVideoFileSelected = this.onVideoFileSelected.bind(this);
         this.cancelVideoUpload = this.cancelVideoUpload.bind(this);
-        this.toggleStageInfoModal = this.toggleStageInfoModal.bind(this);
+        this.toggleStageStreamKeysModal = this.toggleStageStreamKeysModal.bind(this);
 
         this.state = {
             eventName: '',
@@ -137,6 +137,7 @@ export default class Event extends React.Component {
             scheduleStages: [],
             genres: [],
             categories: [],
+            hasEventEnded: false,
             scheduleStreamModalOpen: false,
             stageDropdownOpen: false,
             genreDropdownOpen: false,
@@ -205,8 +206,11 @@ export default class Event extends React.Component {
             const startTime = convertUTCToLocal(res.data.startTime);
             const endTime = convertUTCToLocal(res.data.endTime);
             const scheduleStreamEndTime = moment(startTime).add(1, 'hour');
+
+            const timeNow = moment();
+            const hasEventEnded = timeNow.isSameOrAfter(endTime);
             const isChatActive = isTimeBetween({
-                time: moment(),
+                time: timeNow,
                 start: moment(startTime).subtract(1, 'hour'),
                 end: moment(endTime).add(1, 'hour')
             });
@@ -226,6 +230,7 @@ export default class Event extends React.Component {
                 numOfSubscribers: res.data.numOfSubscribers,
                 rtmpServerURL: res.data.rtmpServerURL,
                 socketIOURL: res.data.socketIOURL,
+                hasEventEnded,
                 isChatActive
             }, () => {
                 if (this.state.isChatActive && !this.socket) {
@@ -884,11 +889,12 @@ export default class Event extends React.Component {
             </Col>
         ));
 
-        const stageInfoButton = this.state.loggedInUser && this.state.loggedInUser._id && this.state.loggedInUser._id === this.state.createdBy._id && (
+        const streamKeysButton = this.state.loggedInUser && this.state.loggedInUser._id
+            && this.state.loggedInUser._id === this.state.createdBy._id && !this.state.hasEventEnded (
             <Row>
                 <Col>
                     <div className='float-right'>
-                        <Button className='btn-dark mb-2' onClick={this.toggleStageInfoModal} size='sm'>
+                        <Button className='btn-dark mb-2' onClick={this.toggleStageStreamKeysModal} size='sm'>
                             <img src={GoLiveIcon} className='mr-1' alt='Stage Info and Stream Keys icon'/>
                             Stage Stream Keys
                         </Button>
@@ -899,7 +905,7 @@ export default class Event extends React.Component {
 
         return (
             <React.Fragment>
-                {stageInfoButton}
+                {streamKeysButton}
                 <Row xs='1' sm='1' md='2' lg='3' xl='3'>
                     {stages}
                 </Row>
@@ -992,6 +998,12 @@ export default class Event extends React.Component {
     }
 
     toggleScheduleStreamModal() {
+        if (!this.state.scheduleStreamModalOpen && moment().isSameOrAfter(this.state.endTime)) {
+            return this.setState({
+                hasEventEnded: true
+            });
+        }
+
         this.setState(prevState => ({
             scheduleStreamModalOpen: !prevState.scheduleStreamModalOpen
         }), () => {
@@ -1320,7 +1332,12 @@ export default class Event extends React.Component {
         }
     }
 
-    toggleStageInfoModal() {
+    toggleStageStreamKeysModal() {
+        if (!this.state.stageInfoModalOpen && moment().isSameOrAfter(this.state.endTime)) {
+            return this.setState({
+                hasEventEnded: true
+            });
+        }
         this.setState(prevState => ({
             stageInfoModalOpen: !prevState.stageInfoModalOpen
         }));
@@ -1332,7 +1349,7 @@ export default class Event extends React.Component {
         displaySuccessMessage(this, 'Copied to clipboard');
     }
 
-    renderStageInfoModal() {
+    renderStageStreamKeysModal() {
         if (!this.state.stageInfoModalOpen) {
             return undefined;
         }
@@ -1354,8 +1371,8 @@ export default class Event extends React.Component {
         ));
 
         return (
-            <Modal isOpen={this.state.stageInfoModalOpen} toggle={this.toggleStageInfoModal} centered={true}>
-                <ModalHeader toggle={this.toggleStageInfoModal}>
+            <Modal isOpen={this.state.stageInfoModalOpen} toggle={this.toggleStageStreamKeysModal} centered={true}>
+                <ModalHeader toggle={this.toggleStageStreamKeysModal}>
                     Stage Stream Keys
                 </ModalHeader>
                 <ModalBody>
@@ -1533,7 +1550,8 @@ export default class Event extends React.Component {
         ) : (
             <Row className='mt-4'>
                 <Col>
-                    {this.state.loggedInUser && this.state.loggedInUser._id && this.state.loggedInUser._id === this.state.createdBy._id && (
+                    {this.state.loggedInUser && this.state.loggedInUser._id
+                    && this.state.loggedInUser._id === this.state.createdBy._id && !this.state.hasEventEnded && (
                         <div className='float-left mb-2'>
                             <Button className='btn-dark' size='sm' onClick={this.toggleScheduleStreamModal}>
                                 <img src={PlusIcon} width={22} height={22} className='mr-1'
@@ -1791,7 +1809,7 @@ export default class Event extends React.Component {
                 {this.renderDeleteEventModal()}
                 {this.renderSelectedScheduledStream()}
                 {this.renderScheduleStreamModal()}
-                {this.renderStageInfoModal()}
+                {this.renderStageStreamKeysModal()}
             </React.Fragment>
         );
     }
