@@ -31,6 +31,21 @@ ScheduledStreamSchema.methods.getPrerecordedVideoFileURL = function () {
         });
 };
 
+ScheduledStreamSchema.methods.deletePrerecordedVideo = async function () {
+    if (!this.prerecordedVideoFile || !this.prerecordedVideoFile.bucket || !this.prerecordedVideoFile.key) {
+        return;
+    }
+
+    await deletePrerecordedVideo(this);
+    this.prerecordedVideoFile = undefined;
+    try {
+        await this.save();
+    } catch (err) {
+        LOGGER.error('An error occurred when saving ScheduledStream (_id: {}). Error: {}', this._id, err.stack);
+        await snsErrorPublisher.publish(err);
+    }
+}
+
 ScheduledStreamSchema.pre('findOneAndDelete', async function() {
     const scheduledStream = await this.model.findOne(this.getQuery());
     if (scheduledStream) {

@@ -12,18 +12,42 @@ const job = new CronJob(cronTime.expiredScheduledStreamsRemover, async () => {
 
     try {
         const expiryTime = Date.now() - storage.scheduledStream.ttl;
-        const streams = await ScheduledStream.find({endTime: {$lte: expiryTime}}).select('_id').exec();
+        const streams = await ScheduledStream.find({endTime: {$lte: expiryTime}})
+            .select('_id eventStage prerecordedVideoFile')
+            .exec();
 
         if (streams.length) {
-            LOGGER.info('Deleting {} ScheduledStream{} from database that finished before {}',
-                streams.length, streams.length === 1 ? '' : 's', expiryTime);
-
+            let numVideosToDelete = 0;
+            let numDocsToDelete = 0;
             const promises = [];
+
             streams.forEach(stream => {
-                const pullReferences = User.updateMany({nonSubscribedScheduledStreams: stream._id}, {$pull: {nonSubscribedScheduledStreams: stream._id}});
-                const deleteStream = ScheduledStream.findByIdAndDelete(stream._id);
-                promises.push(pullReferences, deleteStream);
+                if (stream.eventStage) {
+                    if (stream.prerecordedVideoFile) {
+                        // Do not delete ScheduledStreams from database that were scheduled as part of an event,
+                        // just delete their prerecorded videos from S3, if they have any.
+                        numVideosToDelete++;
+                        promises.push(stream.deletePrerecordedVideo());
+                    }
+                } else {
+                    numDocsToDelete++;
+                    if (stream.prerecordedVideoFile) {
+                        numVideosToDelete++;
+                    }
+
+                    const pullReferences = User.updateMany(
+                        {nonSubscribedScheduledStreams: stream._id},
+                        {$pull: {nonSubscribedScheduledStreams: stream._id}}
+                    );
+                    const deleteStream = ScheduledStream.findByIdAndDelete(stream._id);
+                    promises.push(pullReferences, deleteStream);
+                }
             });
+
+            LOGGER.info('Deleting {} ScheduledStream{} from database, and {} prerecorded video files from S3, ' +
+                'for scheduled streams that finished before {}',
+                numDocsToDelete.length, numDocsToDelete.length === 1 ? '' : 's',
+                numVideosToDelete, numVideosToDelete === 1 ? '' : 's', expiryTime);
 
             const promiseResults = await Promise.allSettled(promises);
             const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
