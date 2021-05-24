@@ -25,7 +25,7 @@ import {
     convertLocalToUTC,
     convertUTCToLocal, formatDate,
     formatDateRange,
-    getDurationTimestamp,
+    getDurationTimestamp, isTimeBetween,
     timeSince
 } from '../utils/dateUtils';
 import ViewersIcon from '../icons/eye.svg';
@@ -158,6 +158,7 @@ export default class Event extends React.Component {
             showAddToScheduleSpinner: false,
             addToScheduleErrorMessage: '',
             rtmpServerURL: '',
+            isChatActive: false,
             socketIOURL: '',
             chat: [],
             unreadChatMessages: 0,
@@ -199,10 +200,17 @@ export default class Event extends React.Component {
     async getEventData() {
         try {
             const res = await axios.get(`/api/events/${this.props.match.params.eventId}`);
+
             document.title = `${res.data.eventName} - ${siteName}`;
             const startTime = convertUTCToLocal(res.data.startTime);
             const endTime = convertUTCToLocal(res.data.endTime);
             const scheduleStreamEndTime = moment(startTime).add(1, 'hour');
+            const isChatActive = isTimeBetween({
+                time: moment(),
+                start: moment(startTime).subtract(1, 'hour'),
+                end: moment(endTime).add(1, 'hour')
+            });
+
             this.setState({
                 eventName: res.data.eventName,
                 createdBy: res.data.createdBy,
@@ -217,9 +225,10 @@ export default class Event extends React.Component {
                 stages: res.data.stages,
                 numOfSubscribers: res.data.numOfSubscribers,
                 rtmpServerURL: res.data.rtmpServerURL,
-                socketIOURL: res.data.socketIOURL
+                socketIOURL: res.data.socketIOURL,
+                isChatActive
             }, () => {
-                if (!this.socket) {
+                if (this.state.isChatActive && !this.socket) {
                     this.connectToSocketIO();
                 }
             });
@@ -1425,10 +1434,10 @@ export default class Event extends React.Component {
                                     <summary>Upload Prerecorded Stream <i>(optional)</i></summary>
                                     <input id='videoFileInput' className='mt-1' type='file' accept='video/*'
                                            onChange={this.onVideoFileSelected}/>
-                                    {this.state.selectedVideoFileDuration && (
+                                    {this.state.selectedVideoFileDuration > 0 && (
                                         <div><i>Duration: {getDurationTimestamp(this.state.selectedVideoFileDuration)}</i></div>
                                     )}
-                                    {this.state.selectedVideoFileSize && (
+                                    {this.state.selectedVideoFileSize > 0 && (
                                         <div><i>File Size: {shortenFileSize(this.state.selectedVideoFileSize)}</i></div>
                                     )}
                                 </details>
@@ -1749,12 +1758,14 @@ export default class Event extends React.Component {
                                 Schedule
                             </NavLink>
                         </NavItem>
-                        <NavItem>
-                            <NavLink className={this.state.activeTab === CHAT_TAB_ID ? 'active active-tab-nav-link' : 'tab-nav-link'}
-                                     onClick={this.toggleChatTab}>
-                                Chat {this.state.unreadChatMessages ? <i>({this.state.unreadChatMessages} unread)</i> : undefined}
-                            </NavLink>
-                        </NavItem>
+                        {this.state.isChatActive && (
+                            <NavItem>
+                                <NavLink className={this.state.activeTab === CHAT_TAB_ID ? 'active active-tab-nav-link' : 'tab-nav-link'}
+                                         onClick={this.toggleChatTab}>
+                                    Chat {this.state.unreadChatMessages > 0 && <i>({this.state.unreadChatMessages} unread)</i>}
+                                </NavLink>
+                            </NavItem>
+                        )}
                     </Nav>
                     <ReactHeight className='h-100' onHeightReady={height => this.setChatHeight(height)}>
                         <TabContent activeTab={this.state.activeTab} className='h-100'>
@@ -1767,9 +1778,11 @@ export default class Event extends React.Component {
                             <TabPane tabId={SCHEDULE_TAB_ID}>
                                 {this.renderSchedule()}
                             </TabPane>
-                            <TabPane tabId={CHAT_TAB_ID} className='h-100'>
-                                {this.renderChat()}
-                            </TabPane>
+                            {this.state.isChatActive && (
+                                <TabPane tabId={CHAT_TAB_ID} className='h-100'>
+                                    {this.renderChat()}
+                                </TabPane>
+                            )}
                         </TabContent>
                     </ReactHeight>
                 </Container>

@@ -63,9 +63,10 @@ export const formatDateRange = ({start, end}) => {
 }
 
 export const isTimeBetween = ({time, start, end}) => {
+    const localTime = convertUTCToLocal(time);
     const startTime = convertUTCToLocal(start);
     const endTime = convertUTCToLocal(end);
-    return moment(time).isBetween(startTime, endTime, undefined, '[]');
+    return moment(localTime).isBetween(startTime, endTime, undefined, '[]');
 }
 
 export const getDurationTimestamp = seconds => {
