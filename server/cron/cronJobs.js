@@ -5,7 +5,8 @@ const cronJobs = [
     require('./upcomingScheduledStreamEmailer'),
     require('./createdScheduledStreamsEmailer'),
     require('./newSubscribersEmailer'),
-    require('./expiredScheduledStreamsRemover')
+    require('./expiredScheduledStreamsRemover'),
+    require('./eventChatManager')
 ];
 
 module.exports.startAll = () => {

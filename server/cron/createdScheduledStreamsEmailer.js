@@ -7,7 +7,7 @@ const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
 const LOGGER = require('../../logger')('./server/cron/createdScheduledStreamsEmailer.js');
 
-const jobName = 'Subscription-created Scheduled Streams Emailer'
+const jobName = 'Subscription-created Scheduled Streams Emailer';
 
 let lastTimeTriggered = Date.now();
 

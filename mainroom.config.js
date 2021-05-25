@@ -96,7 +96,8 @@ module.exports = {
         upcomingScheduledStreamEmailer: CRON_EVERY_MINUTE,
         createdScheduledStreamsEmailer: CRON_EVERY_HOUR,
         newSubscribersEmailer: CRON_EVERY_HOUR,
-        expiredScheduledStreamsRemover: CRON_EVERY_HOUR
+        expiredScheduledStreamsRemover: CRON_EVERY_HOUR,
+        eventChatManager: CRON_EVERY_MINUTE
     },
     storage: {
         thumbnails: {

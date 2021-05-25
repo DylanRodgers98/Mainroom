@@ -100,6 +100,9 @@ export default class Event extends React.Component {
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.onMessageSubmit = this.onMessageSubmit.bind(this);
         this.addMessageToChat = this.addMessageToChat.bind(this);
+        this.addAlertToChat = this.addAlertToChat.bind(this);
+        this.openChat = this.openChat.bind(this);
+        this.closeChat = this.closeChat.bind(this);
         this.onVideoFileSelected = this.onVideoFileSelected.bind(this);
         this.cancelVideoUpload = this.cancelVideoUpload.bind(this);
         this.toggleStageStreamKeysModal = this.toggleStageStreamKeysModal.bind(this);
@@ -233,7 +236,7 @@ export default class Event extends React.Component {
                 hasEventEnded,
                 isChatActive
             }, () => {
-                if (this.state.isChatActive && !this.socket) {
+                if (!this.socket) {
                     this.connectToSocketIO();
                 }
             });
@@ -323,6 +326,9 @@ export default class Event extends React.Component {
     connectToSocketIO() {
         this.socket = io(this.state.socketIOURL, {transports: [ 'websocket' ]});
         this.socket.on(`chatMessage_${this.props.match.params.eventId}`, this.addMessageToChat);
+        this.socket.on(`chatAlert_${this.props.match.params.eventId}`, this.addAlertToChat);
+        this.socket.on(`chatOpened_${this.props.match.params.eventId}`, this.openChat);
+        this.socket.on(`chatClosed_${this.props.match.params.eventId}`, this.closeChat);
     }
 
     componentWillUnmount() {
@@ -332,12 +338,20 @@ export default class Event extends React.Component {
         }
     }
 
+    openChat() {
+        this.setState({isChatActive: true});
+    }
+
+    closeChat() {
+        this.setState({isChatActive: false});
+    }
+
     addMessageToChat({sender, msg}) {
         const displayName = this.state.loggedInUser && sender.username === this.state.loggedInUser.username
             ? <b>You:</b>
             : (sender.displayName || sender.username) + ':';
 
-        const chatMessage = (
+        this.addToChat(
             <div className='ml-1' key={this.state.chat.length}>
                 <span className='black-link' title={`Go to ${sender.displayName || sender.username}'s profile`}>
                     <Link to={`/user/${sender.username}`}>
@@ -350,7 +364,17 @@ export default class Event extends React.Component {
                 <span>{msg}</span>
             </div>
         );
+    }
 
+    addAlertToChat(alert) {
+        this.addToChat(
+            <div className='text-center' key={this.state.chat.length}>
+                <span style={{color: "red"}}>{alert}</span>
+            </div>
+        );
+    }
+
+    addToChat(chatMessage) {
         let unreadChatMessages = this.state.unreadChatMessages;
         if (this.state.activeTab !== CHAT_TAB_ID && unreadChatMessages !== '99+') {
             unreadChatMessages++;

@@ -27,9 +27,12 @@ class WebSocketServer {
                 const bus = await launchPm2MessageBus();
                 LOGGER.debug('pm2 message bus started');
                 bus.on('liveStreamViewCount', ({data}) => emitLiveStreamViewCount(this.io, data));
-                bus.on('chatMessage', ({data}) => emitOnChatMessage(this.io, data));
-                bus.on('streamStarted', ({data}) => emitOnWentLive(this.io, data));
-                bus.on('streamEnded', ({data}) => emitOnStreamEnded(this.io, data));
+                bus.on('chatMessage', ({data}) => emitChatMessage(this.io, data));
+                bus.on('chatAlert', ({data}) => emitOnChatAlert(this.io, data));
+                bus.on('chatOpened', ({data}) => emitChatOpened(this.io, data));
+                bus.on('chatClosed', ({data}) => emitChatClosed(this.io, data));
+                bus.on('streamStarted', ({data}) => emitStreamStarted(this.io, data));
+                bus.on('streamEnded', ({data}) => emitStreamEnded(this.io, data));
                 bus.on('streamInfoUpdated', ({data}) => emitStreamInfoUpdated(this.io, data));
             } catch (err) {
                 LOGGER.error('An error occurred when launching pm2 message bus: {}', err.stack);
@@ -42,15 +45,27 @@ class WebSocketServer {
             });
 
             mainroomEventBus.on('chatMessage', chatMessageData => {
-                emitOnChatMessage(this.io, chatMessageData);
+                emitChatMessage(this.io, chatMessageData);
+            });
+
+            mainroomEventBus.on('chatAlert', alertData => {
+                emitOnChatAlert(this.io, alertData)
+            });
+
+            mainroomEventBus.on('chatOpened', streamer => {
+                emitChatOpened(this.io, streamer)
+            });
+
+            mainroomEventBus.on('chatClosed', streamer => {
+                emitChatClosed(this.io, streamer)
             });
 
             mainroomEventBus.on('streamStarted', streamer => {
-                emitOnWentLive(this.io, streamer);
+                emitStreamStarted(this.io, streamer);
             });
 
             mainroomEventBus.on('streamEnded', streamer => {
-                emitOnStreamEnded(this.io, streamer);
+                emitStreamEnded(this.io, streamer);
             });
 
             mainroomEventBus.on('streamInfoUpdated', streamInfo => {
@@ -138,18 +153,33 @@ function emitLiveStreamViewCount(io, {streamer, viewCount}) {
     io.emit(`liveStreamViewCount_${streamer}`, viewCount);
 }
 
-function emitOnChatMessage(io, {recipient, sender, msg}) {
+function emitChatMessage(io, {recipient, sender, msg}) {
     const args = {sender, msg};
     LOGGER.debug(`Emitting "chatMessage_{}" event with args "{}" using socket.io`, recipient, JSON.stringify(args));
     io.emit(`chatMessage_${recipient}`, args);
 }
 
-function emitOnWentLive(io, streamer) {
+function emitOnChatAlert(io, {recipient, alert}) {
+    LOGGER.debug(`Emitting "chatAlert_{}" event with args "{}" using socket.io`, recipient, alert);
+    io.emit(`chatAlert_${recipient}`, alert);
+}
+
+function emitChatOpened(io, streamer) {
+    LOGGER.debug(`Emitting "chatOpened_{}" event using socket.io`, streamer);
+    io.emit(`chatOpened_${streamer}`);
+}
+
+function emitChatClosed(io, streamer) {
+    LOGGER.debug(`Emitting "chatClosed_{}" event using socket.io`, streamer);
+    io.emit(`chatClosed_${streamer}`);
+}
+
+function emitStreamStarted(io, streamer) {
     LOGGER.debug(`Emitting "streamStarted_{}" event using socket.io`, streamer);
     io.emit(`streamStarted_${streamer}`);
 }
 
-function emitOnStreamEnded(io, streamer) {
+function emitStreamEnded(io, streamer) {
     LOGGER.debug(`Emitting "streamEnded_{}" event using socket.io`, streamer);
     io.emit(`streamEnded_${streamer}`);
 }
