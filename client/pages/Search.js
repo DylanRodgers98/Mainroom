@@ -424,7 +424,7 @@ export default class LiveStreams extends React.Component {
             </div>
         );
 
-        return pastStreams.length && (
+        return pastStreams.length > 0 && (
             <React.Fragment>
                 <h5>Past Streams</h5>
                 <hr className='my-4'/>
@@ -488,7 +488,7 @@ export default class LiveStreams extends React.Component {
             </div>
         );
 
-        return events.length && (
+        return events.length > 0 && (
             <React.Fragment>
                 <h5>Events</h5>
                 <hr className='my-4'/>
@@ -521,7 +521,7 @@ export default class LiveStreams extends React.Component {
             </div>
         );
 
-        return users.length && (
+        return users.length > 0 && (
             <React.Fragment>
                 <h5>Users</h5>
                 <hr className='my-4'/>

@@ -684,7 +684,7 @@ export default class UserProfile extends React.Component {
     }
 
     renderEditLinks() {
-        const headers = this.state.editLinks.length && (
+        const headers = this.state.editLinks.length > 0 && (
             <Row>
                 <Col className='remove-padding-r' xs='4' lg='4'>Title:</Col>
                 <Col className='remove-padding-l ml-1' xs='6' lg='7'>URL:</Col>

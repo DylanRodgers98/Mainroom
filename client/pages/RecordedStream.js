@@ -180,7 +180,7 @@ export default class RecordedStream extends React.Component {
             );
         });
 
-        const loadMoreButton = this.state.showLoadMoreButton && recordedStreams.length && (
+        const loadMoreButton = this.state.showLoadMoreButton && recordedStreams.length > 0 && (
             <div className='text-center my-2'>
                 <Button className='btn-dark' onClick={this.getRecordedStreams}>
                     {this.state.showLoadMoreSpinner ? <Spinner size='sm' /> : 'Load More'}

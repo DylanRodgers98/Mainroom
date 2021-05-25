@@ -140,7 +140,7 @@ export default class Home extends React.Component {
             });
         });
 
-        return this.state.featuredLiveStreams.length && (
+        return this.state.featuredLiveStreams.length > 0 && (
             <React.Fragment>
                 {this.renderLiveStreams('Featured', this.state.featuredLiveStreams)}
                 {this.state.showLoadMoreFeaturedButton && loadMoreButton}
@@ -156,7 +156,7 @@ export default class Home extends React.Component {
             });
         });
 
-        return this.state.subscriptionLiveStreams.length && (
+        return this.state.subscriptionLiveStreams.length > 0 && (
             <React.Fragment>
                 {this.renderLiveStreams('Subscriptions', this.state.subscriptionLiveStreams)}
                 {this.state.showLoadMoreSubscriptionsButton && loadMoreButton}
@@ -242,7 +242,7 @@ export default class Home extends React.Component {
             </Col>
         ));
 
-        return streamBoxes.length && (
+        return streamBoxes.length > 0 && (
             <React.Fragment>
                 <Row>
                     <Col>
