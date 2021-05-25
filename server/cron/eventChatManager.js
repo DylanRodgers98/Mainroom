@@ -47,6 +47,7 @@ async function openChats(thisTimeTriggered) {
         throw err;
     }
 
+    LOGGER.debug('Opening chat for {} event{}', eventChatsToOpen.length, eventChatsToOpen.length === 1 ? '' : 's');
     eventChatsToOpen.forEach(event => mainroomEventBus.send('chatOpened', event._id));
 }
 
@@ -64,6 +65,7 @@ async function closeChats(thisTimeTriggered) {
         throw err;
     }
 
+    LOGGER.debug('Closing chat for {} event{}', eventChatsToClose.length, eventChatsToClose.length === 1 ? '' : 's');
     eventChatsToClose.forEach(event => mainroomEventBus.send('chatClosed', event._id));
 }
 
@@ -91,6 +93,9 @@ async function sendClosureAlert(thisTimeTriggered, minutesUntilClose) {
     };
 
     const eventsToAlert = await Event.find(alertFilter).select('_id').exec();
+
+    LOGGER.debug('Alerting {} event chat{} about closure in {} minute{}', eventsToAlert.length,
+        eventsToAlert.length === 1 ? '' : 's', minutesUntilClose, minutesUntilClose === 1 ? '' : 's');
 
     eventsToAlert.forEach(event => {
         mainroomEventBus.send('chatAlert', {

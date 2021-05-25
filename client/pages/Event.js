@@ -914,7 +914,7 @@ export default class Event extends React.Component {
         ));
 
         const streamKeysButton = this.state.loggedInUser && this.state.loggedInUser._id
-            && this.state.loggedInUser._id === this.state.createdBy._id && !this.state.hasEventEnded (
+            && this.state.loggedInUser._id === this.state.createdBy._id && !this.state.hasEventEnded && (
             <Row>
                 <Col>
                     <div className='float-right'>
@@ -1575,7 +1575,7 @@ export default class Event extends React.Component {
             <Row className='mt-4'>
                 <Col>
                     {this.state.loggedInUser && this.state.loggedInUser._id
-                    && this.state.loggedInUser._id === this.state.createdBy._id && !this.state.hasEventEnded && (
+                    && (this.state.loggedInUser._id === this.state.createdBy._id) && !this.state.hasEventEnded && (
                         <div className='float-left mb-2'>
                             <Button className='btn-dark' size='sm' onClick={this.toggleScheduleStreamModal}>
                                 <img src={PlusIcon} width={22} height={22} className='mr-1'
