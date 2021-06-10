@@ -530,7 +530,7 @@ export default class ManageRecordedStreams extends React.Component {
                 {recordedStreams.length ? recordedStreams : (
                     <Row>
                         <Col>
-                            <p>You have no recorded streams. Go live and we will record the stream for you!</p>
+                            <p>You have no recorded streams. <Link to={'/go-live'}>Go live</Link> and we will record the stream for you!</p>
                         </Col>
                     </Row>
                 )}
