@@ -4,11 +4,24 @@ const EVENT = 'testEvent';
 const ARGS = {
     foo: 'bar'
 };
+const FAIL_ARGS = {
+    fail: true
+};
 
-const mockSendDataToProcessId = jest.fn((id, packet, cb) => {});
+const ERROR = new Error();
+
+const mockPm2SendDataToProcessId = jest.fn((id, packet, cb) => {
+    cb(packet.data === FAIL_ARGS ? ERROR : undefined);
+});
+
+const mockSnsErrorPublisherPublish = jest.fn();
 
 jest.mock('pm2', () => ({
-    sendDataToProcessId: mockSendDataToProcessId
+    sendDataToProcessId: mockPm2SendDataToProcessId
+}));
+
+jest.mock('../../server/aws/snsErrorPublisher', () => ({
+    publish: mockSnsErrorPublisherPublish
 }));
 
 beforeEach(() => {
@@ -24,7 +37,7 @@ describe('mainroomEventBus', () => {
                 // when
                 mainroomEventBus.send(EVENT, ARGS);
                 // then
-                const packet = mockSendDataToProcessId.mock.calls[0][1];
+                const packet = mockPm2SendDataToProcessId.mock.calls[0][1];
                 const event = packet.type;
                 const args = packet.data;
                 expect(event).toEqual(EVENT);
@@ -41,7 +54,7 @@ describe('mainroomEventBus', () => {
                 mainroomEventBus.send(EVENT, ARGS);
                 // then
                 expect(spy).toHaveBeenCalledWith(EVENT, ARGS);
-                expect(mockSendDataToProcessId).not.toHaveBeenCalled();
+                expect(mockPm2SendDataToProcessId).not.toHaveBeenCalled();
             });
         });
     });
@@ -50,18 +63,35 @@ describe('mainroomEventBus', () => {
         it('should send event to pm2 God process when NODE_ENV is set to production', () => {
             overrideEnvironmentVariables({NODE_ENV: 'production'}).andDo(() => {
                 // given
-                process.env.NODE_ENV = 'production';
                 const mainroomEventBus = require('../../server/mainroomEventBus');
                 const spy = spyOn(mainroomEventBus, 'emit');
                 // when
                 mainroomEventBus.sendToGodProcess(EVENT, ARGS);
                 // then
-                const packet = mockSendDataToProcessId.mock.calls[0][1];
+                const packet = mockPm2SendDataToProcessId.mock.calls[0][1];
                 const event = packet.type;
                 const args = packet.data;
                 expect(event).toEqual(EVENT);
                 expect(args).toEqual(ARGS);
                 expect(spy).not.toHaveBeenCalled();
+            });
+        });
+
+        it('should publish error to SNS when an event fails to send to pm2 God process', () => {
+            overrideEnvironmentVariables({NODE_ENV: 'production'}).andDo(() => {
+                // given
+                const mainroomEventBus = require('../../server/mainroomEventBus');
+                const spy = spyOn(mainroomEventBus, 'emit');
+                // when
+                mainroomEventBus.sendToGodProcess(EVENT, FAIL_ARGS);
+                // then
+                const packet = mockPm2SendDataToProcessId.mock.calls[0][1];
+                const event = packet.type;
+                const args = packet.data;
+                expect(event).toEqual(EVENT);
+                expect(args).toEqual(FAIL_ARGS);
+                expect(spy).not.toHaveBeenCalled();
+                expect(mockSnsErrorPublisherPublish).toHaveBeenCalledWith(ERROR);
             });
         });
 
@@ -72,7 +102,7 @@ describe('mainroomEventBus', () => {
                 // when
                 mainroomEventBus.sendToGodProcess(EVENT, ARGS);
                 // then
-                expect(mockSendDataToProcessId).not.toHaveBeenCalled();
+                expect(mockPm2SendDataToProcessId).not.toHaveBeenCalled();
                 expect(spy).not.toHaveBeenCalled();
             });
         });
