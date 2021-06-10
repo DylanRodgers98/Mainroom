@@ -67,9 +67,9 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, async () => {
         LOGGER.info('No streams found starting between {} and {}, so nothing to update',
             lastTimeTriggered, thisTimeTriggered);
     } else {
-        const possessionSuffix = streams.length === 1 ? `'s` : `s'`;
-        LOGGER.info('Updating {} user{}/stage{} stream info from scheduled streams',
-            streams.length, possessionSuffix, possessionSuffix);
+        const pluralSuffix = streams.length === 1 ? '' : `s`;
+        LOGGER.info('Updating stream info for {} user{}/stage{} from scheduled streams',
+            streams.length, pluralSuffix, pluralSuffix);
 
         const promises = [];
 
@@ -116,8 +116,8 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, async () => {
             return await snsErrorPublisher.publish(err);
         }
 
-        LOGGER.info(`Successfully updated {}/{} user{}/stage{} stream info from scheduled streams`,
-            promiseResults.length, streams.length, possessionSuffix, possessionSuffix);
+        LOGGER.info(`Successfully updated stream info for {} out of {} user{}/stage{} from scheduled streams`,
+            promiseResults.length, streams.length, pluralSuffix, pluralSuffix);
     }
 
     lastTimeTriggered = thisTimeTriggered;
