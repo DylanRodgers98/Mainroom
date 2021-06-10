@@ -1,12 +1,10 @@
 module.exports.sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-module.exports.overrideEnvironmentVariables = overrides => {
-    return {
-        andDo: testCallback => overrideEnvVarsAndDo(overrides, testCallback)
-    };
-}
+module.exports.overrideEnvironmentVariables = overrides => ({
+    andDo: async testCallback => await overrideEnvVarsAndDo(overrides, testCallback)
+});
 
-function overrideEnvVarsAndDo(overrides, testCallback) {
+async function overrideEnvVarsAndDo(overrides, testCallback) {
     const originalEnvVars = new Map();
 
     Object.entries(overrides).forEach(entry => {
@@ -19,7 +17,7 @@ function overrideEnvVarsAndDo(overrides, testCallback) {
         process.env[key] = value;
     });
 
-    testCallback();
+    await testCallback();
 
     originalEnvVars.forEach((value, key) => {
         process.env[key] = value;

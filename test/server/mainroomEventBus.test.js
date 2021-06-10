@@ -30,8 +30,8 @@ beforeEach(() => {
 
 describe('mainroomEventBus', () => {
     describe('send', () => {
-        it('should send event to pm2 God process when NODE_ENV is set to production', () => {
-            overrideEnvironmentVariables({NODE_ENV: 'production'}).andDo(() => {
+        it('should send event to pm2 God process when NODE_ENV is set to production', async () => {
+            await overrideEnvironmentVariables({NODE_ENV: 'production'}).andDo(() => {
                 const mainroomEventBus = require('../../server/mainroomEventBus');
                 const spy = spyOn(mainroomEventBus, 'emit');
                 // when
@@ -46,8 +46,8 @@ describe('mainroomEventBus', () => {
             });
         });
 
-        it('should emit event using EventEmitter when NODE_ENV is not set to production', () => {
-            overrideEnvironmentVariables({NODE_ENV: 'development'}).andDo(() => {
+        it('should emit event using EventEmitter when NODE_ENV is not set to production', async () => {
+            await overrideEnvironmentVariables({NODE_ENV: 'development'}).andDo(() => {
                 const mainroomEventBus = require('../../server/mainroomEventBus');
                 const spy = spyOn(mainroomEventBus, 'emit');
                 // when
@@ -60,8 +60,8 @@ describe('mainroomEventBus', () => {
     });
 
     describe('sendToGodProcess', () => {
-        it('should send event to pm2 God process when NODE_ENV is set to production', () => {
-            overrideEnvironmentVariables({NODE_ENV: 'production'}).andDo(() => {
+        it('should send event to pm2 God process when NODE_ENV is set to production', async () => {
+            await overrideEnvironmentVariables({NODE_ENV: 'production'}).andDo(() => {
                 // given
                 const mainroomEventBus = require('../../server/mainroomEventBus');
                 const spy = spyOn(mainroomEventBus, 'emit');
@@ -77,8 +77,8 @@ describe('mainroomEventBus', () => {
             });
         });
 
-        it('should publish error to SNS when an event fails to send to pm2 God process', () => {
-            overrideEnvironmentVariables({NODE_ENV: 'production'}).andDo(() => {
+        it('should publish error to SNS when an event fails to send to pm2 God process', async () => {
+            await overrideEnvironmentVariables({NODE_ENV: 'production'}).andDo(() => {
                 // given
                 const mainroomEventBus = require('../../server/mainroomEventBus');
                 const spy = spyOn(mainroomEventBus, 'emit');
@@ -95,8 +95,8 @@ describe('mainroomEventBus', () => {
             });
         });
 
-        it('should not send event to pm2 God process when NODE_ENV is not set to production', () => {
-            overrideEnvironmentVariables({NODE_ENV: 'development'}).andDo(() => {
+        it('should not send event to pm2 God process when NODE_ENV is not set to production', async () => {
+            await overrideEnvironmentVariables({NODE_ENV: 'development'}).andDo(() => {
                 const mainroomEventBus = require('../../server/mainroomEventBus');
                 const spy = spyOn(mainroomEventBus, 'emit');
                 // when
