@@ -377,9 +377,9 @@ router.patch('/:eventId/thumbnail', loginChecker.ensureLoggedIn(), async (req, r
         }
         try {
             const promises = [];
-            // delete old profile pic if not default
-            if (event.thumbnail.bucket !== s3.defaultEventThumbnail.bucket
-                && event.thumbnail.key !== s3.defaultEventThumbnail.key) {
+            // delete old thumbnail if not default
+            if (!(event.thumbnail.bucket === s3.defaultEventThumbnail.bucket
+                && event.thumbnail.key === s3.defaultEventThumbnail.key)) {
                 promises.push(deleteObject({
                     Bucket: event.thumbnail.bucket,
                     Key: event.thumbnail.key
@@ -452,9 +452,9 @@ router.patch('/:eventId/stage/:eventStageId/splash-thumbnail', loginChecker.ensu
         }
         try {
             const promises = [];
-            // delete old profile pic if not default
-            if (eventStage.splashThumbnail.bucket !== s3.defaultEventStageSplashThumbnail.bucket
-                && eventStage.splashThumbnail.key !== s3.defaultEventStageSplashThumbnail.key) {
+            // delete old splash thumbnail if not default
+            if (!(eventStage.splashThumbnail.bucket === s3.defaultEventStageSplashThumbnail.bucket
+                && eventStage.splashThumbnail.key === s3.defaultEventStageSplashThumbnail.key)) {
                 promises.push(deleteObject({
                     Bucket: eventStage.splashThumbnail.bucket,
                     Key: eventStage.splashThumbnail.key

@@ -71,8 +71,8 @@ async function deleteVideoAndThumbnail(recordedStream) {
     });
     promises.push(deleteVideoPromise);
 
-    if (thumbnail.bucket !== defaultStreamThumbnail.bucket
-        || thumbnail.key !== defaultStreamThumbnail.key) {
+    if (!(thumbnail.bucket === defaultStreamThumbnail.bucket
+        && thumbnail.key === defaultStreamThumbnail.key)) {
 
         LOGGER.debug('Deleting thumbnail (bucket: {}, key: {}) in S3 for RecordedStream (_id: {})',
             thumbnail.bucket, thumbnail.key, recordedStream._id);

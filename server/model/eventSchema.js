@@ -81,8 +81,8 @@ async function deleteBannerPicAndThumbnail(event) {
         promises.push(deleteBannerPicPromise);
     }
 
-    if (thumbnail.bucket !== defaultEventThumbnail.bucket
-        || thumbnail.key !== defaultEventThumbnail.key) {
+    if (!(thumbnail.bucket === defaultEventThumbnail.bucket
+        && thumbnail.key === defaultEventThumbnail.key)) {
 
         LOGGER.debug('Deleting thumbnail (bucket: {}, key: {}) in S3 for Event (_id: {})',
             thumbnail.bucket, thumbnail.key, event._id);

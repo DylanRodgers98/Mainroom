@@ -216,8 +216,8 @@ router.put('/:userId/profile-pic', loginChecker.ensureLoggedIn(), isAuthorised, 
             try {
                 const promises = [];
                 // delete old profile pic if not default
-                if (user.profilePic.bucket !== config.storage.s3.defaultProfilePic.bucket
-                    && user.profilePic.key !== config.storage.s3.defaultProfilePic.key) {
+                if (!(user.profilePic.bucket === config.storage.s3.defaultProfilePic.bucket
+                    && user.profilePic.key === config.storage.s3.defaultProfilePic.key)) {
                     promises.push(deleteObject({
                         Bucket: user.profilePic.bucket,
                         Key: user.profilePic.key

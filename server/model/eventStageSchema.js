@@ -62,8 +62,8 @@ EventStageSchema.post('findOneAndDelete', async function() {
 async function deleteSplashThumbnail(eventStage) {
     const splashThumbnail = eventStage.splashThumbnail;
 
-    if (splashThumbnail.bucket !== defaultEventStageSplashThumbnail.bucket
-        || splashThumbnail.key !== defaultEventStageSplashThumbnail.key) {
+    if (!(splashThumbnail.bucket === defaultEventStageSplashThumbnail.bucket
+        && splashThumbnail.key === defaultEventStageSplashThumbnail.key)) {
 
         LOGGER.debug('Deleting splash thumbnail (bucket: {}, key: {}) in S3 for EventStage (_id: {})',
             splashThumbnail.bucket, splashThumbnail.key, eventStage._id);
