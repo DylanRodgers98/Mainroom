@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const config = require('../../mainroom.config');
 const axios = require('axios');
-const {User, EventStage} = require('../model/schemas');
+const {User, EventStage, Event} = require('../model/schemas');
 const _ = require('lodash');
 const sanitise = require('mongo-sanitize');
 const {getThumbnail} = require('../aws/s3ThumbnailGenerator');
@@ -100,10 +100,29 @@ router.get('/event-stages', async (req, res, next) => {
             {'streamInfo.title': searchQuery},
             {'streamInfo.genre': searchQuery},
             {'streamInfo.category': searchQuery},
-            {'streamInfo.tags': searchQuery},
-            {'event.createdBy.username': searchQuery},
-            {'event.createdBy.displayName': searchQuery}
+            {'streamInfo.tags': searchQuery}
         ];
+
+        try {
+            const users = await User.find({
+                $or: [
+                    {username: searchQuery},
+                    {displayName: searchQuery}
+                ]
+            }).select('_id').exec();
+            if (users.length) {
+                const userIds = users.map(user => user._id);
+                const events = await Event.find({createdBy: {$in: userIds}}).select('_id').exec();
+                if (events.length) {
+                    const eventIds = events.map(event => event._id);
+                    query.$or.push({event: {$in: eventIds}});
+                }
+            }
+        } catch (err) {
+            LOGGER.error(`An error occurred when finding events querying createdBy.username and createdBy.displayName with '{}': {}`,
+                searchQuery, err.stack);
+            next(err);
+        }
     }
     if (req.query.genre) {
         query['streamInfo.genre'] = sanitise(req.query.genre);

@@ -20,12 +20,16 @@ export default class Home extends React.Component {
             loggedInUser: '',
             featuredLiveStreams: [],
             subscriptionLiveStreams: [],
+            recordedStreams: [],
             featuredLiveStreamsPage: STARTING_PAGE,
             subscriptionsLiveStreamsPage: STARTING_PAGE,
+            recordedStreamsNextPage: STARTING_PAGE,
             showLoadMoreFeaturedButton: false,
             showLoadMoreFeaturedSpinner: false,
             showLoadMoreSubscriptionsButton: false,
             showLoadMoreSubscriptionsSpinner: false,
+            showLoadMorePastStreamsButton: false,
+            showLoadMorePastStreamsSpinner: false,
             alertText: '',
             alertColor: ''
         }
@@ -38,14 +42,14 @@ export default class Home extends React.Component {
 
     async fillComponent() {
         await this.getLoggedInUser();
-        const params = {
-            page: STARTING_PAGE,
-            limit: pagination[this.state.loggedInUser ? 'small' : 'large']
-        };
-        await this.getFeaturedLiveStreams(params);
+        const promises = [
+            this.getFeaturedLiveStreams(),
+            this.getPastStreams()
+        ];
         if (this.state.loggedInUser) {
-            await this.getSubscriptionLiveStreams(params);
+            promises.push(this.getSubscriptionLiveStreams());
         }
+        await Promise.all(promises);
         this.setState({
             loaded: true
         });
@@ -58,7 +62,12 @@ export default class Home extends React.Component {
         });
     }
 
-    async getFeaturedLiveStreams(params) {
+    async getFeaturedLiveStreams() {
+        const params = {
+            page: this.state.featuredLiveStreamsPage,
+            limit: pagination[this.state.loggedInUser ? 'small' : 'large']
+        };
+
         const eventStagesCount = await this.getEventStagesReturningCount(params);
         params.limit = params.limit + (params.limit - eventStagesCount);
 
@@ -86,7 +95,12 @@ export default class Home extends React.Component {
         return eventStagesRes.data.streams ? eventStagesRes.data.streams.length : 0;
     }
 
-    async getSubscriptionLiveStreams(params) {
+    async getSubscriptionLiveStreams() {
+        const params = {
+            page: this.state.subscriptionsLiveStreamsPage,
+            limit: pagination[this.state.loggedInUser ? 'small' : 'large']
+        };
+
         const subbedEventStagesCount = await this.getSubscribedEventStagesReturningCount(params);
 
         const subsRes = await axios.get(`/api/users/${this.state.loggedInUser}/subscriptions`);
@@ -132,12 +146,24 @@ export default class Home extends React.Component {
         return 0;
     }
 
+    async getPastStreams() {
+        const res = await axios.get('/api/recorded-streams', {
+            params: {
+                page: this.state.recordedStreamsNextPage,
+                limit: pagination[this.state.loggedInUser ? 'small' : 'large']
+            }
+        });
+
+        this.setState({
+            recordedStreams: [...this.state.recordedStreams, ...(res.data.recordedStreams || [])],
+            recordedStreamsNextPage: res.data.nextPage,
+            showLoadMorePastStreamsButton: !!res.data.nextPage
+        });
+    }
+
     renderFeaturedLiveStreams() {
         const loadMoreButton = this.renderLoadMoreButton('showLoadMoreFeaturedSpinner', async () => {
-            await this.getFeaturedLiveStreams({
-                page: this.state.featuredLiveStreamsPage,
-                limit: pagination[this.state.loggedInUser ? 'small' : 'large']
-            });
+            await this.getFeaturedLiveStreams();
         });
 
         return this.state.featuredLiveStreams.length > 0 && (
@@ -150,10 +176,7 @@ export default class Home extends React.Component {
 
     renderSubscriptionLiveStreams() {
         const loadMoreButton = this.renderLoadMoreButton('showLoadMoreSubscriptionsSpinner', async () => {
-            await this.getSubscriptionLiveStreams({
-                page: this.state.subscriptionLiveStreamsPage,
-                limit: pagination.small
-            });
+            await this.getSubscriptionLiveStreams();
         });
 
         return this.state.subscriptionLiveStreams.length > 0 && (
@@ -256,12 +279,12 @@ export default class Home extends React.Component {
         );
     }
 
-    renderStreamBoxes() {
+    renderLiveStreamBoxes() {
         const subscriptionLiveStreams = this.renderSubscriptionLiveStreams();
         const featuredLiveStreams = this.renderFeaturedLiveStreams();
 
         return subscriptionLiveStreams || featuredLiveStreams ? (
-            <div className={this.state.alertText ? 'my-4' : 'my-5'}>
+            <div>
                 {subscriptionLiveStreams}
                 {featuredLiveStreams}
             </div>
@@ -275,12 +298,80 @@ export default class Home extends React.Component {
         );
     }
 
+    renderPastStreams() {
+        const pastStreams = this.state.recordedStreams.map((recordedStream, index) => (
+            <Col className='stream margin-bottom-thick' key={index}>
+                <span className='video-duration'>{recordedStream.videoDuration}</span>
+                <span className='view-count'>
+                    <img src={ViewersIcon} width={18} height={18} className='mr-1 my-1' alt='Views icon'/>
+                    {shortenNumber(recordedStream.viewCount)}
+                </span>
+                <Link to={`/stream/${recordedStream._id}`}>
+                    <img className='w-100' src={recordedStream.thumbnailURL}
+                         alt={`${recordedStream.title} Stream Thumbnail`}/>
+                </Link>
+                <table>
+                    <tbody>
+                    <tr>
+                        <td valign='top'>
+                            <Link to={`/user/${recordedStream.user.username}`}>
+                                <img className='rounded-circle m-2' src={recordedStream.user.profilePicURL}
+                                     width='50' height='50'
+                                     alt={`${recordedStream.user.username} profile picture`}/>
+                            </Link>
+                        </td>
+                        <td valign='middle'>
+                            <h5 className='text-break'>
+                                <Link to={`/user/${recordedStream.user.username}`}>
+                                    {recordedStream.user.displayName || recordedStream.user.username}
+                                </Link>
+                                <span className='black-link'>
+                                        <Link to={`/stream/${recordedStream._id}`}>
+                                            {recordedStream.title ? ` - ${recordedStream.title}` : ''}
+                                        </Link>
+                                    </span>
+                            </h5>
+                            <h6>
+                                {displayGenreAndCategory({
+                                    genre: recordedStream.genre,
+                                    category: recordedStream.category
+                                })}
+                            </h6>
+                            <h6>{timeSince(recordedStream.timestamp)}</h6>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </Col>
+        ));
+
+        const loadMoreButton = this.renderLoadMoreButton('showLoadMorePastStreamsSpinner', async () => {
+            await this.getPastStreams();
+        });
+
+        return pastStreams.length > 0 && (
+            <React.Fragment>
+                <hr className='mb-4'/>
+                <Row>
+                    <Col>
+                        <h4>Past Streams</h4>
+                    </Col>
+                </Row>
+                <Row className='mt-3' xs='1' sm='1' md='2' lg='3' xl='3'>
+                    {pastStreams}
+                </Row>
+                {this.state.showLoadMorePastStreamsButton && loadMoreButton}
+            </React.Fragment>
+        );
+    }
+
     render() {
         return !this.state.loaded ? <LoadingSpinner /> : (
-            <Container fluid='lg'>
+            <Container fluid='lg' className={this.state.alertText ? 'my-4' : 'my-5'}>
                 {getAlert(this)}
 
-                {this.renderStreamBoxes()}
+                {this.renderLiveStreamBoxes()}
+                {this.renderPastStreams()}
             </Container>
         );
     }

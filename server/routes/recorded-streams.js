@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const sanitise = require('mongo-sanitize');
 const _ = require('lodash');
-const {User, RecordedStream} = require('../model/schemas');
+const {User, RecordedStream, Event, EventStage} = require('../model/schemas');
 const loginChecker = require('connect-ensure-login');
+const CompositeError = require('../errors/CompositeError');
 const {validation: {streamSettings: {titleMaxLength, tagsMaxAmount}}} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/routes/recorded-streams.js');
 
@@ -50,13 +51,56 @@ router.get('/', async (req, res, next) => {
                 {title: searchQuery},
                 {genre: searchQuery},
                 {category: searchQuery},
-                {tags: searchQuery},
-                {'user.username': searchQuery},
-                {'user.displayName': searchQuery},
-                {'eventStage.stageName': searchQuery},
-                {'eventStage.event.eventName': searchQuery},
-                {'eventStage.event.tags': searchQuery}
+                {tags: searchQuery}
             ];
+
+            const getUserIds = async () => {
+                const users = await User.find({
+                    $or: [
+                        {username: searchQuery},
+                        {displayName: searchQuery}
+                    ]
+                }).select('_id').exec();
+                if (users.length) {
+                    const userIds = users.map(user => user._id);
+                    query.$or.push({user: {$in: userIds}});
+                }
+            };
+
+            const getEventStageIds = async () => {
+                const eventStageQuery = {
+                    $or: [
+                        {stageName: searchQuery}
+                    ]
+                };
+
+                const events = await Event.find({
+                    $or: [
+                        {eventName: searchQuery},
+                        {tags: searchQuery}
+                    ]
+                }).select('_id').exec();
+                if (events.length) {
+                    const eventIds = events.map(event => event._id);
+                    eventStageQuery.$or.push({event: {$in: eventIds}});
+                }
+
+                const eventStages = await EventStage.find(eventStageQuery).select('_id').exec();
+                if (eventStages.length) {
+                    const eventStageIds = eventStages.map(eventStage => eventStage._id);
+                    query.$or.push({eventStage: {$in: eventStageIds}});
+                }
+            }
+
+            const promiseResults = await Promise.allSettled([getUserIds(), getEventStageIds()]);
+            const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+
+            if (rejectedPromises.length) {
+                const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
+                LOGGER.error('{} error{} occurred when getting user/stage ids. Error: {}',
+                    rejectedPromises.length, rejectedPromises.length === 1 ? '' : 's', err.stack);
+                return next(err);
+            }
         }
         if (req.query.genre) {
             query.genre = sanitise(req.query.genre);

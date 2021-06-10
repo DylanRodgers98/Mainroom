@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {Event, EventStage, RecordedStream, ScheduledStream} = require('../model/schemas');
+const {Event, EventStage, RecordedStream, ScheduledStream, User} = require('../model/schemas');
 const mongoose = require('mongoose');
 const sanitise = require('mongo-sanitize');
 const escape = require('escape-html');
@@ -30,7 +30,7 @@ const RTMP_SERVER_RTMP_PORT = process.env.RTMP_SERVER_RTMP_PORT !== '1935' ? `:$
 const RTMP_SERVER_URL = `rtmp://${process.env.NODE_ENV === 'production' ? process.env.SERVER_HOST : 'localhost'}`
     + `${RTMP_SERVER_RTMP_PORT}/${process.env.RTMP_SERVER_APP_NAME}`;
 
-router.get('/', (req, res, next) => {
+router.get('/', async (req, res, next) => {
     const query = {};
 
     if (req.query.searchQuery) {
@@ -39,15 +39,47 @@ router.get('/', (req, res, next) => {
         const searchQuery = new RegExp(escapedQuery, 'i');
         query.$or = [
             {eventName: searchQuery},
-            {tags: searchQuery},
-            {'createdBy.username': searchQuery},
-            {'createdBy.displayName': searchQuery},
-            {'stages.stageName': searchQuery},
-            {'stages.streamInfo.title': searchQuery},
-            {'stages.streamInfo.genre': searchQuery},
-            {'stages.streamInfo.category': searchQuery},
-            {'stages.streamInfo.tags': searchQuery},
+            {tags: searchQuery}
         ];
+
+        const getUserIds = async () => {
+            const users = await User.find({
+                $or: [
+                    {username: searchQuery},
+                    {displayName: searchQuery}
+                ]
+            }).select('_id').exec();
+            if (users.length) {
+                const userIds = users.map(user => user._id);
+                query.$or.push({createdBy: {$in: userIds}});
+            }
+        }
+
+        const getEventStageIds = async () => {
+            const eventStages = await EventStage.find({
+                $or: [
+                    {stageName: searchQuery},
+                    {'streamInfo.title': searchQuery},
+                    {'streamInfo.genre': searchQuery},
+                    {'streamInfo.category': searchQuery},
+                    {'streamInfo.tags': searchQuery},
+                ]
+            }).select('_id').exec();
+            if (eventStages.length) {
+                const eventStageIds = eventStages.map(eventStage => eventStage._id);
+                query.$or.push({stages: {$in: eventStageIds}});
+            }
+        }
+
+        const promiseResults = await Promise.allSettled([getUserIds(), getEventStageIds()]);
+        const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
+
+        if (rejectedPromises.length) {
+            const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
+            LOGGER.error('{} error{} occurred when getting user/stage ids. Error: {}',
+                rejectedPromises.length, rejectedPromises.length === 1 ? '' : 's', err.stack);
+            return next(err);
+        }
     } else {
         query.endTime = {$gte: Date.now()};
     }
