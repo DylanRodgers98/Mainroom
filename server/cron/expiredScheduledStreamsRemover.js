@@ -23,7 +23,7 @@ const job = new CronJob(cronTime.expiredScheduledStreamsRemover, async () => {
 
             streams.forEach(stream => {
                 if (stream.eventStage) {
-                    if (stream.prerecordedVideoFile) {
+                    if (stream.prerecordedVideoFile && stream.prerecordedVideoFile.bucket && stream.prerecordedVideoFile.key) {
                         // Do not delete ScheduledStreams from database that were scheduled as part of an event,
                         // just delete their prerecorded videos from S3, if they have any.
                         numVideosToDelete++;
@@ -31,7 +31,7 @@ const job = new CronJob(cronTime.expiredScheduledStreamsRemover, async () => {
                     }
                 } else {
                     numDocsToDelete++;
-                    if (stream.prerecordedVideoFile) {
+                    if (stream.prerecordedVideoFile && stream.prerecordedVideoFile.bucket && stream.prerecordedVideoFile.key) {
                         numVideosToDelete++;
                     }
 
