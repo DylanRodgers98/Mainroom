@@ -44,10 +44,11 @@ const job = new CronJob(cronTime.expiredScheduledStreamsRemover, async () => {
                 }
             });
 
-            LOGGER.info('Deleting {} ScheduledStream{} from database, and {} prerecorded video files from S3, ' +
+            LOGGER.info('Deleting {} ScheduledStream{} from database, and {} prerecorded video file{} from S3, ' +
                 'for scheduled streams that finished before {}',
-                numDocsToDelete.length, numDocsToDelete.length === 1 ? '' : 's',
-                numVideosToDelete, numVideosToDelete === 1 ? '' : 's', expiryTime);
+                numDocsToDelete, numDocsToDelete === 1 ? '' : 's',
+                numVideosToDelete, numVideosToDelete === 1 ? '' : 's',
+                expiryTime);
 
             const promiseResults = await Promise.allSettled(promises);
             const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
