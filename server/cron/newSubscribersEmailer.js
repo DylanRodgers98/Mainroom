@@ -69,7 +69,7 @@ const job = new CronJob(cronTime.newSubscribersEmailer, async () => {
                 }
             }
         } catch (err) {
-            LOGGER.error('An error occurred when creating requests to email users about new subscribers: {}', err.stack);
+            LOGGER.error('An error occurred when creating requests to email users about new subscribers: {}', err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         }
     }

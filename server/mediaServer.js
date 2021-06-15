@@ -31,7 +31,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
     try {
         user = await getUserPrePublish(streamKey);
     } catch (err) {
-        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.stack);
+        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.stack || err.toString());
         return await snsErrorPublisher.publish(err);
     }
 
@@ -44,7 +44,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
             await user.save();
         } catch (err) {
             LOGGER.error('An error occurred when updating view counts and start time for user (username: {}): {}',
-                user.username, err.stack);
+                user.username, err.stack || err.toString());
             return await snsErrorPublisher.publish(err);
         }
 
@@ -59,7 +59,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
     try {
         eventStage = await getEventStagePrePublish(streamKey);
     } catch (err) {
-        LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err.stack);
+        LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err.stack || err.toString());
         return await snsErrorPublisher.publish(err);
     }
 
@@ -72,7 +72,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
             await eventStage.save();
         } catch (err) {
             LOGGER.error(`An error occurred when updating view counts and start time for event stage '{} - {}': {}`,
-                eventStage.event.eventName, eventStage.stageName, err.stack);
+                eventStage.event.eventName, eventStage.stageName, err.stack || err.toString());
             return await snsErrorPublisher.publish(err);
         }
 
@@ -116,7 +116,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
     try {
         user = await getUserDonePublish(streamKey);
     } catch (err) {
-        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.stack);
+        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err.stack || err.toString());
         return await snsErrorPublisher.publish(err);
     }
 
@@ -137,7 +137,7 @@ nms.on('donePublish', async (sessionId, streamPath) => {
     try {
         eventStage = await getEventStageDonePublish(streamKey);
     } catch (err) {
-        LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err.stack);
+        LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err.stack || err.toString());
         return await snsErrorPublisher.publish(err);
     }
 
@@ -236,7 +236,7 @@ async function saveRecordedStream({streamKey, timestamp, streamer, userId, event
         }
     } catch (err) {
         LOGGER.error('An error occurred when uploading recorded stream at {} to S3 (bucket: {}, key: {}): {}',
-            inputURL, Bucket, Key, err.stack);
+            inputURL, Bucket, Key, err.stack || err.toString());
         await snsErrorPublisher.publish(err);
     }
 }
@@ -276,7 +276,7 @@ async function findMP4FileName(inputDirectory, sessionConnectTime) {
         const rejectedPromises = allSettledResults.filter(res => res.status === 'rejected');
         if (rejectedPromises.length) {
             const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
-            LOGGER.error('One or more errors occurred when deleting MP4 files: {}', err.stack);
+            LOGGER.error('One or more errors occurred when deleting MP4 files: {}', err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         }
     }
@@ -299,7 +299,7 @@ async function deleteFile(filePath) {
         await fs.unlink(filePath);
         LOGGER.info('Successfully deleted file at {}', filePath);
     } catch (err) {
-        LOGGER.error('An error occurred when deleting file at {}: {}', filePath, err.stack);
+        LOGGER.error('An error occurred when deleting file at {}: {}', filePath, err.stack || err.toString());
         throw err;
     }
 }
@@ -309,7 +309,7 @@ function getVideoDurationString(inputURL) {
         const args = ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', '-sexagesimal', inputURL];
         const ffprobe = spawn(process.env.FFPROBE_PATH, args);
         ffprobe.on('error', err => {
-            LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, err.stack);
+            LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, err.stack || err.toString());
             reject(err);
         });
         ffprobe.stderr.on('data', data => {

@@ -76,7 +76,7 @@ async function deleteSplashThumbnail(eventStage) {
             LOGGER.debug('Successfully deleted splash thumbnail in S3 for EventStage (_id: {})', eventStage._id);
         } catch (err) {
             LOGGER.error(`Failed to delete splash thumbnail (bucket: {}, key: {}) in S3 for EventStage (_id: {}). Error: {}`,
-                splashThumbnail.bucket, splashThumbnail.key, eventStage._id, err.stack);
+                splashThumbnail.bucket, splashThumbnail.key, eventStage._id, err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         }
     }
@@ -108,7 +108,7 @@ async function deleteScheduledStreams(eventStage) {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} ScheduledStream{} failed to delete for EventStage (_id: {}). Error: {}`,
-                errors.length, streams.length, errors.length === 1 ? '' : 's', eventStage._id, err.stack);
+                errors.length, streams.length, errors.length === 1 ? '' : 's', eventStage._id, err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug('Successfully deleted {} ScheduledStream{} for EventStage (_id: {})',

@@ -57,7 +57,7 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, async () => {
             .exec();
     } catch (err) {
         LOGGER.error('An error occurred when finding scheduled streams starting between {} and {}: {}',
-            lastTimeTriggered, thisTimeTriggered, err.stack);
+            lastTimeTriggered, thisTimeTriggered, err.stack || err.toString());
 
         lastTimeTriggered = thisTimeTriggered;
         return await snsErrorPublisher.publish(err);
@@ -111,7 +111,7 @@ const job = new CronJob(cronTime.scheduledStreamInfoUpdater, async () => {
         if (rejectedPromises.length) {
             const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
             LOGGER.error('{} error{} occurred when updating user/stage stream info from scheduled streams. Error: {}',
-                rejectedPromises.length, rejectedPromises.length === 1 ? '' : 's', err.stack);
+                rejectedPromises.length, rejectedPromises.length === 1 ? '' : 's', err.stack || err.toString());
             lastTimeTriggered = thisTimeTriggered;
             return await snsErrorPublisher.publish(err);
         }

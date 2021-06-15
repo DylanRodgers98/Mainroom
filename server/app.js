@@ -29,19 +29,19 @@ const LOGGER = require('../logger')('./server/app.js');
 if (process.env.NODE_ENV === 'production') {
     process.on('uncaughtException', async err => {
         try {
-            LOGGER.error('An uncaught exception occurred: {}', err.stack);
+            LOGGER.error('An uncaught exception occurred: {}', err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         } catch (publisherError) {
             LOGGER.error(`An error occurred when publishing info about an existing error '{}' to SNS. New error: {}`,
-                err.name, publisherError.toString());
+                err.name, publisherError.stack || publisherError.toString());
         }
     });
 
     process.on('unhandledRejection', async reason => {
-        const err = reason instanceof Error || (reason && reason.name && reason.message && reason.stack)
+        const err = reason instanceof Error || (reason && reason.name && reason.message)
             ? reason : new Error(reason ? reason.toString() : 'An unhandled promise rejection occurred with no reason');
         try {
-            LOGGER.error('An unhandled promise rejection occurred: {}', err.stack);
+            LOGGER.error('An unhandled promise rejection occurred: {}', err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         } catch (publisherError) {
             LOGGER.error(`An error occurred when publishing info about an unhandled promise rejection to SNS: {}`,
@@ -58,7 +58,7 @@ mongoose.connect(process.env.MONGODB_CONNECTION_STRING, {
     useCreateIndex: true
 }, async err => {
     if (err) {
-        LOGGER.error(`An error occurred when connecting to MongoDB database: {}`, err.stack);
+        LOGGER.error(`An error occurred when connecting to MongoDB database: {}`, err.stack || err.toString());
         return await snsErrorPublisher.publish(err);
     }
     LOGGER.info('Connected to MongoDB database');
@@ -234,7 +234,7 @@ app.get('/stage/:eventStageId', setXSRFTokenCookie, async (req, res) => {
             try {
                 imageURL = await getThumbnail(streamKey);
             } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning splash thumbnail. Error: {}', streamKey, err.stack);
+                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning splash thumbnail. Error: {}', streamKey, err.stack || err.toString());
                 imageURL = eventStage.getSplashThumbnailURL();
             }
             videoURL = process.env.NODE_ENV === 'production'
@@ -338,7 +338,7 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
             try {
                 imageURL = await getThumbnail(streamKey);
             } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err.stack);
+                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err.stack || err.toString());
                 imageURL = config.defaultThumbnailURL;
             }
             imageAlt = `${username} Stream Thumbnail`;
@@ -506,7 +506,7 @@ process.on('SIGINT', async () => {
         LOGGER.info('Application shut down successfully. Exiting process with exit code 0');
         process.exit(0);
     } catch (err) {
-        LOGGER.error('An error occurred during application shutdown. Exiting process with exit code 1. Error: {}', err.stack);
+        LOGGER.error('An error occurred during application shutdown. Exiting process with exit code 1. Error: {}', err.stack || err.toString());
         process.exit(1);
     }
 });
@@ -515,7 +515,7 @@ function closeServer() {
     return new Promise((resolve, reject) => {
         httpServer.close(err => {
             if (err) {
-                LOGGER.error('An error occurred when closing HTTP server: {}', err.stack);
+                LOGGER.error('An error occurred when closing HTTP server: {}', err.stack || err.toString());
                 reject(err);
             } else {
                 resolve();

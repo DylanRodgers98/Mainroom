@@ -41,7 +41,7 @@ ScheduledStreamSchema.methods.deletePrerecordedVideo = async function () {
     try {
         await this.save();
     } catch (err) {
-        LOGGER.error('An error occurred when saving ScheduledStream (_id: {}). Error: {}', this._id, err.stack);
+        LOGGER.error('An error occurred when saving ScheduledStream (_id: {}). Error: {}', this._id, err.stack || err.toString());
         await snsErrorPublisher.publish(err);
     }
 }
@@ -73,7 +73,7 @@ async function deletePrerecordedVideo(scheduledStream) {
             LOGGER.debug('Successfully deleted prerecorded video in S3 for ScheduledStream (_id: {})', scheduledStream._id);
         } catch (err) {
             LOGGER.error(`Failed to delete prerecorded video (bucket: {}, key: {}) in S3 for ScheduledStream (_id: {}). Error: {}`,
-                prerecordedVideoFile.bucket, prerecordedVideoFile.key, scheduledStream._id, err.stack);
+                prerecordedVideoFile.bucket, prerecordedVideoFile.key, scheduledStream._id, err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         }
     }

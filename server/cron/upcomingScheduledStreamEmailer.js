@@ -29,7 +29,7 @@ const job = new CronJob(cronTime.upcomingScheduledStreamEmailer, async () => {
                 })
                 .exec();
         } catch (err) {
-            LOGGER.error('An error occurred when finding users to email about streams starting soon: {}', err.stack);
+            LOGGER.error('An error occurred when finding users to email about streams starting soon: {}', err.stack || err.toString());
             return await snsErrorPublisher.publish(err);
         }
 
@@ -97,7 +97,7 @@ const job = new CronJob(cronTime.upcomingScheduledStreamEmailer, async () => {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error('{} error{} occurred when emailing users about streams starting soon. Error: {}',
-                errors.length, errors.length === 1 ? '' : 's', err.stack);
+                errors.length, errors.length === 1 ? '' : 's', err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         }
     }

@@ -77,7 +77,7 @@ router.get('/', async (req, res, next) => {
         if (rejectedPromises.length) {
             const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
             LOGGER.error('{} error{} occurred when getting user/stage ids. Error: {}',
-                rejectedPromises.length, rejectedPromises.length === 1 ? '' : 's', err.stack);
+                rejectedPromises.length, rejectedPromises.length === 1 ? '' : 's', err.stack || err.toString());
             return next(err);
         }
     } else {
@@ -103,7 +103,7 @@ router.get('/', async (req, res, next) => {
 
     Event.paginate(query, options, async (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when finding Events: {}', err.stack);
+            LOGGER.error('An error occurred when finding Events: {}', err.stack || err.toString());
             return next(err);
         }
         res.json({
@@ -166,7 +166,7 @@ router.put('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
                 })
                 .exec();
         } catch (err) {
-            LOGGER.error(`An error occurred when finding Event with id '{}': {}`, sanitisedInput.eventId, err.stack);
+            LOGGER.error(`An error occurred when finding Event with id '{}': {}`, sanitisedInput.eventId, err.stack || err.toString());
             return next(err);
         }
         if (!event) {
@@ -186,7 +186,7 @@ router.put('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
     try {
         await event.save();
     } catch (err) {
-        LOGGER.error('An error occurred when saving Event: {}, Error: {}', JSON.stringify(event), err.stack);
+        LOGGER.error('An error occurred when saving Event: {}, Error: {}', JSON.stringify(event), err.stack || err.toString());
         next(err);
     }
 
@@ -198,7 +198,7 @@ router.put('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
                 try {
                     eventStage = await EventStage.findById(stage._id).select('_id').exec();
                 } catch (err) {
-                    LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, stage._id, err.stack);
+                    LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, stage._id, err.stack || err.toString());
                     return next(err);
                 }
                 if (!eventStage) {
@@ -219,7 +219,7 @@ router.put('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
                 await eventStage.save();
             } catch (err) {
                 LOGGER.error('An error occurred when saving new EventStage: {}, Error: {}',
-                    JSON.stringify(eventStage), err.stack);
+                    JSON.stringify(eventStage), err.stack || err.toString());
                 next(err);
             }
 
@@ -254,7 +254,7 @@ router.put('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
             eventStageIds
         });
     } catch (err) {
-        LOGGER.error('An error occurred when saving new Event: {}, Error: {}', JSON.stringify(event), err.stack);
+        LOGGER.error('An error occurred when saving new Event: {}, Error: {}', JSON.stringify(event), err.stack || err.toString());
         next(err);
     }
 });
@@ -292,7 +292,7 @@ router.patch('/:eventId/banner-pic', loginChecker.ensureLoggedIn(), async (req, 
             return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
         }
     } catch (err) {
-        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack || err.toString());
         return next(err);
     }
 
@@ -303,7 +303,7 @@ router.patch('/:eventId/banner-pic', loginChecker.ensureLoggedIn(), async (req, 
     s3UploadBannerPic(req, res, async err => {
         if (err) {
             LOGGER.error('An error occurred when uploading banner pic to S3 for Event (_id: {}): {}, Error: {}',
-                eventId, err.stack);
+                eventId, err.stack || err.toString());
             return next(err);
         }
         try {
@@ -323,7 +323,7 @@ router.patch('/:eventId/banner-pic', loginChecker.ensureLoggedIn(), async (req, 
             await Promise.all(promises);
             res.sendStatus(200);
         } catch (err) {
-            LOGGER.error('An error occurred when updating banner pic info for Event (_id: {}): {}', eventId, err.stack);
+            LOGGER.error('An error occurred when updating banner pic info for Event (_id: {}): {}', eventId, err.stack || err.toString());
             next(err);
         }
     });
@@ -361,7 +361,7 @@ router.patch('/:eventId/thumbnail', loginChecker.ensureLoggedIn(), async (req, r
             return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
         }
     } catch (err) {
-        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack || err.toString());
         return next(err);
     }
 
@@ -372,7 +372,7 @@ router.patch('/:eventId/thumbnail', loginChecker.ensureLoggedIn(), async (req, r
     s3UploadEventThumbnail(req, res, async err => {
         if (err) {
             LOGGER.error('An error occurred when uploading thumbnail to S3 for Event (_id: {}): {}, Error: {}',
-                eventId, err.stack);
+                eventId, err.stack || err.toString());
             return next(err);
         }
         try {
@@ -393,7 +393,7 @@ router.patch('/:eventId/thumbnail', loginChecker.ensureLoggedIn(), async (req, r
             await Promise.all(promises);
             res.sendStatus(200);
         } catch (err) {
-            LOGGER.error('An error occurred when updating thumbnail info for Event (_id: {}): {}', eventId, err.stack);
+            LOGGER.error('An error occurred when updating thumbnail info for Event (_id: {}): {}', eventId, err.stack || err.toString());
             next(err);
         }
     });
@@ -436,7 +436,7 @@ router.patch('/:eventId/stage/:eventStageId/splash-thumbnail', loginChecker.ensu
             return res.status(404).send(`EventStage (_id: ${escape(eventStageId)}) not found`);
         }
     } catch (err) {
-        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack || err.toString());
         return next(err);
     }
 
@@ -447,7 +447,7 @@ router.patch('/:eventId/stage/:eventStageId/splash-thumbnail', loginChecker.ensu
     s3UploadEventStageSplashThumbnail(req, res, async err => {
         if (err) {
             LOGGER.error('An error occurred when uploading splash thumbnail to S3 for EventStage (_id: {}): {}, Error: {}',
-                eventStageId, err.stack);
+                eventStageId, err.stack || err.toString());
             return next(err);
         }
         try {
@@ -468,7 +468,7 @@ router.patch('/:eventId/stage/:eventStageId/splash-thumbnail', loginChecker.ensu
             await Promise.all(promises);
             res.sendStatus(200);
         } catch (err) {
-            LOGGER.error('An error occurred when updating splash thumbnail info for EventStage (_id: {}): {}', eventStageId, err.stack);
+            LOGGER.error('An error occurred when updating splash thumbnail info for EventStage (_id: {}): {}', eventStageId, err.stack || err.toString());
             next(err);
         }
     });
@@ -491,7 +491,7 @@ router.get('/:eventId', async (req, res, next) => {
             })
             .exec();
     } catch (err) {
-        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack || err.toString());
         return next(err);
     }
 
@@ -511,7 +511,7 @@ router.get('/:eventId', async (req, res, next) => {
             try {
                 thumbnailURL = await getThumbnail(streamKey);
             } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning splash thumbnail. Error: {}', streamKey, err.stack);
+                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning splash thumbnail. Error: {}', streamKey, err.stack || err.toString());
                 thumbnailURL = stage.getSplashThumbnailURL();
             }
         } else {
@@ -557,7 +557,7 @@ router.get('/:eventId/event-name', async (req, res, next) => {
     try {
         event = await Event.findById(eventId).select('eventName').exec();
     } catch (err) {
-        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack || err.toString());
         return next(err);
     }
     if (!event) {
@@ -582,7 +582,7 @@ router.get('/:eventId/subscribers', async (req, res, next) => {
             }
         ]).exec();
     } catch (err) {
-        LOGGER.error('An error occurred when counting number of subscribers for Event (_id: {}): {}', eventId, err.stack);
+        LOGGER.error('An error occurred when counting number of subscribers for Event (_id: {}): {}', eventId, err.stack || err.toString());
         return next(err);
     }
 
@@ -614,7 +614,7 @@ router.get('/:eventId/subscribers', async (req, res, next) => {
             })
             .exec();
     } catch (err) {
-        LOGGER.error('An error occurred when getting subscribers for Event (_id: {}): {}', eventId, err.stack);
+        LOGGER.error('An error occurred when getting subscribers for Event (_id: {}): {}', eventId, err.stack || err.toString());
         return next(err);
     }
 
@@ -640,7 +640,7 @@ router.get('/:eventId/recorded-streams', async (req, res, next) => {
             .select('stages')
             .exec();
     } catch (err) {
-        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack || err.toString());
         return next(err);
     }
 
@@ -664,7 +664,7 @@ router.get('/:eventId/recorded-streams', async (req, res, next) => {
 
     RecordedStream.paginate({eventStage: {$in: event.stages}}, options, (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when finding recorded streams for Event (_id: {}): {}', eventId, err.stack);
+            LOGGER.error('An error occurred when finding recorded streams for Event (_id: {}): {}', eventId, err.stack || err.toString());
             next(err);
         } else {
             res.json({
@@ -697,7 +697,7 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
             })
             .exec();
     } catch (err) {
-        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack || err.toString());
         return next(err);
     }
 
@@ -725,7 +725,7 @@ router.get('/:eventId/scheduled-streams', async (req, res, next) => {
             .sort('startTime')
             .exec();
     } catch (err) {
-        LOGGER.error('An error occurred when finding scheduled streams for Event (_id: {}): {}', eventId, err.stack);
+        LOGGER.error('An error occurred when finding scheduled streams for Event (_id: {}): {}', eventId, err.stack || err.toString());
         next(err);
     }
 
@@ -761,7 +761,7 @@ router.delete('/:eventId', loginChecker.ensureLoggedIn(), async (req, res, next)
             })
             .exec();
     } catch (err) {
-        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack);
+        LOGGER.error(`An error occurred when finding Event with id '{}': {}`, eventId, err.stack || err.toString());
         return next(err);
     }
 
@@ -776,7 +776,7 @@ router.delete('/:eventId', loginChecker.ensureLoggedIn(), async (req, res, next)
         await Event.findByIdAndDelete(eventId);
         res.sendStatus(200);
     } catch (err) {
-        LOGGER.error(`An error occurred when deleting Event (_id: {}) from database: {}`, eventId, err.stack);
+        LOGGER.error(`An error occurred when deleting Event (_id: {}) from database: {}`, eventId, err.stack || err.toString());
         next(err);
     }
 });
@@ -794,7 +794,7 @@ router.get('/:eventStageId/stream-info', async (req, res, next) => {
             })
             .exec()
     } catch (err) {
-        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack || err.toString());
         return next(err);
     }
 
@@ -849,7 +849,7 @@ router.get('/:eventStageId/init-stream-upload', loginChecker.ensureLoggedIn(), a
             })
             .exec()
     } catch (err) {
-        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack || err.toString());
         return next(err);
     }
 
@@ -878,7 +878,7 @@ router.get('/:eventStageId/init-stream-upload', loginChecker.ensureLoggedIn(), a
         });
     } catch (err) {
         LOGGER.error(`An error occurred when getting signed URLs for stream upload for EventStage with id '{}': {}`,
-            eventStageId, err.stack);
+            eventStageId, err.stack || err.toString());
         next(err);
     }
 });
@@ -901,7 +901,7 @@ router.post('/:eventStageId/complete-stream-upload', loginChecker.ensureLoggedIn
             })
             .exec()
     } catch (err) {
-        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack || err.toString());
         return next(err);
     }
 
@@ -941,7 +941,7 @@ router.delete('/:eventStageId/cancel-stream-upload', loginChecker.ensureLoggedIn
             })
             .exec()
     } catch (err) {
-        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack);
+        LOGGER.error(`An error occurred when finding EventStage with id '{}': {}`, eventStageId, err.stack || err.toString());
         return next(err);
     }
 
@@ -962,7 +962,7 @@ router.delete('/:eventStageId/cancel-stream-upload', loginChecker.ensureLoggedIn
         res.sendStatus(200);
     } catch (err) {
         LOGGER.error(`An error occurred when getting cancelling stream upload for EventStage with id '{}': {}`,
-            eventStageId, err.stack);
+            eventStageId, err.stack || err.toString());
         next(err);
     }
 });

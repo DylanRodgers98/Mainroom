@@ -102,7 +102,7 @@ async function deleteBannerPicAndThumbnail(event) {
     if (rejectedPromises.length) {
         const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
         LOGGER.error(`Failed to delete banner pic (bucket: {}, key: {}) and thumbnail (bucket: {}, key: {}) in S3 for Event (_id: {}). Error: {}`,
-            bannerPic.bucket, bannerPic.key, thumbnail.bucket, thumbnail.key, event._id, err.stack);
+            bannerPic.bucket, bannerPic.key, thumbnail.bucket, thumbnail.key, event._id, err.stack || err.toString());
         await snsErrorPublisher.publish(err);
     }
 }
@@ -130,7 +130,7 @@ async function deleteStages(event) {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} EventStages{} failed to delete for Event (_id: {}). Error: {}`,
-                errors.length, eventStages.length, errors.length === 1 ? '' : 's', event._id, err.stack);
+                errors.length, eventStages.length, errors.length === 1 ? '' : 's', event._id, err.stack || err.toString());
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug('Successfully deleted {} EventStage{} for Event (_id: {})',
@@ -149,7 +149,7 @@ async function pullEventFromUserSubscriptions(event) {
         LOGGER.debug('Successfully removed Event (_id: {}) from {} subscribedEvents lists',
             event._id, res.nModified);
     } catch (err) {
-        LOGGER.error(`Failed to remove Event (_id: {}) from subscribedEvents lists. Error: {}`, event._id, err.stack);
+        LOGGER.error(`Failed to remove Event (_id: {}) from subscribedEvents lists. Error: {}`, event._id, err.stack || err.toString());
         await snsErrorPublisher.publish(err);
     }
 }
