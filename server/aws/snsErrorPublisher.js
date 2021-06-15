@@ -7,13 +7,14 @@ module.exports.publish = async errorToPublish => {
         // throw if non-production environment
         throw errorToPublish;
     }
+    const errorString = errorToPublish.stack || errorToPublish.toString();
     const publishCommand = new PublishCommand({
         TopicArn: process.env.ERROR_SNS_TOPIC_ARN,
-        Subject: `${errorToPublish.name} occurred in Mainroom ${process.env.NODE_ENV} environment`,
-        Message: errorToPublish.stack
+        Subject: `${errorToPublish.name || 'Error'} occurred in Mainroom ${process.env.NODE_ENV} environment`,
+        Message: errorString
     });
     const response = await SNS_CLIENT.send(publishCommand);
     if (!response.MessageId) {
-        throw new Error(`No MessageId returned from SNSClient, so info about error will not be published. Original error: ${errorToPublish.stack}`);
+        throw new Error(`No MessageId returned from SNSClient, so info about error will not be published. Original error: ${errorString}`);
     }
 };
