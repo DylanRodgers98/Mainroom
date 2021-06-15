@@ -14,6 +14,6 @@ module.exports.publish = async errorToPublish => {
     });
     const response = await SNS_CLIENT.send(publishCommand);
     if (!response.MessageId) {
-        throw new Error(`No MessageId returned from SNSClient, so info about error will not be published. Original error: ${errorToPublish.toString()}`);
+        throw new Error(`No MessageId returned from SNSClient, so info about error will not be published. Original error: ${errorToPublish.stack}`);
     }
 };
