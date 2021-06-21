@@ -106,11 +106,17 @@ async function deleteProfilePic(user) {
         && profilePic.key === defaultProfilePic.key)) {
         LOGGER.debug('Deleting profile picture in S3 (bucket: {}, key: {}) for User (_id: {})',
             profilePic.bucket, profilePic.key, user._id);
-        await deleteObject({
-            Bucket: profilePic.bucket,
-            Key: profilePic.key
-        });
-        LOGGER.debug('Successfully deleted profile picture in S3 for User (_id: {})', user._id);
+        try {
+            await deleteObject({
+                Bucket: profilePic.bucket,
+                Key: profilePic.key
+            });
+            LOGGER.debug('Successfully deleted profile picture in S3 for User (_id: {})', user._id);
+        } catch (err) {
+            LOGGER.error(`Failed to delete profile picture (bucket: {}, key: {}) in S3 for User (_id: {}). Error: {}`,
+                profilePic.bucket, profilePic.key, user._id, err.stack || err.toString());
+            await snsErrorPublisher.publish(err);
+        }
     }
 }
 

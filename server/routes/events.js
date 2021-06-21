@@ -912,15 +912,20 @@ router.post('/:eventStageId/complete-stream-upload', loginChecker.ensureLoggedIn
     if (eventStage.event.createdBy._id.toString() !== req.user._id.toString()) {
         return res.sendStatus(401);
     }
-    
-    await completeMultipartUpload({
-        Bucket: sanitisedInput.bucket,
-        Key: sanitisedInput.key,
-        UploadId: sanitisedInput.uploadId,
-        Parts: sanitisedInput.uploadedParts
-    });
 
-    res.sendStatus(201);
+    try {
+        await completeMultipartUpload({
+            Bucket: sanitisedInput.bucket,
+            Key: sanitisedInput.key,
+            UploadId: sanitisedInput.uploadId,
+            Parts: sanitisedInput.uploadedParts
+        });
+        res.sendStatus(201);
+    } catch (err) {
+        LOGGER.error(`An error occurred when completing stream upload for EventStage with id '{}': {}`,
+            eventStageId, err.stack || err.toString());
+        next(err);
+    }
 });
 
 router.delete('/:eventStageId/cancel-stream-upload', loginChecker.ensureLoggedIn(), async (req, res, next) => {
@@ -961,7 +966,7 @@ router.delete('/:eventStageId/cancel-stream-upload', loginChecker.ensureLoggedIn
         });
         res.sendStatus(200);
     } catch (err) {
-        LOGGER.error(`An error occurred when getting cancelling stream upload for EventStage with id '{}': {}`,
+        LOGGER.error(`An error occurred when cancelling stream upload for EventStage with id '{}': {}`,
             eventStageId, err.stack || err.toString());
         next(err);
     }
