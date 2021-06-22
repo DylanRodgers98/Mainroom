@@ -31,7 +31,7 @@ function overrideEnvVars(overrides) {
         const originalEnvVar = process.env[key];
         originalEnvVars.set(key, originalEnvVar);
 
-        process.env[key] = value;
+        process.env[key] = value.toString();
     });
 
     return originalEnvVars;

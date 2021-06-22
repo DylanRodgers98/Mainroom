@@ -1,29 +1,72 @@
+const CompositeError = require("../../../server/errors/CompositeError");
 const {overrideEnvironmentVariables} = require('../../testUtils');
 
 const USER_WITH_DISPLAY_NAME_1 = {
     email: 'hasDisplayName1@email.com',
     displayName: 'Test Display Name 1',
     username: 'testUsername1',
-    getProfilePicURL: () => 'testUsername1/profilePic.jpg'
+    getProfilePicURL: () => 'testUsername1/profilePic.jpg',
+    emailSettings: {
+        subscriptionWentLive: true
+    }
 };
 
 const USER_WITH_DISPLAY_NAME_2 = {
     email: 'hasDisplayName2@email.com',
     displayName: 'Test Display Name 2',
     username: 'testUsername2',
-    getProfilePicURL: () => 'testUsername2/profilePic.jpg'
+    getProfilePicURL: () => 'testUsername2/profilePic.jpg',
+    emailSettings: {
+        subscriptionWentLive: false
+    }
 };
 
 const USER_WITHOUT_DISPLAY_NAME_1 = {
     email: 'hasNoDisplayName1@email.com',
     username: 'testUsername3',
-    getProfilePicURL: () => 'testUsername3/profilePic.jpg'
+    getProfilePicURL: () => 'testUsername3/profilePic.jpg',
+    emailSettings: {
+        subscriptionWentLive: true
+    }
 };
 
 const USER_WITHOUT_DISPLAY_NAME_2 = {
     email: 'hasNoDisplayName2@email.com',
     username: 'testUsername4',
     getProfilePicURL: () => 'testUsername4/profilePic.jpg'
+};
+
+const USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME = {
+    displayName: 'User with displayName and Subscriber with displayName',
+    username: 'userWithSubscribers1',
+    getProfilePicURL: () => 'userWithSubscribers1/profilePic.jpg',
+    subscribers: [{user: USER_WITH_DISPLAY_NAME_1}]
+};
+
+const USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME = {
+    username: 'userWithSubscribers2',
+    getProfilePicURL: () => 'userWithSubscribers2/profilePic.jpg',
+    subscribers: [{user: USER_WITH_DISPLAY_NAME_1}]
+};
+
+const USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME = {
+    displayName: 'User with displayName and Subscriber without displayName',
+    username: 'userWithSubscribers3',
+    getProfilePicURL: () => 'userWithSubscribers3/profilePic.jpg',
+    subscribers: [{user: USER_WITHOUT_DISPLAY_NAME_1}]
+};
+
+const USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME = {
+    username: 'userWithSubscribers4',
+    getProfilePicURL: () => 'userWithSubscribers4/profilePic.jpg',
+    subscribers: [{user: USER_WITHOUT_DISPLAY_NAME_1}]
+};
+
+const USER_WITH_SUBSCRIBER_WITH_SUBSCRIPTION_WENT_LIVE_SETTING_TURNED_OFF = {
+    displayName: 'User with Subscriber with subscriptionWentLive set to false',
+    username: 'userWithSubscribers5',
+    getProfilePicURL: () => 'userWithSubscribers5/profilePic.jpg',
+    subscribers: [{user: USER_WITH_DISPLAY_NAME_2}]
 };
 
 const PASSWORD_RESET_TOKEN = 'blahblahblah';
@@ -42,6 +85,7 @@ jest.mock('@aws-sdk/client-ses', () => ({
 }));
 
 const MOCK_NEW_SUBSCRIBERS_TEMPLATE_NAME = 'testNewSubscribers';
+const MOCK_SUBSCRIPTION_WENT_LIVE_TEMPLATE_NAME = 'testSubscriptionWentLive';
 const MOCK_RESET_PASSWORD_TEMPLATE_NAME = 'testResetPassword';
 const MOCK_WELCOME_NEW_USER_TEMPLATE_NAME = 'testWelcomeNewUser';
 const MOCK_SITE_NAME = 'Mainroom Test';
@@ -51,6 +95,7 @@ jest.mock('../../../mainroom.config', () => ({
         ses: {
             templateNames: {
                 newSubscribers: MOCK_NEW_SUBSCRIBERS_TEMPLATE_NAME,
+                subscriptionWentLive: MOCK_SUBSCRIPTION_WENT_LIVE_TEMPLATE_NAME,
                 resetPassword: MOCK_RESET_PASSWORD_TEMPLATE_NAME,
                 welcomeNewUser: MOCK_WELCOME_NEW_USER_TEMPLATE_NAME
             }
@@ -209,7 +254,177 @@ describe('sesEmailSender', () => {
     });
 
     describe('notifySubscribersUserWentLive', () => {
+        it('should send email to subscriber with display name of user with display name', async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
 
+            // when
+            await sesEmailSender.notifySubscribersUserWentLive(USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME);
+
+            // then
+            expect(MOCK_SEND_BULK_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toStrictEqual({
+                Destinations: [{
+                    Destination: {
+                        ToAddresses: [USER_WITH_DISPLAY_NAME_1.email]
+                    },
+                    ReplacementTemplateData: JSON.stringify({
+                        subscriber: {
+                            displayName: USER_WITH_DISPLAY_NAME_1.displayName
+                        }
+                    })
+                }],
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_WENT_LIVE_TEMPLATE_NAME,
+                DefaultTemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME.displayName,
+                        username: USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME.username,
+                        profilePicURL: USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME.getProfilePicURL()
+                    }
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it('should send email to subscriber with display name of user without display name', async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+
+            // when
+            await sesEmailSender.notifySubscribersUserWentLive(USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME);
+
+            // then
+            expect(MOCK_SEND_BULK_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toStrictEqual({
+                Destinations: [{
+                    Destination: {
+                        ToAddresses: [USER_WITH_DISPLAY_NAME_1.email]
+                    },
+                    ReplacementTemplateData: JSON.stringify({
+                        subscriber: {
+                            displayName: USER_WITH_DISPLAY_NAME_1.displayName
+                        }
+                    })
+                }],
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_WENT_LIVE_TEMPLATE_NAME,
+                DefaultTemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME.username,
+                        username: USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME.username,
+                        profilePicURL: USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME.getProfilePicURL()
+                    }
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it('should send email to subscriber without display name of user with display name', async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+
+            // when
+            await sesEmailSender.notifySubscribersUserWentLive(USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME);
+
+            // then
+            expect(MOCK_SEND_BULK_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toStrictEqual({
+                Destinations: [{
+                    Destination: {
+                        ToAddresses: [USER_WITHOUT_DISPLAY_NAME_1.email]
+                    },
+                    ReplacementTemplateData: JSON.stringify({
+                        subscriber: {
+                            displayName: USER_WITHOUT_DISPLAY_NAME_1.username
+                        }
+                    })
+                }],
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_WENT_LIVE_TEMPLATE_NAME,
+                DefaultTemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME.displayName,
+                        username: USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME.username,
+                        profilePicURL: USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME.getProfilePicURL()
+                    }
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it('should send email to subscriber without display name of user without display name', async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+
+            // when
+            await sesEmailSender.notifySubscribersUserWentLive(USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME);
+
+            // then
+            expect(MOCK_SEND_BULK_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toStrictEqual({
+                Destinations: [{
+                    Destination: {
+                        ToAddresses: [USER_WITHOUT_DISPLAY_NAME_1.email]
+                    },
+                    ReplacementTemplateData: JSON.stringify({
+                        subscriber: {
+                            displayName: USER_WITHOUT_DISPLAY_NAME_1.username
+                        }
+                    })
+                }],
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_WENT_LIVE_TEMPLATE_NAME,
+                DefaultTemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME.username,
+                        username: USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME.username,
+                        profilePicURL: USER_WITHOUT_DISPLAY_NAME_AND_SUBSCRIBER_WITHOUT_DISPLAY_NAME.getProfilePicURL()
+                    }
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it('should not send email if no subscribers have "subscriptionWentLive" setting set to true', async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+
+            // when
+            await sesEmailSender.notifySubscribersUserWentLive(USER_WITH_SUBSCRIBER_WITH_SUBSCRIPTION_WENT_LIVE_SETTING_TURNED_OFF);
+
+            // then
+            expect(MOCK_SEND_BULK_TEMPLATED_EMAIL_COMMAND).not.toHaveBeenCalled();
+            expect(MOCK_SES_CLIENT_SEND).not.toHaveBeenCalled();
+        });
+
+        it('should send a SendBulkTemplatedEmailCommand for each group of up to 50 subscribers', async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const numberOfSubscribers = 120;
+            const userWithAHundredSubscribers = Object.assign({}, USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME);
+            for (let i = 1; i < numberOfSubscribers; i++) {
+                userWithAHundredSubscribers.subscribers.push({user: USER_WITH_DISPLAY_NAME_1});
+            }
+
+            // when
+            await sesEmailSender.notifySubscribersUserWentLive(userWithAHundredSubscribers);
+
+            // then
+            const expectedNumberOfCalls = Math.ceil(numberOfSubscribers / 50);
+            expect(MOCK_SEND_BULK_TEMPLATED_EMAIL_COMMAND).toHaveBeenCalledTimes(expectedNumberOfCalls);
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(expectedNumberOfCalls);
+        });
+
+        it('should publish error to SNS when one is thrown', async () => {
+            // given
+            MOCK_SES_CLIENT_SEND.mockRejectedValueOnce(ERROR);
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+
+            // when
+            await sesEmailSender.notifySubscribersUserWentLive(USER_WITH_DISPLAY_NAME_AND_SUBSCRIBER_WITH_DISPLAY_NAME);
+
+            // then
+            const actualError = MOCK_SNS_ERROR_PUBLISHER_PUBLISH.mock.calls[0][0];
+            expect(actualError).toBeInstanceOf(CompositeError);
+            expect(actualError.errors).toContain(ERROR);
+        });
     });
 
     describe('notifyUserSubscriptionsCreatedScheduledStreams', () => {

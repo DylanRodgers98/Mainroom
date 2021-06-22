@@ -39,7 +39,7 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
 }
 
 module.exports.notifySubscribersUserWentLive = async user => {
-    const subscribers = user.subscribers.map(sub => sub.user._id);
+    const subscribers = user.subscribers.map(sub => sub.user);
     const emailType = 'subscriptionWentLive';
     const destinations = getDestinations(subscribers, emailType);
 

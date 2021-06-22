@@ -12,6 +12,7 @@ class CompositeError extends Error {
         });
         super(message);
         this.name = 'CompositeError';
+        this.errors = errors;
     }
 }
 
