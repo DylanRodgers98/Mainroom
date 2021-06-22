@@ -30,14 +30,11 @@ module.exports.notifyUserOfNewSubscribers = async (user, subscribers) => {
     });
     try {
         await SES_CLIENT.send(params);
+        LOGGER.debug(`Successfully sent 'newSubscriber' email to {} using SES`, user.email);
     } catch (err) {
-        if (err) {
-            LOGGER.error(`An error occurred when sending 'newSubscriber' email to {} using SES: {}`,
-                user.email, err.stack || err.toString());
-            await snsErrorPublisher.publish(err);
-        } else {
-            LOGGER.debug(`Successfully sent 'newSubscriber' email to {} using SES`, user.email);
-        }
+        LOGGER.error(`An error occurred when sending 'newSubscriber' email to {} using SES: {}`,
+            user.email, err.stack || err.toString());
+        await snsErrorPublisher.publish(err);
     }
 }
 
@@ -68,13 +65,11 @@ module.exports.notifySubscribersUserWentLive = async user => {
             });
             try {
                 await SES_CLIENT.send(params);
+                LOGGER.debug(`Successfully sent bulk '{}' email {} using SES`, i + 1, emailType);
             } catch (err) {
-                if (err) {
-                    LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`, i + 1, emailType, err.stack || err.toString());
-                    errors.push(err);
-                } else {
-                    LOGGER.debug(`Successfully sent bulk '{}' email {} using SES`, i + 1, emailType);
-                }
+                LOGGER.error(`An error occurred when sending bulk '{}' email {} using SES: {}`,
+                    i + 1, emailType, err.stack || err.toString());
+                errors.push(err);
             }
         }
         if (errors.length) {
@@ -144,14 +139,11 @@ module.exports.notifyUserSubscriptionsCreatedScheduledStreams = async (user, str
     });
     try {
         await SES_CLIENT.send(params);
+        LOGGER.debug(`Successfully sent 'subscriptionsCreatedScheduledStreams' email to {} using SES`, user.email);
     } catch (err) {
-        if (err) {
-            LOGGER.error(`An error occurred when sending 'subscriptionsCreatedScheduledStreams' email to {} using SES: {}`,
-                user.email, err.stack || err.toString());
-            await snsErrorPublisher.publish(err);
-        } else {
-            LOGGER.debug(`Successfully sent 'subscriptionsCreatedScheduledStreams' email to {} using SES`, user.email);
-        }
+        LOGGER.error(`An error occurred when sending 'subscriptionsCreatedScheduledStreams' email to {} using SES: {}`,
+            user.email, err.stack || err.toString());
+        await snsErrorPublisher.publish(err);
     }
 }
 
@@ -186,15 +178,24 @@ module.exports.notifyUserOfSubscriptionsStreamsStartingSoon = async (user, strea
     });
     try {
         await SES_CLIENT.send(params);
+        LOGGER.debug(`Successfully sent 'subscriptionScheduledStreamStartingIn' email to {} using SES`, user.email);
     } catch (err) {
-        if (err) {
-            LOGGER.error(`An error occurred when sending 'subscriptionScheduledStreamStartingIn' email to {} using SES: {}`,
-                user.email, err.stack || err.toString());
-            await snsErrorPublisher.publish(err);
-        } else {
-            LOGGER.debug(`Successfully sent 'subscriptionScheduledStreamStartingIn' email to {} using SES`, user.email);
-        }
+        LOGGER.error(`An error occurred when sending 'subscriptionScheduledStreamStartingIn' email to {} using SES: {}`,
+            user.email, err.stack || err.toString());
+        await snsErrorPublisher.publish(err);
     }
+}
+
+function formatDateRange({start, end}) {
+    const startMoment = moment(start);
+    const endMoment = moment(end);
+
+    const startFormatted = startMoment.format(dateFormat);
+    const endFormatted = startMoment.isSame(endMoment, 'day')
+        ? `-${endMoment.format(timeFormat)}`
+        : ` - ${endMoment.format(dateFormat)}`;
+
+    return `${startFormatted}${endFormatted}`;
 }
 
 module.exports.sendResetPasswordEmail = async (user, token) => {
@@ -213,14 +214,11 @@ module.exports.sendResetPasswordEmail = async (user, token) => {
     });
     try {
         await SES_CLIENT.send(params);
+        LOGGER.debug(`Successfully sent 'resetPassword' email to {} using SES`, user.email);
     } catch (err) {
-        if (err) {
-            LOGGER.error(`An error occurred when sending 'resetPassword' email to {} using SES: {}`,
-                user.email, err.stack || err.toString());
-            await snsErrorPublisher.publish(err);
-        } else {
-            LOGGER.debug(`Successfully sent 'resetPassword' email to {} using SES`, user.email);
-        }
+        LOGGER.error(`An error occurred when sending 'resetPassword' email to {} using SES: {}`,
+            user.email, err.stack || err.toString());
+        await snsErrorPublisher.publish(err);
     }
 }
 
@@ -235,25 +233,10 @@ module.exports.sendWelcomeEmail = async (email, username) => {
     });
     try {
         await SES_CLIENT.send(params);
+        LOGGER.debug(`Successfully sent 'resetPassword' email to {} using SES`, email);
     } catch (err) {
-        if (err) {
-            LOGGER.error(`An error occurred when sending 'welcomeNewUser' email to {} using SES: {}`,
-                email, err.stack || err.toString());
-            await snsErrorPublisher.publish(err);
-        } else {
-            LOGGER.debug(`Successfully sent 'resetPassword' email to {} using SES`, email);
-        }
+        LOGGER.error(`An error occurred when sending 'welcomeNewUser' email to {} using SES: {}`,
+            email, err.stack || err.toString());
+        await snsErrorPublisher.publish(err);
     }
-}
-
-function formatDateRange({start, end}) {
-    const startMoment = moment(start);
-    const endMoment = moment(end);
-
-    const startFormatted = startMoment.format(dateFormat);
-    const endFormatted = startMoment.isSame(endMoment, 'day')
-        ? `-${endMoment.format(timeFormat)}`
-        : ` - ${endMoment.format(dateFormat)}`;
-
-    return `${startFormatted}${endFormatted}`;
 }
