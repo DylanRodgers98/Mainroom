@@ -1,4 +1,6 @@
-const CompositeError = require("../../../server/errors/CompositeError");
+const moment = require('moment');
+
+const CompositeError = require('../../../server/errors/CompositeError');
 const {overrideEnvironmentVariables} = require('../../testUtils');
 
 const USER_WITH_DISPLAY_NAME_1 = {
@@ -69,6 +71,33 @@ const USER_WITH_SUBSCRIBER_WITH_SUBSCRIPTION_WENT_LIVE_SETTING_TURNED_OFF = {
     subscribers: [{user: USER_WITH_DISPLAY_NAME_2}]
 };
 
+const STREAM_BY_USER_WITH_DISPLAY_NAME = {
+    user: USER_WITH_DISPLAY_NAME_1,
+    title: 'Stream by User with displayName',
+    genre: 'Drum & Bass',
+    category: 'DJ Set',
+    startTime: new Date(2021, 6, 22, 18, 30),
+    endTime: new Date(2021, 6, 22, 19, 30)
+}
+
+const STREAM_BY_USER_WITHOUT_DISPLAY_NAME = {
+    user: USER_WITHOUT_DISPLAY_NAME_1,
+    title: 'Stream by User without displayName',
+    genre: 'Techno',
+    category: 'Live Set',
+    startTime: new Date(2021, 6, 22, 20, 30),
+    endTime: new Date(2021, 6, 22, 21, 30)
+}
+
+const STREAM_ENDING_ON_DIFFERENT_DAY = {
+    user: USER_WITH_DISPLAY_NAME_1,
+    title: 'Stream by User with displayName',
+    genre: 'Drum & Bass',
+    category: 'DJ Set',
+    startTime: new Date(2021, 6, 22, 23, 30),
+    endTime: new Date(2021, 6, 23, 0, 30)
+}
+
 const PASSWORD_RESET_TOKEN = 'blahblahblah';
 const ERROR = new Error();
 
@@ -86,9 +115,13 @@ jest.mock('@aws-sdk/client-ses', () => ({
 
 const MOCK_NEW_SUBSCRIBERS_TEMPLATE_NAME = 'testNewSubscribers';
 const MOCK_SUBSCRIPTION_WENT_LIVE_TEMPLATE_NAME = 'testSubscriptionWentLive';
+const MOCK_SUBSCRIPTIONS_CREATED_SCHEDULED_STREAMS_TEMPLATE_NAME = 'testSubscriptionsCreatedScheduledStreams';
+const MOCK_SUBSCRIPTION_SCHEDULED_STREAM_STARTING_IN_TEMPLATE_NAME = 'testSubscriptionScheduledStreamStartingIn';
 const MOCK_RESET_PASSWORD_TEMPLATE_NAME = 'testResetPassword';
 const MOCK_WELCOME_NEW_USER_TEMPLATE_NAME = 'testWelcomeNewUser';
 const MOCK_SITE_NAME = 'Mainroom Test';
+const MOCK_TIME_FORMAT = 'HH:mm';
+const MOCK_DATE_FORMAT = `ddd, DD MMM, yyyy · ${MOCK_TIME_FORMAT}`;
 
 jest.mock('../../../mainroom.config', () => ({
     email: {
@@ -96,12 +129,16 @@ jest.mock('../../../mainroom.config', () => ({
             templateNames: {
                 newSubscribers: MOCK_NEW_SUBSCRIBERS_TEMPLATE_NAME,
                 subscriptionWentLive: MOCK_SUBSCRIPTION_WENT_LIVE_TEMPLATE_NAME,
+                subscriptionsCreatedScheduledStreams: MOCK_SUBSCRIPTIONS_CREATED_SCHEDULED_STREAMS_TEMPLATE_NAME,
+                subscriptionScheduledStreamStartingIn: MOCK_SUBSCRIPTION_SCHEDULED_STREAM_STARTING_IN_TEMPLATE_NAME,
                 resetPassword: MOCK_RESET_PASSWORD_TEMPLATE_NAME,
                 welcomeNewUser: MOCK_WELCOME_NEW_USER_TEMPLATE_NAME
             }
         }
     },
-    siteName: MOCK_SITE_NAME
+    siteName: MOCK_SITE_NAME,
+    timeFormat: MOCK_TIME_FORMAT,
+    dateFormat: MOCK_DATE_FORMAT
 }));
 
 const MOCK_SNS_ERROR_PUBLISHER_PUBLISH = jest.fn();
@@ -428,11 +465,403 @@ describe('sesEmailSender', () => {
     });
 
     describe('notifyUserSubscriptionsCreatedScheduledStreams', () => {
+        it("should send email using user's display name and stream creator's display name", async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITH_DISPLAY_NAME]
 
+            // when
+            await sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams(USER_WITH_DISPLAY_NAME_2, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITH_DISPLAY_NAME_2.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTIONS_CREATED_SCHEDULED_STREAMS_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITH_DISPLAY_NAME_2.displayName
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_BY_USER_WITH_DISPLAY_NAME.user.displayName,
+                            username: STREAM_BY_USER_WITH_DISPLAY_NAME.user.username,
+                            profilePicURL: STREAM_BY_USER_WITH_DISPLAY_NAME.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_BY_USER_WITH_DISPLAY_NAME.title,
+                            genre: STREAM_BY_USER_WITH_DISPLAY_NAME.genre,
+                            category: STREAM_BY_USER_WITH_DISPLAY_NAME.category,
+                            timeRange: `${moment(STREAM_BY_USER_WITH_DISPLAY_NAME.startTime).format(MOCK_DATE_FORMAT)}-${moment(STREAM_BY_USER_WITH_DISPLAY_NAME.endTime).format(MOCK_TIME_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it("should send email using user's username and stream creator's display name", async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITH_DISPLAY_NAME]
+
+            // when
+            await sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams(USER_WITHOUT_DISPLAY_NAME_1, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITHOUT_DISPLAY_NAME_1.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTIONS_CREATED_SCHEDULED_STREAMS_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITHOUT_DISPLAY_NAME_1.username
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_BY_USER_WITH_DISPLAY_NAME.user.displayName,
+                            username: STREAM_BY_USER_WITH_DISPLAY_NAME.user.username,
+                            profilePicURL: STREAM_BY_USER_WITH_DISPLAY_NAME.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_BY_USER_WITH_DISPLAY_NAME.title,
+                            genre: STREAM_BY_USER_WITH_DISPLAY_NAME.genre,
+                            category: STREAM_BY_USER_WITH_DISPLAY_NAME.category,
+                            timeRange: `${moment(STREAM_BY_USER_WITH_DISPLAY_NAME.startTime).format(MOCK_DATE_FORMAT)}-${moment(STREAM_BY_USER_WITH_DISPLAY_NAME.endTime).format(MOCK_TIME_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it("should send email using user's display name and stream creator's username", async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITHOUT_DISPLAY_NAME]
+
+            // when
+            await sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams(USER_WITH_DISPLAY_NAME_1, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITH_DISPLAY_NAME_1.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTIONS_CREATED_SCHEDULED_STREAMS_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITH_DISPLAY_NAME_1.displayName
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.username,
+                            username: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.username,
+                            profilePicURL: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.title,
+                            genre: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.genre,
+                            category: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.category,
+                            timeRange: `${moment(STREAM_BY_USER_WITHOUT_DISPLAY_NAME.startTime).format(MOCK_DATE_FORMAT)}-${moment(STREAM_BY_USER_WITHOUT_DISPLAY_NAME.endTime).format(MOCK_TIME_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it("should send email using user's username and stream creator's username", async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITHOUT_DISPLAY_NAME]
+
+            // when
+            await sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams(USER_WITHOUT_DISPLAY_NAME_2, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITHOUT_DISPLAY_NAME_2.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTIONS_CREATED_SCHEDULED_STREAMS_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITHOUT_DISPLAY_NAME_2.username
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.username,
+                            username: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.username,
+                            profilePicURL: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.title,
+                            genre: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.genre,
+                            category: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.category,
+                            timeRange: `${moment(STREAM_BY_USER_WITHOUT_DISPLAY_NAME.startTime).format(MOCK_DATE_FORMAT)}-${moment(STREAM_BY_USER_WITHOUT_DISPLAY_NAME.endTime).format(MOCK_TIME_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it('should format timeRange correctly if stream is scheduled to end on different day', async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_ENDING_ON_DIFFERENT_DAY]
+
+            // when
+            await sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams(USER_WITH_DISPLAY_NAME_2, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITH_DISPLAY_NAME_2.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTIONS_CREATED_SCHEDULED_STREAMS_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITH_DISPLAY_NAME_2.displayName
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_ENDING_ON_DIFFERENT_DAY.user.displayName,
+                            username: STREAM_ENDING_ON_DIFFERENT_DAY.user.username,
+                            profilePicURL: STREAM_ENDING_ON_DIFFERENT_DAY.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_ENDING_ON_DIFFERENT_DAY.title,
+                            genre: STREAM_ENDING_ON_DIFFERENT_DAY.genre,
+                            category: STREAM_ENDING_ON_DIFFERENT_DAY.category,
+                            timeRange: `${moment(STREAM_ENDING_ON_DIFFERENT_DAY.startTime).format(MOCK_DATE_FORMAT)} - ${moment(STREAM_ENDING_ON_DIFFERENT_DAY.endTime).format(MOCK_DATE_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it('should publish error to SNS when one is thrown', async () => {
+            // given
+            MOCK_SES_CLIENT_SEND.mockRejectedValueOnce(ERROR);
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITH_DISPLAY_NAME]
+
+            // when
+            await sesEmailSender.notifyUserSubscriptionsCreatedScheduledStreams(USER_WITH_DISPLAY_NAME_2, streams);
+
+            // then
+            expect(MOCK_SNS_ERROR_PUBLISHER_PUBLISH).toHaveBeenCalledWith(ERROR);
+        });
     });
 
     describe('notifyUserOfSubscriptionsStreamsStartingSoon', () => {
+        it("should send email using user's display name and stream creator's display name", async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITH_DISPLAY_NAME]
 
+            // when
+            await sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon(USER_WITH_DISPLAY_NAME_2, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITH_DISPLAY_NAME_2.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_SCHEDULED_STREAM_STARTING_IN_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITH_DISPLAY_NAME_2.displayName
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_BY_USER_WITH_DISPLAY_NAME.user.displayName,
+                            username: STREAM_BY_USER_WITH_DISPLAY_NAME.user.username,
+                            profilePicURL: STREAM_BY_USER_WITH_DISPLAY_NAME.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_BY_USER_WITH_DISPLAY_NAME.title,
+                            genre: STREAM_BY_USER_WITH_DISPLAY_NAME.genre,
+                            category: STREAM_BY_USER_WITH_DISPLAY_NAME.category,
+                            timeRange: `${moment(STREAM_BY_USER_WITH_DISPLAY_NAME.startTime).format(MOCK_DATE_FORMAT)}-${moment(STREAM_BY_USER_WITH_DISPLAY_NAME.endTime).format(MOCK_TIME_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it("should send email using user's username and stream creator's display name", async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITH_DISPLAY_NAME]
+
+            // when
+            await sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon(USER_WITHOUT_DISPLAY_NAME_1, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITHOUT_DISPLAY_NAME_1.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_SCHEDULED_STREAM_STARTING_IN_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITHOUT_DISPLAY_NAME_1.username
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_BY_USER_WITH_DISPLAY_NAME.user.displayName,
+                            username: STREAM_BY_USER_WITH_DISPLAY_NAME.user.username,
+                            profilePicURL: STREAM_BY_USER_WITH_DISPLAY_NAME.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_BY_USER_WITH_DISPLAY_NAME.title,
+                            genre: STREAM_BY_USER_WITH_DISPLAY_NAME.genre,
+                            category: STREAM_BY_USER_WITH_DISPLAY_NAME.category,
+                            timeRange: `${moment(STREAM_BY_USER_WITH_DISPLAY_NAME.startTime).format(MOCK_DATE_FORMAT)}-${moment(STREAM_BY_USER_WITH_DISPLAY_NAME.endTime).format(MOCK_TIME_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it("should send email using user's display name and stream creator's username", async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITHOUT_DISPLAY_NAME]
+
+            // when
+            await sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon(USER_WITH_DISPLAY_NAME_1, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITH_DISPLAY_NAME_1.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_SCHEDULED_STREAM_STARTING_IN_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITH_DISPLAY_NAME_1.displayName
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.username,
+                            username: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.username,
+                            profilePicURL: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.title,
+                            genre: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.genre,
+                            category: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.category,
+                            timeRange: `${moment(STREAM_BY_USER_WITHOUT_DISPLAY_NAME.startTime).format(MOCK_DATE_FORMAT)}-${moment(STREAM_BY_USER_WITHOUT_DISPLAY_NAME.endTime).format(MOCK_TIME_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it("should send email using user's username and stream creator's username", async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITHOUT_DISPLAY_NAME]
+
+            // when
+            await sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon(USER_WITHOUT_DISPLAY_NAME_2, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITHOUT_DISPLAY_NAME_2.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_SCHEDULED_STREAM_STARTING_IN_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITHOUT_DISPLAY_NAME_2.username
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.username,
+                            username: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.username,
+                            profilePicURL: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.title,
+                            genre: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.genre,
+                            category: STREAM_BY_USER_WITHOUT_DISPLAY_NAME.category,
+                            timeRange: `${moment(STREAM_BY_USER_WITHOUT_DISPLAY_NAME.startTime).format(MOCK_DATE_FORMAT)}-${moment(STREAM_BY_USER_WITHOUT_DISPLAY_NAME.endTime).format(MOCK_TIME_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it('should format timeRange correctly if stream is scheduled to end on different day', async () => {
+            // given
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_ENDING_ON_DIFFERENT_DAY]
+
+            // when
+            await sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon(USER_WITH_DISPLAY_NAME_2, streams);
+
+            // then
+            expect(MOCK_SEND_TEMPLATED_EMAIL_COMMAND.mock.calls[0][0]).toEqual({
+                Destination: {
+                    ToAddresses: [USER_WITH_DISPLAY_NAME_2.email]
+                },
+                Source: EXPECTED_SOURCE,
+                Template: MOCK_SUBSCRIPTION_SCHEDULED_STREAM_STARTING_IN_TEMPLATE_NAME,
+                TemplateData: JSON.stringify({
+                    user: {
+                        displayName: USER_WITH_DISPLAY_NAME_2.displayName
+                    },
+                    streams: [{
+                        user: {
+                            displayName: STREAM_ENDING_ON_DIFFERENT_DAY.user.displayName,
+                            username: STREAM_ENDING_ON_DIFFERENT_DAY.user.username,
+                            profilePicURL: STREAM_ENDING_ON_DIFFERENT_DAY.user.getProfilePicURL()
+                        },
+                        stream: {
+                            title: STREAM_ENDING_ON_DIFFERENT_DAY.title,
+                            genre: STREAM_ENDING_ON_DIFFERENT_DAY.genre,
+                            category: STREAM_ENDING_ON_DIFFERENT_DAY.category,
+                            timeRange: `${moment(STREAM_ENDING_ON_DIFFERENT_DAY.startTime).format(MOCK_DATE_FORMAT)} - ${moment(STREAM_ENDING_ON_DIFFERENT_DAY.endTime).format(MOCK_DATE_FORMAT)}`
+                        }
+                    }]
+                })
+            });
+            expect(MOCK_SES_CLIENT_SEND).toHaveBeenCalledTimes(1);
+        });
+
+        it('should publish error to SNS when one is thrown', async () => {
+            // given
+            MOCK_SES_CLIENT_SEND.mockRejectedValueOnce(ERROR);
+            const sesEmailSender = require('../../../server/aws/sesEmailSender');
+            const streams = [STREAM_BY_USER_WITH_DISPLAY_NAME]
+
+            // when
+            await sesEmailSender.notifyUserOfSubscriptionsStreamsStartingSoon(USER_WITH_DISPLAY_NAME_2, streams);
+
+            // then
+            expect(MOCK_SNS_ERROR_PUBLISHER_PUBLISH).toHaveBeenCalledWith(ERROR);
+        });
     });
 
     describe('sendResetPasswordEmail', () => {
@@ -498,7 +927,7 @@ describe('sesEmailSender', () => {
     });
 
     describe('sendWelcomeEmail', () => {
-        it("should send email", async () => {
+        it("should send email using user's email address and username", async () => {
             // given
             const sesEmailSender = require('../../../server/aws/sesEmailSender');
             const email = USER_WITH_DISPLAY_NAME_1.email;
