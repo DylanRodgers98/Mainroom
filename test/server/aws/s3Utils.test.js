@@ -32,6 +32,11 @@ jest.mock('../../../mainroom.config', () => ({
     storage: {
         cloudfront: {
             [BUCKET_WITH_CLOUDFRONT_DISTRIBUTION]: CLOUDFRONT_URL_FOR_BUCKET
+        },
+        s3: {
+            upload: {
+                signedURLExpiryInSeconds: 0
+            }
         }
     }
 }))
