@@ -132,7 +132,15 @@ function startStreamFromPrerecordedVideo({startTime, inputURL, streamKey}) {
     if (startTime > 0) {
         args.push('-ss', `${startTime}ms`);
     }
-    args.push('-i', inputURL, '-c:v', 'copy', '-c:a', 'copy', '-f', 'tee', '-map', '0:a?', '-map', '0:v?', '-f', 'flv', `${RTMP_SERVER_URL}/${streamKey}`);
+    args.push('-i', inputURL,
+              '-vf', "scale=-2:'min(1080,ih)'",
+              '-c:v', 'copy',
+              '-c:a', 'copy',
+              '-f', 'tee',
+              '-map', '0:a?',
+              '-map', '0:v?',
+              '-f', 'flv',
+              `${RTMP_SERVER_URL}/${streamKey}`);
 
     return new Promise((resolve, reject) => {
         spawn(process.env.FFMPEG_PATH, args, {detached: true, stdio: 'ignore'})

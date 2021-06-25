@@ -101,7 +101,8 @@ export default class LiveStream extends React.Component {
                     src: data.liveStreamURL,
                     type: 'application/x-mpegURL'
                 }],
-                fluid: true
+                fluid: true,
+                aspectRatio: '16:9'
             },
             displayName: data.displayName,
             profilePicURL: data.profilePicURL,

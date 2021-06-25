@@ -49,11 +49,18 @@ async function checkFileExists(inputURL) {
 }
 
 function doGenerateStreamThumbnail({Bucket, Key, inputURL}) {
+    const args = ['-i', inputURL,
+                  '-ss', '00:00:01',
+                  '-vframes', '1',
+                  '-vf', "scale=w=1280:h=720:force_original_aspect_ratio=1,pad=1280:720:(ow-iw)/2:(oh-ih)/2",
+                  '-c:v', 'png',
+                  '-f', 'image2pipe',
+                  '-'];
+
     return new Promise((resolve, reject) => {
-        const args = ['-i', inputURL, '-ss', '00:00:01', '-vframes', '1', '-vf', 'scale=-2:720', '-c:v', 'png', '-f', 'image2pipe', '-'];
         const ffmpeg = spawn(process.env.FFMPEG_PATH, args);
         ffmpeg.stderr.on('data', data => {
-            LOGGER.debug('stderr: {}', data)
+            LOGGER.debug('stderr: {}', data);
         });
         ffmpeg.on('error', err => {
             LOGGER.error('An error occurred when generating stream thumbnail (stream URL: {}): {}',

@@ -73,7 +73,8 @@ export default class RecordedStream extends React.Component {
                     src: recordedStream.videoURL,
                     type: 'video/mp4'
                 }],
-                fluid: true
+                fluid: true,
+                aspectRatio: '16:9'
             },
             username: recordedStream.user.username,
             displayName: recordedStream.user.displayName,
