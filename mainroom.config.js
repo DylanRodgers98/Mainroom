@@ -11,9 +11,11 @@ const CRON_EVERY_MINUTE = '* * * * *';
 const CRON_EVERY_HOUR = '0 * * * *';
 
 const STATIC_CONTENT_BUCKET_NAME = 'mainroom-static-content';
+const LIVESTREAM_THUMBNAILS_BUCKET_NAME = 'mainroom-livestream-thumbnails';
 const RECORDED_STREAMS_BUCKET_NAME = 'mainroom-streams';
 
 const STATIC_CONTENT_CLOUDFRONT_DOMAIN = 'dp8ki4pcym3cc.cloudfront.net';
+const LIVESTREAM_THUMBNAILS_CLOUDFRONT_DOMAIN = 'ddiny7n4mo3ax.cloudfront.net';
 const RECORDED_STREAMS_CLOUDFRONT_DOMAIN = 'd9wctuq44cpzl.cloudfront.net';
 
 const DEFAULT_PROFILE_PIC_KEY = 'default_profile_pic.png';
@@ -118,6 +120,9 @@ module.exports = {
                     eventImages: 'event-images'
                 }
             },
+            livestreamThumbnails: {
+                bucketName: LIVESTREAM_THUMBNAILS_BUCKET_NAME
+            },
             streams: {
                 bucketName: RECORDED_STREAMS_BUCKET_NAME,
                 keyPrefixes : {
@@ -147,6 +152,8 @@ module.exports = {
         cloudfront: {
             [STATIC_CONTENT_BUCKET_NAME]: STATIC_CONTENT_CLOUDFRONT_DOMAIN,
             staticContent: STATIC_CONTENT_CLOUDFRONT_DOMAIN,
+            [LIVESTREAM_THUMBNAILS_BUCKET_NAME]: LIVESTREAM_THUMBNAILS_CLOUDFRONT_DOMAIN,
+            livestreamThumbnails: LIVESTREAM_THUMBNAILS_CLOUDFRONT_DOMAIN,
             [RECORDED_STREAMS_BUCKET_NAME]: RECORDED_STREAMS_CLOUDFRONT_DOMAIN,
             recordedStreams: RECORDED_STREAMS_CLOUDFRONT_DOMAIN,
             liveStreams: 'd2367g9b1h656u.cloudfront.net'
