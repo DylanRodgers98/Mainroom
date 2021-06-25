@@ -57,7 +57,7 @@ const SCROLL_MARGIN_HEIGHT = 30;
 const CHAT_HEIGHT_NAVBAR_OFFSET = 56;
 const S3_MIN_PART_SIZE = 1024 * 1024 * 5;
 const S3_MAX_NUMBER_OF_PARTS = 10000;
-const UPLOAD_CHUNK_SIZE = 5;
+const UPLOAD_CHUNK_SIZE = storage.s3.upload.numUploadsPerChunk;
 
 export default class Event extends React.Component {
 

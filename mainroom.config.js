@@ -147,6 +147,10 @@ module.exports = {
                 // TODO: CHANGE THESE TO MATCH CORRECT DEFAULT THUMBNAIL
                 bucket: STATIC_CONTENT_BUCKET_NAME,
                 key: DEFAULT_STREAM_THUMBNAIL_KEY
+            },
+            upload: {
+                numUploadsPerChunk: 5,
+                signedURLExpiryInSeconds: 21600 // 6 hours (in seconds, NOT millis)
             }
         },
         cloudfront: {

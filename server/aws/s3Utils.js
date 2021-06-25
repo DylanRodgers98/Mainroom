@@ -7,7 +7,7 @@ const {
     AbortMultipartUploadCommand
 } = require('@aws-sdk/client-s3');
 const {getSignedUrl} = require('@aws-sdk/s3-request-presigner');
-const {storage: {cloudfront}} = require('../../mainroom.config');
+const {storage: {cloudfront, s3: {upload: {signedURLExpiryInSeconds}}}} = require('../../mainroom.config');
 const LOGGER = require('../../logger')('./server/aws/s3Utils.js');
 
 const S3_CLIENT = new S3Client({});
@@ -49,7 +49,7 @@ async function getUploadPartSignedURLs({Bucket, Key, UploadId, NumberOfParts}) {
         const promises = [];
         for (let PartNumber = 1; PartNumber <= NumberOfParts; PartNumber++) {
             const uploadPartCommand = new UploadPartCommand({Bucket, Key, UploadId, PartNumber});
-            promises.push(getSignedUrl(S3_CLIENT, uploadPartCommand, { expiresIn: 3600 }));
+            promises.push(getSignedUrl(S3_CLIENT, uploadPartCommand, { expiresIn: signedURLExpiryInSeconds }));
         }
         return await Promise.all(promises);
     } catch (err) {
