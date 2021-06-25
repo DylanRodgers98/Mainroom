@@ -49,6 +49,7 @@ nms.on('prePublish', async (sessionId, streamPath) => {
         }
 
         mainroomEventBus.send('streamStarted', user.username);
+        mainroomEventBus.send(`streamStarted_${streamKey}`);
         if (config.email.enabled) {
             sesEmailSender.notifySubscribersUserWentLive(user);
         }
@@ -76,7 +77,9 @@ nms.on('prePublish', async (sessionId, streamPath) => {
             return await snsErrorPublisher.publish(err);
         }
 
-        return mainroomEventBus.send('streamStarted', eventStage._id);
+        mainroomEventBus.send('streamStarted', eventStage._id);
+        mainroomEventBus.send(`streamStarted_${streamKey}`);
+        return;
     }
 
     nms.getSession(sessionId).reject();
