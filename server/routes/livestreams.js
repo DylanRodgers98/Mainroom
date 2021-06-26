@@ -50,19 +50,21 @@ router.get('/', async (req, res, next) => {
     User.paginate(query, options, async (err, result) => {
         if (err) {
             LOGGER.error('An error occurred when finding User livestream info: {}', err);
-            next(err);
-        } else {
-            const streams = [];
-            for (const user of result.docs) {
+            return next(err);
+        }
+
+        const streams = await Promise.all(result.docs.map(user => {
+            return async () => {
                 const streamKey = user.streamInfo.streamKey;
                 let thumbnailURL;
                 try {
                     thumbnailURL = await getThumbnail(streamKey);
                 } catch (err) {
-                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
+                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
+                        'Returning default thumbnail. Error: {}', streamKey, err);
                     thumbnailURL = config.defaultThumbnailURL;
                 }
-                streams.push({
+                return {
                     username: user.username,
                     displayName: user.displayName,
                     profilePicURL: user.getProfilePicURL(),
@@ -72,13 +74,14 @@ router.get('/', async (req, res, next) => {
                     viewCount: user.streamInfo.viewCount,
                     startTime: user.streamInfo.startTime,
                     thumbnailURL
-                });
-            }
-            res.json({
-                streams,
-                nextPage: result.nextPage
-            });
-        }
+                };
+            };
+        }));
+
+        res.json({
+            streams,
+            nextPage: result.nextPage
+        });
     });
 });
 
@@ -151,28 +154,31 @@ router.get('/event-stages', async (req, res, next) => {
             return next(err);
         }
 
-        const streams = [];
-        for (const eventStage of result.docs) {
-            const streamKey = eventStage.streamInfo.streamKey;
-            let thumbnailURL;
-            try {
-                thumbnailURL = await getThumbnail(streamKey);
-            } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
-                thumbnailURL = config.defaultThumbnailURL;
-            }
-            streams.push({
-                eventStageId: eventStage._id,
-                stageName: eventStage.stageName,
-                event: eventStage.event,
-                title: eventStage.streamInfo.title,
-                genre: eventStage.streamInfo.genre,
-                category: eventStage.streamInfo.category,
-                viewCount: eventStage.streamInfo.viewCount,
-                startTime: eventStage.streamInfo.startTime,
-                thumbnailURL
-            });
-        }
+        const streams = await Promise.all(result.docs.map(eventStage => {
+            return async () => {
+                const streamKey = eventStage.streamInfo.streamKey;
+                let thumbnailURL;
+                try {
+                    thumbnailURL = await getThumbnail(streamKey);
+                } catch (err) {
+                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
+                        'Returning default thumbnail. Error: {}', streamKey, err);
+                    thumbnailURL = config.defaultThumbnailURL;
+                }
+                return {
+                    eventStageId: eventStage._id,
+                    stageName: eventStage.stageName,
+                    event: eventStage.event,
+                    title: eventStage.streamInfo.title,
+                    genre: eventStage.streamInfo.genre,
+                    category: eventStage.streamInfo.category,
+                    viewCount: eventStage.streamInfo.viewCount,
+                    startTime: eventStage.streamInfo.startTime,
+                    thumbnailURL
+                };
+            };
+        }));
+
         res.json({
             streams,
             nextPage: result.nextPage

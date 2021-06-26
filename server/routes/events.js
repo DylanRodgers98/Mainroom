@@ -500,39 +500,42 @@ router.get('/:eventId', async (req, res, next) => {
         return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
     }
 
-    const stages = [];
-    for (const stage of event.stages) {
-        const streamKey = stage.streamInfo.streamKey;
-        const {data: {isLive}} = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
-            headers: {Authorization: rtmpServer.auth.header}
-        });
+    const stages = await Promise.all(event.stages.map(stage => {
+        return async () => {
+            const streamKey = stage.streamInfo.streamKey;
+            const rtmpServerURL = `http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`;
+            const {data: {isLive}} = await axios.get(rtmpServerURL, {
+                headers: {Authorization: rtmpServer.auth.header}
+            });
 
-        let thumbnailURL;
-        if (isLive) {
-            try {
-                thumbnailURL = await getThumbnail(streamKey);
-            } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning splash thumbnail. Error: {}', streamKey, err);
+            let thumbnailURL;
+            if (isLive) {
+                try {
+                    thumbnailURL = await getThumbnail(streamKey);
+                } catch (err) {
+                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
+                        'Returning splash thumbnail. Error: {}', streamKey, err);
+                    thumbnailURL = stage.getSplashThumbnailURL();
+                }
+            } else {
                 thumbnailURL = stage.getSplashThumbnailURL();
             }
-        } else {
-            thumbnailURL = stage.getSplashThumbnailURL();
-        }
 
-        stages.push({
-            _id: stage._id,
-            isLive,
-            stageName: stage.stageName,
-            thumbnailURL,
-            streamInfo: {
-                streamKey: stage.streamInfo.streamKey,
-                title: stage.streamInfo.title,
-                genre: stage.streamInfo.genre,
-                category: stage.streamInfo.category,
-                viewCount: stage.streamInfo.viewCount
-            }
-        });
-    }
+            return {
+                _id: stage._id,
+                isLive,
+                stageName: stage.stageName,
+                thumbnailURL,
+                streamInfo: {
+                    streamKey: stage.streamInfo.streamKey,
+                    title: stage.streamInfo.title,
+                    genre: stage.streamInfo.genre,
+                    category: stage.streamInfo.category,
+                    viewCount: stage.streamInfo.viewCount
+                }
+            };
+        };
+    }));
 
     const socketIOURL = (process.env.NODE_ENV === 'production' ? 'https' : 'http')
         + `://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?eventId=${eventId}`;
