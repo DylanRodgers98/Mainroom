@@ -53,38 +53,35 @@ router.get('/', async (req, res, next) => {
             return next(err);
         }
 
-        const streams = await Promise.all(result.docs.map(user => {
-            return async () => {
-                const streamKey = user.streamInfo.streamKey;
-                let thumbnailURL;
-                try {
-                    thumbnailURL = await getThumbnail(streamKey);
-                } catch (err) {
-                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
-                        'Returning default thumbnail. Error: {}', streamKey, err);
-                    thumbnailURL = config.defaultThumbnailURL;
-                }
-                return {
-                    username: user.username,
-                    displayName: user.displayName,
-                    profilePicURL: user.getProfilePicURL(),
-                    title: user.streamInfo.title,
-                    genre: user.streamInfo.genre,
-                    category: user.streamInfo.category,
-                    viewCount: user.streamInfo.viewCount,
-                    startTime: user.streamInfo.startTime,
-                    thumbnailURL
-                };
-            };
-        }));
-
         res.json({
-            streams,
+            streams: await Promise.all(result.docs.map(buildUserLivestream)),
             nextPage: result.nextPage
         });
     });
 });
 
+async function buildUserLivestream(user) {
+    const streamKey = user.streamInfo.streamKey;
+    let thumbnailURL;
+    try {
+        thumbnailURL = await getThumbnail(streamKey);
+    } catch (err) {
+        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
+            'Returning default thumbnail. Error: {}', streamKey, err);
+        thumbnailURL = config.defaultThumbnailURL;
+    }
+    return {
+        username: user.username,
+        displayName: user.displayName,
+        profilePicURL: user.getProfilePicURL(),
+        title: user.streamInfo.title,
+        genre: user.streamInfo.genre,
+        category: user.streamInfo.category,
+        viewCount: user.streamInfo.viewCount,
+        startTime: user.streamInfo.startTime,
+        thumbnailURL
+    };
+}
 
 router.get('/event-stages', async (req, res, next) => {
     const streamKeys = await getLiveStreamKeys();
@@ -154,33 +151,8 @@ router.get('/event-stages', async (req, res, next) => {
             return next(err);
         }
 
-        const streams = await Promise.all(result.docs.map(eventStage => {
-            return async () => {
-                const streamKey = eventStage.streamInfo.streamKey;
-                let thumbnailURL;
-                try {
-                    thumbnailURL = await getThumbnail(streamKey);
-                } catch (err) {
-                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
-                        'Returning default thumbnail. Error: {}', streamKey, err);
-                    thumbnailURL = config.defaultThumbnailURL;
-                }
-                return {
-                    eventStageId: eventStage._id,
-                    stageName: eventStage.stageName,
-                    event: eventStage.event,
-                    title: eventStage.streamInfo.title,
-                    genre: eventStage.streamInfo.genre,
-                    category: eventStage.streamInfo.category,
-                    viewCount: eventStage.streamInfo.viewCount,
-                    startTime: eventStage.streamInfo.startTime,
-                    thumbnailURL
-                };
-            };
-        }));
-
         res.json({
-            streams,
+            streams: await Promise.all(result.docs.map(buildEventStageLivestream)),
             nextPage: result.nextPage
         });
     });
@@ -191,6 +163,29 @@ async function getLiveStreamKeys() {
         headers: { Authorization: config.rtmpServer.auth.header }
     });
     return data.live ? Object.getOwnPropertyNames(data.live) : [];
+}
+
+async function buildEventStageLivestream(eventStage) {
+    const streamKey = eventStage.streamInfo.streamKey;
+    let thumbnailURL;
+    try {
+        thumbnailURL = await getThumbnail(streamKey);
+    } catch (err) {
+        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
+            'Returning default thumbnail. Error: {}', streamKey, err);
+        thumbnailURL = config.defaultThumbnailURL;
+    }
+    return {
+        eventStageId: eventStage._id,
+        stageName: eventStage.stageName,
+        event: eventStage.event,
+        title: eventStage.streamInfo.title,
+        genre: eventStage.streamInfo.genre,
+        category: eventStage.streamInfo.category,
+        viewCount: eventStage.streamInfo.viewCount,
+        startTime: eventStage.streamInfo.startTime,
+        thumbnailURL
+    };
 }
 
 router.get('/:streamKey/thumbnail', async (req, res) => {

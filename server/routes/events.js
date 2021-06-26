@@ -500,43 +500,6 @@ router.get('/:eventId', async (req, res, next) => {
         return res.status(404).send(`Event (_id: ${escape(eventId)}) not found`);
     }
 
-    const stages = await Promise.all(event.stages.map(stage => {
-        return async () => {
-            const streamKey = stage.streamInfo.streamKey;
-            const rtmpServerURL = `http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`;
-            const {data: {isLive}} = await axios.get(rtmpServerURL, {
-                headers: {Authorization: rtmpServer.auth.header}
-            });
-
-            let thumbnailURL;
-            if (isLive) {
-                try {
-                    thumbnailURL = await getThumbnail(streamKey);
-                } catch (err) {
-                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
-                        'Returning splash thumbnail. Error: {}', streamKey, err);
-                    thumbnailURL = stage.getSplashThumbnailURL();
-                }
-            } else {
-                thumbnailURL = stage.getSplashThumbnailURL();
-            }
-
-            return {
-                _id: stage._id,
-                isLive,
-                stageName: stage.stageName,
-                thumbnailURL,
-                streamInfo: {
-                    streamKey: stage.streamInfo.streamKey,
-                    title: stage.streamInfo.title,
-                    genre: stage.streamInfo.genre,
-                    category: stage.streamInfo.category,
-                    viewCount: stage.streamInfo.viewCount
-                }
-            };
-        };
-    }));
-
     const socketIOURL = (process.env.NODE_ENV === 'production' ? 'https' : 'http')
         + `://${process.env.SERVER_HOST}:${process.env.SOCKET_IO_PORT}?eventId=${eventId}`;
 
@@ -547,12 +510,46 @@ router.get('/:eventId', async (req, res, next) => {
         endTime: event.endTime,
         bannerPicURL: event.getBannerPicURL(),
         tags: event.tags,
-        stages,
+        stages: await Promise.all(event.stages.map(buildEventStage)),
         numOfSubscribers: event.subscribers.length,
         rtmpServerURL: RTMP_SERVER_URL,
         socketIOURL
     });
 });
+
+async function buildEventStage(eventStage) {
+    const streamKey = eventStage.streamInfo.streamKey;
+    const {data: {isLive}} = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
+        headers: {Authorization: rtmpServer.auth.header}
+    });
+
+    let thumbnailURL;
+    if (isLive) {
+        try {
+            thumbnailURL = await getThumbnail(streamKey);
+        } catch (err) {
+            LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
+                'Returning splash thumbnail. Error: {}', streamKey, err);
+            thumbnailURL = eventStage.getSplashThumbnailURL();
+        }
+    } else {
+        thumbnailURL = eventStage.getSplashThumbnailURL();
+    }
+
+    return {
+        _id: eventStage._id,
+        isLive,
+        stageName: eventStage.stageName,
+        thumbnailURL,
+        streamInfo: {
+            streamKey: eventStage.streamInfo.streamKey,
+            title: eventStage.streamInfo.title,
+            genre: eventStage.streamInfo.genre,
+            category: eventStage.streamInfo.category,
+            viewCount: eventStage.streamInfo.viewCount
+        }
+    };
+}
 
 router.get('/:eventId/event-name', async (req, res, next) => {
     const eventId = sanitise(req.params.eventId);
