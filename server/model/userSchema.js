@@ -114,7 +114,7 @@ async function deleteProfilePic(user) {
             LOGGER.debug('Successfully deleted profile picture in S3 for User (_id: {})', user._id);
         } catch (err) {
             LOGGER.error(`Failed to delete profile picture (bucket: {}, key: {}) in S3 for User (_id: {}). Error: {}`,
-                profilePic.bucket, profilePic.key, user._id, err.stack || err.toString());
+                profilePic.bucket, profilePic.key, user._id, err);
             await snsErrorPublisher.publish(err);
         }
     }
@@ -144,7 +144,7 @@ async function deleteScheduledStreams(user, model) {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} ScheduledStream{} failed to delete for User (_id: {}). Error: {}`,
-                errors.length, streams.length, errors.length === 1 ? '' : 's', user._id, err.stack || err.toString());
+                errors.length, streams.length, errors.length === 1 ? '' : 's', user._id, err);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug('Successfully deleted {} ScheduledStreams for User (_id: {})', deleted, user._id);
@@ -173,7 +173,7 @@ async function deleteRecordedStreams(user) {
         if (errors.length) {
             const err = new CompositeError(errors);
             LOGGER.error(`{} out of {} RecordedStream{} failed to delete for User (_id: {}). Error: {}`,
-                errors.length, streams.length, errors.length === 1 ? '' : 's', user._id, err.stack || err.toString());
+                errors.length, streams.length, errors.length === 1 ? '' : 's', user._id, err);
             await snsErrorPublisher.publish(err);
         } else {
             LOGGER.debug('Successfully deleted {} RecordedStreams for User (_id: {})', deleted, user._id);
@@ -195,8 +195,7 @@ async function removeFromSubscriptions(user, model) {
 
     if (rejectedPromises.length) {
         const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
-        LOGGER.error(`Failed to remove User (_id: {}) from subscribers/subscriptions lists. Error: {}`,
-            user._id, err.stack || err.toString());
+        LOGGER.error(`Failed to remove User (_id: {}) from subscribers/subscriptions lists. Error: {}`, user._id, err);
         await snsErrorPublisher.publish(err);
     } else {
         LOGGER.debug('Successfully removed User (_id: {}) from {} subscribers lists and {} subscriptions lists',

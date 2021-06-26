@@ -18,8 +18,7 @@ async function deleteObject({Bucket, Key}) {
         const deleteObjectCommand = new DeleteObjectCommand({Bucket, Key});
         await S3_CLIENT.send(deleteObjectCommand);
     } catch (err) {
-        LOGGER.error('An error occurred when deleting object in S3 (bucket: {}, key: {}): {}',
-            Bucket, Key, err.stack || err.toString());
+        LOGGER.error('An error occurred when deleting object in S3 (bucket: {}, key: {}): {}', Bucket, Key, err);
         throw err;
     }
 }
@@ -39,7 +38,7 @@ async function createMultipartUpload({Bucket, Key}) {
         return response.UploadId;
     } catch (err) {
         LOGGER.error('An error occurred when creating multipart upload in S3 (bucket: {}, key: {}): {}',
-            Bucket, Key, err.stack || err.toString());
+            Bucket, Key, err);
         throw err;
     }
 }
@@ -54,7 +53,7 @@ async function getUploadPartSignedURLs({Bucket, Key, UploadId, NumberOfParts}) {
         return await Promise.all(promises);
     } catch (err) {
         LOGGER.error('An error occurred when signing URLs for UploadPartCommands to S3 (bucket: {}, key: {}): {}',
-            Bucket, Key, err.stack || err.toString());
+            Bucket, Key, err);
         throw err
     }
 }
@@ -67,7 +66,7 @@ async function completeMultipartUpload({Bucket, Key, UploadId, Parts}) {
         await S3_CLIENT.send(completeMultipartUploadCommand);
     } catch (err) {
         LOGGER.error('An error occurred when completing multipart upload in S3 (Bucket: {}, Key: {}, UploadId: {}): {}',
-            Bucket, Key, UploadId, err.stack || err.toString());
+            Bucket, Key, UploadId, err);
         throw err;
     }
 }
@@ -78,7 +77,7 @@ async function abortMultipartUpload({Bucket, Key, UploadId}) {
         await S3_CLIENT.send(abortMultipartUploadCommand);
     } catch (err) {
         LOGGER.error('An error occurred when aborting multipart upload in S3 (Bucket: {}, Key: {}, UploadId: {}): {}',
-            Bucket, Key, UploadId, err.stack || err.toString());
+            Bucket, Key, UploadId, err);
         throw err
     }
 }

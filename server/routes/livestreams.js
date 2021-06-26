@@ -49,7 +49,7 @@ router.get('/', async (req, res, next) => {
 
     User.paginate(query, options, async (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when finding User livestream info: {}', err.stack || err.toString());
+            LOGGER.error('An error occurred when finding User livestream info: {}', err);
             next(err);
         } else {
             const streams = [];
@@ -59,7 +59,7 @@ router.get('/', async (req, res, next) => {
                 try {
                     thumbnailURL = await getThumbnail(streamKey);
                 } catch (err) {
-                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err.stack || err.toString());
+                    LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
                     thumbnailURL = config.defaultThumbnailURL;
                 }
                 streams.push({
@@ -120,7 +120,7 @@ router.get('/event-stages', async (req, res, next) => {
             }
         } catch (err) {
             LOGGER.error(`An error occurred when finding events querying createdBy.username and createdBy.displayName with '{}': {}`,
-                searchQuery, err.stack || err.toString());
+                searchQuery, err);
             next(err);
         }
     }
@@ -147,7 +147,7 @@ router.get('/event-stages', async (req, res, next) => {
 
     EventStage.paginate(query, options, async (err, result) => {
         if (err) {
-            LOGGER.error('An error occurred when finding EventStage livestream info: {}', err.stack || err.toString());
+            LOGGER.error('An error occurred when finding EventStage livestream info: {}', err);
             return next(err);
         }
 
@@ -158,7 +158,7 @@ router.get('/event-stages', async (req, res, next) => {
             try {
                 thumbnailURL = await getThumbnail(streamKey);
             } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err.stack || err.toString());
+                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
                 thumbnailURL = config.defaultThumbnailURL;
             }
             streams.push({
@@ -193,7 +193,7 @@ router.get('/:streamKey/thumbnail', async (req, res) => {
         const thumbnailURL = await getThumbnail(streamKey);
         res.json({ thumbnailURL });
     } catch (err) {
-        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err.stack || err.toString());
+        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
         res.json({
             thumbnailURL: config.defaultThumbnailURL
         });

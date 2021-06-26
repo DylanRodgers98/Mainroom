@@ -41,8 +41,7 @@ async function checkFileExists(inputURL) {
         if (err.response.status === 404) {
             LOGGER.error('Stream file at {} does not exist', inputURL);
         } else {
-            LOGGER.error('An unexpected error occurred during HEAD request to file at {}: {}',
-                inputURL, err.stack || err.toString());
+            LOGGER.error('An unexpected error occurred during HEAD request to file at {}: {}', inputURL, err);
         }
         throw err;
     }
@@ -65,8 +64,7 @@ function doGenerateStreamThumbnail({Bucket, Key, inputURL}) {
             LOGGER.debug('stderr: {}', data);
         });
         ffmpeg.on('error', err => {
-            LOGGER.error('An error occurred when generating stream thumbnail (stream URL: {}): {}',
-                inputURL, err.stack || err.toString());
+            LOGGER.error('An error occurred when generating stream thumbnail (stream URL: {}): {}', inputURL, err);
             reject(err);
         });
         ffmpeg.on('close', () => {
@@ -93,7 +91,7 @@ function doGenerateStreamThumbnail({Bucket, Key, inputURL}) {
             })
             .catch(err => {
                 LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}',
-                    Bucket, Key, err.stack || err.toString());
+                    Bucket, Key, err);
                 reject(err);
             });
     });

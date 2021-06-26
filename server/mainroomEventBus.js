@@ -32,7 +32,7 @@ class MainroomEventBus extends EventEmitter {
             data
         }, async err => {
             if (err) {
-                LOGGER.error(`An error occurred when sending "{}" event to pm2 God process: {}`, event, err.stack || err.toString());
+                LOGGER.error(`An error occurred when sending "{}" event to pm2 God process: {}`, event, err);
                 await snsErrorPublisher.publish(err);
             } else {
                 LOGGER.debug(`Successfully sent "{}" event to pm2 God process`, event);
@@ -45,7 +45,7 @@ class MainroomEventBus extends EventEmitter {
 const mainroomEventBus = new MainroomEventBus();
 
 mainroomEventBus.on('error', err => {
-    LOGGER.error('An error event was emitted: {}', err.stack || err.toString());
+    LOGGER.error('An error event was emitted: {}', err);
 });
 
 module.exports = mainroomEventBus;

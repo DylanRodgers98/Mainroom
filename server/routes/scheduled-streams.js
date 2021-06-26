@@ -30,7 +30,8 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
             }
             eventStageId = eventStage._id;
         } catch (err) {
-            LOGGER.error('An error occurred when trying to find EventStage (_id: {}): {}', sanitisedInput.eventStageId, err.stack || err.toString());
+            LOGGER.error('An error occurred when trying to find EventStage (_id: {}): {}',
+                sanitisedInput.eventStageId, err);
             return next(err);
         }
     }
@@ -50,7 +51,8 @@ router.post('/', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         await scheduledStream.save();
         res.sendStatus(200);
     } catch (err) {
-        LOGGER.error('An error occurred when saving new ScheduledStream: {}, Error: {}', JSON.stringify(scheduledStream), err.stack || err.toString());
+        LOGGER.error('An error occurred when saving new ScheduledStream: {}, Error: {}',
+            JSON.stringify(scheduledStream), err);
         next(err);
     }
 });
@@ -63,7 +65,7 @@ router.get('/', async (req, res, next) => {
     try {
         user = await User.findOne({username}).select('_id').exec();
     } catch (err) {
-        LOGGER.error(`An error occurred when finding user {}: {}`, username, err.stack || err.toString());
+        LOGGER.error(`An error occurred when finding user {}: {}`, username, err);
         return next(err);
     }
 
@@ -90,7 +92,7 @@ router.get('/', async (req, res, next) => {
             .exec();
         res.json({scheduledStreams});
     } catch (err) {
-        LOGGER.error('An error occurred when finding scheduled streams for user {}: {}', username, err.stack || err.toString());
+        LOGGER.error('An error occurred when finding scheduled streams for user {}: {}', username, err);
         next(err);
     }
 });
@@ -112,7 +114,7 @@ router.delete('/:id', loginChecker.ensureLoggedIn(), async (req, res, next) => {
         await User.updateMany({nonSubscribedScheduledStreams: id}, {$pull: {nonSubscribedScheduledStreams: id}}).exec();
         res.sendStatus(200);
     } catch (err) {
-        LOGGER.error(`An error occurred when deleting scheduled stream (_id: {}) from database: {}`, id, err.stack || err.toString());
+        LOGGER.error(`An error occurred when deleting scheduled stream (_id: {}) from database: {}`, id, err);
         next(err);
     }
 });

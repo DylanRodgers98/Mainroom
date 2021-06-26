@@ -66,7 +66,7 @@ const job = new CronJob(cronTime.createdScheduledStreamsEmailer, async () => {
             }
         } catch (err) {
             LOGGER.error('An error occurred when creating requests to email users about newly created scheduled streams from subscriptions: {}',
-                err.stack || err.toString());
+                err);
             await snsErrorPublisher.publish(err);
         }
     }

@@ -24,7 +24,7 @@ const job = new CronJob(cronTime.eventChatManager, async () => {
     const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
     if (rejectedPromises.length) {
         const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
-        LOGGER.error('Errors occurred when opening/closing/alerting event chats: {}', err.stack || err.toString());
+        LOGGER.error('Errors occurred when opening/closing/alerting event chats: {}', err);
         await snsErrorPublisher.publish(err);
     }
 
@@ -43,7 +43,7 @@ async function openChats(thisTimeTriggered) {
             ]
         }).select('_id').exec();
     } catch (err) {
-        LOGGER.error('An error occurred when getting events whose chats need to be opened: {}', err.stack || err.toString());
+        LOGGER.error('An error occurred when getting events whose chats need to be opened: {}', err);
         throw err;
     }
 
@@ -61,7 +61,7 @@ async function closeChats(thisTimeTriggered) {
             ]
         }).select('_id').exec();
     } catch (err) {
-        LOGGER.error('An error occurred when getting events whose chats need to be closed: {}', err.stack || err.toString());
+        LOGGER.error('An error occurred when getting events whose chats need to be closed: {}', err);
         throw err;
     }
 
@@ -79,7 +79,7 @@ async function sendClosureAlerts(thisTimeTriggered) {
     const rejectedPromises = promiseResults.filter(res => res.status === 'rejected');
     if (rejectedPromises.length) {
         const err = new CompositeError(rejectedPromises.map(promise => promise.reason));
-        LOGGER.error('Errors occurred when sending alerts to event chats about imminent closure: {}', err.stack || err.toString());
+        LOGGER.error('Errors occurred when sending alerts to event chats about imminent closure: {}', err);
         throw err;
     }
 }

@@ -47,7 +47,7 @@ passport.use('localRegister', new Strategy(registerOptions, async (req, emailAdd
     try {
         user = await User.findOne({$or: [{email: emailLowerCase}, {username}]}).exec();
     } catch (err) {
-        LOGGER.error('An error occurred during user registration: {}', err.stack || err.toString());
+        LOGGER.error('An error occurred during user registration: {}', err);
         return done(err);
     }
 
@@ -85,7 +85,7 @@ passport.use('localRegister', new Strategy(registerOptions, async (req, emailAdd
         }
         done(null, newUser);
     } catch (err) {
-        LOGGER.error('An error occurred when saving new User: {}, Error: {}', JSON.stringify(newUser), err.stack || err.toString());
+        LOGGER.error('An error occurred when saving new User: {}, Error: {}', JSON.stringify(newUser), err);
         done(err)
     }
 }));
@@ -108,7 +108,7 @@ passport.use('localLogin', new Strategy(loginOptions, async (req, usernameOrEmai
         }
         done(null, user);
     } catch (err) {
-        LOGGER.error('An error occurred during user login: {}', err.stack || err.toString());
+        LOGGER.error('An error occurred during user login: {}', err);
         done(err);
     }
 }));

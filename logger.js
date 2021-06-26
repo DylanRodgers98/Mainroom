@@ -22,6 +22,10 @@ class Logger {
     }
 
     error(format, ...args) {
+        if (args.length > 0) {
+            const possibleError = args[args.length - 1];
+            args[args.length - 1] = possibleError.stack || possibleError.toString();
+        }
         this.logger.error(`[${this.fileName}]`, formatLogMessage(format, ...args));
     }
 
