@@ -9,7 +9,14 @@ const S3_CLIENT = new S3Client({});
 exports.uploadVideoToS3 = ({inputURL, Bucket, Key}) => {
     return new Promise((resolve, reject) => {
         const outputURL = inputURL.replace('.mp4', '-final.mp4');
-        const args = ['-i', inputURL, '-c:a', 'copy', '-c:v', 'copy', '-movflags', 'faststart', outputURL];
+        const args = [
+            '-i', inputURL,
+            '-c:a', 'copy',
+            '-c:v', 'copy',
+            '-movflags', 'faststart',
+            outputURL
+        ];
+
         const ffmpeg = spawn(process.env.FFMPEG_PATH, args);
         ffmpeg.stderr.on('data', data => {
             LOGGER.debug('stderr: {}', data)

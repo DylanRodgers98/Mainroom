@@ -308,12 +308,14 @@ async function deleteFile(filePath) {
 }
 
 function getVideoDurationString(inputURL) {
-    const args = ['-show_entries', 'format=duration',
-                  '-of', 'default=noprint_wrappers=1:nokey=1',
-                  '-sexagesimal',
-                  inputURL];
-
     return new Promise((resolve, reject) => {
+        const args = [
+            '-show_entries', 'format=duration',
+            '-of', 'default=noprint_wrappers=1:nokey=1',
+            '-sexagesimal',
+            inputURL
+        ];
+
         const ffprobe = spawn(process.env.FFPROBE_PATH, args);
         ffprobe.on('error', err => {
             LOGGER.error('An error occurred when getting video file duration for {}: {}', inputURL, err.stack || err.toString());

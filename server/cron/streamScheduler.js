@@ -136,14 +136,16 @@ function startStreamFromPrerecordedVideo({startTime, inputURL, streamKey}) {
         if (startMillis > 0) {
             args.push('-ss', `${startMillis}ms`);
         }
-        args.push('-i', inputURL,
+        args.push(
+            '-i', inputURL,
             '-c:v', 'copy',
             '-c:a', 'copy',
             '-f', 'tee',
             '-map', '0:a?',
             '-map', '0:v?',
             '-f', 'flv',
-            `${RTMP_SERVER_URL}/${streamKey}`);
+            `${RTMP_SERVER_URL}/${streamKey}`
+        );
 
         mainroomEventBus.once(`streamStarted_${streamKey}`, resolve);
 
