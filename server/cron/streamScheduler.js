@@ -1,5 +1,5 @@
 const {CronJob} = require('cron');
-const {cronTime} = require('../../mainroom.config');
+const {cronTime, streamSchedulerTimeout} = require('../../mainroom.config');
 const {ScheduledStream, User, EventStage} = require('../model/schemas');
 const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
@@ -15,7 +15,7 @@ const jobName = 'Stream Scheduler';
 let lastTimeTriggered = Date.now();
 let isFirstTimeTriggered = true;
 
-const job = new CronJob(cronTime.scheduledStreamInfoUpdater, async () => {
+const job = new CronJob(cronTime.streamScheduler, async () => {
     LOGGER.debug(`${jobName} triggered`);
 
     const thisTimeTriggered = job.lastDate().valueOf();
@@ -146,9 +146,12 @@ function startStreamFromPrerecordedVideo({startTime, inputURL, streamKey}) {
             `${RTMP_SERVER_URL}/${streamKey}`);
 
         mainroomEventBus.once(`streamStarted_${streamKey}`, resolve);
+
         spawn(process.env.FFMPEG_PATH, args, {detached: true, stdio: 'ignore'})
             .on('error', reject)
             .unref();
+
+        setTimeout(reject, streamSchedulerTimeout);
     });
 }
 
@@ -171,7 +174,9 @@ async function startAllStreams(startStreamPromises) {
         }
     }
 
-    LOGGER.info('Successfully started {} out of {} streams from prerecorded videos', successCount, startStreamPromises.length);
+    LOGGER.info('Successfully started {} out of {} streams from prerecorded videos',
+        successCount, startStreamPromises.length);
+
     if (errors.length) {
         throw new CompositeError(errors);
     }

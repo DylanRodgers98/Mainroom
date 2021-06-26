@@ -94,7 +94,7 @@ module.exports = {
         }
     },
     cronTime: {
-        scheduledStreamInfoUpdater: CRON_EVERY_MINUTE,
+        streamScheduler: CRON_EVERY_MINUTE,
         upcomingScheduledStreamEmailer: CRON_EVERY_MINUTE,
         createdScheduledStreamsEmailer: CRON_EVERY_HOUR,
         newSubscribersEmailer: CRON_EVERY_HOUR,
@@ -235,6 +235,7 @@ module.exports = {
     socketIOConnectionTimeout: SECOND,
     loadLivestreamTimeout: 15 * SECOND,
     successMessageTimeout: 3 * SECOND,
+    streamSchedulerTimeout: 5 * SECOND,
     bugReportURL: 'https://gitreports.com/issue/DylanRodgers98/Mainroom',
     chatColours: {
         aqua: "#00ffff",
