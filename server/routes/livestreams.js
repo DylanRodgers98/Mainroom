@@ -43,7 +43,7 @@ router.get('/', async (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: 'username displayName profilePic.bucket profilePic.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
+        select: 'username displayName profilePic.bucket profilePic.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime streamInfo.thumbnailGenerationStatus',
         sort: '-streamInfo.viewCount'
     };
 
@@ -61,13 +61,12 @@ router.get('/', async (req, res, next) => {
 });
 
 async function buildUserLivestream(user) {
-    const streamKey = user.streamInfo.streamKey;
     let thumbnailURL;
     try {
-        thumbnailURL = await getThumbnail(streamKey);
+        thumbnailURL = await getThumbnail(user);
     } catch (err) {
-        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
-            'Returning default thumbnail. Error: {}', streamKey, err);
+        LOGGER.info('An error occurred when getting thumbnail for user stream (username: {}). ' +
+            'Returning default thumbnail. Error: {}', user.username, err);
         thumbnailURL = config.defaultThumbnailURL;
     }
     return {
@@ -137,7 +136,7 @@ router.get('/event-stages', async (req, res, next) => {
     const options = {
         page: req.query.page,
         limit: req.query.limit,
-        select: '_id event stageName +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime',
+        select: '_id event stageName +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.startTime streamInfo.thumbnailGenerationStatus',
         populate: {
             path: 'event',
             select: '_id eventName'
@@ -166,13 +165,12 @@ async function getLiveStreamKeys() {
 }
 
 async function buildEventStageLivestream(eventStage) {
-    const streamKey = eventStage.streamInfo.streamKey;
     let thumbnailURL;
     try {
-        thumbnailURL = await getThumbnail(streamKey);
+        thumbnailURL = await getThumbnail(eventStage);
     } catch (err) {
-        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
-            'Returning default thumbnail. Error: {}', streamKey, err);
+        LOGGER.info('An error occurred when getting thumbnail for eventStage stream (_id: {}). ' +
+            'Returning default thumbnail. Error: {}', eventStage._id, err);
         thumbnailURL = config.defaultThumbnailURL;
     }
     return {
@@ -191,14 +189,47 @@ async function buildEventStageLivestream(eventStage) {
 router.get('/:streamKey/thumbnail', async (req, res) => {
     const streamKey = sanitise(req.params.streamKey);
     try {
-        const thumbnailURL = await getThumbnail(streamKey);
+        const streamer = await getStreamerByStreamKey(streamKey);
+        const thumbnailURL = await getThumbnail(streamer);
         res.json({ thumbnailURL });
     } catch (err) {
-        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
+        LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
+            'Returning default thumbnail. Error: {}', streamKey, err);
         res.json({
             thumbnailURL: config.defaultThumbnailURL
         });
     }
 });
+
+async function getStreamerByStreamKey(streamKey) {
+    let streamer;
+    try {
+        streamer = await User.findOne({'streamInfo.streamKey': streamKey})
+            .select('+streamInfo.streamKey streamInfo.thumbnailGenerationStatus')
+            .exec();
+    } catch (err) {
+        LOGGER.error('An error occurred when finding user with stream key {}: {}', streamKey, err);
+        throw err;
+    }
+
+    if (streamer) {
+        return streamer;
+    }
+
+    try {
+        streamer = await EventStage.findOne({'streamInfo.streamKey': streamKey})
+            .select('+streamInfo.streamKey streamInfo.thumbnailGenerationStatus')
+            .exec();
+    } catch (err) {
+        LOGGER.error('An error occurred when finding event stage with stream key {}: {}', streamKey, err);
+        throw err;
+    }
+
+    if (!streamer) {
+        throw new Error(`No user or event stage exists with stream key ${streamKey}`);
+    }
+
+    return streamer;
+}
 
 module.exports = router;

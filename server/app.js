@@ -218,7 +218,7 @@ app.get('/stage/:eventStageId', setXSRFTokenCookie, async (req, res) => {
     try {
         const eventStageId = sanitise(req.params.eventStageId);
         const eventStage = await EventStage.findById(eventStageId)
-            .select( 'event stageName splashThumbnail.bucket splashThumbnail.key streamInfo.title +streamInfo.streamKey streamInfo.genre streamInfo.category')
+            .select( 'event stageName splashThumbnail.bucket splashThumbnail.key streamInfo.title +streamInfo.streamKey streamInfo.genre streamInfo.category streamInfo.thumbnailGenerationStatus')
             .populate({
                 path: 'event',
                 select: 'eventName'
@@ -232,9 +232,10 @@ app.get('/stage/:eventStageId', setXSRFTokenCookie, async (req, res) => {
             title = [eventStage.event.eventName, eventStage.stageName, eventStage.streamInfo.title, siteName].filter(Boolean).join(' - ');
             description = `${eventStage.streamInfo.genre ? `${eventStage.streamInfo.genre} ` : ''}${eventStage.streamInfo.category || ''}`;
             try {
-                imageURL = await getThumbnail(streamKey);
+                imageURL = await getThumbnail(eventStage);
             } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning splash thumbnail. Error: {}', streamKey, err);
+                LOGGER.info('An error occurred when getting thumbnail for eventStage stream (_id: {}). ' +
+                    'Returning splash thumbnail. Error: {}', eventStageId, err);
                 imageURL = eventStage.getSplashThumbnailURL();
             }
             videoURL = process.env.NODE_ENV === 'production'
@@ -323,10 +324,9 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
     let twitterCard;
 
     try {
-        // TODO: this practically matches '/:username/stream-info' users API route, so extract into controller method and call here and in API route
         const username = sanitise(req.params.username.toLowerCase());
         const user = await User.findOne({username})
-            .select( 'displayName streamInfo.title +streamInfo.streamKey streamInfo.genre streamInfo.category')
+            .select( 'displayName streamInfo.title +streamInfo.streamKey streamInfo.genre streamInfo.category streamInfo.thumbnailGenerationStatus')
             .exec();
         const streamKey = user.streamInfo.streamKey;
         const {data} = await axios.get(`http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/api/streams/live/${streamKey}`, {
@@ -336,9 +336,10 @@ app.get('/user/:username/live', setXSRFTokenCookie, async (req, res) => {
             title = [(user.displayName || username), user.streamInfo.title, siteName].filter(Boolean).join(' - ');
             description = `${user.streamInfo.genre ? `${user.streamInfo.genre} ` : ''}${user.streamInfo.category || ''}`;
             try {
-                imageURL = await getThumbnail(streamKey);
+                imageURL = await getThumbnail(user);
             } catch (err) {
-                LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). Returning default thumbnail. Error: {}', streamKey, err);
+                LOGGER.info('An error occurred when getting thumbnail for user stream (username: {}). ' +
+                    'Returning default thumbnail. Error: {}', username, err);
                 imageURL = config.defaultThumbnailURL;
             }
             imageAlt = `${username} Stream Thumbnail`;

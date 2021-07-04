@@ -488,7 +488,7 @@ router.get('/:eventId', async (req, res, next) => {
             })
             .populate({
                 path: 'stages',
-                select: '_id stageName splashThumbnail.bucket splashThumbnail.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount'
+                select: '_id stageName splashThumbnail.bucket splashThumbnail.key +streamInfo.streamKey streamInfo.title streamInfo.genre streamInfo.category streamInfo.viewCount streamInfo.thumbnailGenerationStatus'
             })
             .exec();
     } catch (err) {
@@ -526,10 +526,10 @@ async function buildEventStage(eventStage) {
     let thumbnailURL;
     if (isLive) {
         try {
-            thumbnailURL = await getThumbnail(streamKey);
+            thumbnailURL = await getThumbnail(eventStage);
         } catch (err) {
-            LOGGER.info('An error occurred when getting thumbnail for stream (stream key: {}). ' +
-                'Returning splash thumbnail. Error: {}', streamKey, err);
+            LOGGER.info('An error occurred when getting thumbnail for eventStage stream (_id: {}). ' +
+                'Returning splash thumbnail. Error: {}', eventStage._id, err);
             thumbnailURL = eventStage.getSplashThumbnailURL();
         }
     } else {
