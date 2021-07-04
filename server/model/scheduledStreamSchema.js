@@ -26,8 +26,8 @@ ScheduledStreamSchema.methods.getPrerecordedVideoFileURL = function () {
     return !this.prerecordedVideoFile || !this.prerecordedVideoFile.bucket || !this.prerecordedVideoFile.key
         ? undefined
         : resolveObjectURL({
-            bucket: this.prerecordedVideoFile.bucket,
-            key: this.prerecordedVideoFile.key
+            Bucket: this.prerecordedVideoFile.bucket,
+            Bey: this.prerecordedVideoFile.key
         });
 };
 

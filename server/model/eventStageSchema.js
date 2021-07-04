@@ -11,6 +11,7 @@ const {deleteObject} = require('../aws/s3Utils');
 const {resolveObjectURL} = require('../aws/s3Utils');
 const {ScheduledStream, User} = require('./schemas');
 const mongoosePaginate = require('mongoose-paginate-v2');
+const {ThumbnailGenerationStatus} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/model/eventStageSchema.js');
 
 const EventStageSchema = new Schema({
@@ -28,7 +29,8 @@ const EventStageSchema = new Schema({
         tags: {type: [String], validate: tags => tags.length <= tagsMaxAmount},
         viewCount: {type: Number, default: 0, min: 0},
         cumulativeViewCount: {type: Number, default: 0, min: 0},
-        startTime: Date
+        startTime: Date,
+        thumbnailGenerationStatus: {type: Number, default: ThumbnailGenerationStatus.READY}
     }
 });
 
@@ -38,8 +40,8 @@ EventStageSchema.statics.generateStreamKey = nanoid;
 
 EventStageSchema.methods.getSplashThumbnailURL = function () {
     return resolveObjectURL({
-        bucket: this.splashThumbnail.bucket,
-        key: this.splashThumbnail.key
+        Bucket: this.splashThumbnail.bucket,
+        Key: this.splashThumbnail.key
     });
 };
 

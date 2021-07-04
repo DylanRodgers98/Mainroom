@@ -36,15 +36,15 @@ EventSchema.methods.getBannerPicURL = function () {
     return !this.bannerPic || !this.bannerPic.bucket || !this.bannerPic.bucket
         ? undefined
         : resolveObjectURL({
-            bucket: this.bannerPic.bucket,
-            key: this.bannerPic.key
+            Bucket: this.bannerPic.bucket,
+            Key: this.bannerPic.key
         });
 };
 
 EventSchema.methods.getThumbnailURL = function () {
     return resolveObjectURL({
-        bucket: this.thumbnail.bucket,
-        key: this.thumbnail.key
+        Bucket: this.thumbnail.bucket,
+        Key: this.thumbnail.key
     });
 };
 

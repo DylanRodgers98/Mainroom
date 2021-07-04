@@ -11,6 +11,7 @@ const nanoid = require('nanoid');
 const {deleteObject, resolveObjectURL} = require('../aws/s3Utils');
 const CompositeError = require('../errors/CompositeError');
 const snsErrorPublisher = require('../aws/snsErrorPublisher');
+const {ThumbnailGenerationStatus} = require('../aws/s3ThumbnailGenerator');
 const LOGGER = require('../../logger')('./server/model/userSchema.js');
 
 const UserSchema = new Schema({
@@ -33,7 +34,8 @@ const UserSchema = new Schema({
         tags: {type: [String], validate: tags => tags.length <= tagsMaxAmount},
         viewCount: {type: Number, default: 0, min: 0},
         cumulativeViewCount: {type: Number, default: 0, min: 0},
-        startTime: Date
+        startTime: Date,
+        thumbnailGenerationStatus: {type: Number, default: ThumbnailGenerationStatus.READY}
     },
     subscribers: [{
         user: {type: Schema.Types.ObjectId, ref: 'User'},
@@ -71,8 +73,8 @@ UserSchema.statics.getRandomChatColour = getRandomColour;
 
 UserSchema.methods.getProfilePicURL = function () {
     return resolveObjectURL({
-        bucket: this.profilePic.bucket,
-        key: this.profilePic.key
+        Bucket: this.profilePic.bucket,
+        Key: this.profilePic.key
     });
 };
 

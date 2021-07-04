@@ -82,8 +82,8 @@ describe('s3Utils', () => {
         it('should return Cloudfront URL for object in bucket with configured Cloudfront distribution', () => {
             // when
             const actualObjectURL = S3_UTILS.resolveObjectURL({
-                bucket: BUCKET_WITH_CLOUDFRONT_DISTRIBUTION,
-                key: KEY
+                Bucket: BUCKET_WITH_CLOUDFRONT_DISTRIBUTION,
+                Key: KEY
             });
 
             // then
@@ -94,8 +94,8 @@ describe('s3Utils', () => {
         it('should return S3 URL for object in bucket with no configured Cloudfront distribution', () => {
             // when
             const actualObjectURL = S3_UTILS.resolveObjectURL({
-                bucket: BUCKET,
-                key: KEY
+                Bucket: BUCKET,
+                Key: KEY
             });
 
             // then
