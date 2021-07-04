@@ -8,30 +8,46 @@ const LOGGER = require('../../logger')('./server/aws/s3ThumbnailGenerator.js');
 
 const S3_CLIENT = new S3Client({});
 
-async function getThumbnail(streamKey) {
-    const inputURL = `http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/live/${streamKey}/index.m3u8`;
+const ThumbnailGenerationStatus = {
+    READY: 0,
+    IN_PROGRESS: 1
+};
+
+async function getThumbnail(streamer) {
+    const streamKey = streamer.streamInfo.streamKey;
     const Bucket = storage.s3.livestreamThumbnails.bucketName;
     const Key = `${streamKey}.jpg`;
+
+    // if thumbnail generation is in progress, a request has already been made to generate thumbnail,
+    // so return URL to where the thumbnail will be generated
+    if (streamer.streamInfo.thumbnailGenerationStatus === ThumbnailGenerationStatus.IN_PROGRESS) {
+        return resolveObjectURL({Bucket, Key});
+    }
+
+    const inputURL = `http://localhost:${process.env.RTMP_SERVER_HTTP_PORT}/live/${streamKey}/index.m3u8`;
     try {
         const headObjectCommand = new HeadObjectCommand({Bucket, Key});
         const output = await S3_CLIENT.send(headObjectCommand);
-        return Date.now() > output.LastModified.getTime() + storage.thumbnails.ttl
-            ? resolveObjectURL(await generateStreamThumbnail({inputURL, Bucket, Key}))
-            : resolveObjectURL({
-                bucket: Bucket,
-                key: Key
-            });
+        if (Date.now() > output.LastModified.getTime() + storage.thumbnails.ttl) {
+            return await generateStreamThumbnail({streamer, inputURL, Bucket, Key});
+        }
+        return resolveObjectURL({Bucket, Key});
     } catch (err) {
         if (err.name === 'NotFound') {
-            return resolveObjectURL(await generateStreamThumbnail({inputURL, Bucket, Key}));
+            return await generateStreamThumbnail({streamer, inputURL, Bucket, Key});
         }
         throw err;
+    } finally {
+        streamer.streamInfo.thumbnailGenerationStatus = ThumbnailGenerationStatus.READY;
+        await streamer.save();
     }
 }
 
-async function generateStreamThumbnail({inputURL, Bucket, Key}) {
+async function generateStreamThumbnail({streamer, inputURL, Bucket, Key}) {
+    streamer.streamInfo.thumbnailGenerationStatus = ThumbnailGenerationStatus.IN_PROGRESS;
+    await streamer.save();
     await checkFileExists(inputURL);
-    return await doGenerateStreamThumbnail({Bucket, Key, inputURL});
+    return resolveObjectURL(await doGenerateStreamThumbnail({Bucket, Key, inputURL}));
 }
 
 async function checkFileExists(inputURL) {
@@ -84,10 +100,7 @@ function doGenerateStreamThumbnail({Bucket, Key, inputURL}) {
         upload.done()
             .then(result => {
                 LOGGER.info('Successfully uploaded thumbnail to {}', decodeURIComponent(result.Location));
-                resolve({
-                    bucket: Bucket,
-                    key: Key
-                });
+                resolve({Bucket, Key});
             })
             .catch(err => {
                 LOGGER.error('An error occurred when uploading stream thumbnail to S3 (bucket: {}, key: {}): {}',
@@ -99,5 +112,6 @@ function doGenerateStreamThumbnail({Bucket, Key, inputURL}) {
 
 module.exports = {
     getThumbnail,
-    generateStreamThumbnail
+    generateStreamThumbnail,
+    ThumbnailGenerationStatus
 }
