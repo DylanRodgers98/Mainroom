@@ -55,6 +55,6 @@
   "requiresCompatibilities": [
     "EC2"
   ],
-  "cpu": "4096",
-  "memory": "7764"
+  "cpu": "2048",
+  "memory": "953"
 }
