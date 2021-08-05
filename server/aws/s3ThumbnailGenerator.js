@@ -29,12 +29,16 @@ async function getThumbnail(streamer) {
         const headObjectCommand = new HeadObjectCommand({Bucket, Key});
         const output = await S3_CLIENT.send(headObjectCommand);
         if (Date.now() > output.LastModified.getTime() + storage.thumbnails.ttl) {
-            return await generateStreamThumbnail({streamer, inputURL, Bucket, Key});
+            return await generateStreamThumbnail({
+                isLive: true, streamer, inputURL, Bucket, Key
+            });
         }
         return resolveObjectURL({Bucket, Key});
     } catch (err) {
         if (err.name === 'NotFound') {
-            return await generateStreamThumbnail({streamer, inputURL, Bucket, Key});
+            return await generateStreamThumbnail({
+                isLive: true, streamer, inputURL, Bucket, Key
+            });
         }
         throw err;
     } finally {
@@ -43,10 +47,12 @@ async function getThumbnail(streamer) {
     }
 }
 
-async function generateStreamThumbnail({streamer, inputURL, Bucket, Key}) {
-    streamer.streamInfo.thumbnailGenerationStatus = ThumbnailGenerationStatus.IN_PROGRESS;
-    await streamer.save();
-    await checkFileExists(inputURL);
+async function generateStreamThumbnail({isLive, streamer, inputURL, Bucket, Key}) {
+    if (isLive) {
+        streamer.streamInfo.thumbnailGenerationStatus = ThumbnailGenerationStatus.IN_PROGRESS;
+        await streamer.save();
+        await checkFileExists(inputURL);
+    }
     return resolveObjectURL(await doGenerateStreamThumbnail({Bucket, Key, inputURL}));
 }
 
@@ -54,7 +60,7 @@ async function checkFileExists(inputURL) {
     try {
         await axios.head(inputURL);
     } catch (err) {
-        if (err.response.status === 404) {
+        if (err.response && err.response.status === 404) {
             LOGGER.error('Stream file at {} does not exist', inputURL);
         } else {
             LOGGER.error('An unexpected error occurred during HEAD request to file at {}: {}', inputURL, err);
