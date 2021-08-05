@@ -203,6 +203,7 @@ async function saveRecordedStream({streamKey, timestamp, streamer, userId, event
         const videoDurationPromise = getVideoDurationString(inputURL);
         const uploadVideoPromise = uploadVideoToS3({inputURL, Bucket, Key});
         const generateThumbnailPromise = generateStreamThumbnail({
+            streamer,
             inputURL,
             Bucket,
             Key: Key.replace('.mp4', '.jpg')
