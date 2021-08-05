@@ -53,7 +53,8 @@ async function generateStreamThumbnail({isLive, streamer, inputURL, Bucket, Key}
         await streamer.save();
         await checkFileExists(inputURL);
     }
-    return resolveObjectURL(await doGenerateStreamThumbnail({Bucket, Key, inputURL}));
+    const thumbnail = await doGenerateStreamThumbnail({Bucket, Key, inputURL});
+    return isLive ? resolveObjectURL(thumbnail) : thumbnail;
 }
 
 async function checkFileExists(inputURL) {
