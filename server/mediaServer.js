@@ -230,7 +230,10 @@ async function saveRecordedStream({streamKey, timestamp, streamer, userId, event
             timestamp,
             videoDuration,
             video,
-            thumbnail
+            thumbnail: {
+                bucket: thumbnail.Bucket,
+                key: thumbnail.Key
+            }
         });
 
         const allSettledResults = await Promise.allSettled([...originalFileURLs.map(deleteFile), recordedStream.save()]);
