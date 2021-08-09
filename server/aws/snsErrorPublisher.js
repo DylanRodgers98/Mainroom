@@ -2,7 +2,12 @@ const {SNSClient, PublishCommand} = require('@aws-sdk/client-sns');
 
 const SNS_CLIENT = new SNSClient({});
 
+const errorsToIgnore = ['ForbiddenError'];
+
 module.exports.publish = async errorToPublish => {
+    if (errorsToIgnore.includes(errorToPublish.name)) {
+        return;
+    }
     if (process.env.NODE_ENV !== 'production') {
         // throw if non-production environment
         throw errorToPublish;
